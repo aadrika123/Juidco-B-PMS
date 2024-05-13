@@ -395,10 +395,23 @@ export const forwardToDaDal = async (req: Request) => {
                     id: item
                 },
                 select: {
-                    id: false
+                    order_no: true,
+                    category_masterId: true,
+                    subcategory_masterId: true,
+                    brand_masterId: true,
+                    processor_masterId: true,
+                    ram_masterId: true,
+                    os_masterId: true,
+                    rom_masterId: true,
+                    graphics_masterId: true,
+                    other_description: true,
+                    rate: true,
+                    quantity: true,
+                    total_rate: true,
+                    statusId: true,
                 }
             })
-            const transaction = await prisma.$transaction([
+            await prisma.$transaction([
 
                 prisma.sr_pre_procurement_outbox.create({
                     data: inbox
@@ -408,7 +421,7 @@ export const forwardToDaDal = async (req: Request) => {
                 }),
                 prisma.procurement_status.update({
                     where: {
-                        id: item
+                        id: inbox?.statusId
                     },
                     data: {
                         status: 1
@@ -417,7 +430,7 @@ export const forwardToDaDal = async (req: Request) => {
                 prisma.sr_pre_procurement_inbox.delete({
                     where: {
                         id: item
-                    }
+                    },
                 })
 
             ])
