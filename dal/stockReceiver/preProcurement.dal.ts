@@ -386,33 +386,45 @@ export const getPreProcurementByOrderNoDal = async (req: Request) => {
 }
 
 
-// export const forwardToDa = async (req: Request) => {
-//     const { preProcurement }: { preProcurement: string[] } = req.body
-//     let srInbox: any
-//     try {
-//         preProcurement.map(async (item) => {
-//             const inbox: any = await prisma.sr_pre_procurement_inbox.findFirst({
-//                 where: {
-//                     id: item
-//                 },
-//                 select: {
-//                     id: false
-//                 }
-//             })
-//             const transaction = await prisma.$transaction([
+export const forwardToDaDal = async (req: Request) => {
+    const { preProcurement }: { preProcurement: string[] } = req.body
+    try {
+        preProcurement.map(async (item) => {
+            const inbox: any = await prisma.sr_pre_procurement_inbox.findFirst({
+                where: {
+                    id: item
+                },
+                select: {
+                    id: false
+                }
+            })
+            const transaction = await prisma.$transaction([
 
-//                 prisma.sr_pre_procurement_outbox.create({
-//                     data: inbox
-//                 }),
-//                 prisma.procurement_status.update({
+                prisma.sr_pre_procurement_outbox.create({
+                    data: inbox
+                }),
+                prisma.da_pre_procurement_inbox.create({
+                    data: inbox
+                }),
+                prisma.procurement_status.update({
+                    where: {
+                        id: item
+                    },
+                    data: {
+                        status: 1
+                    }
+                }),
+                prisma.sr_pre_procurement_inbox.delete({
+                    where: {
+                        id: item
+                    }
+                })
 
-//                 })
-
-//             ])
-//         })
-//         return
-//     } catch (err: any) {
-//         console.log(err?.message)
-//         return { error: true, message: err?.message }
-//     }
-// }
+            ])
+        })
+        return "forwarded"
+    } catch (err: any) {
+        console.log(err?.message)
+        return { error: true, message: err?.message }
+    }
+}
