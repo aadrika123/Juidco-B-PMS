@@ -1,5 +1,6 @@
 import express, { Request, Response } from 'express'
 import { config } from 'dotenv'
+const cors = require('cors')
 
 import masterEntryRoute from './router/masterEntry/masterEntry.route'
 import srPreProcurementRoute from './router/stockReciever/preProcurement/srPreProcurement.route'
@@ -8,6 +9,7 @@ config()
 
 const app = express()
 const port = process.env.PORT || 6969
+app.use(cors());
 
 app.use(express.json())
 
