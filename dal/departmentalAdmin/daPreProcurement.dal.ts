@@ -1,81 +1,9 @@
-import { Request, Response } from "express";
+import { Request } from "express";
 import { PrismaClient } from "@prisma/client";
 import generateOrderNumber from "../../lib/orderNumberGenerator";
 
 
 const prisma = new PrismaClient()
-
-
-export const createPreProcurementDal = async (req: Request) => {
-    let order_no: string
-    const {
-        category,
-        subcategory,
-        brand,
-        processor,
-        ram,
-        os,
-        rom,
-        graphics,
-        other_description,
-        rate,
-        quantity,
-        total_rate
-    } = req.body
-
-    order_no = generateOrderNumber()
-    if (order_no) {
-        try {
-            const existance = await prisma.sr_pre_procurement_inbox.count({
-                where: {
-                    order_no: order_no
-                }
-            })
-            if (existance) {
-                order_no = generateOrderNumber()
-            }
-        } catch (err: any) {
-            console.log(err?.message)
-        }
-    }
-
-    const data: any = {
-        category: { connect: { id: category } },
-        subcategory: { connect: { id: subcategory } },
-        brand: { connect: { id: brand } },
-        processor: { connect: { id: processor } },
-        ram: { connect: { id: ram } },
-        os: { connect: { id: os } },
-        rom: { connect: { id: rom } },
-        graphics: { connect: { id: graphics } },
-        other_description: other_description,
-        order_no: order_no,
-        rate: Number(rate),
-        quantity: Number(quantity),
-        total_rate: Number(total_rate),
-        status: {
-            create: {
-                order_no: order_no,
-                status: 0
-            }
-        }
-    }
-    if (Number(rate) && Number(quantity)) {
-        if (Number(rate) * Number(quantity) !== Number(total_rate)) {
-            return { error: true, message: "The calculation result for total rate is invalid" }
-        }
-    }
-
-    try {
-        const result = await prisma.sr_pre_procurement_inbox.create({
-            data: data
-        })
-        return result
-    } catch (err: any) {
-        console.log(err?.message)
-        return { error: true, message: err?.message }
-    }
-}
 
 
 export const getPreProcurementDal = async (req: Request) => {
@@ -126,10 +54,10 @@ export const getPreProcurementDal = async (req: Request) => {
     }
 
     try {
-        count = await prisma.sr_pre_procurement_inbox.count({
+        count = await prisma.da_pre_procurement_inbox.count({
             where: whereClause
         })
-        const result = await prisma.sr_pre_procurement_inbox.findMany({
+        const result = await prisma.da_pre_procurement_inbox.findMany({
             orderBy: {
                 createdAt: 'desc'
             },
@@ -230,7 +158,7 @@ export const getPreProcurementDal = async (req: Request) => {
 export const getPreProcurementByIdDal = async (req: Request) => {
     const { id } = req.params
     try {
-        const result = await prisma.sr_pre_procurement_inbox.findFirst({
+        const result = await prisma.da_pre_procurement_inbox.findFirst({
             where: {
                 id: id
             },
@@ -309,7 +237,7 @@ export const getPreProcurementByIdDal = async (req: Request) => {
 export const getPreProcurementByOrderNoDal = async (req: Request) => {
     const { order_no } = req.params
     try {
-        const result = await prisma.sr_pre_procurement_inbox.findFirst({
+        const result = await prisma.da_pre_procurement_inbox.findFirst({
             where: {
                 order_no: order_no
             },
@@ -385,11 +313,11 @@ export const getPreProcurementByOrderNoDal = async (req: Request) => {
 }
 
 
-export const forwardToDaDal = async (req: Request) => {
-    const { preProcurement }: { preProcurement: string[] } = req.body
+export const backToSrDal = async (req: Request) => {
+    const { preProcurement, remark }: { preProcurement: string[], remark: string } = req.body
     try {
         preProcurement.map(async (item) => {
-            const inbox: any = await prisma.sr_pre_procurement_inbox.findFirst({
+            const inbox: any = await prisma.da_pre_procurement_inbox.findFirst({
                 where: {
                     id: item
                 },
@@ -410,17 +338,13 @@ export const forwardToDaDal = async (req: Request) => {
                     statusId: true,
                 }
             })
-            const daOutbox: any = await prisma.da_pre_procurement_outbox.count({
-                where: {
-                    order_no: inbox?.order_no
-                }
-            })
+            inbox.remark = remark
             await prisma.$transaction([
 
-                prisma.sr_pre_procurement_outbox.create({
+                prisma.da_pre_procurement_outbox.create({
                     data: inbox
                 }),
-                prisma.da_pre_procurement_inbox.create({
+                prisma.sr_pre_procurement_inbox.create({
                     data: inbox
                 }),
                 prisma.procurement_status.update({
@@ -428,23 +352,23 @@ export const forwardToDaDal = async (req: Request) => {
                         id: inbox?.statusId
                     },
                     data: {
-                        status: 1
+                        status: -1
                     }
                 }),
-                prisma.sr_pre_procurement_inbox.delete({
+                prisma.da_pre_procurement_inbox.delete({
                     where: {
                         id: item
                     },
                 }),
-                ...(daOutbox.length !== 0 ? [prisma.da_pre_procurement_outbox.delete({
+                prisma.sr_pre_procurement_outbox.delete({
                     where: {
                         order_no: inbox?.order_no
                     },
-                })] : [])
+                })
 
             ])
         })
-        return "forwarded"
+        return "Reversed"
     } catch (err: any) {
         console.log(err?.message)
         return { error: true, message: err?.message }
