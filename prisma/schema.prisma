@@ -145,7 +145,7 @@ model graphics_master {
 model procurement_status {
     id                        String                     @id @default(uuid())
     order_no                  String                     @unique
-    status                    Int //-1=rejected, 0=pending, 1=at DA's inbox, 2=released for tender, 3=stock recieved, 4=stock verified
+    status                    Int //-2=rejected, -1=back to sr, 0=pending, 1=at DA's inbox, 2=released for tender, 3=stock recieved, 4=stock verified
     createdAt                 DateTime                   @default(now())
     updatedAt                 DateTime                   @updatedAt
     sr_pre_procurement_inbox  sr_pre_procurement_inbox?
@@ -179,6 +179,7 @@ model sr_pre_procurement_inbox {
     total_rate           Int?
     status               procurement_status @relation(fields: [statusId], references: [id])
     statusId             String             @unique
+    remark               String?
     createdAt            DateTime           @default(now())
     updatedAt            DateTime           @updatedAt
 }
@@ -208,6 +209,7 @@ model sr_pre_procurement_outbox {
     total_rate           Int?
     status               procurement_status @relation(fields: [statusId], references: [id])
     statusId             String             @unique
+    remark               String?
     createdAt            DateTime           @default(now())
     updatedAt            DateTime           @updatedAt
 }
@@ -237,6 +239,7 @@ model da_pre_procurement_inbox {
     total_rate           Int?
     status               procurement_status @relation(fields: [statusId], references: [id])
     statusId             String             @unique
+    remark               String?
     createdAt            DateTime           @default(now())
     updatedAt            DateTime           @updatedAt
 }
@@ -266,6 +269,7 @@ model da_pre_procurement_outbox {
     total_rate           Int?
     status               procurement_status @relation(fields: [statusId], references: [id])
     statusId             String             @unique
+    remark               String?
     createdAt            DateTime           @default(now())
     updatedAt            DateTime           @updatedAt
 }
