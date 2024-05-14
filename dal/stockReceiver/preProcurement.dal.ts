@@ -437,7 +437,7 @@ export const forwardToDaDal = async (req: Request) => {
                         id: item
                     },
                 }),
-                ...(daOutbox.length !== 0 ? [prisma.da_pre_procurement_outbox.delete({
+                ...(daOutbox !== 0 ? [prisma.da_pre_procurement_outbox.delete({
                     where: {
                         order_no: inbox?.order_no
                     },
