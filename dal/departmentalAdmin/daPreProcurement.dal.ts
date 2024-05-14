@@ -425,24 +425,23 @@ export const editPreProcurementDal = async (req: Request) => {
             id: id
         },
         select: {
-            id: true,
             order_no: true,
-            category: true,
-            subcategory: true,
-            brand: true,
-            processor: true,
-            ram: true,
-            os: true,
-            rom: true,
-            graphics: true,
+            category_masterId: true,
+            subcategory_masterId: true,
+            brand_masterId: true,
+            processor_masterId: true,
+            ram_masterId: true,
+            os_masterId: true,
+            rom_masterId: true,
+            graphics_masterId: true,
             other_description: true,
             rate: true,
             quantity: true,
-            status: true,
+            statusId: true,
+            total_rate: true,
             remark: true
         }
     })
-
     const historyExistance = await prisma.pre_procurement_history.count({
         where: {
             order_no: order_no
@@ -452,7 +451,7 @@ export const editPreProcurementDal = async (req: Request) => {
     try {
         await prisma.$transaction([
 
-            ...(historyExistance > 0 ? [prisma.pre_procurement_history.create({
+            ...(historyExistance === 0 ? [prisma.pre_procurement_history.create({
                 data: preProcurement
             })] : []),
             prisma.da_pre_procurement_inbox.update({

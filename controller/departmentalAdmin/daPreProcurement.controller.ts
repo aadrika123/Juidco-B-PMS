@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { getPreProcurementDal, getPreProcurementByIdDal, getPreProcurementByOrderNoDal, backToSrDal } from "../../dal/departmentalAdmin/daPreProcurement.dal";
+import { getPreProcurementDal, getPreProcurementByIdDal, getPreProcurementByOrderNoDal, backToSrDal, editPreProcurementDal } from "../../dal/departmentalAdmin/daPreProcurement.dal";
 
 
 
@@ -76,17 +76,17 @@ export const backToSr = async (req: Request, res: Response) => {
 }
 
 export const editPreProcurement = async (req: Request, res: Response) => {
-    const result: any = await backToSrDal(req)
+    const result: any = await editPreProcurementDal(req)
     if (!result?.error) {
         res.status(200).json({
             status: true,
-            message: `Back to SR successfully`,
+            message: `Edit successfull`,
             data: result
         })
     } else {
         res.status(404).json({
             status: false,
-            message: `Error while reversing to SR`,
+            message: `Error while editing`,
             error: result?.message
         })
     }
