@@ -74,3 +74,20 @@ export const backToSr = async (req: Request, res: Response) => {
         })
     }
 }
+
+export const editPreProcurement = async (req: Request, res: Response) => {
+    const result: any = await backToSrDal(req)
+    if (!result?.error) {
+        res.status(200).json({
+            status: true,
+            message: `Back to SR successfully`,
+            data: result
+        })
+    } else {
+        res.status(404).json({
+            status: false,
+            message: `Error while reversing to SR`,
+            error: result?.message
+        })
+    }
+}

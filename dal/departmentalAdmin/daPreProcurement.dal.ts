@@ -1,6 +1,5 @@
 import { Request } from "express";
 import { PrismaClient } from "@prisma/client";
-import generateOrderNumber from "../../lib/orderNumberGenerator";
 
 
 const prisma = new PrismaClient()
@@ -120,6 +119,7 @@ export const getPreProcurementDal = async (req: Request) => {
                 other_description: true,
                 rate: true,
                 quantity: true,
+                total_rate: true,
                 status: {
                     select: {
                         id: true,
@@ -218,6 +218,7 @@ export const getPreProcurementByIdDal = async (req: Request) => {
                 other_description: true,
                 rate: true,
                 quantity: true,
+                total_rate: true,
                 status: {
                     select: {
                         id: true,
@@ -297,6 +298,7 @@ export const getPreProcurementByOrderNoDal = async (req: Request) => {
                 other_description: true,
                 rate: true,
                 quantity: true,
+                total_rate: true,
                 status: {
                     select: {
                         id: true,
@@ -369,6 +371,111 @@ export const backToSrDal = async (req: Request) => {
             ])
         })
         return "Reversed"
+    } catch (err: any) {
+        console.log(err?.message)
+        return { error: true, message: err?.message }
+    }
+}
+
+
+export const editPreProcurementDal = async (req: Request) => {
+    const {
+        id,
+        order_no,
+        category,
+        subcategory,
+        brand,
+        processor,
+        ram,
+        os,
+        rom,
+        graphics,
+        other_description,
+        rate,
+        quantity,
+        total_rate,
+        remark
+    } = req.body
+
+
+    const data: any = {
+        category: { connect: { id: category } },
+        subcategory: { connect: { id: subcategory } },
+        brand: { connect: { id: brand } },
+        processor: { connect: { id: processor } },
+        ram: { connect: { id: ram } },
+        os: { connect: { id: os } },
+        rom: { connect: { id: rom } },
+        graphics: { connect: { id: graphics } },
+        other_description: other_description,
+        rate: Number(rate),
+        quantity: Number(quantity),
+        total_rate: Number(total_rate),
+        remark: remark,
+        isEdited: true
+    }
+    if (Number(rate) && Number(quantity)) {
+        if (Number(rate) * Number(quantity) !== Number(total_rate)) {
+            return { error: true, message: "The calculation result for total rate is invalid" }
+        }
+    }
+
+    const preProcurement: any = await prisma.da_pre_procurement_inbox.findFirst({
+        where: {
+            id: id
+        },
+        select: {
+            id: true,
+            order_no: true,
+            category: true,
+            subcategory: true,
+            brand: true,
+            processor: true,
+            ram: true,
+            os: true,
+            rom: true,
+            graphics: true,
+            other_description: true,
+            rate: true,
+            quantity: true,
+            status: true,
+            remark: true
+        }
+    })
+
+    const historyExistance = await prisma.pre_procurement_history.count({
+        where: {
+            order_no: order_no
+        }
+    })
+
+    try {
+        await prisma.$transaction([
+
+            ...(historyExistance > 0 ? [prisma.pre_procurement_history.create({
+                data: preProcurement
+            })] : []),
+            prisma.da_pre_procurement_inbox.update({
+                where: {
+                    id: id
+                },
+                data: data
+            }),
+            prisma.sr_pre_procurement_outbox.update({
+                where: {
+                    order_no: order_no
+                },
+                data: data
+            }),
+            prisma.pre_procurement_history.update({
+                where: {
+                    order_no: order_no
+                },
+                data: data
+            })
+
+        ])
+        return 'Edited'
     } catch (err: any) {
         console.log(err?.message)
         return { error: true, message: err?.message }
