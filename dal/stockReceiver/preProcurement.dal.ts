@@ -192,6 +192,7 @@ export const getPreProcurementDal = async (req: Request) => {
                 other_description: true,
                 rate: true,
                 quantity: true,
+                total_rate: true,
                 status: {
                     select: {
                         id: true,
