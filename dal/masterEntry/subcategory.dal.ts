@@ -48,7 +48,7 @@ export const getSubcategoryDal = async (req: Request) => {
 export const getSubcategoryByCategoryIdDal = async (req: Request) => {
     const { categoryId } = req.params
     try {
-        const result = await prisma.subcategory_master.findFirst({
+        const result = await prisma.subcategory_master.findMany({
             where: {
                 category_masterId: categoryId
             }
