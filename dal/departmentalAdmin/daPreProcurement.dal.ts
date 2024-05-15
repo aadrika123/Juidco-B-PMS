@@ -126,7 +126,8 @@ export const getPreProcurementDal = async (req: Request) => {
                         status: true
                     }
                 },
-                isEdited: true
+                isEdited: true,
+                remark: true
             }
         })
         totalPage = Math.ceil(count / take)
@@ -226,7 +227,8 @@ export const getPreProcurementByIdDal = async (req: Request) => {
                         status: true
                     }
                 },
-                isEdited: true
+                isEdited: true,
+                remark: true
             }
         })
         return result
@@ -307,7 +309,8 @@ export const getPreProcurementByOrderNoDal = async (req: Request) => {
                         status: true
                     }
                 },
-                isEdited: true
+                isEdited: true,
+                remark: true
             }
         })
         return result
@@ -341,7 +344,8 @@ export const backToSrDal = async (req: Request) => {
                     quantity: true,
                     total_rate: true,
                     statusId: true,
-                    isEdited: true
+                    isEdited: true,
+                    remark: true
                 }
             })
             if (inbox === null) {
@@ -513,7 +517,8 @@ export const releaseForTenderDal = async (req: Request) => {
                     quantity: true,
                     total_rate: true,
                     statusId: true,
-                    isEdited: true
+                    isEdited: true,
+                    remark: true
                 }
             })
             if (inbox === null) {
@@ -677,7 +682,8 @@ export const getPreProcurementOutboxDal = async (req: Request) => {
                         status: true
                     }
                 },
-                isEdited: true
+                isEdited: true,
+                remark: true
             }
         })
         totalPage = Math.ceil(count / take)
@@ -777,7 +783,8 @@ export const getPreProcurementOutboxtByIdDal = async (req: Request) => {
                         status: true
                     }
                 },
-                isEdited: true
+                isEdited: true,
+                remark: true
             }
         })
         return result
@@ -811,7 +818,8 @@ export const rejectDal = async (req: Request) => {
                     quantity: true,
                     total_rate: true,
                     statusId: true,
-                    isEdited: true
+                    isEdited: true,
+                    remark: true
                 }
             })
             if (inbox === null) {
