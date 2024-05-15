@@ -8,7 +8,8 @@ import {
     editPreProcurement,
     releaseForTender,
     getPreProcurementOutbox,
-    getPreProcurementOutboxById
+    getPreProcurementOutboxById,
+    reject
 } from "../../../controller/departmentalAdmin/daPreProcurement.controller";
 
 
@@ -20,6 +21,7 @@ router.get('/pre-procurement/by-order-no/:order_no', getPreProcurementByOrderNo)
 router.post('/pre-procurement/to-sr', backToSr)
 router.post('/pre-procurement/edit', editPreProcurement)
 router.post('/pre-procurement/release-tender', releaseForTender)
+router.post('/pre-procurement/reject', reject)
 
 
 
