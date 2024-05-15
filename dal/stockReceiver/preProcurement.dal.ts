@@ -396,6 +396,19 @@ export const forwardToDaDal = async (req: Request) => {
     const { preProcurement }: { preProcurement: string[] } = req.body
     try {
         preProcurement.map(async (item) => {
+            const status = await prisma.sr_pre_procurement_inbox.findFirst({
+                where: {
+                    id: item
+                },
+                select: {
+                    status: {
+                        select: { status: true }
+                    }
+                }
+            })
+            if (status?.status?.status !== 0) {
+                return
+            }
             const inbox: any = await prisma.sr_pre_procurement_inbox.findFirst({
                 where: {
                     id: item
