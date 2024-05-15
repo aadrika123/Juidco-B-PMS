@@ -7,7 +7,8 @@ import {
     editPreProcurementDal,
     releaseForTenderDal,
     getPreProcurementOutboxDal,
-    getPreProcurementOutboxtByIdDal
+    getPreProcurementOutboxtByIdDal,
+    rejectDal
 } from "../../dal/departmentalAdmin/daPreProcurement.dal";
 
 
@@ -150,6 +151,24 @@ export const getPreProcurementOutboxById = async (req: Request, res: Response) =
         res.status(404).json({
             status: false,
             message: `Error while fetching Pre procurement for DA`,
+            error: result?.message
+        })
+    }
+}
+
+
+export const reject = async (req: Request, res: Response) => {
+    const result: any = await rejectDal(req)
+    if (!result?.error) {
+        res.status(200).json({
+            status: true,
+            message: `Rejected successfully`,
+            data: result
+        })
+    } else {
+        res.status(404).json({
+            status: false,
+            message: `Error while rejecting`,
             error: result?.message
         })
     }
