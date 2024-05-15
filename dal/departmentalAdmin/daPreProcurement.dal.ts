@@ -545,3 +545,233 @@ export const releaseForTenderDal = async (req: Request) => {
         return { error: true, message: err?.message }
     }
 }
+
+
+export const getPreProcurementOutboxDal = async (req: Request) => {
+    const page: number | undefined = Number(req?.query?.page)
+    const take: number | undefined = Number(req?.query?.take)
+    const startIndex: number | undefined = (page - 1) * take
+    const endIndex: number | undefined = startIndex + take
+    let count: number
+    let totalPage: number
+    let pagination: any = {}
+    const whereClause: any = {};
+
+    const search: string = req?.query?.search ? String(req?.query?.search) : ''
+
+    const category: any[] = Array.isArray(req?.query?.category) ? req?.query?.category : [req?.query?.category]
+    const subcategory: any[] = Array.isArray(req?.query?.scategory) ? req?.query?.scategory : [req?.query?.scategory]
+    const brand: any[] = Array.isArray(req?.query?.brand) ? req?.query?.brand : [req?.query?.brand]
+
+    whereClause.OR = [
+        {
+            order_no: {
+                contains: search,
+                mode: 'insensitive'
+            }
+        },
+        {
+            other_description: {
+                contains: search,
+                mode: 'insensitive'
+            }
+        }
+    ];
+
+    if (category[0]) {
+        whereClause.category_masterId = {
+            in: category
+        }
+    }
+    if (subcategory[0]) {
+        whereClause.subcategory_masterId = {
+            in: subcategory
+        }
+    }
+    if (brand[0]) {
+        whereClause.brand_masterId = {
+            in: brand
+        }
+    }
+
+    try {
+        count = await prisma.da_pre_procurement_outbox.count({
+            where: whereClause
+        })
+        const result = await prisma.da_pre_procurement_outbox.findMany({
+            orderBy: {
+                createdAt: 'desc'
+            },
+            where: whereClause,
+            ...(page && { skip: startIndex }),
+            ...(take && { take: take }),
+            select: {
+                id: true,
+                order_no: true,
+                category: {
+                    select: {
+                        id: true,
+                        name: true
+                    }
+                },
+                subcategory: {
+                    select: {
+                        id: true,
+                        name: true
+                    }
+                },
+                brand: {
+                    select: {
+                        id: true,
+                        name: true
+                    }
+                },
+                processor: {
+                    select: {
+                        id: true,
+                        name: true
+                    }
+                },
+                ram: {
+                    select: {
+                        id: true,
+                        capacity: true
+                    }
+                },
+                os: {
+                    select: {
+                        id: true,
+                        name: true
+                    }
+                },
+                rom: {
+                    select: {
+                        id: true,
+                        capacity: true,
+                        type: true
+                    }
+                },
+                graphics: {
+                    select: {
+                        id: true,
+                        name: true,
+                        vram: true
+                    }
+                },
+                other_description: true,
+                rate: true,
+                quantity: true,
+                total_rate: true,
+                status: {
+                    select: {
+                        id: true,
+                        status: true
+                    }
+                }
+            }
+        })
+        totalPage = Math.ceil(count / take)
+        if (endIndex < count) {
+            pagination.next = {
+                page: page + 1,
+                take: take
+            }
+        }
+        if (startIndex > 0) {
+            pagination.prev = {
+                page: page - 1,
+                take: take
+            }
+        }
+        pagination.currentPage = page
+        pagination.currentTake = take
+        pagination.totalPage = totalPage
+        return {
+            data: result,
+            pagination: pagination
+        }
+    } catch (err: any) {
+        console.log(err?.message)
+        return { error: true, message: err?.message }
+    }
+}
+
+
+export const getPreProcurementOutboxtByIdDal = async (req: Request) => {
+    const { id } = req.params
+    try {
+        const result = await prisma.da_pre_procurement_outbox.findFirst({
+            where: {
+                id: id
+            },
+            select: {
+                id: true,
+                order_no: true,
+                category: {
+                    select: {
+                        id: true,
+                        name: true
+                    }
+                },
+                subcategory: {
+                    select: {
+                        id: true,
+                        name: true
+                    }
+                },
+                brand: {
+                    select: {
+                        id: true,
+                        name: true
+                    }
+                },
+                processor: {
+                    select: {
+                        id: true,
+                        name: true
+                    }
+                },
+                ram: {
+                    select: {
+                        id: true,
+                        capacity: true
+                    }
+                },
+                os: {
+                    select: {
+                        id: true,
+                        name: true
+                    }
+                },
+                rom: {
+                    select: {
+                        id: true,
+                        capacity: true,
+                        type: true
+                    }
+                },
+                graphics: {
+                    select: {
+                        id: true,
+                        name: true,
+                        vram: true
+                    }
+                },
+                other_description: true,
+                rate: true,
+                quantity: true,
+                total_rate: true,
+                status: {
+                    select: {
+                        id: true,
+                        status: true
+                    }
+                }
+            }
+        })
+        return result
+    } catch (err: any) {
+        console.log(err?.message)
+        return { error: true, message: err?.message }
+    }
+}

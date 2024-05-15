@@ -5,7 +5,8 @@ import {
     getPreProcurementByIdDal,
     getPreProcurementByOrderNoDal,
     forwardToDaDal,
-    getPreProcurementOutboxDal
+    getPreProcurementOutboxDal,
+    getPreProcurementOutboxByIdDal
 } from "../../dal/stockReceiver/preProcurement.dal";
 
 
@@ -113,6 +114,24 @@ export const getPreProcurementOutbox = async (req: Request, res: Response) => {
         res.status(404).json({
             status: false,
             message: `Error while fetching Pre procurement outbox list`,
+            error: result?.message
+        })
+    }
+}
+
+
+export const getPreProcurementOutboxById = async (req: Request, res: Response) => {
+    const result: any = await getPreProcurementOutboxByIdDal(req)
+    if (!result?.error) {
+        res.status(200).json({
+            status: true,
+            message: `Pre procurement outbox fetched successfully`,
+            data: result
+        })
+    } else {
+        res.status(404).json({
+            status: false,
+            message: `Error while fetching Pre procurement outbox`,
             error: result?.message
         })
     }
