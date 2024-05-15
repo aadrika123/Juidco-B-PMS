@@ -340,6 +340,9 @@ export const backToSrDal = async (req: Request) => {
                     statusId: true,
                 }
             })
+            if (inbox === null) {
+                return
+            }
             inbox.remark = remark
             await prisma.$transaction([
 
@@ -802,6 +805,9 @@ export const rejectDal = async (req: Request) => {
                     statusId: true,
                 }
             })
+            if (inbox === null) {
+                return
+            }
             inbox.remark = remark
             await prisma.$transaction([
 

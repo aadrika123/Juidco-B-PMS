@@ -411,6 +411,9 @@ export const forwardToDaDal = async (req: Request) => {
                     statusId: true,
                 }
             })
+            if (inbox === null) {
+                return
+            }
             const daOutbox: any = await prisma.da_pre_procurement_outbox.count({
                 where: {
                     order_no: inbox?.order_no
