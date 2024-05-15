@@ -198,7 +198,9 @@ export const getPreProcurementDal = async (req: Request) => {
                         id: true,
                         status: true
                     }
-                }
+                },
+                remark: true,
+                isEdited: true
             }
         })
         totalPage = Math.ceil(count / take)
@@ -296,7 +298,9 @@ export const getPreProcurementByIdDal = async (req: Request) => {
                         id: true,
                         status: true
                     }
-                }
+                },
+                isEdited: true,
+                remark: true
             }
         })
         return result
@@ -375,7 +379,9 @@ export const getPreProcurementByOrderNoDal = async (req: Request) => {
                         id: true,
                         status: true
                     }
-                }
+                },
+                isEdited: true,
+                remark: true
             }
         })
         return result
@@ -409,6 +415,8 @@ export const forwardToDaDal = async (req: Request) => {
                     quantity: true,
                     total_rate: true,
                     statusId: true,
+                    isEdited: true,
+                    remark: true
                 }
             })
             if (inbox === null) {
@@ -576,7 +584,9 @@ export const getPreProcurementOutboxDal = async (req: Request) => {
                         id: true,
                         status: true
                     }
-                }
+                },
+                isEdited: true,
+                remark: true
             }
         })
         totalPage = Math.ceil(count / take)
@@ -673,7 +683,9 @@ export const getPreProcurementOutboxByIdDal = async (req: Request) => {
                         id: true,
                         status: true
                     }
-                }
+                },
+                isEdited: true,
+                remark: true
             }
         })
         return result
