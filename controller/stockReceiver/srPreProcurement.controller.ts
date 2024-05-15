@@ -1,5 +1,12 @@
 import { Request, Response } from "express";
-import { createPreProcurementDal, getPreProcurementDal, getPreProcurementByIdDal, getPreProcurementByOrderNoDal, forwardToDaDal } from "../../dal/stockReceiver/preProcurement.dal";
+import {
+    createPreProcurementDal,
+    getPreProcurementDal,
+    getPreProcurementByIdDal,
+    getPreProcurementByOrderNoDal,
+    forwardToDaDal,
+    getPreProcurementOutboxDal
+} from "../../dal/stockReceiver/preProcurement.dal";
 
 
 export const createPreProcurement = async (req: Request, res: Response) => {
@@ -87,6 +94,25 @@ export const forwardToDa = async (req: Request, res: Response) => {
         res.status(404).json({
             status: false,
             message: `Error while forwarding to DA`,
+            error: result?.message
+        })
+    }
+}
+
+
+export const getPreProcurementOutbox = async (req: Request, res: Response) => {
+    const result: any = await getPreProcurementOutboxDal(req)
+    if (!result?.error) {
+        res.status(200).json({
+            status: true,
+            message: `Pre procurement outbox list fetched successfully`,
+            data: result?.data,
+            pagination: result?.pagination
+        })
+    } else {
+        res.status(404).json({
+            status: false,
+            message: `Error while fetching Pre procurement outbox list`,
             error: result?.message
         })
     }

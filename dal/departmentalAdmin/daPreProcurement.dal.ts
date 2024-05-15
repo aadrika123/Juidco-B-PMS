@@ -480,3 +480,68 @@ export const editPreProcurementDal = async (req: Request) => {
         return { error: true, message: err?.message }
     }
 }
+
+
+export const releaseForTenderDal = async (req: Request) => {
+    const { preProcurement }: { preProcurement: string[] } = req.body
+    try {
+        preProcurement.map(async (item) => {
+            const inbox: any = await prisma.da_pre_procurement_inbox.findFirst({
+                where: {
+                    id: item
+                },
+                select: {
+                    order_no: true,
+                    category_masterId: true,
+                    subcategory_masterId: true,
+                    brand_masterId: true,
+                    processor_masterId: true,
+                    ram_masterId: true,
+                    os_masterId: true,
+                    rom_masterId: true,
+                    graphics_masterId: true,
+                    other_description: true,
+                    rate: true,
+                    quantity: true,
+                    total_rate: true,
+                    statusId: true,
+                }
+            })
+            if (inbox === null) {
+                return
+            }
+            await prisma.$transaction([
+
+                prisma.da_pre_procurement_outbox.create({
+                    data: inbox
+                }),
+                prisma.sr_pre_procurement_inbox.create({
+                    data: inbox
+                }),
+                prisma.procurement_status.update({
+                    where: {
+                        id: inbox?.statusId
+                    },
+                    data: {
+                        status: 2
+                    }
+                }),
+                prisma.da_pre_procurement_inbox.delete({
+                    where: {
+                        id: item
+                    },
+                }),
+                prisma.sr_pre_procurement_outbox.delete({
+                    where: {
+                        order_no: inbox?.order_no
+                    },
+                })
+
+            ])
+        })
+        return "Released for tender"
+    } catch (err: any) {
+        console.log(err?.message)
+        return { error: true, message: err?.message }
+    }
+}

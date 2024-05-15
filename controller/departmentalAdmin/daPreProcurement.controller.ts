@@ -1,5 +1,12 @@
 import { Request, Response } from "express";
-import { getPreProcurementDal, getPreProcurementByIdDal, getPreProcurementByOrderNoDal, backToSrDal, editPreProcurementDal } from "../../dal/departmentalAdmin/daPreProcurement.dal";
+import {
+    getPreProcurementDal,
+    getPreProcurementByIdDal,
+    getPreProcurementByOrderNoDal,
+    backToSrDal,
+    editPreProcurementDal,
+    releaseForTenderDal
+} from "../../dal/departmentalAdmin/daPreProcurement.dal";
 
 
 
@@ -87,6 +94,23 @@ export const editPreProcurement = async (req: Request, res: Response) => {
         res.status(404).json({
             status: false,
             message: `Error while editing`,
+            error: result?.message
+        })
+    }
+}
+
+export const releaseForTender = async (req: Request, res: Response) => {
+    const result: any = await releaseForTenderDal(req)
+    if (!result?.error) {
+        res.status(200).json({
+            status: true,
+            message: `Released for tender successfully`,
+            data: result
+        })
+    } else {
+        res.status(404).json({
+            status: false,
+            message: `Error while releasing for tender`,
             error: result?.message
         })
     }
