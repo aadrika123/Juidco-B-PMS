@@ -5,7 +5,9 @@ import {
     getPreProcurementByOrderNoDal,
     backToSrDal,
     editPreProcurementDal,
-    releaseForTenderDal
+    releaseForTenderDal,
+    getPreProcurementOutboxDal,
+    getPreProcurementOutboxtByIdDal
 } from "../../dal/departmentalAdmin/daPreProcurement.dal";
 
 
@@ -111,6 +113,43 @@ export const releaseForTender = async (req: Request, res: Response) => {
         res.status(404).json({
             status: false,
             message: `Error while releasing for tender`,
+            error: result?.message
+        })
+    }
+}
+
+
+export const getPreProcurementOutbox = async (req: Request, res: Response) => {
+    const result: any = await getPreProcurementOutboxDal(req)
+    if (!result?.error) {
+        res.status(200).json({
+            status: true,
+            message: `Pre procurement outbox list for DA fetched successfully`,
+            data: result?.data,
+            pagination: result?.pagination
+        })
+    } else {
+        res.status(404).json({
+            status: false,
+            message: `Error while fetching Pre procurement outbox list for DA`,
+            error: result?.message
+        })
+    }
+}
+
+
+export const getPreProcurementOutboxById = async (req: Request, res: Response) => {
+    const result: any = await getPreProcurementOutboxtByIdDal(req)
+    if (!result?.error) {
+        res.status(200).json({
+            status: true,
+            message: `Pre procurement outbox for DA fetched successfully`,
+            data: result
+        })
+    } else {
+        res.status(404).json({
+            status: false,
+            message: `Error while fetching Pre procurement for DA`,
             error: result?.message
         })
     }
