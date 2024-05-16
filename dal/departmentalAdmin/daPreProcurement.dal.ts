@@ -478,12 +478,12 @@ export const editPreProcurementDal = async (req: Request) => {
                 },
                 data: data
             }),
-            prisma.pre_procurement_history.update({
-                where: {
-                    order_no: order_no
-                },
-                data: data
-            })
+            // prisma.pre_procurement_history.update({
+            //     where: {
+            //         order_no: order_no
+            //     },
+            //     data: data
+            // })
 
         ])
         return 'Edited'
