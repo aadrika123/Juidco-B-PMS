@@ -6,8 +6,11 @@ import {
     getPreProcurementByOrderNoDal,
     forwardToDaDal,
     getPreProcurementOutboxDal,
-    getPreProcurementOutboxByIdDal
+    getPreProcurementOutboxByIdDal,
+    getPreProcurementRejectedDal,
+    getPreProcurementReleasedDal
 } from "../../dal/stockReceiver/preProcurement.dal";
+
 
 
 export const createPreProcurement = async (req: Request, res: Response) => {
@@ -26,6 +29,7 @@ export const createPreProcurement = async (req: Request, res: Response) => {
         })
     }
 }
+
 
 
 export const getPreProcurement = async (req: Request, res: Response) => {
@@ -47,6 +51,7 @@ export const getPreProcurement = async (req: Request, res: Response) => {
 }
 
 
+
 export const getPreProcurementById = async (req: Request, res: Response) => {
     const result: any = await getPreProcurementByIdDal(req)
     if (!result?.error) {
@@ -63,6 +68,7 @@ export const getPreProcurementById = async (req: Request, res: Response) => {
         })
     }
 }
+
 
 
 export const getPreProcurementByOrderNo = async (req: Request, res: Response) => {
@@ -83,6 +89,7 @@ export const getPreProcurementByOrderNo = async (req: Request, res: Response) =>
 }
 
 
+
 export const forwardToDa = async (req: Request, res: Response) => {
     const result: any = await forwardToDaDal(req)
     if (!result?.error) {
@@ -99,6 +106,7 @@ export const forwardToDa = async (req: Request, res: Response) => {
         })
     }
 }
+
 
 
 export const getPreProcurementOutbox = async (req: Request, res: Response) => {
@@ -120,6 +128,7 @@ export const getPreProcurementOutbox = async (req: Request, res: Response) => {
 }
 
 
+
 export const getPreProcurementOutboxById = async (req: Request, res: Response) => {
     const result: any = await getPreProcurementOutboxByIdDal(req)
     if (!result?.error) {
@@ -132,6 +141,46 @@ export const getPreProcurementOutboxById = async (req: Request, res: Response) =
         res.status(404).json({
             status: false,
             message: `Error while fetching Pre procurement outbox`,
+            error: result?.message
+        })
+    }
+}
+
+
+
+export const getPreProcurementRejected = async (req: Request, res: Response) => {
+    const result: any = await getPreProcurementRejectedDal(req)
+    if (!result?.error) {
+        res.status(200).json({
+            status: true,
+            message: `Rejected Pre procurement list fetched successfully`,
+            data: result?.data,
+            pagination: result?.pagination
+        })
+    } else {
+        res.status(404).json({
+            status: false,
+            message: `Error while fetching rejected Pre procurement list`,
+            error: result?.message
+        })
+    }
+}
+
+
+
+export const getPreProcurementReleased = async (req: Request, res: Response) => {
+    const result: any = await getPreProcurementReleasedDal(req)
+    if (!result?.error) {
+        res.status(200).json({
+            status: true,
+            message: `Released Pre procurement list fetched successfully`,
+            data: result?.data,
+            pagination: result?.pagination
+        })
+    } else {
+        res.status(404).json({
+            status: false,
+            message: `Error while fetching released Pre procurement list`,
             error: result?.message
         })
     }
