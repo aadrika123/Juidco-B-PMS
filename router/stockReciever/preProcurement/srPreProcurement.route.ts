@@ -7,12 +7,16 @@ import {
     getPreProcurementById,
     getPreProcurementByOrderNo,
     getPreProcurementOutbox,
-    getPreProcurementOutboxById
+    getPreProcurementOutboxById,
+    getPreProcurementRejected,
+    getPreProcurementReleased
 } from "../../../controller/stockReceiver/srPreProcurement.controller";
 
 
 router.post('/pre-procurement', createPreProcurement)
 router.get('/pre-procurement', getPreProcurement)
+router.get('/pre-procurement/rejected', getPreProcurementRejected)
+router.get('/pre-procurement/released', getPreProcurementReleased)
 router.get('/pre-procurement/outbox', getPreProcurementOutbox)
 router.get('/pre-procurement/outbox/:id', getPreProcurementOutboxById)
 router.get('/pre-procurement/:id', getPreProcurementById)

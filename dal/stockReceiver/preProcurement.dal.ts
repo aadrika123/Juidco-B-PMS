@@ -78,6 +78,7 @@ export const createPreProcurementDal = async (req: Request) => {
 }
 
 
+
 export const getPreProcurementDal = async (req: Request) => {
     const page: number | undefined = Number(req?.query?.page)
     const take: number | undefined = Number(req?.query?.take)
@@ -124,6 +125,18 @@ export const getPreProcurementDal = async (req: Request) => {
             in: brand
         }
     }
+    whereClause.NOT = [
+        {
+            status: {
+                status: -2
+            }
+        },
+        {
+            status: {
+                status: 2
+            }
+        },
+    ]
 
     try {
         count = await prisma.sr_pre_procurement_inbox.count({
@@ -230,6 +243,7 @@ export const getPreProcurementDal = async (req: Request) => {
 }
 
 
+
 export const getPreProcurementByIdDal = async (req: Request) => {
     const { id } = req.params
     try {
@@ -311,6 +325,7 @@ export const getPreProcurementByIdDal = async (req: Request) => {
 }
 
 
+
 export const getPreProcurementByOrderNoDal = async (req: Request) => {
     const { order_no } = req.params
     try {
@@ -390,6 +405,7 @@ export const getPreProcurementByOrderNoDal = async (req: Request) => {
         return { error: true, message: err?.message }
     }
 }
+
 
 
 export const forwardToDaDal = async (req: Request) => {
@@ -475,6 +491,7 @@ export const forwardToDaDal = async (req: Request) => {
         return { error: true, message: err?.message }
     }
 }
+
 
 
 export const getPreProcurementOutboxDal = async (req: Request) => {
@@ -628,6 +645,8 @@ export const getPreProcurementOutboxDal = async (req: Request) => {
     }
 }
 
+
+
 export const getPreProcurementOutboxByIdDal = async (req: Request) => {
     const { id } = req.params
     try {
@@ -702,6 +721,318 @@ export const getPreProcurementOutboxByIdDal = async (req: Request) => {
             }
         })
         return result
+    } catch (err: any) {
+        console.log(err?.message)
+        return { error: true, message: err?.message }
+    }
+}
+
+
+
+export const getPreProcurementRejectedDal = async (req: Request) => {
+    const page: number | undefined = Number(req?.query?.page)
+    const take: number | undefined = Number(req?.query?.take)
+    const startIndex: number | undefined = (page - 1) * take
+    const endIndex: number | undefined = startIndex + take
+    let count: number
+    let totalPage: number
+    let pagination: any = {}
+    const whereClause: any = {};
+
+    const search: string = req?.query?.search ? String(req?.query?.search) : ''
+
+    const category: any[] = Array.isArray(req?.query?.category) ? req?.query?.category : [req?.query?.category]
+    const subcategory: any[] = Array.isArray(req?.query?.scategory) ? req?.query?.scategory : [req?.query?.scategory]
+    const brand: any[] = Array.isArray(req?.query?.brand) ? req?.query?.brand : [req?.query?.brand]
+
+    whereClause.OR = [
+        {
+            order_no: {
+                contains: search,
+                mode: 'insensitive'
+            }
+        },
+        {
+            other_description: {
+                contains: search,
+                mode: 'insensitive'
+            }
+        }
+    ];
+
+    if (category[0]) {
+        whereClause.category_masterId = {
+            in: category
+        }
+    }
+    if (subcategory[0]) {
+        whereClause.subcategory_masterId = {
+            in: subcategory
+        }
+    }
+    if (brand[0]) {
+        whereClause.brand_masterId = {
+            in: brand
+        }
+    }
+    whereClause.status = {
+        status: -2
+    }
+
+    try {
+        count = await prisma.sr_pre_procurement_inbox.count({
+            where: whereClause
+        })
+        const result = await prisma.sr_pre_procurement_inbox.findMany({
+            orderBy: {
+                createdAt: 'desc'
+            },
+            where: whereClause,
+            ...(page && { skip: startIndex }),
+            ...(take && { take: take }),
+            select: {
+                id: true,
+                order_no: true,
+                category: {
+                    select: {
+                        id: true,
+                        name: true
+                    }
+                },
+                subcategory: {
+                    select: {
+                        id: true,
+                        name: true
+                    }
+                },
+                brand: {
+                    select: {
+                        id: true,
+                        name: true
+                    }
+                },
+                processor: {
+                    select: {
+                        id: true,
+                        name: true
+                    }
+                },
+                ram: {
+                    select: {
+                        id: true,
+                        capacity: true
+                    }
+                },
+                os: {
+                    select: {
+                        id: true,
+                        name: true
+                    }
+                },
+                rom: {
+                    select: {
+                        id: true,
+                        capacity: true,
+                        type: true
+                    }
+                },
+                graphics: {
+                    select: {
+                        id: true,
+                        name: true,
+                        vram: true
+                    }
+                },
+                other_description: true,
+                rate: true,
+                quantity: true,
+                total_rate: true,
+                status: {
+                    select: {
+                        id: true,
+                        status: true
+                    }
+                },
+                remark: true,
+                isEdited: true
+            }
+        })
+        totalPage = Math.ceil(count / take)
+        if (endIndex < count) {
+            pagination.next = {
+                page: page + 1,
+                take: take
+            }
+        }
+        if (startIndex > 0) {
+            pagination.prev = {
+                page: page - 1,
+                take: take
+            }
+        }
+        pagination.currentPage = page
+        pagination.currentTake = take
+        pagination.totalPage = totalPage
+        return {
+            data: result,
+            pagination: pagination
+        }
+    } catch (err: any) {
+        console.log(err?.message)
+        return { error: true, message: err?.message }
+    }
+}
+
+
+
+export const getPreProcurementReleasedDal = async (req: Request) => {
+    const page: number | undefined = Number(req?.query?.page)
+    const take: number | undefined = Number(req?.query?.take)
+    const startIndex: number | undefined = (page - 1) * take
+    const endIndex: number | undefined = startIndex + take
+    let count: number
+    let totalPage: number
+    let pagination: any = {}
+    const whereClause: any = {};
+
+    const search: string = req?.query?.search ? String(req?.query?.search) : ''
+
+    const category: any[] = Array.isArray(req?.query?.category) ? req?.query?.category : [req?.query?.category]
+    const subcategory: any[] = Array.isArray(req?.query?.scategory) ? req?.query?.scategory : [req?.query?.scategory]
+    const brand: any[] = Array.isArray(req?.query?.brand) ? req?.query?.brand : [req?.query?.brand]
+
+    whereClause.OR = [
+        {
+            order_no: {
+                contains: search,
+                mode: 'insensitive'
+            }
+        },
+        {
+            other_description: {
+                contains: search,
+                mode: 'insensitive'
+            }
+        }
+    ];
+
+    if (category[0]) {
+        whereClause.category_masterId = {
+            in: category
+        }
+    }
+    if (subcategory[0]) {
+        whereClause.subcategory_masterId = {
+            in: subcategory
+        }
+    }
+    if (brand[0]) {
+        whereClause.brand_masterId = {
+            in: brand
+        }
+    }
+    whereClause.status = {
+        status: 2
+    }
+
+    try {
+        count = await prisma.sr_pre_procurement_inbox.count({
+            where: whereClause
+        })
+        const result = await prisma.sr_pre_procurement_inbox.findMany({
+            orderBy: {
+                createdAt: 'desc'
+            },
+            where: whereClause,
+            ...(page && { skip: startIndex }),
+            ...(take && { take: take }),
+            select: {
+                id: true,
+                order_no: true,
+                category: {
+                    select: {
+                        id: true,
+                        name: true
+                    }
+                },
+                subcategory: {
+                    select: {
+                        id: true,
+                        name: true
+                    }
+                },
+                brand: {
+                    select: {
+                        id: true,
+                        name: true
+                    }
+                },
+                processor: {
+                    select: {
+                        id: true,
+                        name: true
+                    }
+                },
+                ram: {
+                    select: {
+                        id: true,
+                        capacity: true
+                    }
+                },
+                os: {
+                    select: {
+                        id: true,
+                        name: true
+                    }
+                },
+                rom: {
+                    select: {
+                        id: true,
+                        capacity: true,
+                        type: true
+                    }
+                },
+                graphics: {
+                    select: {
+                        id: true,
+                        name: true,
+                        vram: true
+                    }
+                },
+                other_description: true,
+                rate: true,
+                quantity: true,
+                total_rate: true,
+                status: {
+                    select: {
+                        id: true,
+                        status: true
+                    }
+                },
+                remark: true,
+                isEdited: true
+            }
+        })
+        totalPage = Math.ceil(count / take)
+        if (endIndex < count) {
+            pagination.next = {
+                page: page + 1,
+                take: take
+            }
+        }
+        if (startIndex > 0) {
+            pagination.prev = {
+                page: page - 1,
+                take: take
+            }
+        }
+        pagination.currentPage = page
+        pagination.currentTake = take
+        pagination.totalPage = totalPage
+        return {
+            data: result,
+            pagination: pagination
+        }
     } catch (err: any) {
         console.log(err?.message)
         return { error: true, message: err?.message }
