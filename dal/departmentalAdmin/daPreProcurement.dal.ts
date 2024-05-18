@@ -127,7 +127,16 @@ export const getPreProcurementDal = async (req: Request) => {
                     }
                 },
                 isEdited: true,
-                remark: true
+                remark: true,
+                colour: true,
+                material: true,
+                dimension: true,
+                room_type: true,
+                included_components: true,
+                size: true,
+                recomended_uses: true,
+                bristle: true,
+                weight: true
             }
         })
         totalPage = Math.ceil(count / take)
@@ -228,7 +237,16 @@ export const getPreProcurementByIdDal = async (req: Request) => {
                     }
                 },
                 isEdited: true,
-                remark: true
+                remark: true,
+                colour: true,
+                material: true,
+                dimension: true,
+                room_type: true,
+                included_components: true,
+                size: true,
+                recomended_uses: true,
+                bristle: true,
+                weight: true
             }
         })
         return result
@@ -310,7 +328,16 @@ export const getPreProcurementByOrderNoDal = async (req: Request) => {
                     }
                 },
                 isEdited: true,
-                remark: true
+                remark: true,
+                colour: true,
+                material: true,
+                dimension: true,
+                room_type: true,
+                included_components: true,
+                size: true,
+                recomended_uses: true,
+                bristle: true,
+                weight: true
             }
         })
         return result
@@ -345,7 +372,16 @@ export const backToSrDal = async (req: Request) => {
                     total_rate: true,
                     statusId: true,
                     isEdited: true,
-                    remark: true
+                    remark: true,
+                    colour: true,
+                    material: true,
+                    dimension: true,
+                    room_type: true,
+                    included_components: true,
+                    size: true,
+                    recomended_uses: true,
+                    bristle: true,
+                    weight: true
                 }
             })
             if (inbox === null) {
@@ -405,7 +441,16 @@ export const editPreProcurementDal = async (req: Request) => {
         rate,
         quantity,
         total_rate,
-        remark
+        remark,
+        colour,
+        material,
+        dimension,
+        room_type,
+        included_components,
+        size,
+        recomended_uses,
+        bristle,
+        weight
     } = req.body
 
 
@@ -423,7 +468,16 @@ export const editPreProcurementDal = async (req: Request) => {
         quantity: Number(quantity),
         total_rate: Number(total_rate),
         remark: remark,
-        isEdited: true
+        isEdited: true,
+        colour: colour,
+        material: material,
+        dimension: dimension,
+        room_type: room_type,
+        included_components: included_components,
+        size: size,
+        recomended_uses: recomended_uses,
+        bristle: bristle,
+        weight: weight
     }
     if (Number(rate) && Number(quantity)) {
         if (Number(rate) * Number(quantity) !== Number(total_rate)) {
@@ -451,7 +505,16 @@ export const editPreProcurementDal = async (req: Request) => {
             statusId: true,
             total_rate: true,
             remark: true,
-            isEdited: true
+            isEdited: true,
+            colour: true,
+            material: true,
+            dimension: true,
+            room_type: true,
+            included_components: true,
+            size: true,
+            recomended_uses: true,
+            bristle: true,
+            weight: true
         }
     })
     const historyExistance = await prisma.pre_procurement_history.count({
@@ -518,7 +581,16 @@ export const releaseForTenderDal = async (req: Request) => {
                     total_rate: true,
                     statusId: true,
                     isEdited: true,
-                    remark: true
+                    remark: true,
+                    colour: true,
+                    material: true,
+                    dimension: true,
+                    room_type: true,
+                    included_components: true,
+                    size: true,
+                    recomended_uses: true,
+                    bristle: true,
+                    weight: true
                 }
             })
             if (inbox === null) {
@@ -683,7 +755,16 @@ export const getPreProcurementOutboxDal = async (req: Request) => {
                     }
                 },
                 isEdited: true,
-                remark: true
+                remark: true,
+                colour: true,
+                material: true,
+                dimension: true,
+                room_type: true,
+                included_components: true,
+                size: true,
+                recomended_uses: true,
+                bristle: true,
+                weight: true
             }
         })
         totalPage = Math.ceil(count / take)
@@ -784,7 +865,16 @@ export const getPreProcurementOutboxtByIdDal = async (req: Request) => {
                     }
                 },
                 isEdited: true,
-                remark: true
+                remark: true,
+                colour: true,
+                material: true,
+                dimension: true,
+                room_type: true,
+                included_components: true,
+                size: true,
+                recomended_uses: true,
+                bristle: true,
+                weight: true
             }
         })
         return result
@@ -819,7 +909,16 @@ export const rejectDal = async (req: Request) => {
                     total_rate: true,
                     statusId: true,
                     isEdited: true,
-                    remark: true
+                    remark: true,
+                    colour: true,
+                    material: true,
+                    dimension: true,
+                    room_type: true,
+                    included_components: true,
+                    size: true,
+                    recomended_uses: true,
+                    bristle: true,
+                    weight: true
                 }
             })
             if (inbox === null) {
