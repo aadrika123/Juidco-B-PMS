@@ -20,7 +20,16 @@ export const createPreProcurementDal = async (req: Request) => {
         other_description,
         rate,
         quantity,
-        total_rate
+        total_rate,
+        colour,
+        material,
+        dimension,
+        room_type,
+        included_components,
+        size,
+        recomended_uses,
+        bristle,
+        weight
     } = req.body
 
     order_no = generateOrderNumber()
@@ -58,7 +67,16 @@ export const createPreProcurementDal = async (req: Request) => {
                 order_no: order_no,
                 status: 0
             }
-        }
+        },
+        colour: colour,
+        material: material,
+        dimension: dimension,
+        room_type: room_type,
+        included_components: included_components,
+        size: size,
+        recomended_uses: recomended_uses,
+        bristle: bristle,
+        weight: weight
     }
     if (Number(rate) && Number(quantity)) {
         if (Number(rate) * Number(quantity) !== Number(total_rate)) {
@@ -213,7 +231,16 @@ export const getPreProcurementDal = async (req: Request) => {
                     }
                 },
                 remark: true,
-                isEdited: true
+                isEdited: true,
+                colour: true,
+                material: true,
+                dimension: true,
+                room_type: true,
+                included_components: true,
+                size: true,
+                recomended_uses: true,
+                bristle: true,
+                weight: true
             }
         })
         totalPage = Math.ceil(count / take)
@@ -307,6 +334,7 @@ export const getPreProcurementByIdDal = async (req: Request) => {
                 other_description: true,
                 rate: true,
                 quantity: true,
+                total_rate: true,
                 status: {
                     select: {
                         id: true,
@@ -314,7 +342,16 @@ export const getPreProcurementByIdDal = async (req: Request) => {
                     }
                 },
                 isEdited: true,
-                remark: true
+                remark: true,
+                colour: true,
+                material: true,
+                dimension: true,
+                room_type: true,
+                included_components: true,
+                size: true,
+                recomended_uses: true,
+                bristle: true,
+                weight: true
             }
         })
         return result
@@ -396,7 +433,16 @@ export const getPreProcurementByOrderNoDal = async (req: Request) => {
                     }
                 },
                 isEdited: true,
-                remark: true
+                remark: true,
+                colour: true,
+                material: true,
+                dimension: true,
+                room_type: true,
+                included_components: true,
+                size: true,
+                recomended_uses: true,
+                bristle: true,
+                weight: true
             }
         })
         return result
@@ -445,7 +491,16 @@ export const forwardToDaDal = async (req: Request) => {
                     total_rate: true,
                     statusId: true,
                     isEdited: true,
-                    remark: true
+                    remark: true,
+                    colour: true,
+                    material: true,
+                    dimension: true,
+                    room_type: true,
+                    included_components: true,
+                    size: true,
+                    recomended_uses: true,
+                    bristle: true,
+                    weight: true
                 }
             })
             if (inbox === null) {
@@ -616,7 +671,16 @@ export const getPreProcurementOutboxDal = async (req: Request) => {
                     }
                 },
                 isEdited: true,
-                remark: true
+                remark: true,
+                colour: true,
+                material: true,
+                dimension: true,
+                room_type: true,
+                included_components: true,
+                size: true,
+                recomended_uses: true,
+                bristle: true,
+                weight: true
             }
         })
         totalPage = Math.ceil(count / take)
@@ -717,7 +781,16 @@ export const getPreProcurementOutboxByIdDal = async (req: Request) => {
                     }
                 },
                 isEdited: true,
-                remark: true
+                remark: true,
+                colour: true,
+                material: true,
+                dimension: true,
+                room_type: true,
+                included_components: true,
+                size: true,
+                recomended_uses: true,
+                bristle: true,
+                weight: true
             }
         })
         return result
@@ -854,7 +927,16 @@ export const getPreProcurementRejectedDal = async (req: Request) => {
                     }
                 },
                 remark: true,
-                isEdited: true
+                isEdited: true,
+                colour: true,
+                material: true,
+                dimension: true,
+                room_type: true,
+                included_components: true,
+                size: true,
+                recomended_uses: true,
+                bristle: true,
+                weight: true
             }
         })
         totalPage = Math.ceil(count / take)
@@ -1010,7 +1092,16 @@ export const getPreProcurementReleasedDal = async (req: Request) => {
                     }
                 },
                 remark: true,
-                isEdited: true
+                isEdited: true,
+                colour: true,
+                material: true,
+                dimension: true,
+                room_type: true,
+                included_components: true,
+                size: true,
+                recomended_uses: true,
+                bristle: true,
+                weight: true
             }
         })
         totalPage = Math.ceil(count / take)
