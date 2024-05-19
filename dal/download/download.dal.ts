@@ -42,44 +42,12 @@ export const exportCsvDal = async (req: Request) => {
                     name: true
                 }
             },
-            brand: {
-                select: {
-                    id: true,
-                    name: true
-                }
-            },
-            processor: {
-                select: {
-                    id: true,
-                    name: true
-                }
-            },
-            ram: {
-                select: {
-                    id: true,
-                    capacity: true
-                }
-            },
-            os: {
-                select: {
-                    id: true,
-                    name: true
-                }
-            },
-            rom: {
-                select: {
-                    id: true,
-                    capacity: true,
-                    type: true
-                }
-            },
-            graphics: {
-                select: {
-                    id: true,
-                    name: true,
-                    vram: true
-                }
-            },
+            brand: true,
+            processor: true,
+            ram: true,
+            os: true,
+            rom: true,
+            graphics: true,
             other_description: true,
             rate: true,
             quantity: true,
