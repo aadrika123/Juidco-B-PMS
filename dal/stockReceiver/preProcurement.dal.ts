@@ -29,7 +29,8 @@ export const createPreProcurementDal = async (req: Request) => {
         size,
         recomended_uses,
         bristle,
-        weight
+        weight,
+        number_of_items
     } = req.body
 
     order_no = generateOrderNumber()
@@ -76,7 +77,8 @@ export const createPreProcurementDal = async (req: Request) => {
         size: size,
         recomended_uses: recomended_uses,
         bristle: bristle,
-        weight: weight
+        weight: weight,
+        number_of_items: Number(number_of_items)
     }
     if (Number(rate) && Number(quantity)) {
         if (Number(rate) * Number(quantity) !== Number(total_rate)) {
@@ -240,7 +242,8 @@ export const getPreProcurementDal = async (req: Request) => {
                 size: true,
                 recomended_uses: true,
                 bristle: true,
-                weight: true
+                weight: true,
+                number_of_items: true
             }
         })
         totalPage = Math.ceil(count / take)
@@ -351,7 +354,8 @@ export const getPreProcurementByIdDal = async (req: Request) => {
                 size: true,
                 recomended_uses: true,
                 bristle: true,
-                weight: true
+                weight: true,
+                number_of_items: true
             }
         })
         return result
@@ -442,7 +446,8 @@ export const getPreProcurementByOrderNoDal = async (req: Request) => {
                 size: true,
                 recomended_uses: true,
                 bristle: true,
-                weight: true
+                weight: true,
+                number_of_items: true
             }
         })
         return result
@@ -500,7 +505,8 @@ export const forwardToDaDal = async (req: Request) => {
                     size: true,
                     recomended_uses: true,
                     bristle: true,
-                    weight: true
+                    weight: true,
+                    number_of_items: true
                 }
             })
             if (inbox === null) {
@@ -680,7 +686,8 @@ export const getPreProcurementOutboxDal = async (req: Request) => {
                 size: true,
                 recomended_uses: true,
                 bristle: true,
-                weight: true
+                weight: true,
+                number_of_items: true
             }
         })
         totalPage = Math.ceil(count / take)
@@ -790,7 +797,8 @@ export const getPreProcurementOutboxByIdDal = async (req: Request) => {
                 size: true,
                 recomended_uses: true,
                 bristle: true,
-                weight: true
+                weight: true,
+                number_of_items: true
             }
         })
         return result
@@ -936,7 +944,8 @@ export const getPreProcurementRejectedDal = async (req: Request) => {
                 size: true,
                 recomended_uses: true,
                 bristle: true,
-                weight: true
+                weight: true,
+                number_of_items: true
             }
         })
         totalPage = Math.ceil(count / take)
@@ -1101,7 +1110,8 @@ export const getPreProcurementReleasedDal = async (req: Request) => {
                 size: true,
                 recomended_uses: true,
                 bristle: true,
-                weight: true
+                weight: true,
+                number_of_items: true
             }
         })
         totalPage = Math.ceil(count / take)

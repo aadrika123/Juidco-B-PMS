@@ -91,7 +91,17 @@ export const exportCsvDal = async (req: Request) => {
                 }
             },
             remark: true,
-            isEdited: true
+            isEdited: true,
+            colour: true,
+            material: true,
+            dimension: true,
+            room_type: true,
+            included_components: true,
+            size: true,
+            recomended_uses: true,
+            bristle: true,
+            weight: true,
+            number_of_items: true
         }
     }
 
@@ -142,6 +152,16 @@ export const exportCsvDal = async (req: Request) => {
             ...(item?.os !== null && { "OS": item?.os?.name }),
             ...(item?.rom !== null && { "ROM": item?.rom?.capacity }),
             ...(item?.graphics !== null && { "Graphics": item?.graphics?.name }),
+            ...(item?.colour !== null && { "Colour": item?.colour }),
+            ...(item?.material !== null && { "Material": item?.material }),
+            ...(item?.dimension !== null && { "Dimension": item?.dimension }),
+            ...(item?.room_type !== null && { "Room Type": item?.room_type }),
+            ...(item?.included_components !== null && { "Included Components": item?.included_components }),
+            ...(item?.size !== null && { "Size": item?.size }),
+            ...(item?.recomended_uses !== null && { "Recomended Uses": item?.recomended_uses }),
+            ...(item?.bristle !== null && { "Bristle": item?.bristle }),
+            ...(item?.weight !== null && { "Weight": item?.weight }),
+            ...(item?.number_of_items !== null && { "Number of Items": item?.number_of_items }),
             "Rate": item?.rate,
             "Quantity": item?.quantity,
             "Total Rate": item?.total_rate,
