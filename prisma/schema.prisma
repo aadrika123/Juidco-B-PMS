@@ -70,83 +70,53 @@ model item_master {
 }
 
 model brand_master {
-    id                        String                      @id @default(uuid())
-    name                      String                      @unique
-    createdAt                 DateTime                    @default(now())
-    updatedAt                 DateTime                    @updatedAt
-    item_master               item_master[]
-    sr_pre_procurement        sr_pre_procurement_inbox[]
-    sr_pre_procurement_outbox sr_pre_procurement_outbox[]
-    da_pre_procurement_inbox  da_pre_procurement_inbox[]
-    da_pre_procurement_outbox da_pre_procurement_outbox[]
-    pre_procurement_history   pre_procurement_history[]
+    id          String        @id @default(uuid())
+    name        String        @unique
+    createdAt   DateTime      @default(now())
+    updatedAt   DateTime      @updatedAt
+    item_master item_master[]
 }
 
 model processor_master {
-    id                        String                      @id @default(uuid())
-    name                      String
-    createdAt                 DateTime                    @default(now())
-    updatedAt                 DateTime                    @updatedAt
-    item_master               item_master[]
-    sr_pre_procurement        sr_pre_procurement_inbox[]
-    sr_pre_procurement_outbox sr_pre_procurement_outbox[]
-    da_pre_procurement_inbox  da_pre_procurement_inbox[]
-    da_pre_procurement_outbox da_pre_procurement_outbox[]
-    pre_procurement_history   pre_procurement_history[]
+    id          String        @id @default(uuid())
+    name        String
+    createdAt   DateTime      @default(now())
+    updatedAt   DateTime      @updatedAt
+    item_master item_master[]
 }
 
 model ram_master {
-    id                        String                      @id @default(uuid())
-    capacity                  String
-    createdAt                 DateTime                    @default(now())
-    updatedAt                 DateTime                    @updatedAt
-    item_master               item_master[]
-    sr_pre_procurement        sr_pre_procurement_inbox[]
-    sr_pre_procurement_outbox sr_pre_procurement_outbox[]
-    da_pre_procurement_inbox  da_pre_procurement_inbox[]
-    da_pre_procurement_outbox da_pre_procurement_outbox[]
-    pre_procurement_history   pre_procurement_history[]
+    id          String        @id @default(uuid())
+    capacity    String
+    createdAt   DateTime      @default(now())
+    updatedAt   DateTime      @updatedAt
+    item_master item_master[]
 }
 
 model os_master {
-    id                        String                      @id @default(uuid())
-    name                      String
-    createdAt                 DateTime                    @default(now())
-    updatedAt                 DateTime                    @updatedAt
-    item_master               item_master[]
-    sr_pre_procurement        sr_pre_procurement_inbox[]
-    sr_pre_procurement_outbox sr_pre_procurement_outbox[]
-    da_pre_procurement_inbox  da_pre_procurement_inbox[]
-    da_pre_procurement_outbox da_pre_procurement_outbox[]
-    pre_procurement_history   pre_procurement_history[]
+    id          String        @id @default(uuid())
+    name        String
+    createdAt   DateTime      @default(now())
+    updatedAt   DateTime      @updatedAt
+    item_master item_master[]
 }
 
 model rom_master {
-    id                        String                      @id @default(uuid())
-    capacity                  String
-    type                      RomType?
-    createdAt                 DateTime                    @default(now())
-    updatedAt                 DateTime                    @updatedAt
-    item_master               item_master[]
-    sr_pre_procurement        sr_pre_procurement_inbox[]
-    sr_pre_procurement_outbox sr_pre_procurement_outbox[]
-    da_pre_procurement_inbox  da_pre_procurement_inbox[]
-    da_pre_procurement_outbox da_pre_procurement_outbox[]
-    pre_procurement_history   pre_procurement_history[]
+    id          String        @id @default(uuid())
+    capacity    String
+    type        RomType?
+    createdAt   DateTime      @default(now())
+    updatedAt   DateTime      @updatedAt
+    item_master item_master[]
 }
 
 model graphics_master {
-    id                        String                      @id @default(uuid())
-    name                      String
-    vram                      String
-    createdAt                 DateTime                    @default(now())
-    updatedAt                 DateTime                    @updatedAt
-    item_master               item_master[]
-    sr_pre_procurement        sr_pre_procurement_inbox[]
-    sr_pre_procurement_outbox sr_pre_procurement_outbox[]
-    da_pre_procurement_inbox  da_pre_procurement_inbox[]
-    da_pre_procurement_outbox da_pre_procurement_outbox[]
-    pre_procurement_history   pre_procurement_history[]
+    id          String        @id @default(uuid())
+    name        String
+    vram        String
+    createdAt   DateTime      @default(now())
+    updatedAt   DateTime      @updatedAt
+    item_master item_master[]
 }
 
 // pre-procurement=======================================================================================================================================================
@@ -164,34 +134,28 @@ model procurement_status {
 }
 
 model sr_pre_procurement_inbox {
-    id                   String             @id @default(uuid())
-    order_no             String             @unique
-    category             category_master    @relation(fields: [category_masterId], references: [id])
-    category_masterId    String
-    subcategory          subcategory_master @relation(fields: [subcategory_masterId], references: [id])
-    subcategory_masterId String
-    brand                brand_master?      @relation(fields: [brand_masterId], references: [id])
-    brand_masterId       String?
-    processor            processor_master?  @relation(fields: [processor_masterId], references: [id])
-    processor_masterId   String?
-    ram                  ram_master?        @relation(fields: [ram_masterId], references: [id])
-    ram_masterId         String?
-    os                   os_master?         @relation(fields: [os_masterId], references: [id])
-    os_masterId          String?
-    rom                  rom_master?        @relation(fields: [rom_masterId], references: [id])
-    rom_masterId         String?
-    graphics             graphics_master?   @relation(fields: [graphics_masterId], references: [id])
-    graphics_masterId    String?
+    id                   String              @id @default(uuid())
+    order_no             String              @unique
+    category             category_master?    @relation(fields: [category_masterId], references: [id])
+    category_masterId    String?
+    subcategory          subcategory_master? @relation(fields: [subcategory_masterId], references: [id])
+    subcategory_masterId String?
+    brand                String?
+    processor            String?
+    ram                  String?
+    os                   String?
+    rom                  String?
+    graphics             String?
     other_description    String?
     rate                 Int?
     quantity             Int?
     total_rate           Int?
-    status               procurement_status @relation(fields: [statusId], references: [id])
-    statusId             String             @unique
+    status               procurement_status  @relation(fields: [statusId], references: [id])
+    statusId             String              @unique
     remark               String?
-    isEdited             Boolean            @default(false)
-    createdAt            DateTime           @default(now())
-    updatedAt            DateTime           @updatedAt
+    isEdited             Boolean             @default(false)
+    createdAt            DateTime            @default(now())
+    updatedAt            DateTime            @updatedAt
     colour               String?
     material             String?
     dimension            String?
@@ -211,18 +175,12 @@ model pre_procurement_history {
     category_masterId    String
     subcategory          subcategory_master @relation(fields: [subcategory_masterId], references: [id])
     subcategory_masterId String
-    brand                brand_master?      @relation(fields: [brand_masterId], references: [id])
-    brand_masterId       String?
-    processor            processor_master?  @relation(fields: [processor_masterId], references: [id])
-    processor_masterId   String?
-    ram                  ram_master?        @relation(fields: [ram_masterId], references: [id])
-    ram_masterId         String?
-    os                   os_master?         @relation(fields: [os_masterId], references: [id])
-    os_masterId          String?
-    rom                  rom_master?        @relation(fields: [rom_masterId], references: [id])
-    rom_masterId         String?
-    graphics             graphics_master?   @relation(fields: [graphics_masterId], references: [id])
-    graphics_masterId    String?
+    brand                String?
+    processor            String?
+    ram                  String?
+    os                   String?
+    rom                  String?
+    graphics             String?
     other_description    String?
     rate                 Int?
     quantity             Int?
@@ -252,18 +210,12 @@ model sr_pre_procurement_outbox {
     category_masterId    String
     subcategory          subcategory_master @relation(fields: [subcategory_masterId], references: [id])
     subcategory_masterId String
-    brand                brand_master?      @relation(fields: [brand_masterId], references: [id])
-    brand_masterId       String?
-    processor            processor_master?  @relation(fields: [processor_masterId], references: [id])
-    processor_masterId   String?
-    ram                  ram_master?        @relation(fields: [ram_masterId], references: [id])
-    ram_masterId         String?
-    os                   os_master?         @relation(fields: [os_masterId], references: [id])
-    os_masterId          String?
-    rom                  rom_master?        @relation(fields: [rom_masterId], references: [id])
-    rom_masterId         String?
-    graphics             graphics_master?   @relation(fields: [graphics_masterId], references: [id])
-    graphics_masterId    String?
+    brand                String?
+    processor            String?
+    ram                  String?
+    os                   String?
+    rom                  String?
+    graphics             String?
     other_description    String?
     rate                 Int?
     quantity             Int?
@@ -293,18 +245,12 @@ model da_pre_procurement_inbox {
     category_masterId    String
     subcategory          subcategory_master @relation(fields: [subcategory_masterId], references: [id])
     subcategory_masterId String
-    brand                brand_master?      @relation(fields: [brand_masterId], references: [id])
-    brand_masterId       String?
-    processor            processor_master?  @relation(fields: [processor_masterId], references: [id])
-    processor_masterId   String?
-    ram                  ram_master?        @relation(fields: [ram_masterId], references: [id])
-    ram_masterId         String?
-    os                   os_master?         @relation(fields: [os_masterId], references: [id])
-    os_masterId          String?
-    rom                  rom_master?        @relation(fields: [rom_masterId], references: [id])
-    rom_masterId         String?
-    graphics             graphics_master?   @relation(fields: [graphics_masterId], references: [id])
-    graphics_masterId    String?
+    brand                String?
+    processor            String?
+    ram                  String?
+    os                   String?
+    rom                  String?
+    graphics             String?
     other_description    String?
     rate                 Int?
     quantity             Int?
@@ -334,18 +280,12 @@ model da_pre_procurement_outbox {
     category_masterId    String
     subcategory          subcategory_master @relation(fields: [subcategory_masterId], references: [id])
     subcategory_masterId String
-    brand                brand_master?      @relation(fields: [brand_masterId], references: [id])
-    brand_masterId       String?
-    processor            processor_master?  @relation(fields: [processor_masterId], references: [id])
-    processor_masterId   String?
-    ram                  ram_master?        @relation(fields: [ram_masterId], references: [id])
-    ram_masterId         String?
-    os                   os_master?         @relation(fields: [os_masterId], references: [id])
-    os_masterId          String?
-    rom                  rom_master?        @relation(fields: [rom_masterId], references: [id])
-    rom_masterId         String?
-    graphics             graphics_master?   @relation(fields: [graphics_masterId], references: [id])
-    graphics_masterId    String?
+    brand                String?
+    processor            String?
+    ram                  String?
+    os                   String?
+    rom                  String?
+    graphics             String?
     other_description    String?
     rate                 Int?
     quantity             Int?

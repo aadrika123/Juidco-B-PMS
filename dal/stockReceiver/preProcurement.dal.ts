@@ -52,12 +52,12 @@ export const createPreProcurementDal = async (req: Request) => {
     const data: any = {
         category: { connect: { id: category } },
         subcategory: { connect: { id: subcategory } },
-        brand: { connect: { id: brand } },
-        processor: { connect: { id: processor } },
-        ram: { connect: { id: ram } },
-        os: { connect: { id: os } },
-        rom: { connect: { id: rom } },
-        graphics: { connect: { id: graphics } },
+        brand: brand,
+        processor: processor,
+        ram: ram,
+        os: os,
+        rom: rom,
+        graphics: graphics,
         other_description: other_description,
         order_no: order_no,
         rate: Number(rate),
@@ -131,17 +131,17 @@ export const getPreProcurementDal = async (req: Request) => {
     ];
 
     if (category[0]) {
-        whereClause.category_masterId = {
+        whereClause.category = {
             in: category
         }
     }
     if (subcategory[0]) {
-        whereClause.subcategory_masterId = {
+        whereClause.subcategory = {
             in: subcategory
         }
     }
     if (brand[0]) {
-        whereClause.brand_masterId = {
+        whereClause.brand = {
             in: brand
         }
     }
@@ -184,44 +184,12 @@ export const getPreProcurementDal = async (req: Request) => {
                         name: true
                     }
                 },
-                brand: {
-                    select: {
-                        id: true,
-                        name: true
-                    }
-                },
-                processor: {
-                    select: {
-                        id: true,
-                        name: true
-                    }
-                },
-                ram: {
-                    select: {
-                        id: true,
-                        capacity: true
-                    }
-                },
-                os: {
-                    select: {
-                        id: true,
-                        name: true
-                    }
-                },
-                rom: {
-                    select: {
-                        id: true,
-                        capacity: true,
-                        type: true
-                    }
-                },
-                graphics: {
-                    select: {
-                        id: true,
-                        name: true,
-                        vram: true
-                    }
-                },
+                brand: true,
+                processor: true,
+                ram: true,
+                os: true,
+                rom: true,
+                graphics: true,
                 other_description: true,
                 rate: true,
                 quantity: true,
@@ -296,44 +264,12 @@ export const getPreProcurementByIdDal = async (req: Request) => {
                         name: true
                     }
                 },
-                brand: {
-                    select: {
-                        id: true,
-                        name: true
-                    }
-                },
-                processor: {
-                    select: {
-                        id: true,
-                        name: true
-                    }
-                },
-                ram: {
-                    select: {
-                        id: true,
-                        capacity: true
-                    }
-                },
-                os: {
-                    select: {
-                        id: true,
-                        name: true
-                    }
-                },
-                rom: {
-                    select: {
-                        id: true,
-                        capacity: true,
-                        type: true
-                    }
-                },
-                graphics: {
-                    select: {
-                        id: true,
-                        name: true,
-                        vram: true
-                    }
-                },
+                brand: true,
+                processor: true,
+                ram: true,
+                os: true,
+                rom: true,
+                graphics: true,
                 other_description: true,
                 rate: true,
                 quantity: true,
@@ -389,44 +325,12 @@ export const getPreProcurementByOrderNoDal = async (req: Request) => {
                         name: true
                     }
                 },
-                brand: {
-                    select: {
-                        id: true,
-                        name: true
-                    }
-                },
-                processor: {
-                    select: {
-                        id: true,
-                        name: true
-                    }
-                },
-                ram: {
-                    select: {
-                        id: true,
-                        capacity: true
-                    }
-                },
-                os: {
-                    select: {
-                        id: true,
-                        name: true
-                    }
-                },
-                rom: {
-                    select: {
-                        id: true,
-                        capacity: true,
-                        type: true
-                    }
-                },
-                graphics: {
-                    select: {
-                        id: true,
-                        name: true,
-                        vram: true
-                    }
-                },
+                brand: true,
+                processor: true,
+                ram: true,
+                os: true,
+                rom: true,
+                graphics: true,
                 other_description: true,
                 rate: true,
                 quantity: true,
@@ -484,12 +388,12 @@ export const forwardToDaDal = async (req: Request) => {
                     order_no: true,
                     category_masterId: true,
                     subcategory_masterId: true,
-                    brand_masterId: true,
-                    processor_masterId: true,
-                    ram_masterId: true,
-                    os_masterId: true,
-                    rom_masterId: true,
-                    graphics_masterId: true,
+                    brand: true,
+                    processor: true,
+                    ram: true,
+                    os: true,
+                    rom: true,
+                    graphics: true,
                     other_description: true,
                     rate: true,
                     quantity: true,
@@ -628,44 +532,12 @@ export const getPreProcurementOutboxDal = async (req: Request) => {
                         name: true
                     }
                 },
-                brand: {
-                    select: {
-                        id: true,
-                        name: true
-                    }
-                },
-                processor: {
-                    select: {
-                        id: true,
-                        name: true
-                    }
-                },
-                ram: {
-                    select: {
-                        id: true,
-                        capacity: true
-                    }
-                },
-                os: {
-                    select: {
-                        id: true,
-                        name: true
-                    }
-                },
-                rom: {
-                    select: {
-                        id: true,
-                        capacity: true,
-                        type: true
-                    }
-                },
-                graphics: {
-                    select: {
-                        id: true,
-                        name: true,
-                        vram: true
-                    }
-                },
+                brand: true,
+                processor: true,
+                ram: true,
+                os: true,
+                rom: true,
+                graphics: true,
                 other_description: true,
                 rate: true,
                 quantity: true,
@@ -740,44 +612,12 @@ export const getPreProcurementOutboxByIdDal = async (req: Request) => {
                         name: true
                     }
                 },
-                brand: {
-                    select: {
-                        id: true,
-                        name: true
-                    }
-                },
-                processor: {
-                    select: {
-                        id: true,
-                        name: true
-                    }
-                },
-                ram: {
-                    select: {
-                        id: true,
-                        capacity: true
-                    }
-                },
-                os: {
-                    select: {
-                        id: true,
-                        name: true
-                    }
-                },
-                rom: {
-                    select: {
-                        id: true,
-                        capacity: true,
-                        type: true
-                    }
-                },
-                graphics: {
-                    select: {
-                        id: true,
-                        name: true,
-                        vram: true
-                    }
-                },
+                brand: true,
+                processor: true,
+                ram: true,
+                os: true,
+                rom: true,
+                graphics: true,
                 other_description: true,
                 rate: true,
                 quantity: true,
@@ -886,44 +726,12 @@ export const getPreProcurementRejectedDal = async (req: Request) => {
                         name: true
                     }
                 },
-                brand: {
-                    select: {
-                        id: true,
-                        name: true
-                    }
-                },
-                processor: {
-                    select: {
-                        id: true,
-                        name: true
-                    }
-                },
-                ram: {
-                    select: {
-                        id: true,
-                        capacity: true
-                    }
-                },
-                os: {
-                    select: {
-                        id: true,
-                        name: true
-                    }
-                },
-                rom: {
-                    select: {
-                        id: true,
-                        capacity: true,
-                        type: true
-                    }
-                },
-                graphics: {
-                    select: {
-                        id: true,
-                        name: true,
-                        vram: true
-                    }
-                },
+                brand: true,
+                processor: true,
+                ram: true,
+                os: true,
+                rom: true,
+                graphics: true,
                 other_description: true,
                 rate: true,
                 quantity: true,
@@ -1052,44 +860,12 @@ export const getPreProcurementReleasedDal = async (req: Request) => {
                         name: true
                     }
                 },
-                brand: {
-                    select: {
-                        id: true,
-                        name: true
-                    }
-                },
-                processor: {
-                    select: {
-                        id: true,
-                        name: true
-                    }
-                },
-                ram: {
-                    select: {
-                        id: true,
-                        capacity: true
-                    }
-                },
-                os: {
-                    select: {
-                        id: true,
-                        name: true
-                    }
-                },
-                rom: {
-                    select: {
-                        id: true,
-                        capacity: true,
-                        type: true
-                    }
-                },
-                graphics: {
-                    select: {
-                        id: true,
-                        name: true,
-                        vram: true
-                    }
-                },
+                brand: true,
+                processor: true,
+                ram: true,
+                os: true,
+                rom: true,
+                graphics: true,
                 other_description: true,
                 rate: true,
                 quantity: true,
