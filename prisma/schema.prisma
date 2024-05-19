@@ -201,6 +201,7 @@ model sr_pre_procurement_inbox {
     recomended_uses      String?
     bristle              String?
     weight               String?
+    number_of_items      Int?
 }
 
 model pre_procurement_history {
@@ -241,6 +242,7 @@ model pre_procurement_history {
     recomended_uses      String?
     bristle              String?
     weight               String?
+    number_of_items      Int?
 }
 
 model sr_pre_procurement_outbox {
@@ -281,6 +283,7 @@ model sr_pre_procurement_outbox {
     recomended_uses      String?
     bristle              String?
     weight               String?
+    number_of_items      Int?
 }
 
 model da_pre_procurement_inbox {
@@ -321,6 +324,7 @@ model da_pre_procurement_inbox {
     recomended_uses      String?
     bristle              String?
     weight               String?
+    number_of_items      Int?
 }
 
 model da_pre_procurement_outbox {
@@ -361,4 +365,5 @@ model da_pre_procurement_outbox {
     recomended_uses      String?
     bristle              String?
     weight               String?
+    number_of_items      Int?
 }
