@@ -169,12 +169,12 @@ model sr_pre_procurement_inbox {
 }
 
 model pre_procurement_history {
-    id                   String             @id @default(uuid())
-    order_no             String             @unique
-    category             category_master    @relation(fields: [category_masterId], references: [id])
-    category_masterId    String
-    subcategory          subcategory_master @relation(fields: [subcategory_masterId], references: [id])
-    subcategory_masterId String
+    id                   String              @id @default(uuid())
+    order_no             String              @unique
+    category             category_master?    @relation(fields: [category_masterId], references: [id])
+    category_masterId    String?
+    subcategory          subcategory_master? @relation(fields: [subcategory_masterId], references: [id])
+    subcategory_masterId String?
     brand                String?
     processor            String?
     ram                  String?
@@ -185,12 +185,12 @@ model pre_procurement_history {
     rate                 Int?
     quantity             Int?
     total_rate           Int?
-    status               procurement_status @relation(fields: [statusId], references: [id])
-    statusId             String             @unique
+    status               procurement_status  @relation(fields: [statusId], references: [id])
+    statusId             String              @unique
     remark               String?
-    isEdited             Boolean            @default(false)
-    createdAt            DateTime           @default(now())
-    updatedAt            DateTime           @updatedAt
+    isEdited             Boolean             @default(false)
+    createdAt            DateTime            @default(now())
+    updatedAt            DateTime            @updatedAt
     colour               String?
     material             String?
     dimension            String?
@@ -204,12 +204,12 @@ model pre_procurement_history {
 }
 
 model sr_pre_procurement_outbox {
-    id                   String             @id @default(uuid())
-    order_no             String             @unique
-    category             category_master    @relation(fields: [category_masterId], references: [id])
-    category_masterId    String
-    subcategory          subcategory_master @relation(fields: [subcategory_masterId], references: [id])
-    subcategory_masterId String
+    id                   String              @id @default(uuid())
+    order_no             String              @unique
+    category             category_master?    @relation(fields: [category_masterId], references: [id])
+    category_masterId    String?
+    subcategory          subcategory_master? @relation(fields: [subcategory_masterId], references: [id])
+    subcategory_masterId String?
     brand                String?
     processor            String?
     ram                  String?
@@ -220,12 +220,12 @@ model sr_pre_procurement_outbox {
     rate                 Int?
     quantity             Int?
     total_rate           Int?
-    status               procurement_status @relation(fields: [statusId], references: [id])
-    statusId             String             @unique
+    status               procurement_status  @relation(fields: [statusId], references: [id])
+    statusId             String              @unique
     remark               String?
-    isEdited             Boolean            @default(false)
-    createdAt            DateTime           @default(now())
-    updatedAt            DateTime           @updatedAt
+    isEdited             Boolean             @default(false)
+    createdAt            DateTime            @default(now())
+    updatedAt            DateTime            @updatedAt
     colour               String?
     material             String?
     dimension            String?
@@ -239,12 +239,12 @@ model sr_pre_procurement_outbox {
 }
 
 model da_pre_procurement_inbox {
-    id                   String             @id @default(uuid())
-    order_no             String             @unique
-    category             category_master    @relation(fields: [category_masterId], references: [id])
-    category_masterId    String
-    subcategory          subcategory_master @relation(fields: [subcategory_masterId], references: [id])
-    subcategory_masterId String
+    id                   String              @id @default(uuid())
+    order_no             String              @unique
+    category             category_master?    @relation(fields: [category_masterId], references: [id])
+    category_masterId    String?
+    subcategory          subcategory_master? @relation(fields: [subcategory_masterId], references: [id])
+    subcategory_masterId String?
     brand                String?
     processor            String?
     ram                  String?
@@ -255,12 +255,12 @@ model da_pre_procurement_inbox {
     rate                 Int?
     quantity             Int?
     total_rate           Int?
-    status               procurement_status @relation(fields: [statusId], references: [id])
-    statusId             String             @unique
+    status               procurement_status  @relation(fields: [statusId], references: [id])
+    statusId             String              @unique
     remark               String?
-    isEdited             Boolean            @default(false)
-    createdAt            DateTime           @default(now())
-    updatedAt            DateTime           @updatedAt
+    isEdited             Boolean             @default(false)
+    createdAt            DateTime            @default(now())
+    updatedAt            DateTime            @updatedAt
     colour               String?
     material             String?
     dimension            String?
@@ -274,12 +274,12 @@ model da_pre_procurement_inbox {
 }
 
 model da_pre_procurement_outbox {
-    id                   String             @id @default(uuid())
-    order_no             String             @unique
-    category             category_master    @relation(fields: [category_masterId], references: [id])
-    category_masterId    String
-    subcategory          subcategory_master @relation(fields: [subcategory_masterId], references: [id])
-    subcategory_masterId String
+    id                   String              @id @default(uuid())
+    order_no             String              @unique
+    category             category_master?    @relation(fields: [category_masterId], references: [id])
+    category_masterId    String?
+    subcategory          subcategory_master? @relation(fields: [subcategory_masterId], references: [id])
+    subcategory_masterId String?
     brand                String?
     processor            String?
     ram                  String?
@@ -290,12 +290,12 @@ model da_pre_procurement_outbox {
     rate                 Int?
     quantity             Int?
     total_rate           Int?
-    status               procurement_status @relation(fields: [statusId], references: [id])
-    statusId             String             @unique
+    status               procurement_status  @relation(fields: [statusId], references: [id])
+    statusId             String              @unique
     remark               String?
-    isEdited             Boolean            @default(false)
-    createdAt            DateTime           @default(now())
-    updatedAt            DateTime           @updatedAt
+    isEdited             Boolean             @default(false)
+    createdAt            DateTime            @default(now())
+    updatedAt            DateTime            @updatedAt
     colour               String?
     material             String?
     dimension            String?
