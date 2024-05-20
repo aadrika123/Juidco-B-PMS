@@ -127,22 +127,23 @@ export const getPreProcurementDal = async (req: Request) => {
                 contains: search,
                 mode: 'insensitive'
             }
+        },
+        {
+            brand: {
+                contains: search,
+                mode: 'insensitive'
+            }
         }
     ];
 
     if (category[0]) {
-        whereClause.category = {
+        whereClause.category_masterId = {
             in: category
         }
     }
     if (subcategory[0]) {
-        whereClause.subcategory = {
+        whereClause.subcategory_masterId = {
             in: subcategory
-        }
-    }
-    if (brand[0]) {
-        whereClause.brand = {
-            in: brand
         }
     }
     whereClause.NOT = [
@@ -230,6 +231,7 @@ export const getPreProcurementDal = async (req: Request) => {
         pagination.currentPage = page
         pagination.currentTake = take
         pagination.totalPage = totalPage
+        pagination.totalResult = count
         return {
             data: result,
             pagination: pagination
@@ -487,6 +489,12 @@ export const getPreProcurementOutboxDal = async (req: Request) => {
                 contains: search,
                 mode: 'insensitive'
             }
+        },
+        {
+            brand: {
+                contains: search,
+                mode: 'insensitive'
+            }
         }
     ];
 
@@ -498,11 +506,6 @@ export const getPreProcurementOutboxDal = async (req: Request) => {
     if (subcategory[0]) {
         whereClause.subcategory_masterId = {
             in: subcategory
-        }
-    }
-    if (brand[0]) {
-        whereClause.brand_masterId = {
-            in: brand
         }
     }
 
@@ -578,6 +581,7 @@ export const getPreProcurementOutboxDal = async (req: Request) => {
         pagination.currentPage = page
         pagination.currentTake = take
         pagination.totalPage = totalPage
+        pagination.totalResult = count
         return {
             data: result,
             pagination: pagination
@@ -679,6 +683,12 @@ export const getPreProcurementRejectedDal = async (req: Request) => {
                 contains: search,
                 mode: 'insensitive'
             }
+        },
+        {
+            brand: {
+                contains: search,
+                mode: 'insensitive'
+            }
         }
     ];
 
@@ -690,11 +700,6 @@ export const getPreProcurementRejectedDal = async (req: Request) => {
     if (subcategory[0]) {
         whereClause.subcategory_masterId = {
             in: subcategory
-        }
-    }
-    if (brand[0]) {
-        whereClause.brand_masterId = {
-            in: brand
         }
     }
     whereClause.status = {
@@ -773,6 +778,7 @@ export const getPreProcurementRejectedDal = async (req: Request) => {
         pagination.currentPage = page
         pagination.currentTake = take
         pagination.totalPage = totalPage
+        pagination.totalResult = count
         return {
             data: result,
             pagination: pagination
@@ -813,6 +819,12 @@ export const getPreProcurementReleasedDal = async (req: Request) => {
                 contains: search,
                 mode: 'insensitive'
             }
+        },
+        {
+            brand: {
+                contains: search,
+                mode: 'insensitive'
+            }
         }
     ];
 
@@ -824,11 +836,6 @@ export const getPreProcurementReleasedDal = async (req: Request) => {
     if (subcategory[0]) {
         whereClause.subcategory_masterId = {
             in: subcategory
-        }
-    }
-    if (brand[0]) {
-        whereClause.brand_masterId = {
-            in: brand
         }
     }
     whereClause.status = {
@@ -907,6 +914,7 @@ export const getPreProcurementReleasedDal = async (req: Request) => {
         pagination.currentPage = page
         pagination.currentTake = take
         pagination.totalPage = totalPage
+        pagination.totalResult = count
         return {
             data: result,
             pagination: pagination
