@@ -15,16 +15,16 @@ app.use(cors());
 
 app.use(express.json())
 
-app.get('/', (req: Request, res: Response) => {
+app.get('/api/pms', (req: Request, res: Response) => {
     res.send('Procurement and Inventory Management System backend')
 })
 
 //routes
 
-app.use('/api/master', masterEntryRoute)
-app.use('/api/sr', srPreProcurementRoute)
-app.use('/api/da', daPreProcurementRoute)
-app.use('/api/download', downloadRoute)
+app.use('/api/pms/master', masterEntryRoute)
+app.use('/api/pms/sr', srPreProcurementRoute)
+app.use('/api/pms/da', daPreProcurementRoute)
+app.use('/api/pms/download', downloadRoute)
 
 
 app.listen(port, () => {
