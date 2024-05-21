@@ -420,13 +420,18 @@ export const forwardToDaDal = async (req: Request) => {
                     bristle: true,
                     weight: true,
                     number_of_items: true,
-                    status: {
-                        select: {
-                            status: true
-                        }
-                    }
+                    status: true
                 }
             })
+
+            const statusChecker = (status: number) => {
+                if (status === 0) {
+                    return 1
+                } else {
+                    return 69
+                }
+            }
+
             if (inbox === null) {
                 return
             }
@@ -435,6 +440,7 @@ export const forwardToDaDal = async (req: Request) => {
                     order_no: inbox?.order_no
                 }
             })
+            delete inbox.status
             await prisma.$transaction([
 
                 prisma.sr_pre_procurement_outbox.create({
@@ -448,7 +454,7 @@ export const forwardToDaDal = async (req: Request) => {
                         id: inbox?.statusId
                     },
                     data: {
-                        status: 1
+                        status: statusChecker(Number(inbox?.status?.status))
                     }
                 }),
                 prisma.sr_pre_procurement_inbox.delete({
