@@ -3,6 +3,9 @@
     "version": "1.0.0",
     "description": "Backend for procurement and inventory management system",
     "main": "index.ts",
+    "prisma": {
+        "seed": "ts-node prisma/seed.ts"
+      },
     "scripts": {
         "dev": "nodemon index.ts",
         "build": "npx tsc",
@@ -11,7 +14,7 @@
     "author": "",
     "license": "ISC",
     "dependencies": {
-        "@prisma/client": "^5.13.0",
+        "@prisma/client": "^5.14.0",
         "cors": "^2.8.5",
         "express": "^4.19.2",
         "json-2-csv": "^5.5.1"
@@ -21,7 +24,7 @@
         "@types/node": "^20.12.11",
         "dotenv": "^16.4.5",
         "nodemon": "^3.1.0",
-        "prisma": "^5.13.0",
+        "prisma": "^5.14.0",
         "ts-node": "^10.9.2",
         "typescript": "^5.4.5"
     }
