@@ -6,6 +6,7 @@ import masterEntryRoute from './router/masterEntry/masterEntry.route'
 import srPreProcurementRoute from './router/stockReciever/preProcurement/srPreProcurement.route'
 import daPreProcurementRoute from './router/departmenalAdmin/preProcurement/daPreProcurement.route'
 import downloadRoute from './router/download/download.route'
+import daPostProcurementRoute from './router/departmenalAdmin/postPrecurement/daPostProcurement.route'
 
 config()
 
@@ -25,6 +26,7 @@ app.use('/api/pms/master', masterEntryRoute)
 app.use('/api/pms/sr', srPreProcurementRoute)
 app.use('/api/pms/da', daPreProcurementRoute)
 app.use('/api/pms/download', downloadRoute)
+app.use('/api/pms/da/post-procurement', daPostProcurementRoute)
 
 
 app.listen(port, () => {

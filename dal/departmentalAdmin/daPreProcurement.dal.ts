@@ -514,16 +514,25 @@ export const releaseForTenderDal = async (req: Request) => {
                     number_of_items: true
                 }
             })
+
             if (inbox === null) {
                 return
             }
-            await prisma.$transaction([
 
-                prisma.da_pre_procurement_outbox.create({
-                    data: inbox
-                }),
+            const daPreOut = await prisma.da_pre_procurement_outbox.create({
+                data: inbox
+            })
+
+            const [srPreInCr, daPostInCr, prSUp, daPreInDl, srPreOutDl] = await prisma.$transaction([
                 prisma.sr_pre_procurement_inbox.create({
                     data: inbox
+                }),
+                prisma.da_post_procurement_inbox.create({
+                    data: {
+                        order_no: inbox?.order_no,
+                        statusId: inbox?.statusId,
+                        da_pre_procurement_outboxId: daPreOut?.id
+                    }
                 }),
                 prisma.procurement_status.update({
                     where: {
@@ -543,8 +552,14 @@ export const releaseForTenderDal = async (req: Request) => {
                         order_no: inbox?.order_no
                     },
                 })
-
             ])
+            if (!srPreInCr || !daPostInCr || !prSUp || !daPreInDl || !srPreOutDl) {
+                await prisma.da_pre_procurement_outbox.delete({
+                    where: {
+                        order_no: inbox?.order_no
+                    }
+                })
+            }
         })
         return "Released for tender"
     } catch (err: any) {

@@ -119,18 +119,21 @@ model graphics_master {
     item_master item_master[]
 }
 
-// pre-procurement=======================================================================================================================================================
+// pre-procurement============================================================================================================================================================================================================================================================================================================
+
 model procurement_status {
-    id                        String                     @id @default(uuid())
-    order_no                  String                     @unique
-    status                    Int //-2=rejected, -1=back to sr, 0=pending, 1=in DA's inbox, 69= revised and in DA's inbox, 2=released for tender, 3=stock recieved, 4=stock verified
-    createdAt                 DateTime                   @default(now())
-    updatedAt                 DateTime                   @updatedAt
-    sr_pre_procurement_inbox  sr_pre_procurement_inbox?
-    sr_pre_procurement_outbox sr_pre_procurement_outbox?
-    da_pre_procurement_inbox  da_pre_procurement_inbox?
-    da_pre_procurement_outbox da_pre_procurement_outbox?
-    pre_procurement_history   pre_procurement_history?
+    id                         String                      @id @default(uuid())
+    order_no                   String                      @unique
+    status                     Int //-2=rejected, -1=back to sr, 0=pending, 1=in DA's inbox, 69= revised and in DA's inbox, 2=released for tender,3=supplier assigned, 4=stock recieved, 5=stock verified
+    createdAt                  DateTime                    @default(now())
+    updatedAt                  DateTime                    @updatedAt
+    sr_pre_procurement_inbox   sr_pre_procurement_inbox?
+    sr_pre_procurement_outbox  sr_pre_procurement_outbox?
+    da_pre_procurement_inbox   da_pre_procurement_inbox?
+    da_pre_procurement_outbox  da_pre_procurement_outbox?
+    pre_procurement_history    pre_procurement_history?
+    da_post_procurement_inbox  da_post_procurement_inbox?
+    da_post_procurement_outbox da_post_procurement_outbox?
 }
 
 model sr_pre_procurement_inbox {
@@ -274,36 +277,78 @@ model da_pre_procurement_inbox {
 }
 
 model da_pre_procurement_outbox {
-    id                   String              @id @default(uuid())
-    order_no             String              @unique
-    category             category_master?    @relation(fields: [category_masterId], references: [id])
-    category_masterId    String?
-    subcategory          subcategory_master? @relation(fields: [subcategory_masterId], references: [id])
-    subcategory_masterId String?
-    brand                String?
-    processor            String?
-    ram                  String?
-    os                   String?
-    rom                  String?
-    graphics             String?
-    other_description    String?
-    rate                 Int?
-    quantity             Int?
-    total_rate           Int?
-    status               procurement_status  @relation(fields: [statusId], references: [id])
-    statusId             String              @unique
-    remark               String?
-    isEdited             Boolean             @default(false)
-    createdAt            DateTime            @default(now())
-    updatedAt            DateTime            @updatedAt
-    colour               String?
-    material             String?
-    dimension            String?
-    room_type            String?
-    included_components  String?
-    size                 String?
-    recomended_uses      String?
-    bristle              String?
-    weight               String?
-    number_of_items      Int?
+    id                         String                      @id @default(uuid())
+    order_no                   String                      @unique
+    category                   category_master?            @relation(fields: [category_masterId], references: [id])
+    category_masterId          String?
+    subcategory                subcategory_master?         @relation(fields: [subcategory_masterId], references: [id])
+    subcategory_masterId       String?
+    brand                      String?
+    processor                  String?
+    ram                        String?
+    os                         String?
+    rom                        String?
+    graphics                   String?
+    other_description          String?
+    rate                       Int?
+    quantity                   Int?
+    total_rate                 Int?
+    status                     procurement_status          @relation(fields: [statusId], references: [id])
+    statusId                   String                      @unique
+    remark                     String?
+    isEdited                   Boolean                     @default(false)
+    createdAt                  DateTime                    @default(now())
+    updatedAt                  DateTime                    @updatedAt
+    colour                     String?
+    material                   String?
+    dimension                  String?
+    room_type                  String?
+    included_components        String?
+    size                       String?
+    recomended_uses            String?
+    bristle                    String?
+    weight                     String?
+    number_of_items            Int?
+    da_post_procurement_inbox  da_post_procurement_inbox?
+    da_post_procurement_outbox da_post_procurement_outbox?
+}
+
+// post-procurement============================================================================================================================================================================================================================================================================================================
+
+model da_post_procurement_inbox {
+    id                          String                    @id @default(uuid())
+    order_no                    String                    @unique
+    status                      procurement_status        @relation(fields: [statusId], references: [id])
+    statusId                    String                    @unique
+    pre_procurement             da_pre_procurement_outbox @relation(fields: [da_pre_procurement_outboxId], references: [id])
+    da_pre_procurement_outboxId String                    @unique
+    supplier_name               String?
+    gst_no                      String?
+    final_rate                  Int?
+    gst                         Int?
+    total_quantity              Int?
+    total_price                 Int?
+    unit_price                  Int?
+    is_gst_added                Boolean                   @default(false)
+    createdAt                   DateTime                  @default(now())
+    updatedAt                   DateTime                  @updatedAt
+}
+
+model da_post_procurement_outbox {
+    id                          String                    @id @default(uuid())
+    order_no                    String                    @unique
+    status                      procurement_status        @relation(fields: [statusId], references: [id])
+    statusId                    String                    @unique
+    pre_procurement             da_pre_procurement_outbox @relation(fields: [da_pre_procurement_outboxId], references: [id])
+    da_pre_procurement_outboxId String                    @unique
+    supplier_name               String?
+    gst_no                      String?
+    final_rate                  Int?
+    gst                         Int?
+    total_quantity              Int?
+    total_price                 Int?
+    unit_price                  Int?
+    is_gst_added                Boolean                   @default(false)
+    createdAt                   DateTime                  @default(now())
+    updatedAt                   DateTime                  @updatedAt
 }
