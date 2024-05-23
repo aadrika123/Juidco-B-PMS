@@ -222,7 +222,7 @@ export const SaveAdditionalDetailsProcurementDal = async (req: Request) => {
         is_gst_added: Boolean(is_gst_added),
     }
     if (Number(total_quantity) && Number(total_price)) {
-        if (Number(total_quantity) / Number(total_price) !== Number(unit_price)) {
+        if (Number(total_price) / Number(total_quantity) !== Number(unit_price)) {
             return { error: true, message: "The calculation result for Unit Price is invalid" }
         }
     }
