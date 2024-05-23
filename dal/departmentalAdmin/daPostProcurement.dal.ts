@@ -233,13 +233,33 @@ export const SaveAdditionalDetailsProcurementDal = async (req: Request) => {
         }
     }
 
+    const daPostInbox: any = await prisma.da_post_procurement_inbox.findFirst({
+        where: {
+            id: id
+        }
+    })
+    if (daPostInbox) {
+        delete daPostInbox.id
+        delete daPostInbox.createdAt
+        delete daPostInbox.updatedAt
+    }
+
+    const daPostOut = await prisma.da_post_procurement_outbox.create({
+        data: daPostInbox
+    })
+
     try {
-        await prisma.$transaction([
-            prisma.da_post_procurement_inbox.update({
+        const [daPostOutUp, daPostInDel, proStatusUp]: any = await prisma.$transaction([
+            prisma.da_post_procurement_outbox.update({
                 where: {
-                    id: id
+                    id: daPostOut?.id
                 },
                 data: data
+            }),
+            prisma.da_post_procurement_inbox.delete({
+                where: {
+                    id: id
+                }
             }),
             prisma.procurement_status.update({
                 where: {
@@ -250,104 +270,26 @@ export const SaveAdditionalDetailsProcurementDal = async (req: Request) => {
                 }
             })
         ])
-        return 'Post Procurement Saved'
+        if (!daPostOutUp || !daPostInDel || !proStatusUp) {
+            await prisma.da_post_procurement_outbox.delete({
+                where: {
+                    id: daPostOut?.id
+                }
+            })
+        }
+
+        if (daPostOutUp) {
+            delete daPostOutUp.id
+            delete daPostOutUp.createdAt
+            delete daPostOutUp.updatedAt
+        }
+        await prisma.da_received_inventory_inbox.create({
+            data: daPostOutUp
+        })
+
+        return 'Additional Details Saved'
     } catch (err: any) {
         console.log(err?.message)
         return { error: false, message: err?.message }
-    }
-}
-
-
-
-
-
-export const releaseForTenderDal = async (req: Request) => {
-    const { preProcurement }: { preProcurement: string[] } = req.body
-    try {
-        preProcurement.map(async (item) => {
-            const inbox: any = await prisma.da_pre_procurement_inbox.findFirst({
-                where: {
-                    id: item
-                },
-                select: {
-                    order_no: true,
-                    category_masterId: true,
-                    subcategory_masterId: true,
-                    brand: true,
-                    processor: true,
-                    ram: true,
-                    os: true,
-                    rom: true,
-                    graphics: true,
-                    other_description: true,
-                    rate: true,
-                    quantity: true,
-                    total_rate: true,
-                    statusId: true,
-                    isEdited: true,
-                    remark: true,
-                    colour: true,
-                    material: true,
-                    dimension: true,
-                    room_type: true,
-                    included_components: true,
-                    size: true,
-                    recomended_uses: true,
-                    bristle: true,
-                    weight: true,
-                    number_of_items: true
-                }
-            })
-
-            if (inbox === null) {
-                return
-            }
-
-            const daPreOut = await prisma.da_pre_procurement_outbox.create({
-                data: inbox
-            })
-
-            const [srPreInCr, daPostInCr, prSUp, daPreInDl, srPreOutDl] = await prisma.$transaction([
-                prisma.sr_pre_procurement_inbox.create({
-                    data: inbox
-                }),
-                prisma.da_post_procurement_inbox.create({
-                    data: {
-                        order_no: inbox?.order_no,
-                        statusId: inbox?.statusId,
-                        da_pre_procurement_outboxId: daPreOut?.id
-                    }
-                }),
-                prisma.procurement_status.update({
-                    where: {
-                        id: inbox?.statusId
-                    },
-                    data: {
-                        status: 2
-                    }
-                }),
-                prisma.da_pre_procurement_inbox.delete({
-                    where: {
-                        id: item
-                    },
-                }),
-                prisma.sr_pre_procurement_outbox.delete({
-                    where: {
-                        order_no: inbox?.order_no
-                    },
-                })
-            ])
-            if (!srPreInCr || !daPostInCr || !prSUp || !daPreInDl || !srPreOutDl) {
-                await prisma.da_pre_procurement_outbox.delete({
-                    where: {
-                        order_no: inbox?.order_no
-                    }
-                })
-            }
-        })
-        return "Released for tender"
-    } catch (err: any) {
-        console.log(err?.message)
-        return { error: true, message: err?.message }
     }
 }
