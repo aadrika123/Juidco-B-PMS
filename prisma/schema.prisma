@@ -150,9 +150,9 @@ model sr_pre_procurement_inbox {
     rom                  String?
     graphics             String?
     other_description    String?
-    rate                 Int?
+    rate                 Float?
     quantity             Int?
-    total_rate           Int?
+    total_rate           Float?
     status               procurement_status  @relation(fields: [statusId], references: [id])
     statusId             String              @unique
     remark               String?
@@ -185,9 +185,9 @@ model pre_procurement_history {
     rom                  String?
     graphics             String?
     other_description    String?
-    rate                 Int?
+    rate                 Float?
     quantity             Int?
-    total_rate           Int?
+    total_rate           Float?
     status               procurement_status  @relation(fields: [statusId], references: [id])
     statusId             String              @unique
     remark               String?
@@ -220,9 +220,9 @@ model sr_pre_procurement_outbox {
     rom                  String?
     graphics             String?
     other_description    String?
-    rate                 Int?
+    rate                 Float?
     quantity             Int?
-    total_rate           Int?
+    total_rate           Float?
     status               procurement_status  @relation(fields: [statusId], references: [id])
     statusId             String              @unique
     remark               String?
@@ -255,9 +255,9 @@ model da_pre_procurement_inbox {
     rom                  String?
     graphics             String?
     other_description    String?
-    rate                 Int?
+    rate                 Float?
     quantity             Int?
-    total_rate           Int?
+    total_rate           Float?
     status               procurement_status  @relation(fields: [statusId], references: [id])
     statusId             String              @unique
     remark               String?
@@ -290,9 +290,9 @@ model da_pre_procurement_outbox {
     rom                        String?
     graphics                   String?
     other_description          String?
-    rate                       Int?
+    rate                       Float?
     quantity                   Int?
-    total_rate                 Int?
+    total_rate                 Float?
     status                     procurement_status          @relation(fields: [statusId], references: [id])
     statusId                   String                      @unique
     remark                     String?
@@ -324,11 +324,11 @@ model da_post_procurement_inbox {
     da_pre_procurement_outboxId String                    @unique
     supplier_name               String?
     gst_no                      String?
-    final_rate                  Int?
-    gst                         Int?
+    final_rate                  Float?
+    gst                         Float?
     total_quantity              Int?
-    total_price                 Int?
-    unit_price                  Int?
+    total_price                 Float?
+    unit_price                  Float?
     is_gst_added                Boolean                   @default(false)
     createdAt                   DateTime                  @default(now())
     updatedAt                   DateTime                  @updatedAt
@@ -343,11 +343,11 @@ model da_post_procurement_outbox {
     da_pre_procurement_outboxId String                    @unique
     supplier_name               String?
     gst_no                      String?
-    final_rate                  Int?
-    gst                         Int?
+    final_rate                  Float?
+    gst                         Float?
     total_quantity              Int?
-    total_price                 Int?
-    unit_price                  Int?
+    total_price                 Float?
+    unit_price                  Float?
     is_gst_added                Boolean                   @default(false)
     createdAt                   DateTime                  @default(now())
     updatedAt                   DateTime                  @updatedAt
