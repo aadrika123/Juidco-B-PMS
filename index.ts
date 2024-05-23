@@ -2,6 +2,10 @@ import express, { Request, Response } from 'express'
 import { config } from 'dotenv'
 const cors = require('cors')
 
+
+import devRoute from './router/dev/dev.route'
+
+
 import masterEntryRoute from './router/masterEntry/masterEntry.route'
 import srPreProcurementRoute from './router/stockReciever/preProcurement/srPreProcurement.route'
 import daPreProcurementRoute from './router/departmenalAdmin/preProcurement/daPreProcurement.route'
@@ -19,6 +23,8 @@ app.use(express.json())
 app.get('/api/pms', (req: Request, res: Response) => {
     res.send('Procurement and Inventory Management System backend')
 })
+// dev routes with protection
+app.use('/api/pms/dev', devRoute)
 
 //routes
 
