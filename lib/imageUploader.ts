@@ -28,7 +28,7 @@ const imageUploader = (file: any) => {
     //         }
 
     const dmsUrl = process.env.DMS_URL_UPLOAD
-
+    
 
 }
 
