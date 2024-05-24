@@ -3,7 +3,9 @@ import {
     getPostProcurementDal,
     getPostProcurementByIdDal,
     getPostProcurementByOrderNoDal,
-    SaveAdditionalDetailsProcurementDal
+    SaveAdditionalDetailsProcurementDal,
+    getPostProcurementOutboxDal,
+    getPostProcurementOutboxByIdDal
 } from "../../dal/departmentalAdmin/daPostProcurement.dal";
 
 
@@ -81,19 +83,38 @@ export const SaveAdditionalDetailsProcurement = async (req: Request, res: Respon
 }
 
 
-// export const releaseForTender = async (req: Request, res: Response) => {
-//     const result: any = await releaseForTenderDal(req)
-//     if (!result?.error) {
-//         res.status(200).json({
-//             status: true,
-//             message: `Released for tender successfully`,
-//             data: result
-//         })
-//     } else {
-//         res.status(404).json({
-//             status: false,
-//             message: `Error while releasing for tender`,
-//             error: result?.message
-//         })
-//     }
-// }
+export const getPostProcurementOutbox = async (req: Request, res: Response) => {
+    const result: any = await getPostProcurementOutboxDal(req)
+    if (!result?.error) {
+        res.status(200).json({
+            status: true,
+            message: `Post procurement outbox list fetched successfully`,
+            data: result?.data,
+            pagination: result?.pagination
+        })
+    } else {
+        res.status(404).json({
+            status: false,
+            message: `Error while fetching Post procurement list`,
+            error: result?.message
+        })
+    }
+}
+
+
+export const getPostProcurementOutboxById = async (req: Request, res: Response) => {
+    const result: any = await getPostProcurementOutboxByIdDal(req)
+    if (!result?.error) {
+        res.status(200).json({
+            status: true,
+            message: `Post procurement outbox fetched successfully`,
+            data: result
+        })
+    } else {
+        res.status(404).json({
+            status: false,
+            message: `Error while fetching Post procurement outbox`,
+            error: result?.message
+        })
+    }
+}
