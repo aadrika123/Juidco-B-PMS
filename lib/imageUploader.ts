@@ -1,35 +1,27 @@
+import { PrismaClient } from "@prisma/client";
+const prisma = new PrismaClient()
 
-const imageUploader = (file: any) => {
-
-    // $dmsUrl = Config::get('constants.DMS_URL');
-    //         $file = $request->document;
-    //         $filePath = $file->getPathname();
-    //         $hashedFile = hash_file('sha256', $filePath);
-    //         $filename = ($request->document)->getClientOriginalName();
-    //         $api = "$dmsUrl/backend/document/upload";
-    //         $transfer = [
-    //             "file" => $request->document,
-    //             "tags" => $filename,
-    //             // "reference" => 425
-    //         ];
-    //         $returnData = Http::withHeaders([
-    //             "x-digest"      => "$hashedFile",
-    //             "token"         => "8Ufn6Jio6Obv9V7VXeP7gbzHSyRJcKluQOGorAD58qA1IQKYE0",
-    //             "folderPathId"  => 1
-    //         ])->attach([
-    //             [
-    //                 'file',
-    //                 file_get_contents($filePath),
-    //                 $filename
-    //             ]
-    //         ])->post("$api", $transfer);
-    //         if ($returnData->successful()) {
-    //             return (json_decode($returnData->body(), true));
-    //         }
-
-    const dmsUrl = process.env.DMS_URL_UPLOAD
-    
-
+export const receivingImageUploader = async (img: any, receiving_no: string) => {
+    const toReturn: any[] = []
+    try {
+        await Promise.all(
+            img.map(async (item: any) => {
+                const dataToUpload: any = {
+                    name: item?.filename,
+                    destination: item?.destination,
+                    mime_type: item?.mimetype,
+                    size: String(item?.size),
+                    path: item?.path,
+                    receiving_no: receiving_no
+                }
+                const uploadedImg = await prisma.receiving_image.create({
+                    data: dataToUpload
+                })
+            })
+        )
+    } catch (err) {
+        // console.log(err)
+        throw err
+    }
+    return toReturn
 }
-
-export default imageUploader

@@ -1,6 +1,7 @@
 import { Request } from "express";
 import { PrismaClient } from "@prisma/client";
 import generateReceivingNumber from "../../lib/receivingNumberGenerator";
+import { receivingImageUploader } from "../../lib/imageUploader";
 
 
 const prisma = new PrismaClient()
@@ -206,24 +207,29 @@ export const createReceivingDal = async (req: Request) => {
         remaining_quantity,
         ulb_id
     } = req.body
-
-    // const {} = req.files
-
-    const receiving_no = generateReceivingNumber(ulb_id)
-
-    const data: any = {
-        order_no: order_no,
-        receiving_no: receiving_no,
-        date: date,
-        received_quantity: received_quantity,
-        remaining_quantity: remaining_quantity
-    }
-    console.log(data)
-
+    const formattedDate = new Date(date)
+    const img = req.files
+    console.log(img)
     try {
-        // await prisma.receivings.create({
-        //     data: data
-        // })
+        const receiving_no = generateReceivingNumber(ulb_id)
+
+        const data: any = {
+            order_no: order_no,
+            receiving_no: receiving_no,
+            date: formattedDate,
+            received_quantity: Number(received_quantity),
+            remaining_quantity: Number(remaining_quantity)
+        }
+
+        const createdReceiving = await prisma.receivings.create({
+            data: data
+        })
+
+        if (!createdReceiving) {
+            throw 'Error while creating receiving'
+        }
+
+        await receivingImageUploader(img, receiving_no)
 
         return 'Receiving created'
     } catch (err: any) {

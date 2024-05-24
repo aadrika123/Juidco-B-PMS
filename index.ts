@@ -11,6 +11,7 @@ import srPreProcurementRoute from './router/stockReciever/preProcurement/srPrePr
 import daPreProcurementRoute from './router/departmenalAdmin/preProcurement/daPreProcurement.route'
 import downloadRoute from './router/download/download.route'
 import daPostProcurementRoute from './router/departmenalAdmin/postPrecurement/daPostProcurement.route'
+import daReceivedInventoryRoute from './router/departmenalAdmin/receivedInventory/receivedInventory.route'
 
 config()
 
@@ -33,6 +34,7 @@ app.use('/api/pms/sr', srPreProcurementRoute)
 app.use('/api/pms/da', daPreProcurementRoute)
 app.use('/api/pms/download', downloadRoute)
 app.use('/api/pms/da/post-procurement', daPostProcurementRoute)
+app.use('/api/pms/da/rec-inv', daReceivedInventoryRoute)
 
 
 app.listen(port, () => {
