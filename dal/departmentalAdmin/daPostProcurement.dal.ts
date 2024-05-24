@@ -82,7 +82,12 @@ export const getPostProcurementDal = async (req: Request) => {
             select: {
                 id: true,
                 order_no: true,
-                pre_procurement: true,
+                pre_procurement: {
+                    include: {
+                        category: true,
+                        subcategory: true
+                    }
+                },
                 status: true,
                 supplier_name: true,
                 gst_no: true,
@@ -145,7 +150,12 @@ export const getPostProcurementByIdDal = async (req: Request) => {
             select: {
                 id: true,
                 order_no: true,
-                pre_procurement: true,
+                pre_procurement: {
+                    include: {
+                        category: true,
+                        subcategory: true
+                    }
+                },
                 status: true,
                 supplier_name: true,
                 gst_no: true,
@@ -175,7 +185,12 @@ export const getPostProcurementByOrderNoDal = async (req: Request) => {
             select: {
                 id: true,
                 order_no: true,
-                pre_procurement: true,
+                pre_procurement: {
+                    include: {
+                        category: true,
+                        subcategory: true
+                    }
+                },
                 status: true,
                 supplier_name: true,
                 gst_no: true,
@@ -373,7 +388,12 @@ export const getPostProcurementOutboxDal = async (req: Request) => {
             select: {
                 id: true,
                 order_no: true,
-                pre_procurement: true,
+                pre_procurement: {
+                    include: {
+                        category: true,
+                        subcategory: true
+                    }
+                },
                 status: true,
                 supplier_name: true,
                 gst_no: true,
@@ -436,7 +456,12 @@ export const getPostProcurementOutboxByIdDal = async (req: Request) => {
             select: {
                 id: true,
                 order_no: true,
-                pre_procurement: true,
+                pre_procurement: {
+                    include: {
+                        category: true,
+                        subcategory: true
+                    }
+                },
                 status: true,
                 supplier_name: true,
                 gst_no: true,
