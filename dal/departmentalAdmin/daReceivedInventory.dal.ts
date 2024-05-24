@@ -207,6 +207,8 @@ export const createReceivingDal = async (req: Request) => {
         ulb_id
     } = req.body
 
+    // const {} = req.files
+
     const receiving_no = generateReceivingNumber(ulb_id)
 
     const data: any = {
@@ -216,11 +218,12 @@ export const createReceivingDal = async (req: Request) => {
         received_quantity: received_quantity,
         remaining_quantity: remaining_quantity
     }
+    console.log(data)
 
     try {
-        await prisma.receivings.create({
-            data: data
-        })
+        // await prisma.receivings.create({
+        //     data: data
+        // })
 
         return 'Receiving created'
     } catch (err: any) {
