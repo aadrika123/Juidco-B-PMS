@@ -77,6 +77,7 @@ export const createReceiving = async (req: Request, res: Response) => {
             message: `Error while creating receiving`,
             error: result?.message
         })
+        console.log(result)
     }
 }
 
