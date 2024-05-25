@@ -30,10 +30,11 @@ export const createPreProcurementDal = async (req: Request) => {
         recomended_uses,
         bristle,
         weight,
-        number_of_items
+        number_of_items,
+        ulb_id
     } = req.body
 
-    order_no = generateOrderNumber()
+    order_no = generateOrderNumber(ulb_id)
     if (order_no) {
         try {
             const existance = await prisma.sr_pre_procurement_inbox.count({
@@ -42,7 +43,7 @@ export const createPreProcurementDal = async (req: Request) => {
                 }
             })
             if (existance) {
-                order_no = generateOrderNumber()
+                order_no = generateOrderNumber(ulb_id)
             }
         } catch (err: any) {
             console.log(err?.message)
