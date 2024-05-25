@@ -2,7 +2,7 @@ import crypto from 'crypto'
 import axios from 'axios'
 import FormData from 'form-data'
 
-export const imageUploader = async (file: any, receiving_no: string) => {
+export const imageUploader = async (file: any) => {
     const toReturn: any[] = []
     try {
 
@@ -16,7 +16,7 @@ export const imageUploader = async (file: any, receiving_no: string) => {
                 const hashed = crypto.createHash('SHA256').update(item?.buffer).digest('hex');
 
                 const formData = new FormData()
-                formData.append('file', item?.buffer, item?.originalname.substring(0, 7));
+                formData.append('file', item?.buffer, item?.mimetype);
                 formData.append('tags', item?.originalname.substring(0, 7));
 
                 const headers = {

@@ -360,18 +360,17 @@ model da_post_procurement_outbox {
 // received inventory============================================================================================================================================================================================================================================================================================================
 
 model receivings {
-    id                             String                        @id @default(uuid())
-    order_no                       String
-    receiving_no                   String                        @unique
-    date                           DateTime?                     @db.Date
-    received_quantity              Int?
-    remaining_quantity             Int?
-    received_inventory             da_received_inventory_inbox   @relation(fields: [order_no], references: [order_no])
-    createdAt                      DateTime                      @default(now())
-    updatedAt                      DateTime                      @updatedAt
-    receiving_image                receiving_image[]
-    da_received_inventory_outbox   da_received_inventory_outbox? @relation(fields: [da_received_inventory_outboxId], references: [id])
-    da_received_inventory_outboxId String?
+    id                        String                        @id @default(uuid())
+    order_no                  String?   
+    receiving_no              String                        @unique
+    date                      DateTime?                     @db.Date
+    received_quantity         Int?
+    remaining_quantity        Int?
+    received_inventory        da_received_inventory_inbox?  @relation(fields: [order_no], references: [order_no], map: "receivings_order_no_fkey_inbox")
+    createdAt                 DateTime                      @default(now())
+    updatedAt                 DateTime                      @updatedAt
+    receiving_image           receiving_image[]
+    received_inventory_outbox da_received_inventory_outbox? @relation(fields: [order_no], references: [order_no], map: "receivings_order_no_fkey_outbox")
 }
 
 model receiving_image {
@@ -407,7 +406,7 @@ model da_received_inventory_inbox {
 
 model da_received_inventory_outbox {
     id                          String                    @id @default(uuid())
-    order_no                    String                    @unique
+    order_no                    String?                   @unique
     status                      procurement_status        @relation(fields: [statusId], references: [id])
     statusId                    String                    @unique
     pre_procurement             da_pre_procurement_outbox @relation(fields: [da_pre_procurement_outboxId], references: [id])

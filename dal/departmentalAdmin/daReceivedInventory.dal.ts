@@ -2,9 +2,11 @@ import { Request } from "express";
 import { PrismaClient } from "@prisma/client";
 import generateReceivingNumber from "../../lib/receivingNumberGenerator";
 import { imageUploader } from "../../lib/imageUploader";
+import axios from 'axios'
 
 
 const prisma = new PrismaClient()
+const dmsUrlGet = process.env.DMS_GET || ''
 
 
 export const getReceivedInventoryDal = async (req: Request) => {
@@ -94,7 +96,11 @@ export const getReceivedInventoryDal = async (req: Request) => {
                 total_price: true,
                 unit_price: true,
                 is_gst_added: true,
-                receivings: true
+                receivings: {
+                    include: {
+                        receiving_image: true
+                    }
+                }
             }
         })
 
@@ -107,6 +113,24 @@ export const getReceivedInventoryDal = async (req: Request) => {
             delete tempPreProcurement.updatedAt
             delete tempPreProcurement.statusId
             delete item.pre_procurement
+
+            item?.receivings.forEach((receiving: any) => {
+                receiving?.receiving_image.forEach(async (img: any) => {
+                    const headers = {
+                        "token": "8Ufn6Jio6Obv9V7VXeP7gbzHSyRJcKluQOGorAD58qA1IQKYE0"
+                    }
+                    await axios.post(dmsUrlGet, { "referenceNo": img?.ReferenceNo }, { headers })
+                        .then((response) => {
+                            // console.log(response?.data?.data, 'res')
+                            img.imageUrl = response?.data?.data?.fullPath
+                        }).catch((err) => {
+                            // console.log(err?.data?.data, 'err')
+                            // toReturn.push(err?.data?.data)
+                            throw err
+                        })
+                })
+            })
+
             resultToSend.push({ ...item, ...tempPreProcurement })
         })
 
@@ -229,7 +253,7 @@ export const createReceivingDal = async (req: Request) => {
             throw 'Error while creating receiving'
         }
 
-        const uploaded = await imageUploader(img, receiving_no)   //It will return reference number and unique id as an object after uploading.
+        const uploaded = await imageUploader(img)   //It will return reference number and unique id as an object after uploading.
 
         if (uploaded.length === 0) {
             throw 'Error while uploading file(s)'
