@@ -1,7 +1,7 @@
 import { Request } from "express";
 import { PrismaClient } from "@prisma/client";
 import generateReceivingNumber from "../../lib/receivingNumberGenerator";
-import { receivingImageUploader } from "../../lib/imageUploader";
+import { imageUploader } from "../../lib/imageUploader";
 
 
 const prisma = new PrismaClient()
@@ -209,7 +209,7 @@ export const createReceivingDal = async (req: Request) => {
     } = req.body
     const formattedDate = new Date(date)
     const img = req.files
-    console.log(img)
+    // console.log(img)
     try {
         const receiving_no = generateReceivingNumber(ulb_id)
 
@@ -229,11 +229,83 @@ export const createReceivingDal = async (req: Request) => {
             throw 'Error while creating receiving'
         }
 
-        await receivingImageUploader(img, receiving_no)
+        const uploaded = await imageUploader(img, receiving_no)   //It will return reference number and unique id as an object after uploading.
+
+        if (uploaded.length === 0) {
+            throw 'Error while uploading file(s)'
+        }
+
+        await Promise.all(
+            uploaded.map(async (item) => {
+                await prisma.receiving_image.create({
+                    data: {
+                        receiving_no: receiving_no,
+                        ReferenceNo: item?.ReferenceNo,
+                        uniqueId: item?.uniqueId
+                    }
+                })
+            })
+        ).catch(async (err) => {
+            await prisma.receivings.delete({   //delete the receiving if image upload fails
+                where: {
+                    id: createdReceiving?.id
+                }
+            })
+            throw err
+        })
+
+        //check for partially received
+        const totalReceiving = await prisma.receivings.aggregate({
+            where: {
+                receiving_no: receiving_no
+            },
+            _sum: {
+                received_quantity: true
+            }
+        })
+        const daRecInvIn: any = await prisma.da_received_inventory_inbox.findFirst({
+            where: {
+                order_no: order_no
+            }
+        })
+        if (Number(daRecInvIn?.total_quantity) === Number(totalReceiving)) {
+            const dataTocreate = { ...daRecInvIn }
+            delete dataTocreate.id
+            delete dataTocreate.createdAt
+            delete dataTocreate.updatedAt
+            await prisma.$transaction([
+                prisma.da_received_inventory_outbox.create({
+                    data: dataTocreate
+                }),
+                prisma.da_received_inventory_inbox.delete({
+                    where: {
+                        id: daRecInvIn?.id
+                    }
+                }),
+                prisma.procurement_status.update({
+                    data: {
+                        status: 5
+                    },
+                    where: {
+                        id: daRecInvIn?.statusId
+                    }
+                })
+            ])
+        } else {
+            await prisma.procurement_status.update({
+                data: {
+                    status: 4
+                },
+                where: {
+                    id: daRecInvIn?.statusId
+                }
+            })
+        }
+
 
         return 'Receiving created'
     } catch (err: any) {
-        console.log(err?.message)
-        return { error: false, message: err?.message }
+        console.log(err)
+        return { error: true, message: err?.message }
     }
 }

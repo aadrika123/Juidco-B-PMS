@@ -1,27 +1,78 @@
-import { PrismaClient } from "@prisma/client";
-const prisma = new PrismaClient()
+import crypto from 'crypto'
+import axios from 'axios'
+import FormData from 'form-data'
 
-export const receivingImageUploader = async (img: any, receiving_no: string) => {
+export const imageUploader = async (file: any, receiving_no: string) => {
     const toReturn: any[] = []
     try {
+
+        const dmsUrl = process.env.DMS_UPLOAD || ''
+
         await Promise.all(
-            img.map(async (item: any) => {
-                const dataToUpload: any = {
-                    name: item?.filename,
-                    destination: item?.destination,
-                    mime_type: item?.mimetype,
-                    size: String(item?.size),
-                    path: item?.path,
-                    receiving_no: receiving_no
+            file.map(async (item: any) => {
+
+                // const fileData = fs.readFileSync(item?.path)
+
+                const hashed = crypto.createHash('SHA256').update(item?.buffer).digest('hex');
+
+                const formData = new FormData()
+                formData.append('file', item?.buffer, item?.originalname.substring(0, 7));
+                formData.append('tags', item?.originalname.substring(0, 7));
+
+                const headers = {
+                    "x-digest": hashed,
+                    "token": "8Ufn6Jio6Obv9V7VXeP7gbzHSyRJcKluQOGorAD58qA1IQKYE0",
+                    "folderPathId": 1,
+                    ...formData.getHeaders(),
                 }
-                const uploadedImg = await prisma.receiving_image.create({
-                    data: dataToUpload
-                })
+
+                await axios.post(dmsUrl, formData, { headers })
+                    .then((response) => {
+                        // console.log(response?.data?.data, 'res')
+                        toReturn.push(response?.data?.data)
+                    }).catch((err) => {
+                        // console.log(err?.data?.data, 'err')
+                        // toReturn.push(err?.data?.data)
+                        throw err
+                    })
             })
         )
+
     } catch (err) {
-        // console.log(err)
         throw err
     }
+    // console.log(toReturn, 'toReturn')
     return toReturn
 }
+
+
+
+
+
+
+
+// $dmsUrl = Config::get('constants.DMS_URL');
+//             $file = $request->document;
+//             $filePath = $file->getPathname();
+//             $hashedFile = hash_file('sha256', $filePath);
+//             $filename = ($request->document)->getClientOriginalName();
+//             $api = "$dmsUrl/backend/document/upload";
+//             $transfer = [
+//                 "file" => $request->document,
+//                 "tags" => $filename,
+//                 // "reference" => 425
+//             ];
+//             $returnData = Http::withHeaders([
+//                 "x-digest"      => "$hashedFile",
+//                 "token"         => "8Ufn6Jio6Obv9V7VXeP7gbzHSyRJcKluQOGorAD58qA1IQKYE0",
+//                 "folderPathId"  => 1
+//             ])->attach([
+//                 [
+//                     'file',
+//                     file_get_contents($filePath),
+//                     $filename
+//                 ]
+//             ])->post("$api", $transfer);
+//             if ($returnData->successful()) {
+//                 return (json_decode($returnData->body(), true));
+//             }
