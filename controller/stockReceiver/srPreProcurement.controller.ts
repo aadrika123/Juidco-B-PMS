@@ -8,7 +8,8 @@ import {
     getPreProcurementOutboxDal,
     getPreProcurementOutboxByIdDal,
     getPreProcurementRejectedDal,
-    getPreProcurementReleasedDal
+    getPreProcurementReleasedDal,
+    editPreProcurementDal
 } from "../../dal/stockReceiver/preProcurement.dal";
 
 
@@ -181,6 +182,25 @@ export const getPreProcurementReleased = async (req: Request, res: Response) => 
         res.status(404).json({
             status: false,
             message: `Error while fetching released Pre procurement list`,
+            error: result?.message
+        })
+    }
+}
+
+
+
+export const editPreProcurement = async (req: Request, res: Response) => {
+    const result: any = await editPreProcurementDal(req)
+    if (!result?.error) {
+        res.status(200).json({
+            status: true,
+            message: `Edit successful`,
+            data: result
+        })
+    } else {
+        res.status(404).json({
+            status: false,
+            message: `Error while editing`,
             error: result?.message
         })
     }
