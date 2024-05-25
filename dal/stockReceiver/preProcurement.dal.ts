@@ -964,3 +964,139 @@ export const getPreProcurementReleasedDal = async (req: Request) => {
         return { error: true, message: err?.message }
     }
 }
+
+
+
+export const editPreProcurementDal = async (req: Request) => {
+    const {
+        id,
+        order_no,
+        category,
+        subcategory,
+        brand,
+        processor,
+        ram,
+        os,
+        rom,
+        graphics,
+        other_description,
+        rate,
+        quantity,
+        total_rate,
+        remark,
+        colour,
+        material,
+        dimension,
+        room_type,
+        included_components,
+        size,
+        recomended_uses,
+        bristle,
+        weight,
+        number_of_items
+    } = req.body
+
+
+    const data: any = {
+        category: { connect: { id: category } },
+        subcategory: { connect: { id: subcategory } },
+        brand: brand,
+        processor: processor,
+        ram: ram,
+        os: os,
+        rom: rom,
+        graphics: graphics,
+        other_description: other_description,
+        rate: Number(rate),
+        quantity: Number(quantity),
+        total_rate: Number(total_rate),
+        remark: remark,
+        isEdited: true,
+        colour: colour,
+        material: material,
+        dimension: dimension,
+        room_type: room_type,
+        included_components: included_components,
+        size: size,
+        recomended_uses: recomended_uses,
+        bristle: bristle,
+        weight: weight,
+        number_of_items: Number(number_of_items)
+    }
+    if (Number(rate) && Number(quantity)) {
+        if (Number(rate) * Number(quantity) !== Number(total_rate)) {
+            return { error: true, message: "The calculation result for total rate is invalid" }
+        }
+    }
+
+    const preProcurement: any = await prisma.da_pre_procurement_inbox.findFirst({
+        where: {
+            id: id
+        },
+        select: {
+            order_no: true,
+            category_masterId: true,
+            subcategory_masterId: true,
+            brand: true,
+            processor: true,
+            ram: true,
+            os: true,
+            rom: true,
+            graphics: true,
+            other_description: true,
+            rate: true,
+            quantity: true,
+            statusId: true,
+            total_rate: true,
+            remark: true,
+            isEdited: true,
+            colour: true,
+            material: true,
+            dimension: true,
+            room_type: true,
+            included_components: true,
+            size: true,
+            recomended_uses: true,
+            bristle: true,
+            weight: true,
+            number_of_items: true
+        }
+    })
+    const historyExistence = await prisma.pre_procurement_history.count({
+        where: {
+            order_no: order_no
+        }
+    })
+
+    try {
+        await prisma.$transaction([
+
+            ...(historyExistence === 0 ? [prisma.pre_procurement_history.create({
+                data: preProcurement
+            })] : []),
+            prisma.da_pre_procurement_inbox.update({
+                where: {
+                    id: id
+                },
+                data: data
+            }),
+            prisma.sr_pre_procurement_outbox.update({
+                where: {
+                    order_no: order_no
+                },
+                data: data
+            }),
+            // prisma.pre_procurement_history.update({
+            //     where: {
+            //         order_no: order_no
+            //     },
+            //     data: data
+            // })
+
+        ])
+        return 'Edited'
+    } catch (err: any) {
+        console.log(err?.message)
+        return { error: true, message: err?.message }
+    }
+}

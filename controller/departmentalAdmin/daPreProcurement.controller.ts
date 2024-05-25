@@ -90,7 +90,7 @@ export const editPreProcurement = async (req: Request, res: Response) => {
     if (!result?.error) {
         res.status(200).json({
             status: true,
-            message: `Edit successfull`,
+            message: `Edit successful`,
             data: result
         })
     } else {
