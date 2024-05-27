@@ -123,22 +123,26 @@ export const getReceivedInventoryDal = async (req: Request) => {
                 })
 
 
-                // item?.receivings.forEach((receiving: any) => {
-                //     receiving?.receiving_image.forEach(async (img: any) => {
-                //         const headers = {
-                //             "token": "8Ufn6Jio6Obv9V7VXeP7gbzHSyRJcKluQOGorAD58qA1IQKYE0"
-                //         }
-                //         await axios.post(dmsUrlGet, { "referenceNo": img?.ReferenceNo }, { headers })
-                //             .then((response) => {
-                //                 // console.log(response?.data?.data, 'res')
-                //                 img.imageUrl = response?.data?.data?.fullPath
-                //             }).catch((err) => {
-                //                 // console.log(err?.data?.data, 'err')
-                //                 // toReturn.push(err?.data?.data)
-                //                 throw err
-                //             })
-                //     })
-                // })
+                await Promise.all(
+                    receivings.map(async (receiving: any) => {
+                        await Promise.all(
+                            receiving?.receiving_image.map(async (img: any) => {
+                                const headers = {
+                                    "token": "8Ufn6Jio6Obv9V7VXeP7gbzHSyRJcKluQOGorAD58qA1IQKYE0"
+                                }
+                                await axios.post(dmsUrlGet, { "referenceNo": img?.ReferenceNo }, { headers })
+                                    .then((response) => {
+                                        // console.log(response?.data?.data, 'res')
+                                        img.imageUrl = response?.data?.data?.fullPath
+                                    }).catch((err) => {
+                                        // console.log(err?.data?.data, 'err')
+                                        // toReturn.push(err?.data?.data)
+                                        throw err
+                                    })
+                            })
+                        )
+                    })
+                )
 
                 resultToSend.push({ ...item, ...tempPreProcurement, receivings: receivings })
             })
@@ -289,26 +293,19 @@ export const createReceivingDal = async (req: Request) => {
         }
 
 
-        // const uploaded = await imageUploader(img)   //It will return reference number and unique id as an object after uploading.
+        const uploaded = await imageUploader(img)   //It will return reference number and unique id as an object after uploading.
 
-        // await Promise.all(
-        //     uploaded.map(async (item) => {
-        //         await prisma.receiving_image.create({
-        //             data: {
-        //                 receiving_no: receiving_no,
-        //                 ReferenceNo: item?.ReferenceNo,
-        //                 uniqueId: item?.uniqueId
-        //             }
-        //         })
-        //     })
-        // ).catch(async (err) => {
-        //     await prisma.receivings.delete({   //delete the receiving if image upload fails
-        //         where: {
-        //             id: createdReceiving?.id
-        //         }
-        //     })
-        //     throw err
-        // })
+        await Promise.all(
+            uploaded.map(async (item) => {
+                await prisma.receiving_image.create({
+                    data: {
+                        receiving_no: receiving_no,
+                        ReferenceNo: item?.ReferenceNo,
+                        uniqueId: item?.uniqueId
+                    }
+                })
+            })
+        )
 
         const outboxCount = await prisma.da_received_inventory_outbox.count({
             where: {
@@ -338,6 +335,14 @@ export const createReceivingDal = async (req: Request) => {
                     where: {
                         id: daRecInvIn?.statusId
                     }
+                }),
+                prisma.da_received_inventory_outbox.update({
+                    where: {
+                        order_no: order_no
+                    },
+                    data: {
+                        is_partial: false
+                    }
                 })
             ])
         } else {
@@ -359,6 +364,181 @@ export const createReceivingDal = async (req: Request) => {
         return 'Receiving created'
     } catch (err: any) {
         console.log(err)
+        return { error: true, message: err?.message }
+    }
+}
+
+
+
+export const getReceivedInventoryOutboxDal = async (req: Request) => {
+    const page: number | undefined = Number(req?.query?.page)
+    const take: number | undefined = Number(req?.query?.take)
+    const startIndex: number | undefined = (page - 1) * take
+    const endIndex: number | undefined = startIndex + take
+    let count: number
+    let totalPage: number
+    let pagination: any = {}
+    const whereClause: any = {};
+
+    const search: string = req?.query?.search ? String(req?.query?.search) : ''
+
+    const category: any[] = Array.isArray(req?.query?.category) ? req?.query?.category : [req?.query?.category]
+    const subcategory: any[] = Array.isArray(req?.query?.scategory) ? req?.query?.scategory : [req?.query?.scategory]
+    const status: any[] = Array.isArray(req?.query?.status) ? req?.query?.status : [req?.query?.status]
+
+    whereClause.OR = [
+        {
+            order_no: {
+                contains: search,
+                mode: 'insensitive'
+            }
+        },
+        {
+            pre_procurement: {
+                other_description: {
+                    contains: search,
+                    mode: 'insensitive'
+                }
+            }
+        },
+        {
+            pre_procurement: {
+                brand: {
+                    contains: search,
+                    mode: 'insensitive'
+                }
+            }
+        }
+    ];
+
+    if (category[0]) {
+        whereClause.pre_procurement = {
+            category_masterId: {
+                in: category
+            }
+        }
+    }
+    if (subcategory[0]) {
+        whereClause.pre_procurement = {
+            subcategory_masterId: {
+                in: subcategory
+            }
+        }
+    }
+    if (status[0]) {
+        whereClause.status = {
+            status: {
+                in: status.map(Number)
+            }
+        }
+    }
+
+    try {
+        count = await prisma.da_received_inventory_outbox.count({
+            where: whereClause
+        })
+        const result: any = await prisma.da_received_inventory_outbox.findMany({
+            orderBy: {
+                createdAt: 'desc'
+            },
+            where: whereClause,
+            ...(page && { skip: startIndex }),
+            ...(take && { take: take }),
+            select: {
+                id: true,
+                order_no: true,
+                pre_procurement: true,
+                status: true,
+                supplier_name: true,
+                gst_no: true,
+                final_rate: true,
+                gst: true,
+                total_quantity: true,
+                total_price: true,
+                unit_price: true,
+                is_gst_added: true,
+            }
+        })
+
+        let resultToSend: any[] = []
+        await Promise.all(
+            result.map(async (item: any) => {
+                const tempPreProcurement = { ...item?.pre_procurement }
+                delete tempPreProcurement.id
+                delete tempPreProcurement.createdAt
+                delete tempPreProcurement.updatedAt
+                delete tempPreProcurement.statusId
+                delete item.pre_procurement
+
+                const receivings = await prisma.receivings.findMany({
+                    where: {
+                        order_no: item?.order_no
+                    },
+                    select: {
+                        order_no: true,
+                        receiving_no: true,
+                        date: true,
+                        received_quantity: true,
+                        remaining_quantity: true,
+                        receiving_image: {
+                            select: {
+                                ReferenceNo: true,
+                                uniqueId: true,
+                                receiving_no: true
+                            }
+                        }
+                    }
+                })
+
+
+                await Promise.all(
+                    receivings.map(async (receiving: any) => {
+                        await Promise.all(
+                            receiving?.receiving_image.map(async (img: any) => {
+                                const headers = {
+                                    "token": "8Ufn6Jio6Obv9V7VXeP7gbzHSyRJcKluQOGorAD58qA1IQKYE0"
+                                }
+                                await axios.post(dmsUrlGet, { "referenceNo": img?.ReferenceNo }, { headers })
+                                    .then((response) => {
+                                        // console.log(response?.data?.data, 'res')
+                                        img.imageUrl = response?.data?.data?.fullPath
+                                    }).catch((err) => {
+                                        // console.log(err?.data?.data, 'err')
+                                        // toReturn.push(err?.data?.data)
+                                        throw err
+                                    })
+                            })
+                        )
+                    })
+                )
+
+                resultToSend.push({ ...item, ...tempPreProcurement, receivings: receivings })
+            })
+        )
+
+        totalPage = Math.ceil(count / take)
+        if (endIndex < count) {
+            pagination.next = {
+                page: page + 1,
+                take: take
+            }
+        }
+        if (startIndex > 0) {
+            pagination.prev = {
+                page: page - 1,
+                take: take
+            }
+        }
+        pagination.currentPage = page
+        pagination.currentTake = take
+        pagination.totalPage = totalPage
+        pagination.totalResult = count
+        return {
+            data: resultToSend,
+            pagination: pagination
+        }
+    } catch (err: any) {
+        console.log(err?.message)
         return { error: true, message: err?.message }
     }
 }

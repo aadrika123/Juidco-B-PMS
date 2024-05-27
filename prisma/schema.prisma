@@ -374,9 +374,9 @@ model receivings {
 model receiving_image {
     id           String     @id @default(uuid())
     ReferenceNo  String
-    uniqueId     String
-    receiving    receivings @relation(fields: [receiving_no], references: [receiving_no])
-    receiving_no String
+    uniqueId     String?
+    receiving    receivings? @relation(fields: [receiving_no], references: [receiving_no])
+    receiving_no String?
     createdAt    DateTime   @default(now())
     updatedAt    DateTime   @updatedAt
 }
