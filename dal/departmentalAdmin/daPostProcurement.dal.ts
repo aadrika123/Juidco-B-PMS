@@ -298,9 +298,15 @@ export const SaveAdditionalDetailsProcurementDal = async (req: Request) => {
             delete daPostOutUp.createdAt
             delete daPostOutUp.updatedAt
         }
-        await prisma.da_received_inventory_inbox.create({
-            data: daPostOutUp
-        })
+        await prisma.$transaction([
+            prisma.da_received_inventory_inbox.create({
+                data: daPostOutUp
+            }),
+            prisma.sr_post_procurement_inbox.create({
+                data: daPostOutUp
+            })
+        ])
+
 
         return 'Additional Details Saved'
     } catch (err: any) {
