@@ -123,7 +123,15 @@ export const getReceivedInventoryDal = async (req: Request) => {
                         receiving_no: true,
                         date: true,
                         received_quantity: true,
-                        remaining_quantity: true
+                        remaining_quantity: true,
+                        is_added: true,
+                        receiving_image: {
+                            select: {
+                                ReferenceNo: true,
+                                uniqueId: true,
+                                receiving_no: true
+                            }
+                        }
                     }
                 })
 
@@ -228,6 +236,7 @@ export const getReceivedInventoryByIdDal = async (req: Request) => {
                 date: true,
                 received_quantity: true,
                 remaining_quantity: true,
+                is_added: true,
                 receiving_image: {
                     select: {
                         ReferenceNo: true,
@@ -317,6 +326,7 @@ export const getReceivedInventoryByOrderNoDal = async (req: Request) => {
                 date: true,
                 received_quantity: true,
                 remaining_quantity: true,
+                is_added: true,
                 receiving_image: {
                     select: {
                         ReferenceNo: true,
@@ -607,6 +617,7 @@ export const getReceivedInventoryOutboxDal = async (req: Request) => {
                         date: true,
                         received_quantity: true,
                         remaining_quantity: true,
+                        is_added: true,
                         receiving_image: {
                             select: {
                                 ReferenceNo: true,
@@ -718,6 +729,7 @@ export const getReceivedInventoryOutboxByIdDal = async (req: Request) => {
                 date: true,
                 received_quantity: true,
                 remaining_quantity: true,
+                is_added: true,
                 receiving_image: {
                     select: {
                         ReferenceNo: true,
