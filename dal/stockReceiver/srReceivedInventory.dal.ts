@@ -706,7 +706,7 @@ export const addToInventoryDal = async (req: Request) => {
 
         return {
             dead_stock: dead_stock || 0,
-            total_Added_stock: totalNonAddedReceiving?._sum?.received_quantity + Number(dead_stock)
+            total_Added_stock: dead_stock ? totalNonAddedReceiving?._sum?.received_quantity + Number(dead_stock) : totalNonAddedReceiving?._sum?.received_quantity
         }
     } catch (err: any) {
         console.log(err)
