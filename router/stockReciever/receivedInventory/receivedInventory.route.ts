@@ -5,7 +5,7 @@ import {
     getReceivedInventory,
     getReceivedInventoryById,
     getReceivedInventoryByOrderNo,
-    // createReceiving,
+    addToInventory,
     getReceivedInventoryOutbox,
     getReceivedInventoryOutboxById
 } from "../../../controller/stockReceiver/srReceivedInventory.controller";
@@ -14,8 +14,7 @@ import {
 router.get('/', getReceivedInventory)
 router.get('/outbox', getReceivedInventoryOutbox)
 router.get('/by-order-no/:order_no', getReceivedInventoryByOrderNo)
-// router.post('/receive', upload.array('img'), createReceiving)
-// router.get('/outbox', createReceiving)
+router.post('/add-to-inv', upload.array('img'), addToInventory)
 router.get('/outbox/:id', getReceivedInventoryOutboxById)
 router.get('/:id', getReceivedInventoryById)
 
