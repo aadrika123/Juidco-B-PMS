@@ -73,10 +73,10 @@ export const getReceivedInventoryDal = async (req: Request) => {
     }
 
     try {
-        count = await prisma.da_received_inventory_inbox.count({
+        count = await prisma.sr_received_inventory_inbox.count({
             where: whereClause
         })
-        const result: any = await prisma.da_received_inventory_inbox.findMany({
+        const result: any = await prisma.sr_received_inventory_inbox.findMany({
             orderBy: {
                 createdAt: 'desc'
             },
@@ -184,7 +184,7 @@ export const getReceivedInventoryDal = async (req: Request) => {
 export const getReceivedInventoryByIdDal = async (req: Request) => {
     const { id } = req.params
     try {
-        const result = await prisma.da_received_inventory_inbox.findFirst({
+        const result = await prisma.sr_received_inventory_inbox.findFirst({
             where: {
                 id: id
             },
@@ -219,7 +219,7 @@ export const getReceivedInventoryByIdDal = async (req: Request) => {
 export const getReceivedInventoryByOrderNoDal = async (req: Request) => {
     const { order_no } = req.params
     try {
-        const result = await prisma.da_received_inventory_inbox.findFirst({
+        const result = await prisma.sr_received_inventory_inbox.findFirst({
             where: {
                 order_no: order_no
             },
@@ -252,136 +252,136 @@ export const getReceivedInventoryByOrderNoDal = async (req: Request) => {
 
 
 
-export const createReceivingDal = async (req: Request) => {
-    const {
-        order_no,
-        date,
-        received_quantity,
-        remaining_quantity,
-        ulb_id
-    } = req.body
-    const formattedDate = new Date(date)
-    const img = req.files
-    // console.log(img)
-    try {
-        const receiving_no = generateReceivingNumber(ulb_id)
+// export const createReceivingDal = async (req: Request) => {
+//     const {
+//         order_no,
+//         date,
+//         received_quantity,
+//         remaining_quantity,
+//         ulb_id
+//     } = req.body
+//     const formattedDate = new Date(date)
+//     const img = req.files
+//     // console.log(img)
+//     try {
+//         const receiving_no = generateReceivingNumber(ulb_id)
 
-        const data: any = {
-            order_no: order_no,
-            receiving_no: receiving_no,
-            date: formattedDate,
-            received_quantity: Number(received_quantity),
-            remaining_quantity: Number(remaining_quantity)
-        }
+//         const data: any = {
+//             order_no: order_no,
+//             receiving_no: receiving_no,
+//             date: formattedDate,
+//             received_quantity: Number(received_quantity),
+//             remaining_quantity: Number(remaining_quantity)
+//         }
 
-        const daRecInvIn: any = await prisma.da_received_inventory_inbox.findFirst({
-            where: {
-                order_no: order_no
-            }
-        })
+//         const daRecInvIn: any = await prisma.da_received_inventory_inbox.findFirst({
+//             where: {
+//                 order_no: order_no
+//             }
+//         })
 
-        const totalReceiving: any = await prisma.receivings.aggregate({
-            where: {
-                order_no: order_no
-            },
-            _sum: {
-                received_quantity: true
-            }
-        })
+//         const totalReceiving: any = await prisma.receivings.aggregate({
+//             where: {
+//                 order_no: order_no
+//             },
+//             _sum: {
+//                 received_quantity: true
+//             }
+//         })
 
-        //check for received quantity exceeding total allowed quantity
-        if (totalReceiving?._sum?.received_quantity + Number(received_quantity) > daRecInvIn?.total_quantity) {
-            throw { error: true, message: 'Provided received quantity will make the total received quantity more than the quantity that can be received' }
-        }
+//         //check for received quantity exceeding total allowed quantity
+//         if (totalReceiving?._sum?.received_quantity + Number(received_quantity) > daRecInvIn?.total_quantity) {
+//             throw { error: true, message: 'Provided received quantity will make the total received quantity more than the quantity that can be received' }
+//         }
 
-        // check for valid remaining quantity
-        if (totalReceiving?._sum?.received_quantity + Number(received_quantity) + Number(remaining_quantity) !== daRecInvIn?.total_quantity) {
-            throw { error: true, message: 'Provided remaining quantity is invalid' }
-        }
+//         // check for valid remaining quantity
+//         if (totalReceiving?._sum?.received_quantity + Number(received_quantity) + Number(remaining_quantity) !== daRecInvIn?.total_quantity) {
+//             throw { error: true, message: 'Provided remaining quantity is invalid' }
+//         }
 
-        const createdReceiving = await prisma.receivings.create({
-            data: data
-        })
+//         const createdReceiving = await prisma.receivings.create({
+//             data: data
+//         })
 
-        if (!createdReceiving) {
-            throw 'Error while creating receiving'
-        }
+//         if (!createdReceiving) {
+//             throw 'Error while creating receiving'
+//         }
 
 
-        const uploaded = await imageUploader(img)   //It will return reference number and unique id as an object after uploading.
+//         const uploaded = await imageUploader(img)   //It will return reference number and unique id as an object after uploading.
 
-        await Promise.all(
-            uploaded.map(async (item) => {
-                await prisma.receiving_image.create({
-                    data: {
-                        receiving_no: receiving_no,
-                        ReferenceNo: item?.ReferenceNo,
-                        uniqueId: item?.uniqueId
-                    }
-                })
-            })
-        )
+//         await Promise.all(
+//             uploaded.map(async (item) => {
+//                 await prisma.receiving_image.create({
+//                     data: {
+//                         receiving_no: receiving_no,
+//                         ReferenceNo: item?.ReferenceNo,
+//                         uniqueId: item?.uniqueId
+//                     }
+//                 })
+//             })
+//         )
 
-        const outboxCount = await prisma.da_received_inventory_outbox.count({
-            where: {
-                order_no: order_no
-            }
-        })
+//         const outboxCount = await prisma.da_received_inventory_outbox.count({
+//             where: {
+//                 order_no: order_no
+//             }
+//         })
 
-        //check for fully received
-        const dataTocreate = { ...daRecInvIn }
-        delete dataTocreate.id
-        delete dataTocreate.createdAt
-        delete dataTocreate.updatedAt
-        if (totalReceiving?._sum?.received_quantity + Number(received_quantity) === daRecInvIn?.total_quantity) {
-            await prisma.$transaction([
-                ...(outboxCount === 0 ? [prisma.da_received_inventory_outbox.create({
-                    data: dataTocreate
-                })] : []),
-                prisma.da_received_inventory_inbox.delete({
-                    where: {
-                        id: daRecInvIn?.id
-                    }
-                }),
-                prisma.procurement_status.update({
-                    data: {
-                        status: 5
-                    },
-                    where: {
-                        id: daRecInvIn?.statusId
-                    }
-                }),
-                prisma.da_received_inventory_outbox.update({
-                    where: {
-                        order_no: order_no
-                    },
-                    data: {
-                        is_partial: false
-                    }
-                })
-            ])
-        } else {
-            await prisma.$transaction([
-                ...(outboxCount === 0 ? [prisma.da_received_inventory_outbox.create({
-                    data: dataTocreate
-                })] : []),
-                prisma.procurement_status.update({
-                    data: {
-                        status: 4
-                    },
-                    where: {
-                        id: daRecInvIn?.statusId
-                    }
-                })
-            ])
-        }
+//         //check for fully received
+//         const dataTocreate = { ...daRecInvIn }
+//         delete dataTocreate.id
+//         delete dataTocreate.createdAt
+//         delete dataTocreate.updatedAt
+//         if (totalReceiving?._sum?.received_quantity + Number(received_quantity) === daRecInvIn?.total_quantity) {
+//             await prisma.$transaction([
+//                 ...(outboxCount === 0 ? [prisma.da_received_inventory_outbox.create({
+//                     data: dataTocreate
+//                 })] : []),
+//                 prisma.da_received_inventory_inbox.delete({
+//                     where: {
+//                         id: daRecInvIn?.id
+//                     }
+//                 }),
+//                 prisma.procurement_status.update({
+//                     data: {
+//                         status: 5
+//                     },
+//                     where: {
+//                         id: daRecInvIn?.statusId
+//                     }
+//                 }),
+//                 prisma.da_received_inventory_outbox.update({
+//                     where: {
+//                         order_no: order_no
+//                     },
+//                     data: {
+//                         is_partial: false
+//                     }
+//                 })
+//             ])
+//         } else {
+//             await prisma.$transaction([
+//                 ...(outboxCount === 0 ? [prisma.da_received_inventory_outbox.create({
+//                     data: dataTocreate
+//                 })] : []),
+//                 prisma.procurement_status.update({
+//                     data: {
+//                         status: 4
+//                     },
+//                     where: {
+//                         id: daRecInvIn?.statusId
+//                     }
+//                 })
+//             ])
+//         }
 
-        return 'Receiving created'
-    } catch (err: any) {
-        console.log(err)
-        return { error: true, message: err?.message }
-    }
-}
+//         return 'Receiving created'
+//     } catch (err: any) {
+//         console.log(err)
+//         return { error: true, message: err?.message }
+//     }
+// }
 
 
 
@@ -449,10 +449,10 @@ export const getReceivedInventoryOutboxDal = async (req: Request) => {
     }
 
     try {
-        count = await prisma.da_received_inventory_outbox.count({
+        count = await prisma.sr_received_inventory_outbox.count({
             where: whereClause
         })
-        const result: any = await prisma.da_received_inventory_outbox.findMany({
+        const result: any = await prisma.sr_received_inventory_outbox.findMany({
             orderBy: {
                 createdAt: 'desc'
             },
