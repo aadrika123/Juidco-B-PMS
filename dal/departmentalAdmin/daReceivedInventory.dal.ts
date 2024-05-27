@@ -261,7 +261,7 @@ export const getReceivedInventoryByIdDal = async (req: Request) => {
 
         resultToSend = { ...result, receivings: receivings, total_receivings: totalReceiving?._sum?.received_quantity }
 
-        return result
+        return resultToSend
     } catch (err: any) {
         console.log(err?.message)
         return { error: true, message: err?.message }
@@ -271,6 +271,7 @@ export const getReceivedInventoryByIdDal = async (req: Request) => {
 
 export const getReceivedInventoryByOrderNoDal = async (req: Request) => {
     const { order_no } = req.params
+    let resultToSend: any = {}
     try {
         const result = await prisma.da_received_inventory_inbox.findFirst({
             where: {
@@ -296,7 +297,60 @@ export const getReceivedInventoryByOrderNoDal = async (req: Request) => {
                 is_gst_added: true
             }
         })
-        return result
+
+        const totalReceiving: any = await prisma.receivings.aggregate({
+            where: {
+                order_no: result?.order_no || ''
+            },
+            _sum: {
+                received_quantity: true
+            }
+        })
+
+        const receivings = await prisma.receivings.findMany({
+            where: {
+                order_no: order_no || ''
+            },
+            select: {
+                order_no: true,
+                receiving_no: true,
+                date: true,
+                received_quantity: true,
+                remaining_quantity: true,
+                receiving_image: {
+                    select: {
+                        ReferenceNo: true,
+                        uniqueId: true,
+                        receiving_no: true
+                    }
+                }
+            }
+        })
+
+        await Promise.all(
+            receivings.map(async (receiving: any) => {
+                await Promise.all(
+                    receiving?.receiving_image.map(async (img: any) => {
+                        const headers = {
+                            "token": "8Ufn6Jio6Obv9V7VXeP7gbzHSyRJcKluQOGorAD58qA1IQKYE0"
+                        }
+                        await axios.post(dmsUrlGet, { "referenceNo": img?.ReferenceNo }, { headers })
+                            .then((response) => {
+                                // console.log(response?.data?.data, 'res')
+                                img.imageUrl = response?.data?.data?.fullPath
+                            }).catch((err) => {
+                                // console.log(err?.data?.data, 'err')
+                                // toReturn.push(err?.data?.data)
+                                throw err
+                            })
+                    })
+                )
+            })
+        )
+
+        resultToSend = { ...result, receivings: receivings, total_receivings: totalReceiving?._sum?.received_quantity }
+
+        return resultToSend
     } catch (err: any) {
         console.log(err?.message)
         return { error: true, message: err?.message }
@@ -697,7 +751,7 @@ export const getReceivedInventoryOutboxByIdDal = async (req: Request) => {
 
         resultToSend = { ...result, receivings: receivings, total_receivings: totalReceiving?._sum?.received_quantity }
 
-        return result
+        return resultToSend
     } catch (err: any) {
         console.log(err?.message)
         return { error: true, message: err?.message }
