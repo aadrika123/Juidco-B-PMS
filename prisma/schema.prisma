@@ -360,26 +360,23 @@ model da_post_procurement_outbox {
 // received inventory============================================================================================================================================================================================================================================================================================================
 
 model receivings {
-    id                             String                        @id @default(uuid())
-    order_no                       String
-    receiving_no                   String                        @unique
-    date                           DateTime?                     @db.Date
-    received_quantity              Int?
-    remaining_quantity             Int?
-    received_inventory             da_received_inventory_inbox   @relation(fields: [order_no], references: [order_no])
-    createdAt                      DateTime                      @default(now())
-    updatedAt                      DateTime                      @updatedAt
-    receiving_image                receiving_image[]
-    da_received_inventory_outbox   da_received_inventory_outbox? @relation(fields: [da_received_inventory_outboxId], references: [id])
-    da_received_inventory_outboxId String?
+    id                 String            @id @default(uuid())
+    order_no           String?
+    receiving_no       String            @unique
+    date               DateTime?         @db.Date
+    received_quantity  Int?
+    remaining_quantity Int?
+    createdAt          DateTime          @default(now())
+    updatedAt          DateTime          @updatedAt
+    receiving_image    receiving_image[]
 }
 
 model receiving_image {
     id           String     @id @default(uuid())
     ReferenceNo  String
-    uniqueId     String
-    receiving    receivings @relation(fields: [receiving_no], references: [receiving_no])
-    receiving_no String
+    uniqueId     String?
+    receiving    receivings? @relation(fields: [receiving_no], references: [receiving_no])
+    receiving_no String?
     createdAt    DateTime   @default(now())
     updatedAt    DateTime   @updatedAt
 }
@@ -402,12 +399,11 @@ model da_received_inventory_inbox {
     is_partial                  Boolean                   @default(true)
     createdAt                   DateTime                  @default(now())
     updatedAt                   DateTime                  @updatedAt
-    receivings                  receivings[]
 }
 
 model da_received_inventory_outbox {
     id                          String                    @id @default(uuid())
-    order_no                    String                    @unique
+    order_no                    String?                   @unique
     status                      procurement_status        @relation(fields: [statusId], references: [id])
     statusId                    String                    @unique
     pre_procurement             da_pre_procurement_outbox @relation(fields: [da_pre_procurement_outboxId], references: [id])
@@ -423,5 +419,4 @@ model da_received_inventory_outbox {
     is_partial                  Boolean                   @default(true)
     createdAt                   DateTime                  @default(now())
     updatedAt                   DateTime                  @updatedAt
-    receivings                  receivings[]
 }

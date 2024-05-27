@@ -376,104 +376,106 @@ export const getPreProcurementByOrderNoDal = async (req: Request) => {
 export const forwardToDaDal = async (req: Request) => {
     const { preProcurement }: { preProcurement: string[] } = req.body
     try {
-        preProcurement.map(async (item) => {
-            const status: any = await prisma.sr_pre_procurement_inbox.findFirst({
-                where: {
-                    id: item
-                },
-                select: {
-                    status: {
-                        select: { status: true }
-                    }
-                }
-            })
-            if (status?.status?.status < -1 && status?.status?.status > 0) {
-                return
-            }
-            const inbox: any = await prisma.sr_pre_procurement_inbox.findFirst({
-                where: {
-                    id: item
-                },
-                select: {
-                    order_no: true,
-                    category_masterId: true,
-                    subcategory_masterId: true,
-                    brand: true,
-                    processor: true,
-                    ram: true,
-                    os: true,
-                    rom: true,
-                    graphics: true,
-                    other_description: true,
-                    rate: true,
-                    quantity: true,
-                    total_rate: true,
-                    statusId: true,
-                    isEdited: true,
-                    remark: true,
-                    colour: true,
-                    material: true,
-                    dimension: true,
-                    room_type: true,
-                    included_components: true,
-                    size: true,
-                    recomended_uses: true,
-                    bristle: true,
-                    weight: true,
-                    number_of_items: true,
-                    status: true
-                }
-            })
-
-            const statusChecker = (status: number) => {
-                if (status === 0) {
-                    return 1
-                } else {
-                    return 69
-                }
-            }
-
-            if (inbox === null) {
-                return
-            }
-            const daOutbox: any = await prisma.da_pre_procurement_outbox.count({
-                where: {
-                    order_no: inbox?.order_no
-                }
-            })
-            delete inbox.status
-            await prisma.$transaction([
-
-                prisma.sr_pre_procurement_outbox.create({
-                    data: inbox
-                }),
-                prisma.da_pre_procurement_inbox.create({
-                    data: inbox
-                }),
-                prisma.procurement_status.update({
-                    where: {
-                        id: inbox?.statusId
-                    },
-                    data: {
-                        status: statusChecker(Number(inbox?.status?.status))
-                    }
-                }),
-                prisma.sr_pre_procurement_inbox.delete({
+        await Promise.all(
+            preProcurement.map(async (item) => {
+                const status: any = await prisma.sr_pre_procurement_inbox.findFirst({
                     where: {
                         id: item
                     },
-                }),
-                ...(daOutbox !== 0 ? [prisma.da_pre_procurement_outbox.delete({
+                    select: {
+                        status: {
+                            select: { status: true }
+                        }
+                    }
+                })
+                if (status?.status?.status < -1 || status?.status?.status > 0) {
+                    throw { error: true, message: "Pre Procurement is not valid to be forwarded" }
+                }
+                const inbox: any = await prisma.sr_pre_procurement_inbox.findFirst({
+                    where: {
+                        id: item
+                    },
+                    select: {
+                        order_no: true,
+                        category_masterId: true,
+                        subcategory_masterId: true,
+                        brand: true,
+                        processor: true,
+                        ram: true,
+                        os: true,
+                        rom: true,
+                        graphics: true,
+                        other_description: true,
+                        rate: true,
+                        quantity: true,
+                        total_rate: true,
+                        statusId: true,
+                        isEdited: true,
+                        remark: true,
+                        colour: true,
+                        material: true,
+                        dimension: true,
+                        room_type: true,
+                        included_components: true,
+                        size: true,
+                        recomended_uses: true,
+                        bristle: true,
+                        weight: true,
+                        number_of_items: true,
+                        status: true
+                    }
+                })
+                const statusChecker = (status: number) => {
+                    if (status === 0) {
+                        return 1
+                    } else {
+                        return 69
+                    }
+                }
+
+                if (inbox === null) {
+                    return
+                }
+                const daOutbox: any = await prisma.da_pre_procurement_outbox.count({
                     where: {
                         order_no: inbox?.order_no
-                    },
-                })] : [])
+                    }
+                })
+                const statusToUpdate = statusChecker(Number(inbox?.status?.status))
+                delete inbox.status
+                await prisma.$transaction([
 
-            ])
-        })
-        return "forwarded"
+                    prisma.sr_pre_procurement_outbox.create({
+                        data: inbox
+                    }),
+                    prisma.da_pre_procurement_inbox.create({
+                        data: inbox
+                    }),
+                    prisma.procurement_status.update({
+                        where: {
+                            id: inbox?.statusId
+                        },
+                        data: {
+                            status: statusToUpdate
+                        }
+                    }),
+                    prisma.sr_pre_procurement_inbox.delete({
+                        where: {
+                            id: item
+                        },
+                    }),
+                    ...(daOutbox !== 0 ? [prisma.da_pre_procurement_outbox.delete({
+                        where: {
+                            order_no: inbox?.order_no
+                        },
+                    })] : [])
+
+                ])
+            })
+        )
+        return 'Forwarded'
     } catch (err: any) {
-        console.log(err?.message)
+        // console.log(err?.message)
         return { error: true, message: err?.message }
     }
 }
@@ -613,7 +615,7 @@ export const getPreProcurementOutboxDal = async (req: Request) => {
             pagination: pagination
         }
     } catch (err: any) {
-        console.log(err?.message)
+        // console.log(err?.message)
         return { error: true, message: err?.message }
     }
 }

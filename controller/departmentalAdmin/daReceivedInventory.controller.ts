@@ -3,7 +3,8 @@ import {
     getReceivedInventoryDal,
     getReceivedInventoryByIdDal,
     getReceivedInventoryByOrderNoDal,
-    createReceivingDal
+    createReceivingDal,
+    getReceivedInventoryOutboxDal
 } from "../../dal/departmentalAdmin/daReceivedInventory.dal";
 
 
@@ -80,3 +81,22 @@ export const createReceiving = async (req: Request, res: Response) => {
     }
 }
 
+
+
+export const getReceivedInventoryOutbox = async (req: Request, res: Response) => {
+    const result: any = await getReceivedInventoryOutboxDal(req)
+    if (!result?.error) {
+        res.status(200).json({
+            status: true,
+            message: `Received Inventory list fetched successfully`,
+            data: result?.data,
+            pagination: result?.pagination
+        })
+    } else {
+        res.status(404).json({
+            status: false,
+            message: `Error while fetching Received Inventory list`,
+            error: result?.message
+        })
+    }
+}

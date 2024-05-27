@@ -5,11 +5,13 @@ import {
     getReceivedInventory,
     getReceivedInventoryById,
     getReceivedInventoryByOrderNo,
-    createReceiving
+    createReceiving,
+    getReceivedInventoryOutbox
 } from "../../../controller/departmentalAdmin/daReceivedInventory.controller";
 
 
 router.get('/', getReceivedInventory)
+router.get('/outbox', getReceivedInventoryOutbox)
 router.get('/by-order-no/:order_no', getReceivedInventoryByOrderNo)
 router.post('/receive', upload.array('img'), createReceiving)
 // router.get('/outbox', createReceiving)
