@@ -302,6 +302,9 @@ export const SaveAdditionalDetailsProcurementDal = async (req: Request) => {
             prisma.da_received_inventory_inbox.create({
                 data: daPostOutUp
             }),
+            prisma.sr_received_inventory_inbox.create({
+                data: daPostOutUp
+            }),
             prisma.sr_post_procurement_inbox.create({
                 data: daPostOutUp
             })

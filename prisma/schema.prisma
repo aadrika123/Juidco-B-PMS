@@ -137,6 +137,8 @@ model procurement_status {
     da_received_inventory_inbox  da_received_inventory_inbox?
     da_received_inventory_outbox da_received_inventory_outbox?
     sr_post_procurement_inbox    sr_post_procurement_inbox?
+    sr_received_inventory_inbox  sr_received_inventory_inbox?
+    sr_received_inventory_outbox sr_received_inventory_outbox?
 }
 
 model sr_pre_procurement_inbox {
@@ -317,6 +319,8 @@ model da_pre_procurement_outbox {
     da_received_inventory_inbox  da_received_inventory_inbox?
     da_received_inventory_outbox da_received_inventory_outbox?
     sr_post_procurement_inbox    sr_post_procurement_inbox?
+    sr_received_inventory_inbox  sr_received_inventory_inbox?
+    sr_received_inventory_outbox sr_received_inventory_outbox?
 }
 
 // post-procurement============================================================================================================================================================================================================================================================================================================
@@ -387,6 +391,7 @@ model receivings {
     date               DateTime?         @db.Date
     received_quantity  Int?
     remaining_quantity Int?
+    is_added           Boolean           @default(false)
     createdAt          DateTime          @default(now())
     updatedAt          DateTime          @updatedAt
     receiving_image    receiving_image[]
@@ -425,6 +430,46 @@ model da_received_inventory_inbox {
 model da_received_inventory_outbox {
     id                          String                    @id @default(uuid())
     order_no                    String?                   @unique
+    status                      procurement_status        @relation(fields: [statusId], references: [id])
+    statusId                    String                    @unique
+    pre_procurement             da_pre_procurement_outbox @relation(fields: [da_pre_procurement_outboxId], references: [id])
+    da_pre_procurement_outboxId String                    @unique
+    supplier_name               String?
+    gst_no                      String?
+    final_rate                  Float?
+    gst                         Float?
+    total_quantity              Int?
+    total_price                 Float?
+    unit_price                  Float?
+    is_gst_added                Boolean                   @default(false)
+    is_partial                  Boolean                   @default(true)
+    createdAt                   DateTime                  @default(now())
+    updatedAt                   DateTime                  @updatedAt
+}
+
+model sr_received_inventory_inbox {
+    id                          String                    @id @default(uuid())
+    order_no                    String                    @unique
+    status                      procurement_status        @relation(fields: [statusId], references: [id])
+    statusId                    String                    @unique
+    pre_procurement             da_pre_procurement_outbox @relation(fields: [da_pre_procurement_outboxId], references: [id])
+    da_pre_procurement_outboxId String                    @unique
+    supplier_name               String?
+    gst_no                      String?
+    final_rate                  Float?
+    gst                         Float?
+    total_quantity              Int?
+    total_price                 Float?
+    unit_price                  Float?
+    is_gst_added                Boolean                   @default(false)
+    is_partial                  Boolean                   @default(true)
+    createdAt                   DateTime                  @default(now())
+    updatedAt                   DateTime                  @updatedAt
+}
+
+model sr_received_inventory_outbox {
+    id                          String                    @id @default(uuid())
+    order_no                    String                    @unique
     status                      procurement_status        @relation(fields: [statusId], references: [id])
     statusId                    String                    @unique
     pre_procurement             da_pre_procurement_outbox @relation(fields: [da_pre_procurement_outboxId], references: [id])
