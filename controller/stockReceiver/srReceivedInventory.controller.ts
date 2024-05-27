@@ -3,10 +3,10 @@ import {
     getReceivedInventoryDal,
     getReceivedInventoryByIdDal,
     getReceivedInventoryByOrderNoDal,
-    createReceivingDal,
+    // createReceivingDal,
     getReceivedInventoryOutboxDal,
     getReceivedInventoryOutboxByIdDal
-} from "../../dal/departmentalAdmin/daReceivedInventory.dal";
+} from "../../dal/stockReceiver/srReceivedInventory.dal";
 
 
 
@@ -65,22 +65,22 @@ export const getReceivedInventoryByOrderNo = async (req: Request, res: Response)
 }
 
 
-export const createReceiving = async (req: Request, res: Response) => {
-    const result: any = await createReceivingDal(req)
-    if (!result?.error) {
-        res.status(200).json({
-            status: true,
-            message: `Receiving created successfully`,
-            data: result
-        })
-    } else {
-        res.status(404).json({
-            status: false,
-            message: `Error while creating receiving`,
-            error: result?.message
-        })
-    }
-}
+// export const createReceiving = async (req: Request, res: Response) => {
+//     const result: any = await createReceivingDal(req)
+//     if (!result?.error) {
+//         res.status(200).json({
+//             status: true,
+//             message: `Receiving created successfully`,
+//             data: result
+//         })
+//     } else {
+//         res.status(404).json({
+//             status: false,
+//             message: `Error while creating receiving`,
+//             error: result?.message
+//         })
+//     }
+// }
 
 
 

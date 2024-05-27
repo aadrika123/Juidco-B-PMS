@@ -183,6 +183,7 @@ export const getReceivedInventoryDal = async (req: Request) => {
 
 export const getReceivedInventoryByIdDal = async (req: Request) => {
     const { id } = req.params
+    let resultToSend: any = {}
     try {
         const result = await prisma.da_received_inventory_inbox.findFirst({
             where: {
@@ -208,6 +209,58 @@ export const getReceivedInventoryByIdDal = async (req: Request) => {
                 is_gst_added: true
             }
         })
+        const totalReceiving: any = await prisma.receivings.aggregate({
+            where: {
+                order_no: result?.order_no || ''
+            },
+            _sum: {
+                received_quantity: true
+            }
+        })
+
+        const receivings = await prisma.receivings.findMany({
+            where: {
+                order_no: result?.order_no || ''
+            },
+            select: {
+                order_no: true,
+                receiving_no: true,
+                date: true,
+                received_quantity: true,
+                remaining_quantity: true,
+                receiving_image: {
+                    select: {
+                        ReferenceNo: true,
+                        uniqueId: true,
+                        receiving_no: true
+                    }
+                }
+            }
+        })
+
+        await Promise.all(
+            receivings.map(async (receiving: any) => {
+                await Promise.all(
+                    receiving?.receiving_image.map(async (img: any) => {
+                        const headers = {
+                            "token": "8Ufn6Jio6Obv9V7VXeP7gbzHSyRJcKluQOGorAD58qA1IQKYE0"
+                        }
+                        await axios.post(dmsUrlGet, { "referenceNo": img?.ReferenceNo }, { headers })
+                            .then((response) => {
+                                // console.log(response?.data?.data, 'res')
+                                img.imageUrl = response?.data?.data?.fullPath
+                            }).catch((err) => {
+                                // console.log(err?.data?.data, 'err')
+                                // toReturn.push(err?.data?.data)
+                                throw err
+                            })
+                    })
+                )
+            })
+        )
+
+        resultToSend = { ...result, receivings: receivings, total_receivings: totalReceiving?._sum?.received_quantity }
+
         return result
     } catch (err: any) {
         console.log(err?.message)
@@ -557,6 +610,94 @@ export const getReceivedInventoryOutboxDal = async (req: Request) => {
             data: resultToSend,
             pagination: pagination
         }
+    } catch (err: any) {
+        console.log(err?.message)
+        return { error: true, message: err?.message }
+    }
+}
+
+
+export const getReceivedInventoryOutboxByIdDal = async (req: Request) => {
+    const { id } = req.params
+    let resultToSend: any = {}
+    try {
+        const result = await prisma.da_received_inventory_outbox.findFirst({
+            where: {
+                id: id
+            },
+            select: {
+                id: true,
+                order_no: true,
+                pre_procurement: {
+                    include: {
+                        category: true,
+                        subcategory: true
+                    }
+                },
+                status: true,
+                supplier_name: true,
+                gst_no: true,
+                final_rate: true,
+                gst: true,
+                total_quantity: true,
+                total_price: true,
+                unit_price: true,
+                is_gst_added: true
+            }
+        })
+        const totalReceiving: any = await prisma.receivings.aggregate({
+            where: {
+                order_no: result?.order_no || ''
+            },
+            _sum: {
+                received_quantity: true
+            }
+        })
+
+        const receivings = await prisma.receivings.findMany({
+            where: {
+                order_no: result?.order_no || ''
+            },
+            select: {
+                order_no: true,
+                receiving_no: true,
+                date: true,
+                received_quantity: true,
+                remaining_quantity: true,
+                receiving_image: {
+                    select: {
+                        ReferenceNo: true,
+                        uniqueId: true,
+                        receiving_no: true
+                    }
+                }
+            }
+        })
+
+        await Promise.all(
+            receivings.map(async (receiving: any) => {
+                await Promise.all(
+                    receiving?.receiving_image.map(async (img: any) => {
+                        const headers = {
+                            "token": "8Ufn6Jio6Obv9V7VXeP7gbzHSyRJcKluQOGorAD58qA1IQKYE0"
+                        }
+                        await axios.post(dmsUrlGet, { "referenceNo": img?.ReferenceNo }, { headers })
+                            .then((response) => {
+                                // console.log(response?.data?.data, 'res')
+                                img.imageUrl = response?.data?.data?.fullPath
+                            }).catch((err) => {
+                                // console.log(err?.data?.data, 'err')
+                                // toReturn.push(err?.data?.data)
+                                throw err
+                            })
+                    })
+                )
+            })
+        )
+
+        resultToSend = { ...result, receivings: receivings, total_receivings: totalReceiving?._sum?.received_quantity }
+
+        return result
     } catch (err: any) {
         console.log(err?.message)
         return { error: true, message: err?.message }
