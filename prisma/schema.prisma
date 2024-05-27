@@ -136,6 +136,7 @@ model procurement_status {
     da_post_procurement_outbox   da_post_procurement_outbox?
     da_received_inventory_inbox  da_received_inventory_inbox?
     da_received_inventory_outbox da_received_inventory_outbox?
+    sr_post_procurement_inbox    sr_post_procurement_inbox?
 }
 
 model sr_pre_procurement_inbox {
@@ -315,6 +316,7 @@ model da_pre_procurement_outbox {
     da_post_procurement_outbox   da_post_procurement_outbox?
     da_received_inventory_inbox  da_received_inventory_inbox?
     da_received_inventory_outbox da_received_inventory_outbox?
+    sr_post_procurement_inbox    sr_post_procurement_inbox?
 }
 
 // post-procurement============================================================================================================================================================================================================================================================================================================
@@ -357,6 +359,25 @@ model da_post_procurement_outbox {
     updatedAt                   DateTime                  @updatedAt
 }
 
+model sr_post_procurement_inbox {
+    id                          String                    @id @default(uuid())
+    order_no                    String                    @unique
+    status                      procurement_status        @relation(fields: [statusId], references: [id])
+    statusId                    String                    @unique
+    pre_procurement             da_pre_procurement_outbox @relation(fields: [da_pre_procurement_outboxId], references: [id])
+    da_pre_procurement_outboxId String                    @unique
+    supplier_name               String?
+    gst_no                      String?
+    final_rate                  Float?
+    gst                         Float?
+    total_quantity              Int?
+    total_price                 Float?
+    unit_price                  Float?
+    is_gst_added                Boolean                   @default(false)
+    createdAt                   DateTime                  @default(now())
+    updatedAt                   DateTime                  @updatedAt
+}
+
 // received inventory============================================================================================================================================================================================================================================================================================================
 
 model receivings {
@@ -372,13 +393,13 @@ model receivings {
 }
 
 model receiving_image {
-    id           String     @id @default(uuid())
+    id           String      @id @default(uuid())
     ReferenceNo  String
     uniqueId     String?
     receiving    receivings? @relation(fields: [receiving_no], references: [receiving_no])
     receiving_no String?
-    createdAt    DateTime   @default(now())
-    updatedAt    DateTime   @updatedAt
+    createdAt    DateTime    @default(now())
+    updatedAt    DateTime    @updatedAt
 }
 
 model da_received_inventory_inbox {
