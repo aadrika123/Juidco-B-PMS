@@ -123,7 +123,7 @@ export const getReceivedInventoryDal = async (req: Request) => {
                         date: true,
                         received_quantity: true,
                         remaining_quantity: true,
-                        remark:true,
+                        remark: true,
                         receiving_image: {
                             select: {
                                 ReferenceNo: true,
@@ -192,7 +192,7 @@ export const getReceivedInventoryByIdDal = async (req: Request) => {
     const { id } = req.params
     let resultToSend: any = {}
     try {
-        const result = await prisma.sr_received_inventory_inbox.findFirst({
+        const result: any = await prisma.sr_received_inventory_inbox.findFirst({
             where: {
                 id: id
             },
@@ -217,6 +217,17 @@ export const getReceivedInventoryByIdDal = async (req: Request) => {
             }
         })
 
+        const totalReceiving: any = await prisma.receivings.aggregate({
+            where: {
+                order_no: result?.order_no || ''
+            },
+            _sum: {
+                received_quantity: true
+            }
+        })
+
+        const total_remaining = result?.total_quantity - totalReceiving?._sum?.received_quantity
+
         const receivings = await prisma.receivings.findMany({
             where: {
                 order_no: result?.order_no || ''
@@ -227,7 +238,7 @@ export const getReceivedInventoryByIdDal = async (req: Request) => {
                 date: true,
                 received_quantity: true,
                 remaining_quantity: true,
-                remark:true,
+                remark: true,
                 receiving_image: {
                     select: {
                         ReferenceNo: true,
@@ -259,7 +270,7 @@ export const getReceivedInventoryByIdDal = async (req: Request) => {
             })
         )
 
-        resultToSend = { ...result, receivings: receivings }
+        resultToSend = { ...result, receivings: receivings, total_receivings: totalReceiving?._sum?.received_quantity, total_remaining: total_remaining }
 
         return resultToSend
     } catch (err: any) {
@@ -308,7 +319,7 @@ export const getReceivedInventoryByOrderNoDal = async (req: Request) => {
                 date: true,
                 received_quantity: true,
                 remaining_quantity: true,
-                remark:true,
+                remark: true,
                 receiving_image: {
                     select: {
                         ReferenceNo: true,
@@ -466,7 +477,7 @@ export const getReceivedInventoryOutboxDal = async (req: Request) => {
                         date: true,
                         received_quantity: true,
                         remaining_quantity: true,
-                        remark:true,
+                        remark: true,
                         receiving_image: {
                             select: {
                                 ReferenceNo: true,
@@ -570,7 +581,7 @@ export const getReceivedInventoryOutboxByIdDal = async (req: Request) => {
                 date: true,
                 received_quantity: true,
                 remaining_quantity: true,
-                remark:true,
+                remark: true,
                 receiving_image: {
                     select: {
                         ReferenceNo: true,
