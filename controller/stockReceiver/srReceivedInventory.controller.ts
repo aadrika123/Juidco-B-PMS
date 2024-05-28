@@ -3,9 +3,9 @@ import {
     getReceivedInventoryDal,
     getReceivedInventoryByIdDal,
     getReceivedInventoryByOrderNoDal,
-    // createReceivingDal,
     getReceivedInventoryOutboxDal,
-    getReceivedInventoryOutboxByIdDal
+    getReceivedInventoryOutboxByIdDal,
+    addToInventoryDal
 } from "../../dal/stockReceiver/srReceivedInventory.dal";
 
 
@@ -65,24 +65,6 @@ export const getReceivedInventoryByOrderNo = async (req: Request, res: Response)
 }
 
 
-// export const createReceiving = async (req: Request, res: Response) => {
-//     const result: any = await createReceivingDal(req)
-//     if (!result?.error) {
-//         res.status(200).json({
-//             status: true,
-//             message: `Receiving created successfully`,
-//             data: result
-//         })
-//     } else {
-//         res.status(404).json({
-//             status: false,
-//             message: `Error while creating receiving`,
-//             error: result?.message
-//         })
-//     }
-// }
-
-
 
 export const getReceivedInventoryOutbox = async (req: Request, res: Response) => {
     const result: any = await getReceivedInventoryOutboxDal(req)
@@ -116,6 +98,25 @@ export const getReceivedInventoryOutboxById = async (req: Request, res: Response
         res.status(404).json({
             status: false,
             message: `Error while fetching Received Inventory`,
+            error: result?.message
+        })
+    }
+}
+
+
+
+export const addToInventory = async (req: Request, res: Response) => {
+    const result: any = await addToInventoryDal(req)
+    if (!result?.error) {
+        res.status(200).json({
+            status: true,
+            message: `Added to Inventory successfully`,
+            data: result
+        })
+    } else {
+        res.status(404).json({
+            status: false,
+            message: `Error while adding`,
             error: result?.message
         })
     }

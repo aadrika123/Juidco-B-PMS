@@ -123,7 +123,15 @@ export const getReceivedInventoryDal = async (req: Request) => {
                         receiving_no: true,
                         date: true,
                         received_quantity: true,
-                        remaining_quantity: true
+                        remaining_quantity: true,
+                        is_added: true,
+                        receiving_image: {
+                            select: {
+                                ReferenceNo: true,
+                                uniqueId: true,
+                                receiving_no: true
+                            }
+                        }
                     }
                 })
 
@@ -228,6 +236,7 @@ export const getReceivedInventoryByIdDal = async (req: Request) => {
                 date: true,
                 received_quantity: true,
                 remaining_quantity: true,
+                is_added: true,
                 receiving_image: {
                     select: {
                         ReferenceNo: true,
@@ -317,6 +326,7 @@ export const getReceivedInventoryByOrderNoDal = async (req: Request) => {
                 date: true,
                 received_quantity: true,
                 remaining_quantity: true,
+                is_added: true,
                 receiving_image: {
                     select: {
                         ReferenceNo: true,
@@ -414,20 +424,21 @@ export const createReceivingDal = async (req: Request) => {
             throw 'Error while creating receiving'
         }
 
+        if (img) {
+            const uploaded = await imageUploader(img)   //It will return reference number and unique id as an object after uploading.
 
-        const uploaded = await imageUploader(img)   //It will return reference number and unique id as an object after uploading.
-
-        await Promise.all(
-            uploaded.map(async (item) => {
-                await prisma.receiving_image.create({
-                    data: {
-                        receiving_no: receiving_no,
-                        ReferenceNo: item?.ReferenceNo,
-                        uniqueId: item?.uniqueId
-                    }
+            await Promise.all(
+                uploaded.map(async (item) => {
+                    await prisma.receiving_image.create({
+                        data: {
+                            receiving_no: receiving_no,
+                            ReferenceNo: item?.ReferenceNo,
+                            uniqueId: item?.uniqueId
+                        }
+                    })
                 })
-            })
-        )
+            )
+        }
 
         const outboxCount = await prisma.da_received_inventory_outbox.count({
             where: {
@@ -459,6 +470,14 @@ export const createReceivingDal = async (req: Request) => {
                     }
                 }),
                 prisma.da_received_inventory_outbox.update({
+                    where: {
+                        order_no: order_no
+                    },
+                    data: {
+                        is_partial: false
+                    }
+                }),
+                prisma.sr_received_inventory_inbox.update({
                     where: {
                         order_no: order_no
                     },
@@ -607,6 +626,7 @@ export const getReceivedInventoryOutboxDal = async (req: Request) => {
                         date: true,
                         received_quantity: true,
                         remaining_quantity: true,
+                        is_added: true,
                         receiving_image: {
                             select: {
                                 ReferenceNo: true,
@@ -718,6 +738,7 @@ export const getReceivedInventoryOutboxByIdDal = async (req: Request) => {
                 date: true,
                 received_quantity: true,
                 remaining_quantity: true,
+                is_added: true,
                 receiving_image: {
                     select: {
                         ReferenceNo: true,
