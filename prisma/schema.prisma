@@ -518,5 +518,4 @@ model dead_stock_image {
     uniqueId     String?
     dead_stock   dead_stock @relation(fields: [order_no], references: [order_no])
     updatedAt    DateTime   @updatedAt
-    dead_stockId String
 }
