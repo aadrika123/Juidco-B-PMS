@@ -394,6 +394,7 @@ model receivings {
     received_quantity  Int?
     remaining_quantity Int?
     is_added           Boolean           @default(false)
+    remark             String?
     createdAt          DateTime          @default(now())
     updatedAt          DateTime          @updatedAt
     receiving_image    receiving_image[]
@@ -512,10 +513,10 @@ model dead_stock {
 }
 
 model dead_stock_image {
-    id           String     @id @default(uuid())
-    order_no     String     @unique
-    ReferenceNo  String
-    uniqueId     String?
-    dead_stock   dead_stock @relation(fields: [order_no], references: [order_no])
-    updatedAt    DateTime   @updatedAt
+    id          String     @id @default(uuid())
+    order_no    String     @unique
+    ReferenceNo String
+    uniqueId    String?
+    dead_stock  dead_stock @relation(fields: [order_no], references: [order_no])
+    updatedAt   DateTime   @updatedAt
 }

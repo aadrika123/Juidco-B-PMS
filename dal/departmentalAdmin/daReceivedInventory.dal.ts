@@ -379,7 +379,8 @@ export const createReceivingDal = async (req: Request) => {
         date,
         received_quantity,
         remaining_quantity,
-        ulb_id
+        ulb_id,
+        remark
     } = req.body
     const formattedDate = new Date(date)
     const img = req.files
@@ -391,6 +392,7 @@ export const createReceivingDal = async (req: Request) => {
             order_no: order_no,
             receiving_no: receiving_no,
             date: formattedDate,
+            remark:remark,
             received_quantity: Number(received_quantity),
             remaining_quantity: Number(remaining_quantity)
         }
