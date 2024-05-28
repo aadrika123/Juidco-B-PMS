@@ -1031,7 +1031,7 @@ export const editPreProcurementDal = async (req: Request) => {
         }
     }
 
-    const preProcurement: any = await prisma.da_pre_procurement_inbox.findFirst({
+    const preProcurement: any = await prisma.sr_pre_procurement_inbox.findFirst({
         where: {
             id: id
         },
@@ -1076,13 +1076,13 @@ export const editPreProcurementDal = async (req: Request) => {
             ...(historyExistence === 0 ? [prisma.pre_procurement_history.create({
                 data: preProcurement
             })] : []),
-            prisma.da_pre_procurement_inbox.update({
+            prisma.sr_pre_procurement_inbox.update({
                 where: {
                     id: id
                 },
                 data: data
             }),
-            prisma.sr_pre_procurement_outbox.update({
+            prisma.da_pre_procurement_outbox.update({
                 where: {
                     order_no: order_no
                 },

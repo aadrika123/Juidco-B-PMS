@@ -503,9 +503,20 @@ model inventory {
 }
 
 model dead_stock {
-    id        String   @id @default(uuid())
-    order_no  String   @unique
-    quantity  Int
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
+    id               String             @id @default(uuid())
+    order_no         String             @unique
+    quantity         Int
+    createdAt        DateTime           @default(now())
+    updatedAt        DateTime           @updatedAt
+    dead_stock_image dead_stock_image[]
+}
+
+model dead_stock_image {
+    id           String     @id @default(uuid())
+    order_no     String     @unique
+    ReferenceNo  String
+    uniqueId     String?
+    dead_stock   dead_stock @relation(fields: [order_no], references: [order_no])
+    updatedAt    DateTime   @updatedAt
+    dead_stockId String
 }
