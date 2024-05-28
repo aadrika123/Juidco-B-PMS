@@ -307,6 +307,10 @@ export const getReceivedInventoryByOrderNoDal = async (req: Request) => {
             }
         })
 
+        if (!result) {
+            throw { error: true, message: 'Received Inventory with provided Order Number not found' }
+        }
+
         const totalReceiving: any = await prisma.receivings.aggregate({
             where: {
                 order_no: result?.order_no || ''
@@ -396,6 +400,10 @@ export const createReceivingDal = async (req: Request) => {
                 order_no: order_no
             }
         })
+
+        if (!daRecInvIn) {
+            throw { error: true, message: `No received inventory with order number ${order_no} ` }
+        }
 
         const totalReceiving: any = await prisma.receivings.aggregate({
             where: {

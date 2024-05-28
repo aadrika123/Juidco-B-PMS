@@ -1,6 +1,5 @@
 import { Request } from "express";
 import { PrismaClient } from "@prisma/client";
-import generateReceivingNumber from "../../lib/receivingNumberGenerator";
 import { imageUploader } from "../../lib/imageUploader";
 import axios from 'axios'
 
@@ -619,30 +618,6 @@ export const addToInventoryDal = async (req: Request) => {
     // console.log(img)
     try {
 
-        const data: any = {
-            order_no: order_no,
-        }
-
-        // const srRecInvIn: any = await prisma.sr_received_inventory_inbox.findFirst({
-        //     where: {
-        //         order_no: order_no
-        //     },
-        //     select: {
-        //         id: true,
-        //         order_no: true,
-        //         statusId: true,
-        //         supplier_name: true,
-        //         gst_no: true,
-        //         final_rate: true,
-        //         gst: true,
-        //         total_quantity: true,
-        //         total_price: true,
-        //         unit_price: true,
-        //         is_gst_added: true,
-        //         is_partial: true,
-        //     }
-        // })
-
         const totalNonAddedReceiving: any = await prisma.receivings.aggregate({
             where: {
                 order_no: order_no || '',
@@ -683,6 +658,7 @@ export const addToInventoryDal = async (req: Request) => {
                     order_no: order_no
                 }
             })
+
             if (prev_dead_stock) {
                 await prisma.dead_stock.update({
                     where: {
@@ -700,13 +676,30 @@ export const addToInventoryDal = async (req: Request) => {
                     }
                 })
             }
+
+            if (img) {
+                const uploaded = await imageUploader(img)   //It will return reference number and unique id as an object after uploading.
+
+                await Promise.all(
+                    uploaded.map(async (item) => {
+                        await prisma.dead_stock_image.create({
+                            data: {
+                                order_no: order_no,
+                                ReferenceNo: item?.ReferenceNo,
+                                uniqueId: item?.uniqueId
+                            }
+                        })
+                    })
+                )
+            }
+
         }
 
         console.log(totalNonAddedReceiving)
 
         return {
             dead_stock: dead_stock || 0,
-            total_Added_stock: dead_stock ? totalNonAddedReceiving?._sum?.received_quantity + Number(dead_stock) : totalNonAddedReceiving?._sum?.received_quantity
+            total_Added_stock: dead_stock ? totalNonAddedReceiving?._sum?.received_quantity - Number(dead_stock) : totalNonAddedReceiving?._sum?.received_quantity
         }
     } catch (err: any) {
         console.log(err)
