@@ -125,6 +125,7 @@ export const getReceivedInventoryDal = async (req: Request) => {
                         received_quantity: true,
                         remaining_quantity: true,
                         is_added: true,
+                        remark:true,
                         receiving_image: {
                             select: {
                                 ReferenceNo: true,
@@ -237,6 +238,7 @@ export const getReceivedInventoryByIdDal = async (req: Request) => {
                 received_quantity: true,
                 remaining_quantity: true,
                 is_added: true,
+                remark:true,
                 receiving_image: {
                     select: {
                         ReferenceNo: true,
@@ -331,6 +333,7 @@ export const getReceivedInventoryByOrderNoDal = async (req: Request) => {
                 received_quantity: true,
                 remaining_quantity: true,
                 is_added: true,
+                remark:true,
                 receiving_image: {
                     select: {
                         ReferenceNo: true,
@@ -637,6 +640,7 @@ export const getReceivedInventoryOutboxDal = async (req: Request) => {
                         received_quantity: true,
                         remaining_quantity: true,
                         is_added: true,
+                        remark:true,
                         receiving_image: {
                             select: {
                                 ReferenceNo: true,
@@ -749,6 +753,7 @@ export const getReceivedInventoryOutboxByIdDal = async (req: Request) => {
                 received_quantity: true,
                 remaining_quantity: true,
                 is_added: true,
+                remark:true,
                 receiving_image: {
                     select: {
                         ReferenceNo: true,
