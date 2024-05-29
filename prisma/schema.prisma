@@ -222,10 +222,13 @@ model procurement {
     brand_masterId               String?
     description                  String?
     quantity                     Int                           @default(0)
+    rate                         Float?
+    total_rate                   Float?
     isEdited                     Boolean                       @default(false)
     is_partial                   Boolean                       @default(true)
     status                       procurement_status            @relation(fields: [statusId], references: [id])
     statusId                     String
+    remark                       String?
     createdAt                    DateTime                      @default(now())
     updatedAt                    DateTime                      @updatedAt
     sr_pre_procurement_inbox     sr_pre_procurement_inbox?
@@ -272,7 +275,6 @@ model procurement_history {
     quantity             Int                 @default(0)
     isEdited             Boolean             @default(false)
     status               Int
-    statusId             String
     createdAt            DateTime            @default(now())
     updatedAt            DateTime            @updatedAt
 }
