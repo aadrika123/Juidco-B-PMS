@@ -6,10 +6,11 @@ const prisma = new PrismaClient()
 
 
 export const createBrandDal = async (req: Request) => {
-    const { name } = req.body
+    const { name, subcategory } = req.body
 
     const data: any = {
-        name: name
+        name: name,
+        subcategory_masterId: subcategory
     }
 
     try {
