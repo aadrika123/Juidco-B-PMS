@@ -129,7 +129,6 @@ model receivings {
     createdAt          DateTime          @default(now())
     updatedAt          DateTime          @updatedAt
     receiving_image    receiving_image[]
-    procurementId      String
 }
 
 model receiving_image {
@@ -275,6 +274,10 @@ model procurement_history {
     quantity             Int                 @default(0)
     isEdited             Boolean             @default(false)
     status               Int
+    rate                 Float?
+    total_rate           Float?
+    is_partial           Boolean             @default(true)
+    remark               String?
     createdAt            DateTime            @default(now())
     updatedAt            DateTime            @updatedAt
 }

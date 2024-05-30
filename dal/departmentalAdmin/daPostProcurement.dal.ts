@@ -296,7 +296,6 @@ export const getPostProcurementByOrderNoDal = async (req: Request) => {
 
 export const SaveAdditionalDetailsProcurementDal = async (req: Request) => {
     const {
-        id,
         supplier_name,
         procurement_no,
         gst_no,
@@ -334,6 +333,9 @@ export const SaveAdditionalDetailsProcurementDal = async (req: Request) => {
 
     try {
         await prisma.$transaction([
+            prisma.post_procurement.create({
+                data: data
+            }),
             prisma.da_post_procurement_outbox.create({
                 data: {
                     procurement_no: procurement_no

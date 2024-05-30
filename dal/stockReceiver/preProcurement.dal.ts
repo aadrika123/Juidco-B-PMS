@@ -25,9 +25,9 @@ export const createPreProcurementDal = async (req: Request) => {
     procurement_no = generateOrderNumber(ulb_id)
 
     const data: any = {
-        category_masterId: category,
-        subcategory_masterId: subcategory,
-        brand_masterId: brand,
+        category: { connect: { id: category } },
+        subcategory: { connect: { id: subcategory } },
+        brand: { connect: { id: brand } },
         description: description,
         procurement_no: procurement_no,
         rate: Number(rate),
@@ -51,14 +51,15 @@ export const createPreProcurementDal = async (req: Request) => {
         const result = await prisma.procurement.create({
             data: data
         })
+        let srPreIn = {}
         if (result) {
-            await prisma.sr_pre_procurement_inbox.create({
+            srPreIn = await prisma.sr_pre_procurement_inbox.create({
                 data: {
                     procurement_no: procurement_no
                 }
             })
         }
-        return result
+        return srPreIn
     } catch (err: any) {
         console.log(err?.message)
         return { error: true, message: err?.message }
@@ -186,7 +187,12 @@ export const getPreProcurementDal = async (req: Request) => {
                         quantity: true,
                         rate: true,
                         total_rate: true,
-                        isEdited: true
+                        isEdited: true,
+                        status: {
+                            select: {
+                                status: true
+                            }
+                        }
                     }
                 }
             }
@@ -261,7 +267,12 @@ export const getPreProcurementByIdDal = async (req: Request) => {
                         quantity: true,
                         rate: true,
                         total_rate: true,
-                        isEdited: true
+                        isEdited: true,
+                        status: {
+                            select: {
+                                status: true
+                            }
+                        }
                     }
                 }
             }
@@ -314,7 +325,12 @@ export const getPreProcurementByOrderNoDal = async (req: Request) => {
                         quantity: true,
                         rate: true,
                         total_rate: true,
-                        isEdited: true
+                        isEdited: true,
+                        status: {
+                            select: {
+                                status: true
+                            }
+                        }
                     }
                 }
             }
@@ -373,7 +389,7 @@ export const forwardToDaDal = async (req: Request) => {
                 }
 
                 if (inbox === null) {
-                    return
+                    throw { error: true, message: 'Invalid inbox ID' }
                 }
                 const daOutbox: any = await prisma.da_pre_procurement_outbox.count({
                     where: {
@@ -540,7 +556,12 @@ export const getPreProcurementOutboxDal = async (req: Request) => {
                         quantity: true,
                         rate: true,
                         total_rate: true,
-                        isEdited: true
+                        isEdited: true,
+                        status: {
+                            select: {
+                                status: true
+                            }
+                        }
                     }
                 }
             }
@@ -615,7 +636,12 @@ export const getPreProcurementOutboxByIdDal = async (req: Request) => {
                         quantity: true,
                         rate: true,
                         total_rate: true,
-                        isEdited: true
+                        isEdited: true,
+                        status: {
+                            select: {
+                                status: true
+                            }
+                        }
                     }
                 }
             }
@@ -744,7 +770,12 @@ export const getPreProcurementRejectedDal = async (req: Request) => {
                         quantity: true,
                         rate: true,
                         total_rate: true,
-                        isEdited: true
+                        isEdited: true,
+                        status: {
+                            select: {
+                                status: true
+                            }
+                        }
                     }
                 }
             }
@@ -895,7 +926,12 @@ export const getPreProcurementReleasedDal = async (req: Request) => {
                         quantity: true,
                         rate: true,
                         total_rate: true,
-                        isEdited: true
+                        isEdited: true,
+                        status: {
+                            select: {
+                                status: true
+                            }
+                        }
                     }
                 }
             }
@@ -947,19 +983,21 @@ export const editPreProcurementDal = async (req: Request) => {
         description,
         rate,
         quantity,
-        total_rate
+        total_rate,
+        remark
     } = req.body
 
 
     const data = {
-        category_masterId: category,
-        subcategory_masterId: subcategory,
-        brand_masterId: brand,
+        category: { connect: { id: category } },
+        subcategory: { connect: { id: subcategory } },
+        brand: { connect: { id: brand } },
         description: description,
         rate: Number(rate),
         quantity: Number(quantity),
         total_rate: Number(total_rate),
-        isEdited: true
+        isEdited: true,
+        remark: remark
     }
     if (Number(rate) && Number(quantity)) {
         if (Number(rate) * Number(quantity) !== Number(total_rate)) {
@@ -975,12 +1013,21 @@ export const editPreProcurementDal = async (req: Request) => {
             status: true
         }
     })
-    delete procurement.id
-    delete procurement.createdAt
-    delete procurement.updatedAt
     const tempStatus = Number(procurement?.status?.status)
-    delete procurement.status
-    procurement['status'] = tempStatus
+
+    const tempData: any = {
+        procurement_no: procurement_no,
+        category: { connect: { id: procurement?.category_masterId } },
+        subcategory: { connect: { id: procurement?.subcategory_masterId } },
+        brand: { connect: { id: procurement?.brand_masterId } },
+        description: procurement?.description,
+        rate: procurement?.rate,
+        quantity: procurement?.quantity,
+        total_rate: procurement?.total_rate,
+        remark: procurement?.remark,
+        isEdited: procurement?.isEdited,
+        status: tempStatus
+    }
 
     const historyExistence = await prisma.procurement_history.count({
         where: {
@@ -992,7 +1039,7 @@ export const editPreProcurementDal = async (req: Request) => {
         await prisma.$transaction([
 
             ...(historyExistence === 0 ? [prisma.procurement_history.create({
-                data: procurement
+                data: tempData
             })] : []),
             prisma.procurement.update({
                 where: {

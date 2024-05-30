@@ -13,7 +13,7 @@ import {
 
 router.get('/', getReceivedInventory)
 router.get('/outbox', getReceivedInventoryOutbox)
-router.get('/by-order-no/:order_no', getReceivedInventoryByOrderNo)
+router.get('/by-order-no/:procurement_no', getReceivedInventoryByOrderNo)
 router.post('/receive', upload.array('img'), createReceiving)
 // router.get('/outbox', createReceiving)
 router.get('/outbox/:id', getReceivedInventoryOutboxById)

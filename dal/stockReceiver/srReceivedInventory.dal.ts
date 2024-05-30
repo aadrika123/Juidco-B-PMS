@@ -773,7 +773,8 @@ export const getReceivedInventoryOutboxByIdDal = async (req: Request) => {
 export const addToInventoryDal = async (req: Request) => {
     const {
         procurement_no,
-        dead_stock
+        dead_stock,
+        inventory
     } = req.body
     const img = req.files
     // console.log(img)
@@ -812,6 +813,10 @@ export const addToInventoryDal = async (req: Request) => {
                 })
             })
         )
+
+        if (dead_stock && !img) {
+            throw { error: true, message: 'If there is any dead stock, at least one image is mandatory.' }
+        }
 
         if (dead_stock) {
             const prev_dead_stock = await prisma.dead_stock.findFirst({

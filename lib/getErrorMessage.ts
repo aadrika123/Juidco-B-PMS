@@ -1,5 +1,5 @@
 
-export default function getErrorMessage(error: unknown) {
+export default function getErrorMessage(error: any) {
     if (error instanceof Error) return error.message;
-    return String(error);
+    return String(error.message);
 }
