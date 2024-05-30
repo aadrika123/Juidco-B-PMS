@@ -50,7 +50,7 @@ model brand_master {
 model procurement_status {
     id             String        @id @default(uuid())
     procurement_no String        @unique
-    status         Int //-2=rejected, -1=back to sr, 0=pending, 1=in DA's inbox, 69= revised and in DA's inbox, 2=released for tender,3=supplier assigned,4=stock partially recieved, 5=stock recieved, 6=stock verified
+    status         Int //-2=rejected, -1=back to sr, 0=pending, 1=in DA's inbox, 69= revised and in DA's inbox, 2=released for tender,3=supplier assigned,4=stock partially recieved, 5=stock recieved, 6=partially added, 7=added
     createdAt      DateTime      @default(now())
     updatedAt      DateTime      @updatedAt
     procurement    procurement[]

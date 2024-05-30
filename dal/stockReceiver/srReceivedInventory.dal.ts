@@ -801,67 +801,100 @@ export const addToInventoryDal = async (req: Request) => {
             }
         })
 
-        await Promise.all(
-            NonAddedReceiving.map(async (item: any) => {
-                await prisma.receivings.update({
-                    where: {
-                        id: item?.id
-                    },
-                    data: {
-                        is_added: true
-                    }
-                })
-            })
-        )
-
         if (dead_stock && !img) {
             throw { error: true, message: 'If there is any dead stock, at least one image is mandatory.' }
         }
 
-        if (dead_stock) {
-            const prev_dead_stock = await prisma.dead_stock.findFirst({
-                where: {
-                    procurement_no: procurement_no
-                }
-            })
+        prisma.$transaction(async (tx) => {
 
-            if (prev_dead_stock) {
-                await prisma.dead_stock.update({
+            await Promise.all(
+                NonAddedReceiving.map(async (item: any) => {
+                    const updatedReceiving = await tx.receivings.update({
+                        where: {
+                            id: item?.id
+                        },
+                        data: {
+                            is_added: true
+                        }
+                    })
+                    if (!updatedReceiving) throw { error: true, message: 'Error while updating receiving' }
+                })
+            )
+
+            if (dead_stock) {
+                const prev_dead_stock = await prisma.dead_stock.findFirst({
                     where: {
                         procurement_no: procurement_no
-                    },
-                    data: {
-                        quantity: Number(prev_dead_stock?.quantity) + Number(dead_stock)
                     }
                 })
-            } else {
-                await prisma.dead_stock.create({
-                    data: {
-                        procurement_no: procurement_no,
-                        quantity: Number(dead_stock)
-                    }
-                })
-            }
 
-            if (img) {
-                const uploaded = await imageUploader(img)   //It will return reference number and unique id as an object after uploading.
-
-                await Promise.all(
-                    uploaded.map(async (item) => {
-                        await prisma.dead_stock_image.create({
-                            data: {
-                                procurement_no: procurement_no,
-                                ReferenceNo: item?.ReferenceNo,
-                                uniqueId: item?.uniqueId
-                            }
-                        })
+                if (prev_dead_stock) {
+                    const updatedDeadStock = await tx.dead_stock.update({
+                        where: {
+                            procurement_no: procurement_no
+                        },
+                        data: {
+                            quantity: Number(prev_dead_stock?.quantity) + Number(dead_stock)
+                        }
                     })
-                )
+                    if (!updatedDeadStock) throw { error: true, message: 'Error while updating dead stock' }
+                } else {
+                    const createdDeadStock = await tx.dead_stock.create({
+                        data: {
+                            procurement_no: procurement_no,
+                            quantity: Number(dead_stock)
+                        }
+                    })
+                    if (!createdDeadStock) throw { error: true, message: 'Error while creating dead stock' }
+                }
+
+                if (img) {
+                    const uploaded = await imageUploader(img)   //It will return reference number and unique id as an object after uploading.
+
+                    await Promise.all(
+                        uploaded.map(async (item) => {
+                            const dsImg = await tx.dead_stock_image.create({
+                                data: {
+                                    procurement_no: procurement_no,
+                                    ReferenceNo: item?.ReferenceNo,
+                                    uniqueId: item?.uniqueId
+                                }
+                            })
+                            if (!dsImg) throw { error: true, message: 'Error while creating dead stock image' }
+                        })
+                    )
+                }
+
+                if (inventory) {
+                    const updatedInv = await tx.inventory.update({
+                        where: {
+                            id: inventory
+                        },
+                        data: {
+                            quantity: {
+                                increment: dead_stock ? totalNonAddedReceiving?._sum?.received_quantity - Number(dead_stock) : totalNonAddedReceiving?._sum?.received_quantity
+                            }
+                        }
+                    })
+                    if (!updatedInv) throw { error: true, message: 'Error while updating inventory' }
+                } else {
+                    const procData: any = await prisma.procurement.findFirst({
+                        where: { procurement_no: procurement_no }
+                    })
+                    const createdInv = await tx.inventory.create({
+                        data: {
+                            category: { connect: { id: procData?.category_masterId } },
+                            subcategory: { connect: { id: procData?.subcategory_masterId } },
+                            brand: { connect: { id: procData?.brand_masterId } },
+                            description: procData?.description,
+                            quantity: dead_stock ? totalNonAddedReceiving?._sum?.received_quantity - Number(dead_stock) : totalNonAddedReceiving?._sum?.received_quantity
+                        }
+                    })
+                    if (!createdInv) throw { error: true, message: 'Error while creating inventory' }
+                }
+
             }
-
-        }
-
-        console.log(totalNonAddedReceiving)
+        })
 
         return {
             dead_stock: dead_stock || 0,
