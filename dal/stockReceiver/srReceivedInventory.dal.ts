@@ -2,6 +2,7 @@ import { Request } from "express";
 import { PrismaClient } from "@prisma/client";
 import { imageUploader } from "../../lib/imageUploader";
 import axios from 'axios'
+import getErrorMessage from "../../lib/getErrorMessage";
 
 
 const prisma = new PrismaClient()
@@ -18,55 +19,59 @@ export const getReceivedInventoryDal = async (req: Request) => {
     let pagination: any = {}
     const whereClause: any = {};
 
-    const search: string = req?.query?.search ? String(req?.query?.search) : ''
+    const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined
 
     const category: any[] = Array.isArray(req?.query?.category) ? req?.query?.category : [req?.query?.category]
     const subcategory: any[] = Array.isArray(req?.query?.scategory) ? req?.query?.scategory : [req?.query?.scategory]
     const status: any[] = Array.isArray(req?.query?.status) ? req?.query?.status : [req?.query?.status]
+    const brand: any[] = Array.isArray(req?.query?.brand) ? req?.query?.brand : [req?.query?.brand]
 
-    whereClause.OR = [
-        {
-            order_no: {
-                contains: search,
-                mode: 'insensitive'
-            }
-        },
-        {
-            pre_procurement: {
-                other_description: {
+    //creating search options for the query
+    if (search) {
+        whereClause.OR = [
+            {
+                procurement_no: {
                     contains: search,
                     mode: 'insensitive'
                 }
-            }
-        },
-        {
-            pre_procurement: {
-                brand: {
-                    contains: search,
-                    mode: 'insensitive'
+            },
+            {
+                procurement: {
+                    description: {
+                        contains: search,
+                        mode: 'insensitive'
+                    }
                 }
             }
-        }
-    ];
+        ];
+    }
 
+    //creating filter options for the query
     if (category[0]) {
-        whereClause.pre_procurement = {
+        whereClause.procurement = {
             category_masterId: {
                 in: category
             }
         }
     }
     if (subcategory[0]) {
-        whereClause.pre_procurement = {
+        whereClause.procurement = {
             subcategory_masterId: {
                 in: subcategory
             }
         }
     }
     if (status[0]) {
-        whereClause.status = {
+        whereClause.procurement = {
             status: {
                 in: status.map(Number)
+            }
+        }
+    }
+    if (brand[0]) {
+        whereClause.procurement = {
+            brand: {
+                in: brand
             }
         }
     }
@@ -75,7 +80,7 @@ export const getReceivedInventoryDal = async (req: Request) => {
         count = await prisma.sr_received_inventory_inbox.count({
             where: whereClause
         })
-        const result: any = await prisma.sr_received_inventory_inbox.findMany({
+        const result = await prisma.sr_received_inventory_inbox.findMany({
             orderBy: {
                 createdAt: 'desc'
             },
@@ -84,45 +89,65 @@ export const getReceivedInventoryDal = async (req: Request) => {
             ...(take && { take: take }),
             select: {
                 id: true,
-                order_no: true,
-                pre_procurement: {
-                    include: {
-                        category: true,
-                        subcategory: true
+                procurement_no: true,
+                procurement: {
+                    select: {
+                        procurement_no: true,
+                        category: {
+                            select: {
+                                name: true
+                            }
+                        },
+                        subcategory: {
+                            select: {
+                                name: true
+                            }
+                        },
+                        brand: {
+                            select: {
+                                name: true
+                            }
+                        },
+                        post_procurement: {
+                            select: {
+                                procurement_no: true,
+                                supplier_name: true,
+                                gst_no: true,
+                                final_rate: true,
+                                gst: true,
+                                total_quantity: true,
+                                total_price: true,
+                                unit_price: true,
+                                is_gst_added: true,
+                            }
+                        },
+                        description: true,
+                        quantity: true,
+                        rate: true,
+                        total_rate: true,
+                        isEdited: true
                     }
-                },
-                status: true,
-                supplier_name: true,
-                gst_no: true,
-                final_rate: true,
-                gst: true,
-                total_quantity: true,
-                total_price: true,
-                unit_price: true,
-                is_gst_added: true,
+                }
             }
         })
 
         let resultToSend: any[] = []
         await Promise.all(
             result.map(async (item: any) => {
-                const tempPreProcurement = { ...item?.pre_procurement }
-                delete tempPreProcurement.id
-                delete tempPreProcurement.createdAt
-                delete tempPreProcurement.updatedAt
-                delete tempPreProcurement.statusId
-                delete item.pre_procurement
+                const temp = { ...item?.procurement }
+                delete item.procurement
 
                 const receivings = await prisma.receivings.findMany({
                     where: {
-                        order_no: item?.order_no
+                        procurement_no: item?.procurement_no
                     },
                     select: {
-                        order_no: true,
+                        procurement_no: true,
                         receiving_no: true,
                         date: true,
                         received_quantity: true,
                         remaining_quantity: true,
+                        is_added: true,
                         remark: true,
                         receiving_image: {
                             select: {
@@ -133,7 +158,6 @@ export const getReceivedInventoryDal = async (req: Request) => {
                         }
                     }
                 })
-
 
                 await Promise.all(
                     receivings.map(async (receiving: any) => {
@@ -156,7 +180,7 @@ export const getReceivedInventoryDal = async (req: Request) => {
                     })
                 )
 
-                resultToSend.push({ ...item, ...tempPreProcurement, receivings: receivings })
+                resultToSend.push({ ...item, ...temp, receivings: receivings })
             })
         )
 
@@ -182,8 +206,8 @@ export const getReceivedInventoryDal = async (req: Request) => {
             pagination: pagination
         }
     } catch (err: any) {
-        console.log(err)
-        return { error: true, message: err?.message }
+        console.log(err?.message)
+        return { error: true, message: getErrorMessage(err) }
     }
 }
 
@@ -198,46 +222,67 @@ export const getReceivedInventoryByIdDal = async (req: Request) => {
             },
             select: {
                 id: true,
-                order_no: true,
-                pre_procurement: {
-                    include: {
-                        category: true,
-                        subcategory: true
+                procurement_no: true,
+                procurement: {
+                    select: {
+                        procurement_no: true,
+                        category: {
+                            select: {
+                                name: true
+                            }
+                        },
+                        subcategory: {
+                            select: {
+                                name: true
+                            }
+                        },
+                        brand: {
+                            select: {
+                                name: true
+                            }
+                        },
+                        post_procurement: {
+                            select: {
+                                procurement_no: true,
+                                supplier_name: true,
+                                gst_no: true,
+                                final_rate: true,
+                                gst: true,
+                                total_quantity: true,
+                                total_price: true,
+                                unit_price: true,
+                                is_gst_added: true,
+                            }
+                        },
+                        description: true,
+                        quantity: true,
+                        rate: true,
+                        total_rate: true,
+                        isEdited: true
                     }
-                },
-                status: true,
-                supplier_name: true,
-                gst_no: true,
-                final_rate: true,
-                gst: true,
-                total_quantity: true,
-                total_price: true,
-                unit_price: true,
-                is_gst_added: true
+                }
             }
         })
-
         const totalReceiving: any = await prisma.receivings.aggregate({
             where: {
-                order_no: result?.order_no || ''
+                procurement_no: result?.procurement_no || ''
             },
             _sum: {
                 received_quantity: true
             }
         })
 
-        const total_remaining = result?.total_quantity - totalReceiving?._sum?.received_quantity
-
         const receivings = await prisma.receivings.findMany({
             where: {
-                order_no: result?.order_no || ''
+                procurement_no: result?.procurement_no || ''
             },
             select: {
-                order_no: true,
+                procurement_no: true,
                 receiving_no: true,
                 date: true,
                 received_quantity: true,
                 remaining_quantity: true,
+                is_added: true,
                 remark: true,
                 receiving_image: {
                     select: {
@@ -270,55 +315,95 @@ export const getReceivedInventoryByIdDal = async (req: Request) => {
             })
         )
 
-        resultToSend = { ...result, receivings: receivings, total_receivings: totalReceiving?._sum?.received_quantity, total_remaining: total_remaining }
+        const temp = { ...result?.procurement }
+        delete result.procurement
+
+        resultToSend = { ...result, ...temp, receivings: receivings, total_receivings: totalReceiving?._sum?.received_quantity }
 
         return resultToSend
     } catch (err: any) {
         console.log(err?.message)
-        return { error: true, message: err?.message }
+        return { error: true, message: getErrorMessage(err) }
     }
 }
 
 
 export const getReceivedInventoryByOrderNoDal = async (req: Request) => {
-    const { order_no } = req.params
+    const { procurement_no } = req.params
     let resultToSend: any = {}
     try {
-        const result = await prisma.sr_received_inventory_inbox.findFirst({
+        const result: any = await prisma.sr_received_inventory_inbox.findFirst({
             where: {
-                order_no: order_no
+                procurement_no: procurement_no
             },
             select: {
                 id: true,
-                order_no: true,
-                pre_procurement: {
-                    include: {
-                        category: true,
-                        subcategory: true
+                procurement_no: true,
+                procurement: {
+                    select: {
+                        procurement_no: true,
+                        category: {
+                            select: {
+                                name: true
+                            }
+                        },
+                        subcategory: {
+                            select: {
+                                name: true
+                            }
+                        },
+                        brand: {
+                            select: {
+                                name: true
+                            }
+                        },
+                        post_procurement: {
+                            select: {
+                                procurement_no: true,
+                                supplier_name: true,
+                                gst_no: true,
+                                final_rate: true,
+                                gst: true,
+                                total_quantity: true,
+                                total_price: true,
+                                unit_price: true,
+                                is_gst_added: true,
+                            }
+                        },
+                        description: true,
+                        quantity: true,
+                        rate: true,
+                        total_rate: true,
+                        isEdited: true
                     }
-                },
-                status: true,
-                supplier_name: true,
-                gst_no: true,
-                final_rate: true,
-                gst: true,
-                total_quantity: true,
-                total_price: true,
-                unit_price: true,
-                is_gst_added: true
+                }
+            }
+        })
+
+        if (!result) {
+            throw { error: true, message: 'Received Inventory with provided Order Number not found' }
+        }
+
+        const totalReceiving: any = await prisma.receivings.aggregate({
+            where: {
+                procurement_no: result?.procurement_no || ''
+            },
+            _sum: {
+                received_quantity: true
             }
         })
 
         const receivings = await prisma.receivings.findMany({
             where: {
-                order_no: order_no || ''
+                procurement_no: result?.procurement_no || ''
             },
             select: {
-                order_no: true,
+                procurement_no: true,
                 receiving_no: true,
                 date: true,
                 received_quantity: true,
                 remaining_quantity: true,
+                is_added: true,
                 remark: true,
                 receiving_image: {
                     select: {
@@ -351,12 +436,15 @@ export const getReceivedInventoryByOrderNoDal = async (req: Request) => {
             })
         )
 
-        resultToSend = { ...result, receivings: receivings }
+        const temp = { ...result?.procurement }
+        delete result.procurement
+
+        resultToSend = { ...result, ...temp, receivings: receivings, total_receivings: totalReceiving?._sum?.received_quantity }
 
         return resultToSend
     } catch (err: any) {
         console.log(err?.message)
-        return { error: true, message: err?.message }
+        return { error: true, message: getErrorMessage(err) }
     }
 }
 
@@ -372,55 +460,59 @@ export const getReceivedInventoryOutboxDal = async (req: Request) => {
     let pagination: any = {}
     const whereClause: any = {};
 
-    const search: string = req?.query?.search ? String(req?.query?.search) : ''
+    const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined
 
     const category: any[] = Array.isArray(req?.query?.category) ? req?.query?.category : [req?.query?.category]
     const subcategory: any[] = Array.isArray(req?.query?.scategory) ? req?.query?.scategory : [req?.query?.scategory]
     const status: any[] = Array.isArray(req?.query?.status) ? req?.query?.status : [req?.query?.status]
+    const brand: any[] = Array.isArray(req?.query?.brand) ? req?.query?.brand : [req?.query?.brand]
 
-    whereClause.OR = [
-        {
-            order_no: {
-                contains: search,
-                mode: 'insensitive'
-            }
-        },
-        {
-            pre_procurement: {
-                other_description: {
+    //creating search options for the query
+    if (search) {
+        whereClause.OR = [
+            {
+                procurement_no: {
                     contains: search,
                     mode: 'insensitive'
                 }
-            }
-        },
-        {
-            pre_procurement: {
-                brand: {
-                    contains: search,
-                    mode: 'insensitive'
+            },
+            {
+                procurement: {
+                    description: {
+                        contains: search,
+                        mode: 'insensitive'
+                    }
                 }
             }
-        }
-    ];
+        ];
+    }
 
+    //creating filter options for the query
     if (category[0]) {
-        whereClause.pre_procurement = {
+        whereClause.procurement = {
             category_masterId: {
                 in: category
             }
         }
     }
     if (subcategory[0]) {
-        whereClause.pre_procurement = {
+        whereClause.procurement = {
             subcategory_masterId: {
                 in: subcategory
             }
         }
     }
     if (status[0]) {
-        whereClause.status = {
+        whereClause.procurement = {
             status: {
                 in: status.map(Number)
+            }
+        }
+    }
+    if (brand[0]) {
+        whereClause.procurement = {
+            brand: {
+                in: brand
             }
         }
     }
@@ -429,7 +521,7 @@ export const getReceivedInventoryOutboxDal = async (req: Request) => {
         count = await prisma.sr_received_inventory_outbox.count({
             where: whereClause
         })
-        const result: any = await prisma.sr_received_inventory_outbox.findMany({
+        const result = await prisma.sr_received_inventory_outbox.findMany({
             orderBy: {
                 createdAt: 'desc'
             },
@@ -438,45 +530,65 @@ export const getReceivedInventoryOutboxDal = async (req: Request) => {
             ...(take && { take: take }),
             select: {
                 id: true,
-                order_no: true,
-                pre_procurement: {
-                    include: {
-                        category: true,
-                        subcategory: true
+                procurement_no: true,
+                procurement: {
+                    select: {
+                        procurement_no: true,
+                        category: {
+                            select: {
+                                name: true
+                            }
+                        },
+                        subcategory: {
+                            select: {
+                                name: true
+                            }
+                        },
+                        brand: {
+                            select: {
+                                name: true
+                            }
+                        },
+                        post_procurement: {
+                            select: {
+                                procurement_no: true,
+                                supplier_name: true,
+                                gst_no: true,
+                                final_rate: true,
+                                gst: true,
+                                total_quantity: true,
+                                total_price: true,
+                                unit_price: true,
+                                is_gst_added: true,
+                            }
+                        },
+                        description: true,
+                        quantity: true,
+                        rate: true,
+                        total_rate: true,
+                        isEdited: true
                     }
-                },
-                status: true,
-                supplier_name: true,
-                gst_no: true,
-                final_rate: true,
-                gst: true,
-                total_quantity: true,
-                total_price: true,
-                unit_price: true,
-                is_gst_added: true,
+                }
             }
         })
 
         let resultToSend: any[] = []
         await Promise.all(
             result.map(async (item: any) => {
-                const tempPreProcurement = { ...item?.pre_procurement }
-                delete tempPreProcurement.id
-                delete tempPreProcurement.createdAt
-                delete tempPreProcurement.updatedAt
-                delete tempPreProcurement.statusId
-                delete item.pre_procurement
+                const temp = { ...item?.procurement }
+                delete item.procurement
 
                 const receivings = await prisma.receivings.findMany({
                     where: {
-                        order_no: item?.order_no || ''
+                        procurement_no: item?.procurement_no
                     },
                     select: {
-                        order_no: true,
+                        procurement_no: true,
                         receiving_no: true,
                         date: true,
                         received_quantity: true,
                         remaining_quantity: true,
+                        is_added: true,
                         remark: true,
                         receiving_image: {
                             select: {
@@ -487,7 +599,6 @@ export const getReceivedInventoryOutboxDal = async (req: Request) => {
                         }
                     }
                 })
-
 
                 await Promise.all(
                     receivings.map(async (receiving: any) => {
@@ -510,7 +621,7 @@ export const getReceivedInventoryOutboxDal = async (req: Request) => {
                     })
                 )
 
-                resultToSend.push({ ...item, ...tempPreProcurement, receivings: receivings })
+                resultToSend.push({ ...item, ...temp, receivings: receivings })
             })
         )
 
@@ -537,50 +648,82 @@ export const getReceivedInventoryOutboxDal = async (req: Request) => {
         }
     } catch (err: any) {
         console.log(err?.message)
-        return { error: true, message: err?.message }
+        return { error: true, message: getErrorMessage(err) }
     }
 }
 
 
 export const getReceivedInventoryOutboxByIdDal = async (req: Request) => {
     const { id } = req.params
-    let resultToSend: any[] = []
+    let resultToSend: any = {}
     try {
-        const result = await prisma.sr_received_inventory_outbox.findFirst({
+        const result: any = await prisma.sr_received_inventory_outbox.findFirst({
             where: {
                 id: id
             },
             select: {
                 id: true,
-                order_no: true,
-                pre_procurement: {
-                    include: {
-                        category: true,
-                        subcategory: true
+                procurement_no: true,
+                procurement: {
+                    select: {
+                        procurement_no: true,
+                        category: {
+                            select: {
+                                name: true
+                            }
+                        },
+                        subcategory: {
+                            select: {
+                                name: true
+                            }
+                        },
+                        brand: {
+                            select: {
+                                name: true
+                            }
+                        },
+                        post_procurement: {
+                            select: {
+                                procurement_no: true,
+                                supplier_name: true,
+                                gst_no: true,
+                                final_rate: true,
+                                gst: true,
+                                total_quantity: true,
+                                total_price: true,
+                                unit_price: true,
+                                is_gst_added: true,
+                            }
+                        },
+                        description: true,
+                        quantity: true,
+                        rate: true,
+                        total_rate: true,
+                        isEdited: true
                     }
-                },
-                status: true,
-                supplier_name: true,
-                gst_no: true,
-                final_rate: true,
-                gst: true,
-                total_quantity: true,
-                total_price: true,
-                unit_price: true,
-                is_gst_added: true
+                }
+            }
+        })
+        const totalReceiving: any = await prisma.receivings.aggregate({
+            where: {
+                procurement_no: result?.procurement_no || ''
+            },
+            _sum: {
+                received_quantity: true
             }
         })
 
         const receivings = await prisma.receivings.findMany({
             where: {
-                order_no: result?.order_no || ''
+                procurement_no: result?.procurement_no || ''
             },
             select: {
-                order_no: true,
+                procurement_no: true,
                 receiving_no: true,
                 date: true,
                 received_quantity: true,
                 remaining_quantity: true,
+                is_added: true,
                 remark: true,
                 receiving_image: {
                     select: {
@@ -591,7 +734,6 @@ export const getReceivedInventoryOutboxByIdDal = async (req: Request) => {
                 }
             }
         })
-
 
         await Promise.all(
             receivings.map(async (receiving: any) => {
@@ -614,12 +756,15 @@ export const getReceivedInventoryOutboxByIdDal = async (req: Request) => {
             })
         )
 
-        resultToSend.push({ ...result, receivings: receivings })
+        const temp = { ...result?.procurement }
+        delete result.procurement
+
+        resultToSend = { ...result, ...temp, receivings: receivings, total_receivings: totalReceiving?._sum?.received_quantity }
 
         return resultToSend
     } catch (err: any) {
         console.log(err?.message)
-        return { error: true, message: err?.message }
+        return { error: true, message: getErrorMessage(err) }
     }
 }
 
@@ -627,7 +772,7 @@ export const getReceivedInventoryOutboxByIdDal = async (req: Request) => {
 
 export const addToInventoryDal = async (req: Request) => {
     const {
-        order_no,
+        procurement_no,
         dead_stock
     } = req.body
     const img = req.files
@@ -636,7 +781,7 @@ export const addToInventoryDal = async (req: Request) => {
 
         const totalNonAddedReceiving: any = await prisma.receivings.aggregate({
             where: {
-                order_no: order_no || '',
+                procurement_no: procurement_no || '',
                 is_added: false
             },
             _sum: {
@@ -650,7 +795,7 @@ export const addToInventoryDal = async (req: Request) => {
 
         const NonAddedReceiving: any = await prisma.receivings.findMany({
             where: {
-                order_no: order_no || '',
+                procurement_no: procurement_no || '',
                 is_added: false
             }
         })
@@ -671,14 +816,14 @@ export const addToInventoryDal = async (req: Request) => {
         if (dead_stock) {
             const prev_dead_stock = await prisma.dead_stock.findFirst({
                 where: {
-                    order_no: order_no
+                    procurement_no: procurement_no
                 }
             })
 
             if (prev_dead_stock) {
                 await prisma.dead_stock.update({
                     where: {
-                        order_no: order_no
+                        procurement_no: procurement_no
                     },
                     data: {
                         quantity: Number(prev_dead_stock?.quantity) + Number(dead_stock)
@@ -687,7 +832,7 @@ export const addToInventoryDal = async (req: Request) => {
             } else {
                 await prisma.dead_stock.create({
                     data: {
-                        order_no: order_no,
+                        procurement_no: procurement_no,
                         quantity: Number(dead_stock)
                     }
                 })
@@ -700,7 +845,7 @@ export const addToInventoryDal = async (req: Request) => {
                     uploaded.map(async (item) => {
                         await prisma.dead_stock_image.create({
                             data: {
-                                order_no: order_no,
+                                procurement_no: procurement_no,
                                 ReferenceNo: item?.ReferenceNo,
                                 uniqueId: item?.uniqueId
                             }

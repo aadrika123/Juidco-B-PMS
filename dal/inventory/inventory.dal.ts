@@ -115,7 +115,8 @@ export const getItemDal = async (req: Request) => {
                         name: true
                     }
                 },
-                description: true
+                description: true,
+                quantity: true
             }
         })
         totalPage = Math.ceil(count / take)

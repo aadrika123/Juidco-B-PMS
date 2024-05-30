@@ -1,5 +1,6 @@
 import { Request } from "express";
 import { PrismaClient } from "@prisma/client";
+import getErrorMessage from "../../lib/getErrorMessage";
 
 
 const prisma = new PrismaClient()
@@ -15,55 +16,59 @@ export const getPostProcurementDal = async (req: Request) => {
     let pagination: any = {}
     const whereClause: any = {};
 
-    const search: string = req?.query?.search ? String(req?.query?.search) : ''
+    const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined
 
     const category: any[] = Array.isArray(req?.query?.category) ? req?.query?.category : [req?.query?.category]
     const subcategory: any[] = Array.isArray(req?.query?.scategory) ? req?.query?.scategory : [req?.query?.scategory]
     const status: any[] = Array.isArray(req?.query?.status) ? req?.query?.status : [req?.query?.status]
+    const brand: any[] = Array.isArray(req?.query?.brand) ? req?.query?.brand : [req?.query?.brand]
 
-    whereClause.OR = [
-        {
-            order_no: {
-                contains: search,
-                mode: 'insensitive'
-            }
-        },
-        {
-            pre_procurement: {
-                other_description: {
+    //creating search options for the query
+    if (search) {
+        whereClause.OR = [
+            {
+                procurement_no: {
                     contains: search,
                     mode: 'insensitive'
                 }
-            }
-        },
-        {
-            pre_procurement: {
-                brand: {
-                    contains: search,
-                    mode: 'insensitive'
+            },
+            {
+                procurement: {
+                    description: {
+                        contains: search,
+                        mode: 'insensitive'
+                    }
                 }
             }
-        }
-    ];
+        ];
+    }
 
+    //creating filter options for the query
     if (category[0]) {
-        whereClause.pre_procurement = {
+        whereClause.procurement = {
             category_masterId: {
                 in: category
             }
         }
     }
     if (subcategory[0]) {
-        whereClause.pre_procurement = {
+        whereClause.procurement = {
             subcategory_masterId: {
                 in: subcategory
             }
         }
     }
     if (status[0]) {
-        whereClause.status = {
+        whereClause.procurement = {
             status: {
                 in: status.map(Number)
+            }
+        }
+    }
+    if (brand[0]) {
+        whereClause.procurement = {
+            brand: {
+                in: brand
             }
         }
     }
@@ -72,7 +77,7 @@ export const getPostProcurementDal = async (req: Request) => {
         count = await prisma.da_post_procurement_inbox.count({
             where: whereClause
         })
-        const result: any = await prisma.da_post_procurement_inbox.findMany({
+        const result = await prisma.da_post_procurement_inbox.findMany({
             orderBy: {
                 createdAt: 'desc'
             },
@@ -81,35 +86,54 @@ export const getPostProcurementDal = async (req: Request) => {
             ...(take && { take: take }),
             select: {
                 id: true,
-                order_no: true,
-                pre_procurement: {
-                    include: {
-                        category: true,
-                        subcategory: true
+                procurement_no: true,
+                procurement: {
+                    select: {
+                        procurement_no: true,
+                        category: {
+                            select: {
+                                name: true
+                            }
+                        },
+                        subcategory: {
+                            select: {
+                                name: true
+                            }
+                        },
+                        brand: {
+                            select: {
+                                name: true
+                            }
+                        },
+                        post_procurement: {
+                            select: {
+                                procurement_no: true,
+                                supplier_name: true,
+                                gst_no: true,
+                                final_rate: true,
+                                gst: true,
+                                total_quantity: true,
+                                total_price: true,
+                                unit_price: true,
+                                is_gst_added: true,
+                            }
+                        },
+                        description: true,
+                        quantity: true,
+                        rate: true,
+                        total_rate: true,
+                        isEdited: true
                     }
-                },
-                status: true,
-                supplier_name: true,
-                gst_no: true,
-                final_rate: true,
-                gst: true,
-                total_quantity: true,
-                total_price: true,
-                unit_price: true,
-                is_gst_added: true
+                }
             }
         })
 
         let resultToSend: any[] = []
 
-        result.map((item: any) => {
-            const tempPreProcurement = { ...item?.pre_procurement }
-            delete tempPreProcurement.id
-            delete tempPreProcurement.createdAt
-            delete tempPreProcurement.updatedAt
-            delete tempPreProcurement.statusId
-            delete item.pre_procurement
-            resultToSend.push({ ...item, ...tempPreProcurement })
+        result.map(async (item: any) => {
+            const temp = { ...item?.procurement }
+            delete item.procurement
+            resultToSend.push({ ...item, ...temp })
         })
 
         totalPage = Math.ceil(count / take)
@@ -134,8 +158,8 @@ export const getPostProcurementDal = async (req: Request) => {
             pagination: pagination
         }
     } catch (err: any) {
-        console.log(err?.message)
-        return { error: true, message: err?.message }
+        console.log(err)
+        return { error: true, message: getErrorMessage(err) }
     }
 }
 
@@ -143,69 +167,128 @@ export const getPostProcurementDal = async (req: Request) => {
 export const getPostProcurementByIdDal = async (req: Request) => {
     const { id } = req.params
     try {
-        const result = await prisma.da_post_procurement_inbox.findFirst({
+        const result: any = await prisma.da_post_procurement_inbox.findFirst({
             where: {
                 id: id
             },
             select: {
                 id: true,
-                order_no: true,
-                pre_procurement: {
-                    include: {
-                        category: true,
-                        subcategory: true
+                procurement_no: true,
+                procurement: {
+                    select: {
+                        procurement_no: true,
+                        category: {
+                            select: {
+                                name: true
+                            }
+                        },
+                        subcategory: {
+                            select: {
+                                name: true
+                            }
+                        },
+                        brand: {
+                            select: {
+                                name: true
+                            }
+                        },
+                        post_procurement: {
+                            select: {
+                                procurement_no: true,
+                                supplier_name: true,
+                                gst_no: true,
+                                final_rate: true,
+                                gst: true,
+                                total_quantity: true,
+                                total_price: true,
+                                unit_price: true,
+                                is_gst_added: true,
+                            }
+                        },
+                        description: true,
+                        quantity: true,
+                        rate: true,
+                        total_rate: true,
+                        isEdited: true
                     }
-                },
-                status: true,
-                supplier_name: true,
-                gst_no: true,
-                final_rate: true,
-                gst: true,
-                total_quantity: true,
-                total_price: true,
-                unit_price: true,
-                is_gst_added: true
+                }
             }
         })
-        return result
+
+        let resultToSend: any = {}
+
+        const temp = { ...result?.procurement }
+        delete result.procurement
+        resultToSend = { ...result, ...temp }
+
+        return resultToSend
     } catch (err: any) {
-        console.log(err?.message)
-        return { error: true, message: err?.message }
+        console.log(err)
+        return { error: true, message: getErrorMessage(err) }
     }
 }
 
 
 export const getPostProcurementByOrderNoDal = async (req: Request) => {
-    const { order_no } = req.params
+    const { procurement_no } = req.params
     try {
-        const result = await prisma.da_post_procurement_inbox.findFirst({
+        const result: any = await prisma.da_post_procurement_inbox.findFirst({
             where: {
-                order_no: order_no
+                procurement_no: procurement_no
             },
             select: {
                 id: true,
-                order_no: true,
-                pre_procurement: {
-                    include: {
-                        category: true,
-                        subcategory: true
+                procurement_no: true,
+                procurement: {
+                    select: {
+                        procurement_no: true,
+                        category: {
+                            select: {
+                                name: true
+                            }
+                        },
+                        subcategory: {
+                            select: {
+                                name: true
+                            }
+                        },
+                        brand: {
+                            select: {
+                                name: true
+                            }
+                        },
+                        post_procurement: {
+                            select: {
+                                procurement_no: true,
+                                supplier_name: true,
+                                gst_no: true,
+                                final_rate: true,
+                                gst: true,
+                                total_quantity: true,
+                                total_price: true,
+                                unit_price: true,
+                                is_gst_added: true,
+                            }
+                        },
+                        description: true,
+                        quantity: true,
+                        rate: true,
+                        total_rate: true,
+                        isEdited: true
                     }
-                },
-                status: true,
-                supplier_name: true,
-                gst_no: true,
-                final_rate: true,
-                gst: true,
-                total_quantity: true,
-                total_price: true,
-                unit_price: true,
-                is_gst_added: true
+                }
             }
         })
-        return result
+        let resultToSend: any = {}
+
+        const temp = { ...result?.procurement }
+        delete result.procurement
+        resultToSend = { ...result, ...temp }
+
+        return resultToSend
     } catch (err: any) {
-        console.log(err?.message)
-        return { error: true, message: err?.message }
+        console.log(err)
+        return { error: true, message: getErrorMessage(err) }
     }
 }
 
@@ -215,7 +298,7 @@ export const SaveAdditionalDetailsProcurementDal = async (req: Request) => {
     const {
         id,
         supplier_name,
-        order_no,
+        procurement_no,
         gst_no,
         final_rate,
         gst,
@@ -227,6 +310,7 @@ export const SaveAdditionalDetailsProcurementDal = async (req: Request) => {
 
 
     const data: any = {
+        procurement_no: procurement_no,
         supplier_name: supplier_name,
         gst_no: gst_no,
         final_rate: Number(final_rate),
@@ -248,73 +332,47 @@ export const SaveAdditionalDetailsProcurementDal = async (req: Request) => {
         }
     }
 
-    const daPostInbox: any = await prisma.da_post_procurement_inbox.findFirst({
-        where: {
-            id: id
-        }
-    })
-    if (daPostInbox) {
-        delete daPostInbox.id
-        delete daPostInbox.createdAt
-        delete daPostInbox.updatedAt
-    }
-
-    const daPostOut = await prisma.da_post_procurement_outbox.create({
-        data: daPostInbox
-    })
-
     try {
-        const [daPostOutUp, daPostInDel, proStatusUp]: any = await prisma.$transaction([
-            prisma.da_post_procurement_outbox.update({
-                where: {
-                    id: daPostOut?.id
-                },
-                data: data
+        await prisma.$transaction([
+            prisma.da_post_procurement_outbox.create({
+                data: {
+                    procurement_no: procurement_no
+                }
             }),
             prisma.da_post_procurement_inbox.delete({
                 where: {
-                    id: id
+                    procurement_no: procurement_no
                 }
             }),
             prisma.procurement_status.update({
                 where: {
-                    order_no: order_no
+                    procurement_no: procurement_no
                 },
                 data: {
                     status: 3
                 }
-            })
-        ])
-        if (!daPostOutUp || !daPostInDel || !proStatusUp) {
-            await prisma.da_post_procurement_outbox.delete({
-                where: {
-                    id: daPostOut?.id
-                }
-            })
-        }
-
-        if (daPostOutUp) {
-            delete daPostOutUp.id
-            delete daPostOutUp.createdAt
-            delete daPostOutUp.updatedAt
-        }
-        await prisma.$transaction([
+            }),
             prisma.da_received_inventory_inbox.create({
-                data: daPostOutUp
+                data: {
+                    procurement_no: procurement_no
+                }
             }),
             prisma.sr_received_inventory_inbox.create({
-                data: daPostOutUp
+                data: {
+                    procurement_no: procurement_no
+                }
             }),
             prisma.sr_post_procurement_inbox.create({
-                data: daPostOutUp
+                data: {
+                    procurement_no: procurement_no
+                }
             })
         ])
-
 
         return 'Additional Details Saved'
     } catch (err: any) {
         console.log(err?.message)
-        return { error: true, message: err?.message }
+        return { error: true, message: getErrorMessage(err) }
     }
 }
 
@@ -330,55 +388,59 @@ export const getPostProcurementOutboxDal = async (req: Request) => {
     let pagination: any = {}
     const whereClause: any = {};
 
-    const search: string = req?.query?.search ? String(req?.query?.search) : ''
+    const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined
 
     const category: any[] = Array.isArray(req?.query?.category) ? req?.query?.category : [req?.query?.category]
     const subcategory: any[] = Array.isArray(req?.query?.scategory) ? req?.query?.scategory : [req?.query?.scategory]
     const status: any[] = Array.isArray(req?.query?.status) ? req?.query?.status : [req?.query?.status]
+    const brand: any[] = Array.isArray(req?.query?.brand) ? req?.query?.brand : [req?.query?.brand]
 
-    whereClause.OR = [
-        {
-            order_no: {
-                contains: search,
-                mode: 'insensitive'
-            }
-        },
-        {
-            pre_procurement: {
-                other_description: {
+    //creating search options for the query
+    if (search) {
+        whereClause.OR = [
+            {
+                procurement_no: {
                     contains: search,
                     mode: 'insensitive'
                 }
-            }
-        },
-        {
-            pre_procurement: {
-                brand: {
-                    contains: search,
-                    mode: 'insensitive'
+            },
+            {
+                procurement: {
+                    description: {
+                        contains: search,
+                        mode: 'insensitive'
+                    }
                 }
             }
-        }
-    ];
+        ];
+    }
 
+    //creating filter options for the query
     if (category[0]) {
-        whereClause.pre_procurement = {
+        whereClause.procurement = {
             category_masterId: {
                 in: category
             }
         }
     }
     if (subcategory[0]) {
-        whereClause.pre_procurement = {
+        whereClause.procurement = {
             subcategory_masterId: {
                 in: subcategory
             }
         }
     }
     if (status[0]) {
-        whereClause.status = {
+        whereClause.procurement = {
             status: {
                 in: status.map(Number)
+            }
+        }
+    }
+    if (brand[0]) {
+        whereClause.procurement = {
+            brand: {
+                in: brand
             }
         }
     }
@@ -387,7 +449,7 @@ export const getPostProcurementOutboxDal = async (req: Request) => {
         count = await prisma.da_post_procurement_outbox.count({
             where: whereClause
         })
-        const result: any = await prisma.da_post_procurement_outbox.findMany({
+        const result = await prisma.da_post_procurement_outbox.findMany({
             orderBy: {
                 createdAt: 'desc'
             },
@@ -396,35 +458,54 @@ export const getPostProcurementOutboxDal = async (req: Request) => {
             ...(take && { take: take }),
             select: {
                 id: true,
-                order_no: true,
-                pre_procurement: {
-                    include: {
-                        category: true,
-                        subcategory: true
+                procurement_no: true,
+                procurement: {
+                    select: {
+                        procurement_no: true,
+                        category: {
+                            select: {
+                                name: true
+                            }
+                        },
+                        subcategory: {
+                            select: {
+                                name: true
+                            }
+                        },
+                        brand: {
+                            select: {
+                                name: true
+                            }
+                        },
+                        post_procurement: {
+                            select: {
+                                procurement_no: true,
+                                supplier_name: true,
+                                gst_no: true,
+                                final_rate: true,
+                                gst: true,
+                                total_quantity: true,
+                                total_price: true,
+                                unit_price: true,
+                                is_gst_added: true,
+                            }
+                        },
+                        description: true,
+                        quantity: true,
+                        rate: true,
+                        total_rate: true,
+                        isEdited: true
                     }
-                },
-                status: true,
-                supplier_name: true,
-                gst_no: true,
-                final_rate: true,
-                gst: true,
-                total_quantity: true,
-                total_price: true,
-                unit_price: true,
-                is_gst_added: true
+                }
             }
         })
 
         let resultToSend: any[] = []
 
-        result.map((item: any) => {
-            const tempPreProcurement = { ...item?.pre_procurement }
-            delete tempPreProcurement.id
-            delete tempPreProcurement.createdAt
-            delete tempPreProcurement.updatedAt
-            delete tempPreProcurement.statusId
-            delete item.pre_procurement
-            resultToSend.push({ ...item, ...tempPreProcurement })
+        result.map(async (item: any) => {
+            const temp = { ...item?.procurement }
+            delete item.procurement
+            resultToSend.push({ ...item, ...temp })
         })
 
         totalPage = Math.ceil(count / take)
@@ -449,8 +530,8 @@ export const getPostProcurementOutboxDal = async (req: Request) => {
             pagination: pagination
         }
     } catch (err: any) {
-        console.log(err?.message)
-        return { error: true, message: err?.message }
+        console.log(err)
+        return { error: true, message: getErrorMessage(err) }
     }
 }
 
@@ -458,33 +539,63 @@ export const getPostProcurementOutboxDal = async (req: Request) => {
 export const getPostProcurementOutboxByIdDal = async (req: Request) => {
     const { id } = req.params
     try {
-        const result = await prisma.da_post_procurement_outbox.findFirst({
+        const result: any = await prisma.da_post_procurement_outbox.findFirst({
             where: {
                 id: id
             },
             select: {
                 id: true,
-                order_no: true,
-                pre_procurement: {
-                    include: {
-                        category: true,
-                        subcategory: true
+                procurement_no: true,
+                procurement: {
+                    select: {
+                        procurement_no: true,
+                        category: {
+                            select: {
+                                name: true
+                            }
+                        },
+                        subcategory: {
+                            select: {
+                                name: true
+                            }
+                        },
+                        brand: {
+                            select: {
+                                name: true
+                            }
+                        },
+                        post_procurement: {
+                            select: {
+                                procurement_no: true,
+                                supplier_name: true,
+                                gst_no: true,
+                                final_rate: true,
+                                gst: true,
+                                total_quantity: true,
+                                total_price: true,
+                                unit_price: true,
+                                is_gst_added: true,
+                            }
+                        },
+                        description: true,
+                        quantity: true,
+                        rate: true,
+                        total_rate: true,
+                        isEdited: true
                     }
-                },
-                status: true,
-                supplier_name: true,
-                gst_no: true,
-                final_rate: true,
-                gst: true,
-                total_quantity: true,
-                total_price: true,
-                unit_price: true,
-                is_gst_added: true
+                }
             }
         })
-        return result
+
+        let resultToSend: any = {}
+
+        const temp = { ...result?.procurement }
+        delete result.procurement
+        resultToSend = { ...result, ...temp }
+
+        return resultToSend
     } catch (err: any) {
-        console.log(err?.message)
-        return { error: true, message: err?.message }
+        console.log(err)
+        return { error: true, message: getErrorMessage(err) }
     }
 }
