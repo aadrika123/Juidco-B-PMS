@@ -59,7 +59,7 @@ export const createPreProcurementDal = async (req: Request) => {
                 }
             })
         }
-        return srPreIn
+        return result
     } catch (err: any) {
         console.log(err?.message)
         return { error: true, message: err?.message }
@@ -188,6 +188,7 @@ export const getPreProcurementDal = async (req: Request) => {
                         rate: true,
                         total_rate: true,
                         isEdited: true,
+                        remark: true,
                         status: {
                             select: {
                                 status: true

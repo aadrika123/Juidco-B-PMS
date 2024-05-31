@@ -19,8 +19,8 @@ export const createPreProcurement = async (req: Request, res: Response) => {
     if (!result?.error) {
         res.status(201).json({
             status: true,
-            message: `Pre procurement created having id : ${result.id}`,
-            order_no: result?.order_no
+            message: `Pre procurement created having Procurement number : ${result?.procurement_no}`,
+            order_no: result?.procurement_no
         })
     } else {
         res.status(400).json({
