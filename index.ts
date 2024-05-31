@@ -14,6 +14,7 @@ import daPostProcurementRoute from './router/departmenalAdmin/postPrecurement/da
 import daReceivedInventoryRoute from './router/departmenalAdmin/receivedInventory/receivedInventory.route'
 import srPostProcurementRoute from './router/stockReciever/postPrecurement/srPostProcurement.route'
 import srReceivedInventoryRoute from './router/stockReciever/receivedInventory/receivedInventory.route'
+import inventoryRoute from './router/inventory/inventory.route'
 
 
 config()
@@ -30,8 +31,8 @@ app.get('/api/pms', (req: Request, res: Response) => {
 // dev routes with protection
 app.use('/api/pms/dev', devRoute)
 
-//routes
-
+//----------------------------routes--------------------------------------
+//procurement route
 app.use('/api/pms/master', masterEntryRoute)
 app.use('/api/pms/sr', srPreProcurementRoute)
 app.use('/api/pms/da', daPreProcurementRoute)
@@ -40,6 +41,9 @@ app.use('/api/pms/da/post-procurement', daPostProcurementRoute)
 app.use('/api/pms/da/rec-inv', daReceivedInventoryRoute)
 app.use('/api/pms/sr/post-procurement', srPostProcurementRoute)
 app.use('/api/pms/sr/rec-inv', srReceivedInventoryRoute)
+
+//inventory route
+app.use('/api/pms/inventory', inventoryRoute)
 
 
 app.listen(port, () => {
