@@ -35,7 +35,7 @@ model subcategory_master {
 
 model brand_master {
     id                   String                @id @default(uuid())
-    name                 String                @unique
+    name                 String
     subcategory          subcategory_master?   @relation(fields: [subcategory_masterId], references: [id])
     subcategory_masterId String?
     createdAt            DateTime              @default(now())
