@@ -334,12 +334,17 @@ export const getReceivedInventoryByIdDal = async (req: Request) => {
         const temp = { ...result?.procurement }
         delete result.procurement
 
+        const deadStockCount = await prisma.dead_stock.count({
+            where: { procurement_no: temp?.procurement_no }
+        })
+
         resultToSend = {
             ...result,
             ...temp,
             receivings: receivings,
             total_receivings: totalReceiving?._sum?.received_quantity || 0,
-            total_remaining: temp?.post_procurement?.total_quantity - totalReceiving?._sum?.received_quantity
+            total_remaining: temp?.post_procurement?.total_quantity - totalReceiving?._sum?.received_quantity,
+            dead_stock: deadStockCount
         }
 
         return resultToSend
@@ -802,7 +807,18 @@ export const getReceivedInventoryOutboxByIdDal = async (req: Request) => {
         const temp = { ...result?.procurement }
         delete result.procurement
 
-        resultToSend = { ...result, ...temp, receivings: receivings, total_receivings: totalReceiving?._sum?.received_quantity }
+        const deadStockCount = await prisma.dead_stock.count({
+            where: { procurement_no: temp?.procurement_no }
+        })
+
+        resultToSend = {
+            ...result,
+            ...temp,
+            receivings: receivings,
+            total_receivings: totalReceiving?._sum?.received_quantity || 0,
+            total_remaining: temp?.post_procurement?.total_quantity - totalReceiving?._sum?.received_quantity,
+            dead_stock: deadStockCount
+        }
 
         return resultToSend
     } catch (err: any) {
