@@ -3,6 +3,7 @@ import { PrismaClient } from "@prisma/client";
 import { imageUploader } from "../../lib/imageUploader";
 import axios from 'axios'
 import getErrorMessage from "../../lib/getErrorMessage";
+import { pagination } from "../../type/common.type";
 
 
 const prisma = new PrismaClient()
@@ -16,7 +17,7 @@ export const getReceivedInventoryDal = async (req: Request) => {
     const endIndex: number | undefined = startIndex + take
     let count: number
     let totalPage: number
-    let pagination: any = {}
+    let pagination: pagination = {}
     const whereClause: any = {};
 
     const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined
@@ -234,16 +235,19 @@ export const getReceivedInventoryByIdDal = async (req: Request) => {
                         procurement_no: true,
                         category: {
                             select: {
+                                id: true,
                                 name: true
                             }
                         },
                         subcategory: {
                             select: {
+                                id: true,
                                 name: true
                             }
                         },
                         brand: {
                             select: {
+                                id: true,
                                 name: true
                             }
                         },
@@ -481,7 +485,7 @@ export const getReceivedInventoryOutboxDal = async (req: Request) => {
     const endIndex: number | undefined = startIndex + take
     let count: number
     let totalPage: number
-    let pagination: any = {}
+    let pagination: pagination = {}
     const whereClause: any = {};
 
     const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined
@@ -699,16 +703,19 @@ export const getReceivedInventoryOutboxByIdDal = async (req: Request) => {
                         procurement_no: true,
                         category: {
                             select: {
+                                id: true,
                                 name: true
                             }
                         },
                         subcategory: {
                             select: {
+                                id: true,
                                 name: true
                             }
                         },
                         brand: {
                             select: {
+                                id: true,
                                 name: true
                             }
                         },

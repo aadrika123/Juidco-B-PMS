@@ -1,6 +1,7 @@
 import { Request } from "express";
 import { PrismaClient } from "@prisma/client";
 import getErrorMessage from "../../lib/getErrorMessage";
+import { pagination } from "../../type/common.type";
 
 
 const prisma = new PrismaClient()
@@ -13,7 +14,7 @@ export const getPostProcurementDal = async (req: Request) => {
     const endIndex: number | undefined = startIndex + take
     let count: number
     let totalPage: number
-    let pagination: any = {}
+    let pagination: pagination = {}
     const whereClause: any = {};
 
     const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined
@@ -185,16 +186,19 @@ export const getPostProcurementByIdDal = async (req: Request) => {
                         procurement_no: true,
                         category: {
                             select: {
+                                id: true,
                                 name: true
                             }
                         },
                         subcategory: {
                             select: {
+                                id: true,
                                 name: true
                             }
                         },
                         brand: {
                             select: {
+                                id: true,
                                 name: true
                             }
                         },
@@ -256,16 +260,19 @@ export const getPostProcurementByOrderNoDal = async (req: Request) => {
                         procurement_no: true,
                         category: {
                             select: {
+                                id: true,
                                 name: true
                             }
                         },
                         subcategory: {
                             select: {
+                                id: true,
                                 name: true
                             }
                         },
                         brand: {
                             select: {
+                                id: true,
                                 name: true
                             }
                         },
@@ -405,7 +412,7 @@ export const getPostProcurementOutboxDal = async (req: Request) => {
     const endIndex: number | undefined = startIndex + take
     let count: number
     let totalPage: number
-    let pagination: any = {}
+    let pagination: pagination = {}
     const whereClause: any = {};
 
     const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined
@@ -577,16 +584,19 @@ export const getPostProcurementOutboxByIdDal = async (req: Request) => {
                         procurement_no: true,
                         category: {
                             select: {
+                                id: true,
                                 name: true
                             }
                         },
                         subcategory: {
                             select: {
+                                id: true,
                                 name: true
                             }
                         },
                         brand: {
                             select: {
+                                id: true,
                                 name: true
                             }
                         },
