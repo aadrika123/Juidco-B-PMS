@@ -121,7 +121,13 @@ export const getPostProcurementDal = async (req: Request) => {
                         quantity: true,
                         rate: true,
                         total_rate: true,
-                        isEdited: true
+                        isEdited: true,
+                        remark: true,
+                        status: {
+                            select: {
+                                status: true
+                            }
+                        }
                     }
                 }
             }
@@ -209,7 +215,13 @@ export const getPostProcurementByIdDal = async (req: Request) => {
                         quantity: true,
                         rate: true,
                         total_rate: true,
-                        isEdited: true
+                        isEdited: true,
+                        remark: true,
+                        status: {
+                            select: {
+                                status: true
+                            }
+                        }
                     }
                 }
             }
@@ -274,7 +286,13 @@ export const getPostProcurementByOrderNoDal = async (req: Request) => {
                         quantity: true,
                         rate: true,
                         total_rate: true,
-                        isEdited: true
+                        isEdited: true,
+                        remark: true,
+                        status: {
+                            select: {
+                                status: true
+                            }
+                        }
                     }
                 }
             }
