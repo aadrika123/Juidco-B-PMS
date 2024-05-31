@@ -40,3 +40,18 @@ export const getBrandDal = async (req: Request) => {
     }
 }
 
+
+export const getBrandBySubcategoryIdDal = async (req: Request) => {
+    const { subcategoryId } = req.params
+    try {
+        const result = await prisma.brand_master.findMany({
+            where: {
+                subcategory_masterId: subcategoryId
+            }
+        })
+        return result
+    } catch (err: any) {
+        console.log(err?.message)
+        return { error: true, message: err?.message }
+    }
+}

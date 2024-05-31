@@ -2,7 +2,7 @@ import express from "express";
 const router = express.Router()
 import { createSubCategory, getSubcategory, getSubcategoryByCategoryId } from './../../controller/masterEntry/subcategory.controller';
 import { createCategory, getCategory, getCategoryById } from "../../controller/masterEntry/category.controller";
-import { createBrand, getBrand } from "../../controller/masterEntry/brand.controller";
+import { createBrand, getBrand, getBrandBySubcategoryId } from "../../controller/masterEntry/brand.controller";
 
 //sub-category
 router.post('/sub-category', createSubCategory)
@@ -17,6 +17,7 @@ router.get('/category/:id', getCategoryById)
 //Brand
 router.post('/brand', createBrand)
 router.get('/brand', getBrand)
+router.get('/brand/by-subcategory/:subcategoryId', getBrandBySubcategoryId)
 
 
 export default router
