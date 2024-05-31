@@ -106,10 +106,16 @@ export const getPreProcurementDal = async (req: Request) => {
                             }
                         },
                         description: true,
+                        remark: true,
                         quantity: true,
                         rate: true,
                         total_rate: true,
-                        isEdited: true
+                        isEdited: true,
+                        status: {
+                            select: {
+                                status: true
+                            }
+                        }
                     }
                 }
             }
@@ -183,7 +189,13 @@ export const getPreProcurementByIdDal = async (req: Request) => {
                         quantity: true,
                         rate: true,
                         total_rate: true,
-                        isEdited: true
+                        isEdited: true,
+                        remark: true,
+                        status: {
+                            select: {
+                                status: true
+                            }
+                        }
                     }
                 }
             }
@@ -235,7 +247,13 @@ export const getPreProcurementByOrderNoDal = async (req: Request) => {
                         quantity: true,
                         rate: true,
                         total_rate: true,
-                        isEdited: true
+                        isEdited: true,
+                        remark: true,
+                        status: {
+                            select: {
+                                status: true
+                            }
+                        }
                     }
                 }
             }
@@ -557,7 +575,13 @@ export const getPreProcurementOutboxDal = async (req: Request) => {
                         quantity: true,
                         rate: true,
                         total_rate: true,
-                        isEdited: true
+                        isEdited: true,
+                        remark: true,
+                        status: {
+                            select: {
+                                status: true
+                            }
+                        }
                     }
                 }
             }
@@ -631,7 +655,13 @@ export const getPreProcurementOutboxtByIdDal = async (req: Request) => {
                         quantity: true,
                         rate: true,
                         total_rate: true,
-                        isEdited: true
+                        isEdited: true,
+                        remark: true,
+                        status: {
+                            select: {
+                                status: true
+                            }
+                        }
                     }
                 }
             }

@@ -125,7 +125,13 @@ export const getReceivedInventoryDal = async (req: Request) => {
                         quantity: true,
                         rate: true,
                         total_rate: true,
-                        isEdited: true
+                        isEdited: true,
+                        remark: true,
+                        status: {
+                            select: {
+                                status: true
+                            }
+                        }
                     }
                 }
             }
@@ -258,7 +264,13 @@ export const getReceivedInventoryByIdDal = async (req: Request) => {
                         quantity: true,
                         rate: true,
                         total_rate: true,
-                        isEdited: true
+                        isEdited: true,
+                        remark: true,
+                        status: {
+                            select: {
+                                status: true
+                            }
+                        }
                     }
                 }
             }
@@ -374,7 +386,13 @@ export const getReceivedInventoryByOrderNoDal = async (req: Request) => {
                         quantity: true,
                         rate: true,
                         total_rate: true,
-                        isEdited: true
+                        isEdited: true,
+                        remark: true,
+                        status: {
+                            select: {
+                                status: true
+                            }
+                        }
                     }
                 }
             }
@@ -566,7 +584,13 @@ export const getReceivedInventoryOutboxDal = async (req: Request) => {
                         quantity: true,
                         rate: true,
                         total_rate: true,
-                        isEdited: true
+                        isEdited: true,
+                        remark: true,
+                        status: {
+                            select: {
+                                status: true
+                            }
+                        }
                     }
                 }
             }
@@ -699,7 +723,13 @@ export const getReceivedInventoryOutboxByIdDal = async (req: Request) => {
                         quantity: true,
                         rate: true,
                         total_rate: true,
-                        isEdited: true
+                        isEdited: true,
+                        remark: true,
+                        status: {
+                            select: {
+                                status: true
+                            }
+                        }
                     }
                 }
             }

@@ -269,6 +269,7 @@ export const getPreProcurementByIdDal = async (req: Request) => {
                         rate: true,
                         total_rate: true,
                         isEdited: true,
+                        remark: true,
                         status: {
                             select: {
                                 status: true
@@ -327,6 +328,7 @@ export const getPreProcurementByOrderNoDal = async (req: Request) => {
                         rate: true,
                         total_rate: true,
                         isEdited: true,
+                        remark: true,
                         status: {
                             select: {
                                 status: true
@@ -558,6 +560,7 @@ export const getPreProcurementOutboxDal = async (req: Request) => {
                         rate: true,
                         total_rate: true,
                         isEdited: true,
+                        remark: true,
                         status: {
                             select: {
                                 status: true
@@ -638,6 +641,7 @@ export const getPreProcurementOutboxByIdDal = async (req: Request) => {
                         rate: true,
                         total_rate: true,
                         isEdited: true,
+                        remark: true,
                         status: {
                             select: {
                                 status: true
@@ -772,6 +776,7 @@ export const getPreProcurementRejectedDal = async (req: Request) => {
                         rate: true,
                         total_rate: true,
                         isEdited: true,
+                        remark: true,
                         status: {
                             select: {
                                 status: true
@@ -928,6 +933,7 @@ export const getPreProcurementReleasedDal = async (req: Request) => {
                         rate: true,
                         total_rate: true,
                         isEdited: true,
+                        remark: true,
                         status: {
                             select: {
                                 status: true
