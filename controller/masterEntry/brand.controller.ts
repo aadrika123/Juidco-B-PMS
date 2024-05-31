@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { createBrandDal, getBrandDal } from "../../dal/masterEntry/brand.dal";
+import { createBrandDal, getBrandDal, getBrandBySubcategoryIdDal } from "../../dal/masterEntry/brand.dal";
 
 
 export const createBrand = async (req: Request, res: Response) => {
@@ -21,6 +21,24 @@ export const createBrand = async (req: Request, res: Response) => {
 
 export const getBrand = async (req: Request, res: Response) => {
     const result: any = await getBrandDal(req)
+    if (!result?.error) {
+        res.status(200).json({
+            status: true,
+            message: `Brand list fetched successfully`,
+            data: result
+        })
+    } else {
+        res.status(404).json({
+            status: false,
+            message: `Error while fetching brand list`,
+            error: result?.message
+        })
+    }
+}
+
+
+export const getBrandBySubcategoryId = async (req: Request, res: Response) => {
+    const result: any = await getBrandBySubcategoryIdDal(req)
     if (!result?.error) {
         res.status(200).json({
             status: true,
