@@ -820,6 +820,8 @@ export const addToInventoryDal = async (req: Request) => {
         inventory
     } = req.body
     const img = req.files
+    let inventoryId = inventory
+    let exist: boolean = false
     // console.log(img)
     try {
 
@@ -847,6 +849,10 @@ export const addToInventoryDal = async (req: Request) => {
         if (dead_stock && !img) {
             throw { error: true, message: 'If there is any dead stock, at least one image is mandatory.' }
         }
+
+        const procData: any = await prisma.procurement.findFirst({
+            where: { procurement_no: procurement_no }
+        })
 
         prisma.$transaction(async (tx) => {
 
@@ -908,10 +914,19 @@ export const addToInventoryDal = async (req: Request) => {
                     )
                 }
 
-                if (inventory) {
+                const historyExistence = await prisma.stock_addition_history.findFirst({
+                    where: { procurement_no: procurement_no }
+                })
+
+                if (historyExistence) {
+                    inventoryId = historyExistence?.inventoryId
+                    exist = true
+                }
+
+                if (inventoryId) {
                     const updatedInv = await tx.inventory.update({
                         where: {
-                            id: inventory
+                            id: inventoryId
                         },
                         data: {
                             quantity: {
@@ -919,11 +934,17 @@ export const addToInventoryDal = async (req: Request) => {
                             }
                         }
                     })
+                    if (!exist) {
+                        const historyCreation = await tx.stock_addition_history.create({
+                            data: {
+                                inventory: { connect: { id: inventoryId } },
+                                procurement_no: procurement_no
+                            }
+                        })
+                        if (!historyCreation) throw { error: true, message: 'Error while creating history' }
+                    }
                     if (!updatedInv) throw { error: true, message: 'Error while updating inventory' }
                 } else {
-                    const procData: any = await prisma.procurement.findFirst({
-                        where: { procurement_no: procurement_no }
-                    })
                     const createdInv = await tx.inventory.create({
                         data: {
                             category: { connect: { id: procData?.category_masterId } },
@@ -934,6 +955,35 @@ export const addToInventoryDal = async (req: Request) => {
                         }
                     })
                     if (!createdInv) throw { error: true, message: 'Error while creating inventory' }
+                    const historyCreation = await tx.stock_addition_history.create({
+                        data: {
+                            inventory: { connect: { id: createdInv?.id } },
+                            procurement_no: procurement_no
+                        }
+                    })
+                    if (!historyCreation) throw { error: true, message: 'Error while creating history for new item' }
+                }
+
+                const outboxExistence = await prisma.sr_received_inventory_outbox.count({
+                    where: {
+                        procurement_no: procurement_no
+                    }
+                })
+                if (outboxExistence > 0) {
+                    const srRecInvOut = await tx.sr_received_inventory_outbox.create({
+                        data: {
+                            procurement_no: procurement_no
+                        }
+                    })
+                    if (!srRecInvOut) throw { error: true, message: 'Error while creating SR outbox' }
+                }
+                if (!procData?.is_partial) {
+                    const srRecInvInDel = await tx.sr_received_inventory_inbox.delete({
+                        where: {
+                            procurement_no: procurement_no
+                        }
+                    })
+                    if (!srRecInvInDel) throw { error: true, message: 'Error while deleting SR inbox' }
                 }
 
             }
