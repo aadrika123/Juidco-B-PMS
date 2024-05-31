@@ -176,17 +176,18 @@ model sr_received_inventory_outbox {
 //inventory============================================================================================================================================================================================================================================================================================================
 
 model inventory {
-    id                   String              @id @default(uuid())
-    category             category_master?    @relation(fields: [category_masterId], references: [id])
-    category_masterId    String?
-    subcategory          subcategory_master? @relation(fields: [subcategory_masterId], references: [id])
-    subcategory_masterId String?
-    brand                brand_master?       @relation(fields: [brand_masterId], references: [id])
-    brand_masterId       String?
-    description          String?
-    quantity             Int                 @default(0)
-    createdAt            DateTime            @default(now())
-    updatedAt            DateTime            @updatedAt
+    id                     String                   @id @default(uuid())
+    category               category_master?         @relation(fields: [category_masterId], references: [id])
+    category_masterId      String?
+    subcategory            subcategory_master?      @relation(fields: [subcategory_masterId], references: [id])
+    subcategory_masterId   String?
+    brand                  brand_master?            @relation(fields: [brand_masterId], references: [id])
+    brand_masterId         String?
+    description            String?
+    quantity               Int                      @default(0)
+    createdAt              DateTime                 @default(now())
+    updatedAt              DateTime                 @updatedAt
+    stock_addition_history stock_addition_history[]
 }
 
 model dead_stock {
@@ -280,4 +281,13 @@ model procurement_history {
     remark               String?
     createdAt            DateTime            @default(now())
     updatedAt            DateTime            @updatedAt
+}
+
+model stock_addition_history {
+    id             String    @id @default(uuid())
+    inventory      inventory @relation(fields: [inventoryId], references: [id])
+    inventoryId    String
+    procurement_no String    @unique
+    createdAt      DateTime  @default(now())
+    updatedAt      DateTime  @updatedAt
 }
