@@ -331,7 +331,13 @@ export const getReceivedInventoryByIdDal = async (req: Request) => {
         const temp = { ...result?.procurement }
         delete result.procurement
 
-        resultToSend = { ...result, ...temp, receivings: receivings, total_receivings: totalReceiving?._sum?.received_quantity }
+        resultToSend = {
+            ...result,
+            ...temp,
+            receivings: receivings,
+            total_receivings: totalReceiving?._sum?.received_quantity || 0,
+            remaining: temp?.post_procurement?.total_quantity - totalReceiving?._sum?.received_quantity || temp?.post_procurement?.total_quantity
+        }
 
         return resultToSend
     } catch (err: any) {
