@@ -332,6 +332,12 @@ export const SaveAdditionalDetailsProcurementDal = async (req: Request) => {
         is_gst_added
     } = req.body
 
+    const gstValidation = /^([0][1-9]|[1-2][0-9]|[3][0-8])[A-Z]{3}[ABCFGHLJPTF]{1}[A-Z]{1}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}/;
+    if (gst_no) {
+        if (!gstValidation.test(gst_no)) {
+            return { error: true, message: 'GST number is not valid' }
+        }
+    }
 
     const data: any = {
         procurement_no: procurement_no,
