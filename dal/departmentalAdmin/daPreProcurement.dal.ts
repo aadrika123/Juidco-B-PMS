@@ -424,11 +424,11 @@ export const editPreProcurementDal = async (req: Request) => {
 
 
 export const releaseForTenderDal = async (req: Request) => {
-    const { preProcurement }: { preProcurement: string[] } = req.body
+    const { preProcurement }: { preProcurement: string } = req.body
     const img = req.files
     try {
         await Promise.all(
-            preProcurement.map(async (item) => {
+            JSON.parse(preProcurement).map(async (item: string) => {
                 const inbox: any = await prisma.da_pre_procurement_inbox.findFirst({
                     where: {
                         id: item
