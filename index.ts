@@ -33,7 +33,7 @@ app.use('/api/pms/dev', devRoute)
 
 //----------------------------routes--------------------------------------
 //procurement route
-app.use('/auth/api/pms/master', masterEntryRoute)
+app.use('/api/pms/master', masterEntryRoute)
 app.use('/api/pms/sr', srPreProcurementRoute)
 app.use('/api/pms/da', daPreProcurementRoute)
 app.use('/api/pms/download', downloadRoute)
