@@ -1,7 +1,8 @@
 import { Request, Response } from "express";
 import {
     createItemDal,
-    getItemDal
+    getItemDal,
+    getItemByFilterDal
 } from "../../dal/inventory/inventory.dal";
 
 
@@ -24,6 +25,23 @@ export const createItem = async (req: Request, res: Response) => {
 
 export const getItem = async (req: Request, res: Response) => {
     const result: any = await getItemDal(req)
+    if (!result?.error) {
+        res.status(200).json({
+            status: true,
+            message: `Item list fetched successfully`,
+            data: result
+        })
+    } else {
+        res.status(404).json({
+            status: false,
+            message: `Error while fetching item list`,
+            error: result?.message
+        })
+    }
+}
+
+export const getItemByFilter = async (req: Request, res: Response) => {
+    const result: any = await getItemByFilterDal(req)
     if (!result?.error) {
         res.status(200).json({
             status: true,
