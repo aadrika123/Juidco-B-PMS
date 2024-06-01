@@ -408,19 +408,20 @@ export const forwardToDaDal = async (req: Request) => {
 
                 if (img) {
                     const uploaded = await imageUploader(img)   //It will return reference number and unique id as an object after uploading.
-
-                    await Promise.all(
-                        uploaded.map(async (item) => {
-                            await prisma.note_sheet.create({
-                                data: {
-                                    procurement_no: inbox?.procurement_no,
-                                    ReferenceNo: item?.ReferenceNo,
-                                    uniqueId: item?.uniqueId,
-                                    operation: 1
-                                }
+                    if (uploaded) {
+                        await Promise.all(
+                            uploaded.map(async (item) => {
+                                await prisma.note_sheet.create({
+                                    data: {
+                                        procurement_no: inbox?.procurement_no,
+                                        ReferenceNo: item?.ReferenceNo,
+                                        uniqueId: item?.uniqueId,
+                                        operation: 1
+                                    }
+                                })
                             })
-                        })
-                    )
+                        )
+                    }
                 }
 
                 const statusToUpdate = statusChecker(Number(status?.procurement?.status?.status))
