@@ -69,7 +69,7 @@ export const getPreProcurementDal = async (req: Request) => {
     }
     if (brand[0]) {
         whereClause.procurement = {
-            brand: {
+            brand_masterId: {
                 in: brand
             }
         }
@@ -559,7 +559,7 @@ export const getPreProcurementOutboxDal = async (req: Request) => {
     }
     if (brand[0]) {
         whereClause.procurement = {
-            brand: {
+            brand_masterId: {
                 in: brand
             }
         }
