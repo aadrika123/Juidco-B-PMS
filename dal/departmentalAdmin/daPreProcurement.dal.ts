@@ -1,6 +1,7 @@
 import { Request } from "express";
 import { PrismaClient } from "@prisma/client";
 import getErrorMessage from "../../lib/getErrorMessage";
+import { imageUploader } from "../../lib/imageUploader";
 import { pagination } from "../../type/common.type";
 
 
@@ -424,6 +425,7 @@ export const editPreProcurementDal = async (req: Request) => {
 
 export const releaseForTenderDal = async (req: Request) => {
     const { preProcurement }: { preProcurement: string[] } = req.body
+    const img = req.files
     try {
         await Promise.all(
             preProcurement.map(async (item) => {
@@ -438,6 +440,23 @@ export const releaseForTenderDal = async (req: Request) => {
 
                 if (inbox === null) {
                     throw { error: true, message: 'Invalid inbox ID' }
+                }
+
+                if (img) {
+                    const uploaded = await imageUploader(img)   //It will return reference number and unique id as an object after uploading.
+
+                    await Promise.all(
+                        uploaded.map(async (item) => {
+                            await prisma.note_sheet.create({
+                                data: {
+                                    procurement_no: inbox?.procurement_no,
+                                    ReferenceNo: item?.ReferenceNo,
+                                    uniqueId: item?.uniqueId,
+                                    operation: 2
+                                }
+                            })
+                        })
+                    )
                 }
 
                 await prisma.$transaction([

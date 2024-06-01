@@ -291,3 +291,15 @@ model stock_addition_history {
     createdAt      DateTime  @default(now())
     updatedAt      DateTime  @updatedAt
 }
+
+//Docs============================================================================================================================================================================================================================================================================================================
+
+model note_sheet {
+    id             String   @id @default(uuid())
+    procurement_no String
+    operation      Int //1=forward to DA, 2=release for tender
+    ReferenceNo    String
+    uniqueId       String?
+    createdAt      DateTime @default(now())
+    updatedAt      DateTime @updatedAt
+}

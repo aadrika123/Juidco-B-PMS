@@ -4,6 +4,7 @@ import {
 } from "@prisma/client";
 import generateOrderNumber from "../../lib/orderNumberGenerator";
 import getErrorMessage from "../../lib/getErrorMessage";
+import { imageUploader } from "../../lib/imageUploader";
 import { pagination } from "../../type/common.type";
 
 
@@ -359,6 +360,7 @@ export const getPreProcurementByOrderNoDal = async (req: Request) => {
 
 export const forwardToDaDal = async (req: Request) => {
     const { preProcurement }: { preProcurement: string[] } = req.body
+    const img = req.files
     try {
         await Promise.all(
             preProcurement.map(async (item) => {
@@ -403,6 +405,24 @@ export const forwardToDaDal = async (req: Request) => {
                         procurement_no: inbox?.procurement_no
                     }
                 })
+
+                if (img) {
+                    const uploaded = await imageUploader(img)   //It will return reference number and unique id as an object after uploading.
+
+                    await Promise.all(
+                        uploaded.map(async (item) => {
+                            await prisma.note_sheet.create({
+                                data: {
+                                    procurement_no: inbox?.procurement_no,
+                                    ReferenceNo: item?.ReferenceNo,
+                                    uniqueId: item?.uniqueId,
+                                    operation: 1
+                                }
+                            })
+                        })
+                    )
+                }
+
                 const statusToUpdate = statusChecker(Number(status?.procurement?.status?.status))
                 delete inbox.status
                 await prisma.$transaction([
