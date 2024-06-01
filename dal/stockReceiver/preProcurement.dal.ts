@@ -359,11 +359,11 @@ export const getPreProcurementByOrderNoDal = async (req: Request) => {
 
 
 export const forwardToDaDal = async (req: Request) => {
-    const { preProcurement }: { preProcurement: string[] } = req.body
+    const { preProcurement }: { preProcurement: string } = req.body
     const img = req.files
     try {
         await Promise.all(
-            preProcurement.map(async (item) => {
+            JSON.parse(preProcurement).map(async (item: string) => {
                 const status: any = await prisma.sr_pre_procurement_inbox.findFirst({
                     where: {
                         id: item
