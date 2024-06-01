@@ -15,7 +15,7 @@ router.get('/category', getCategory)
 router.get('/category/:id', getCategoryById)
 
 //Brand
-router.get('/brand/by-subcategory/:subcategoryId', getBrandBySubcategoryId)
+router.get('/by-subcategory/:subcategoryId', getBrandBySubcategoryId)
 router.post('/brand', createBrand)
 router.get('/brand', getBrand)
 // router.get('/brand/by-subcategory/:subcategoryId', getBrandBySubcategoryId)
