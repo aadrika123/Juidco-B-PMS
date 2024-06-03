@@ -1,5 +1,6 @@
 import express from "express";
 import { upload } from "../../../config/multer.config";
+import { srAuth } from "../../../middleware/userAuth";
 const router = express.Router()
 import {
     getReceivedInventory,
@@ -10,6 +11,7 @@ import {
     getReceivedInventoryOutboxById
 } from "../../../controller/stockReceiver/srReceivedInventory.controller";
 
+router.use(srAuth)
 
 router.get('/', getReceivedInventory)
 router.get('/outbox', getReceivedInventoryOutbox)

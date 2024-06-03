@@ -1,5 +1,6 @@
 import express from "express";
 import { upload } from "../../../config/multer.config";
+import { srAuth } from "../../../middleware/userAuth";
 const router = express.Router()
 import {
     createPreProcurement,
@@ -14,6 +15,7 @@ import {
     editPreProcurement
 } from "../../../controller/stockReceiver/srPreProcurement.controller";
 
+router.use(srAuth)
 
 router.post('/pre-procurement', createPreProcurement)
 router.get('/pre-procurement', getPreProcurement)

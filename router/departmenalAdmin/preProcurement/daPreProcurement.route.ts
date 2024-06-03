@@ -1,5 +1,6 @@
 import express from "express";
 import { upload } from "../../../config/multer.config";
+import { daAuth } from "../../../middleware/userAuth";
 const router = express.Router()
 import {
     backToSr,
@@ -13,6 +14,7 @@ import {
     reject
 } from "../../../controller/departmentalAdmin/daPreProcurement.controller";
 
+router.use(daAuth)
 
 router.get('/pre-procurement', getPreProcurement)
 router.get('/pre-procurement/outbox', getPreProcurementOutbox)
