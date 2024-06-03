@@ -26,7 +26,7 @@ export const imageUploader = async (file: any) => {
                     ...formData.getHeaders(),
                 }
 
-                await axios.post(dmsUrl, formData, { headers })
+                await axios.post(process.env.DMS_UPLOAD || '', formData, { headers })
                     .then((response) => {
                         // console.log(response?.data?.data, 'res')
                         toReturn.push(response?.data?.data)
