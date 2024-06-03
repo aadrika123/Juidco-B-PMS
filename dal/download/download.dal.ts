@@ -185,7 +185,7 @@ export const exportCsvDal = async (req: Request) => {
     if (jsonData) {
         const dataToExport = resultToSend.map((item: any) => {
             return {
-                "Order Number": item?.order_no,
+                "Procurement Number": item?.procurement_no,
                 "Category": item?.category?.name,
                 "Sub Category": item?.subcategory?.name,
                 "Brand": item?.brand?.name,
@@ -194,7 +194,7 @@ export const exportCsvDal = async (req: Request) => {
                 "Total Rate": item?.total_rate,
                 "Status": orderStatus(item?.status?.status),
                 "Remark": item?.remark,
-                "Description": item?.other_description,
+                "Description": item?.description,
                 "Edited": item?.isEdited ? "Yes" : "No"
             }
         })
