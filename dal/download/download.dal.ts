@@ -11,42 +11,54 @@ export const exportCsvDal = async (req: Request) => {
     const category: any[] = Array.isArray(req?.body?.category) ? req?.body?.category : [req?.body?.category]
     const subcategory: any[] = Array.isArray(req?.body?.scategory) ? req?.body?.scategory : [req?.body?.scategory]
     const status: any[] = Array.isArray(req?.query?.status) ? req?.query?.status : [req?.query?.status]
+    const brand: any[] = Array.isArray(req?.query?.brand) ? req?.query?.brand : [req?.query?.brand]
 
-    whereClause.OR = [
-        {
-            order_no: {
-                contains: search,
-                mode: 'insensitive'
+    //creating search options for the query
+    if (search) {
+        whereClause.OR = [
+            {
+                procurement_no: {
+                    contains: search,
+                    mode: 'insensitive'
+                }
+            },
+            {
+                procurement: {
+                    description: {
+                        contains: search,
+                        mode: 'insensitive'
+                    }
+                }
             }
-        },
-        {
-            other_description: {
-                contains: search,
-                mode: 'insensitive'
-            }
-        },
-        {
-            brand: {
-                contains: search,
-                mode: 'insensitive'
-            }
-        }
-    ];
+        ];
+    }
 
+    //creating filter options for the query
     if (category[0]) {
-        whereClause.category_masterId = {
-            in: category
+        whereClause.procurement = {
+            category_masterId: {
+                in: category
+            }
         }
     }
     if (subcategory[0]) {
-        whereClause.subcategory_masterId = {
-            in: subcategory
+        whereClause.procurement = {
+            subcategory_masterId: {
+                in: subcategory
+            }
         }
     }
     if (status[0]) {
-        whereClause.status = {
+        whereClause.procurement = {
             status: {
                 in: status.map(Number)
+            }
+        }
+    }
+    if (brand[0]) {
+        whereClause.procurement = {
+            brand_masterId: {
+                in: brand
             }
         }
     }
@@ -57,51 +69,44 @@ export const exportCsvDal = async (req: Request) => {
         },
         where: whereClause,
         select: {
-            order_no: true,
-            category: {
+            id: true,
+            procurement_no: true,
+            procurement: {
                 select: {
-                    id: true,
-                    name: true
+                    procurement_no: true,
+                    category: {
+                        select: {
+                            name: true
+                        }
+                    },
+                    subcategory: {
+                        select: {
+                            name: true
+                        }
+                    },
+                    brand: {
+                        select: {
+                            name: true
+                        }
+                    },
+                    description: true,
+                    quantity: true,
+                    rate: true,
+                    total_rate: true,
+                    isEdited: true,
+                    remark: true,
+                    status: {
+                        select: {
+                            status: true
+                        }
+                    }
                 }
-            },
-            subcategory: {
-                select: {
-                    id: true,
-                    name: true
-                }
-            },
-            brand: true,
-            processor: true,
-            ram: true,
-            os: true,
-            rom: true,
-            graphics: true,
-            other_description: true,
-            rate: true,
-            quantity: true,
-            total_rate: true,
-            status: {
-                select: {
-                    id: true,
-                    status: true
-                }
-            },
-            remark: true,
-            isEdited: true,
-            colour: true,
-            material: true,
-            dimension: true,
-            room_type: true,
-            included_components: true,
-            size: true,
-            recomended_uses: true,
-            bristle: true,
-            weight: true,
-            number_of_items: true
+            }
         }
     }
 
     switch (req?.body?.table) {
+        //pre-procurement
         case "SRIN": {
             jsonData = await prisma.sr_pre_procurement_inbox.findMany(condition)
             break
@@ -118,7 +123,45 @@ export const exportCsvDal = async (req: Request) => {
             jsonData = await prisma.da_pre_procurement_outbox.findMany(condition)
             break
         }
+        //post-procurement
+        case "POSTSRIN": {
+            jsonData = await prisma.sr_post_procurement_inbox.findMany(condition)
+            break
+        }
+        case "POSTDAIN": {
+            jsonData = await prisma.da_post_procurement_inbox.findMany(condition)
+            break
+        }
+        case "POSTDAOUT": {
+            jsonData = await prisma.da_post_procurement_outbox.findMany(condition)
+            break
+        }
+        //received inventory
+        case "RECSRIN": {
+            jsonData = await prisma.sr_received_inventory_inbox.findMany(condition)
+            break
+        }
+        case "RECSROUT": {
+            jsonData = await prisma.sr_received_inventory_outbox.findMany(condition)
+            break
+        }
+        case "RECDAIN": {
+            jsonData = await prisma.da_received_inventory_inbox.findMany(condition)
+            break
+        }
+        case "RECDAOUT": {
+            jsonData = await prisma.da_received_inventory_outbox.findMany(condition)
+            break
+        }
     }
+
+    let resultToSend: any[] = []
+
+    jsonData.map(async (item: any) => {
+        const temp = { ...item?.procurement }
+        delete item.procurement
+        resultToSend.push({ ...item, ...temp })
+    })
 
     const orderStatus = (status: number) => {
         switch (status) {
@@ -140,33 +183,18 @@ export const exportCsvDal = async (req: Request) => {
     }
 
     if (jsonData) {
-        const dataToExport = jsonData.map((item: any) => {
+        const dataToExport = resultToSend.map((item: any) => {
             return {
                 "Order Number": item?.order_no,
                 "Category": item?.category?.name,
                 "Sub Category": item?.subcategory?.name,
-                ...(item?.processor !== null && { "Processor": item?.processor }),
-                ...(item?.brand !== null && { "Brand": item?.brand }),
-                ...(item?.ram !== null && { "Ram": item?.ram }),
-                ...(item?.os !== null && { "OS": item?.os }),
-                ...(item?.rom !== null && { "ROM": item?.rom }),
-                ...(item?.graphics !== null && { "Graphics": item?.graphics }),
-                ...(item?.colour !== null && { "Colour": item?.colour }),
-                ...(item?.material !== null && { "Material": item?.material }),
-                ...(item?.dimension !== null && { "Dimension": item?.dimension }),
-                ...(item?.room_type !== null && { "Room Type": item?.room_type }),
-                ...(item?.included_components !== null && { "Included Components": item?.included_components }),
-                ...(item?.size !== null && { "Size": item?.size }),
-                ...(item?.recomended_uses !== null && { "Recomended Uses": item?.recomended_uses }),
-                ...(item?.bristle !== null && { "Bristle": item?.bristle }),
-                ...(item?.weight !== null && { "Weight": item?.weight }),
-                ...(item?.number_of_items !== null && { "Number of Items": item?.number_of_items }),
+                "Brand": item?.brand?.name,
                 "Rate": item?.rate,
                 "Quantity": item?.quantity,
                 "Total Rate": item?.total_rate,
                 "Status": orderStatus(item?.status?.status),
                 "Remark": item?.remark,
-                "Other Description": item?.other_description,
+                "Description": item?.other_description,
                 "Edited": item?.isEdited ? "Yes" : "No"
             }
         })
