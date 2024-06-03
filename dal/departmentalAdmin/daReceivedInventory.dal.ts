@@ -214,7 +214,7 @@ export const getReceivedInventoryDal = async (req: Request) => {
             pagination: pagination
         }
     } catch (err: any) {
-        console.log(err?.message)
+        console.log(err)
         return { error: true, message: getErrorMessage(err) }
     }
 }
@@ -350,7 +350,7 @@ export const getReceivedInventoryByIdDal = async (req: Request) => {
 
         return resultToSend
     } catch (err: any) {
-        console.log(err?.message)
+        console.log(err)
         return { error: true, message: getErrorMessage(err) }
     }
 }
@@ -477,7 +477,7 @@ export const getReceivedInventoryByOrderNoDal = async (req: Request) => {
 
         return resultToSend
     } catch (err: any) {
-        console.log(err?.message)
+        console.log(err)
         return { error: true, message: getErrorMessage(err) }
     }
 }
@@ -827,7 +827,7 @@ export const getReceivedInventoryOutboxDal = async (req: Request) => {
             pagination: pagination
         }
     } catch (err: any) {
-        console.log(err?.message)
+        console.log(err)
         return { error: true, message: getErrorMessage(err) }
     }
 }
@@ -963,7 +963,7 @@ export const getReceivedInventoryOutboxByIdDal = async (req: Request) => {
 
         return resultToSend
     } catch (err: any) {
-        console.log(err?.message)
+        console.log(err)
         return { error: true, message: getErrorMessage(err) }
     }
 }
