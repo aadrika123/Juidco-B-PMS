@@ -38,9 +38,9 @@ app.use('/api/pms/sr', srPreProcurementRoute)
 app.use('/api/pms/da', daPreProcurementRoute)
 app.use('/api/pms/download', downloadRoute)
 app.use('/api/pms/da/post-procurement', daPostProcurementRoute)
-app.use('/api/pms/da/recinv', daReceivedInventoryRoute)
+app.use('/api/pms/da/rec-inv', daReceivedInventoryRoute)
 app.use('/api/pms/sr/post-procurement', srPostProcurementRoute)
-app.use('/api/pms/sr/recinv', srReceivedInventoryRoute)
+app.use('/api/pms/sr/rec-inv', srReceivedInventoryRoute)
 
 //inventory route
 app.use('/api/pms/inventory', inventoryRoute)
