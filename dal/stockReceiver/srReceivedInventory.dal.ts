@@ -173,7 +173,7 @@ export const getReceivedInventoryDal = async (req: Request) => {
                                 const headers = {
                                     "token": "8Ufn6Jio6Obv9V7VXeP7gbzHSyRJcKluQOGorAD58qA1IQKYE0"
                                 }
-                                await axios.post(dmsUrlGet, { "referenceNo": img?.ReferenceNo }, { headers })
+                                await axios.post(process.env.DMS_GET || '', { "referenceNo": img?.ReferenceNo }, { headers })
                                     .then((response) => {
                                         // console.log(response?.data?.data, 'res')
                                         img.imageUrl = response?.data?.data?.fullPath
@@ -317,7 +317,7 @@ export const getReceivedInventoryByIdDal = async (req: Request) => {
                         const headers = {
                             "token": "8Ufn6Jio6Obv9V7VXeP7gbzHSyRJcKluQOGorAD58qA1IQKYE0"
                         }
-                        await axios.post(dmsUrlGet, { "referenceNo": img?.ReferenceNo }, { headers })
+                        await axios.post(process.env.DMS_GET || '', { "referenceNo": img?.ReferenceNo }, { headers })
                             .then((response) => {
                                 // console.log(response?.data?.data, 'res')
                                 img.imageUrl = response?.data?.data?.fullPath
@@ -455,7 +455,7 @@ export const getReceivedInventoryByOrderNoDal = async (req: Request) => {
                         const headers = {
                             "token": "8Ufn6Jio6Obv9V7VXeP7gbzHSyRJcKluQOGorAD58qA1IQKYE0"
                         }
-                        await axios.post(dmsUrlGet, { "referenceNo": img?.ReferenceNo }, { headers })
+                        await axios.post(process.env.DMS_GET || '', { "referenceNo": img?.ReferenceNo }, { headers })
                             .then((response) => {
                                 // console.log(response?.data?.data, 'res')
                                 img.imageUrl = response?.data?.data?.fullPath
@@ -646,7 +646,7 @@ export const getReceivedInventoryOutboxDal = async (req: Request) => {
                                 const headers = {
                                     "token": "8Ufn6Jio6Obv9V7VXeP7gbzHSyRJcKluQOGorAD58qA1IQKYE0"
                                 }
-                                await axios.post(dmsUrlGet, { "referenceNo": img?.ReferenceNo }, { headers })
+                                await axios.post(process.env.DMS_GET || '', { "referenceNo": img?.ReferenceNo }, { headers })
                                     .then((response) => {
                                         // console.log(response?.data?.data, 'res')
                                         img.imageUrl = response?.data?.data?.fullPath
@@ -790,7 +790,7 @@ export const getReceivedInventoryOutboxByIdDal = async (req: Request) => {
                         const headers = {
                             "token": "8Ufn6Jio6Obv9V7VXeP7gbzHSyRJcKluQOGorAD58qA1IQKYE0"
                         }
-                        await axios.post(dmsUrlGet, { "referenceNo": img?.ReferenceNo }, { headers })
+                        await axios.post(process.env.DMS_GET || '', { "referenceNo": img?.ReferenceNo }, { headers })
                             .then((response) => {
                                 // console.log(response?.data?.data, 'res')
                                 img.imageUrl = response?.data?.data?.fullPath
