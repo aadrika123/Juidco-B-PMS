@@ -34,6 +34,14 @@
  *                       
 */
 
+  /**
+   * @swagger
+   * /api/pms/master/category:
+   * tags:
+   *   name: Users
+   *   description: User management and login
+   */
+
 
 /**
  * @swagger
