@@ -1,26 +1,26 @@
 import { Request, Response, NextFunction } from "express"
 
 export const srAuth = (req: Request, res: Response, next: NextFunction) => {
-    const roleLabelsHeader = req.headers['role-label'];
+    const roleIdHeader = req.headers['role-id'];
 
-    if (typeof roleLabelsHeader !== 'string') {
-        return res.status(400).send({ message: 'Invalid role labels format' });
+    if (typeof roleIdHeader !== 'string') {
+        return res.status(400).send({ message: 'Invalid role ID format' });
     }
 
-    const roleLabelsArray: string[] = JSON.parse(roleLabelsHeader);
+    const roleIdArray: string[] = JSON.parse(roleIdHeader);
 
-    const label: number[] = roleLabelsArray.map(label => {
-        const number = Number(label);
+    const roleId: number[] = roleIdArray.map(roleId => {
+        const number = Number(roleId);
         if (isNaN(number)) {
-            throw new Error('Invalid number in role labels');
+            throw new Error('Invalid number in role ID');
         }
         return number;
     });
 
-    if (!label) {
-        res.status(401).send({ error: true, message: "Role label is required as 'role-label' in headers" })
+    if (!roleId) {
+        res.status(401).send({ error: true, message: "Role ID is required as 'role-id' in headers" })
     }
-    if (!label.includes(1)) {
+    if (!roleId.includes(59)) {
         res.status(401).send({ error: true, message: "User not authorized to access this api" })
     } else {
         next()
@@ -29,26 +29,26 @@ export const srAuth = (req: Request, res: Response, next: NextFunction) => {
 
 
 export const daAuth = (req: Request, res: Response, next: NextFunction) => {
-    const roleLabelsHeader = req.headers['role-label'];
+    const roleIdHeader = req.headers['role-id'];
 
-    if (typeof roleLabelsHeader !== 'string') {
-        return res.status(400).send({ message: 'Invalid role labels format' });
+    if (typeof roleIdHeader !== 'string') {
+        return res.status(400).send({ message: 'Invalid role ID format' });
     }
 
-    const roleLabelsArray: string[] = JSON.parse(roleLabelsHeader);
+    const roleIdArray: string[] = JSON.parse(roleIdHeader);
 
-    const label: number[] = roleLabelsArray.map(label => {
-        const number = Number(label);
+    const roleId: number[] = roleIdArray.map(roleId => {
+        const number = Number(roleId);
         if (isNaN(number)) {
-            throw new Error('Invalid number in role labels');
+            throw new Error('Invalid number in role ID');
         }
         return number;
     });
 
-    if (!label) {
-        res.status(401).send({ error: true, message: "Role label is required as 'role-label' in headers" })
+    if (!roleId) {
+        res.status(401).send({ error: true, message: "Role ID is required as 'role-id' in headers" })
     }
-    if (!label.includes(2)) {
+    if (!roleId.includes(60)) {
         res.status(401).send({ error: true, message: "User not authorized to access this api" })
     } else {
         next()
@@ -57,26 +57,26 @@ export const daAuth = (req: Request, res: Response, next: NextFunction) => {
 
 
 export const accAuth = (req: Request, res: Response, next: NextFunction) => {
-    const roleLabelsHeader = req.headers['role-label'];
+    const roleIdHeader = req.headers['role-id'];
 
-    if (typeof roleLabelsHeader !== 'string') {
-        return res.status(400).send({ message: 'Invalid role labels format' });
+    if (typeof roleIdHeader !== 'string') {
+        return res.status(400).send({ message: 'Invalid role ID format' });
     }
 
-    const roleLabelsArray: string[] = JSON.parse(roleLabelsHeader);
+    const roleIdArray: string[] = JSON.parse(roleIdHeader);
 
-    const label: number[] = roleLabelsArray.map(label => {
-        const number = Number(label);
+    const roleId: number[] = roleIdArray.map(roleId => {
+        const number = Number(roleId);
         if (isNaN(number)) {
-            throw new Error('Invalid number in role labels');
+            throw new Error('Invalid number in role ID');
         }
         return number;
     });
 
-    if (!label) {
-        res.status(401).send({ error: true, message: "Role label is required as 'role-label' in headers" })
+    if (!roleId) {
+        res.status(401).send({ error: true, message: "Role ID is required as 'role-id' in headers" })
     }
-    if (!label.includes(3)) {
+    if (!roleId.includes(61)) {
         res.status(401).send({ error: true, message: "User not authorized to access this api" })
     } else {
         next()
@@ -85,26 +85,26 @@ export const accAuth = (req: Request, res: Response, next: NextFunction) => {
 
 
 export const distAuth = (req: Request, res: Response, next: NextFunction) => {
-    const roleLabelsHeader = req.headers['role-label'];
+    const roleIdHeader = req.headers['role-id'];
 
-    if (typeof roleLabelsHeader !== 'string') {
-        return res.status(400).send({ message: 'Invalid role labels format' });
+    if (typeof roleIdHeader !== 'string') {
+        return res.status(400).send({ message: 'Invalid role ID format' });
     }
 
-    const roleLabelsArray: string[] = JSON.parse(roleLabelsHeader);
+    const roleIdArray: string[] = JSON.parse(roleIdHeader);
 
-    const label: number[] = roleLabelsArray.map(label => {
-        const number = Number(label);
+    const roleId: number[] = roleIdArray.map(roleId => {
+        const number = Number(roleId);
         if (isNaN(number)) {
-            throw new Error('Invalid number in role labels');
+            throw new Error('Invalid number in role ID');
         }
         return number;
     });
 
-    if (!label) {
-        res.status(401).send({ error: true, message: "Role label is required as 'role-label' in headers" })
+    if (!roleId) {
+        res.status(401).send({ error: true, message: "Role ID is required as 'role-id' in headers" })
     }
-    if (!label.includes(4)) {
+    if (!roleId.includes(62)) {
         res.status(401).send({ error: true, message: "User not authorized to access this api" })
     } else {
         next()
