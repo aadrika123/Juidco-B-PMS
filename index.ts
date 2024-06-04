@@ -1,5 +1,6 @@
 import express, { Request, Response } from 'express'
 import { config } from 'dotenv'
+import swagger from './lib/swagger'
 const cors = require('cors')
 
 
@@ -45,6 +46,8 @@ app.use('/api/pms/sr/rec-inv', srReceivedInventoryRoute)
 //inventory route
 app.use('/api/pms/inventory', inventoryRoute)
 
+//swagger
+swagger(app)
 
 app.listen(port, () => {
     console.log(`Procurement and Inventory Management System is listening on port ${port}`)
