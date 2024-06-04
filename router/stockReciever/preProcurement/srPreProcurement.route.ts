@@ -15,7 +15,7 @@ import {
     editPreProcurement
 } from "../../../controller/stockReceiver/srPreProcurement.controller";
 
-router.use(srAuth)
+// router.use(srAuth)
 
 router.post('/pre-procurement', createPreProcurement)
 router.get('/pre-procurement', getPreProcurement)

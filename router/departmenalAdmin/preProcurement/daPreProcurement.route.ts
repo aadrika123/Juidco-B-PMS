@@ -14,7 +14,7 @@ import {
     reject
 } from "../../../controller/departmentalAdmin/daPreProcurement.controller";
 
-router.use(daAuth)
+// router.use(daAuth)
 
 router.get('/pre-procurement', getPreProcurement)
 router.get('/pre-procurement/outbox', getPreProcurementOutbox)
