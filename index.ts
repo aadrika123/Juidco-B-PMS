@@ -26,6 +26,7 @@ const port = process.env.PORT || 6969
 app.use(cors());
 
 app.use(express.json())
+app.use(express.urlencoded({ extended: true }));
 
 app.get('/api/pms', (req: Request, res: Response) => {
     res.send('Procurement and Inventory Management System backend')
