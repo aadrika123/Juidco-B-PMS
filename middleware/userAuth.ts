@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from "express"
 
 export const srAuth = (req: Request, res: Response, next: NextFunction) => {
     const roleIdHeader = req.headers['role-id'];
-    console.log(req.headers)
+    console.log(req)
 
     if (typeof roleIdHeader !== 'string') {
         return res.status(400).send({ message: 'Invalid role ID format' });
