@@ -6,6 +6,8 @@
  *   get:
  *     summary: Get category list
  *     description: Retrieve a list of categories.
+ *     tags:
+ *       - Category
  *     responses:
  *       200:
  *         description: A list of categories.
@@ -34,20 +36,14 @@
  *                       
 */
 
-  /**
-   * @swagger
-   * /api/pms/master/category:
-   * tags:
-   *   name: Users
-   *   description: User management and login
-   */
-
 
 /**
  * @swagger
  * /api/pms/master/category:
  *   post:
  *     summary: Create category.
+ *     tags:
+ *       - Category
  *     requestBody:
  *       required: true
  *       content:

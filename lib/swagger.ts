@@ -24,7 +24,6 @@ const options = {
 }
 
 const specs = swaggerJsdoc(options)
-console.log(specs)
 
 const uiOptions = {
     customCss: '.swagger-ui .topbar { display: none }'

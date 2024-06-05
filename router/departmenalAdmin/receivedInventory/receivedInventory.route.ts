@@ -11,7 +11,7 @@ import {
     getReceivedInventoryOutboxById
 } from "../../../controller/departmentalAdmin/daReceivedInventory.controller";
 
-// router.use(daAuth)
+router.use(daAuth)
 
 router.get('/', getReceivedInventory)
 router.get('/outbox', getReceivedInventoryOutbox)

@@ -1,4 +1,4 @@
-function generateOrderNumber(ulb_id: any) {
+function generateOrderNumber(ulb_id: string) {
     // Get current date
     const currentDate = new Date();
     const year = currentDate.getFullYear().toString().slice(-2);

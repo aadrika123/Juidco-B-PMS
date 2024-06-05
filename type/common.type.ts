@@ -13,3 +13,9 @@ export type pagination = {
     totalPage?: number,
     totalResult?: number
 }
+
+
+export type uploadedDoc = {
+    ReferenceNo: string,
+    uniqueId: string
+}

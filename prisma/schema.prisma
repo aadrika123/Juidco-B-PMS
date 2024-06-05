@@ -50,7 +50,7 @@ model brand_master {
 model procurement_status {
     id             String        @id @default(uuid())
     procurement_no String        @unique
-    status         Int //-2=rejected, -1=back to sr, 0=pending, 1=in DA's inbox, 69= revised and in DA's inbox, 2=released for tender,3=supplier assigned,4=stock partially recieved, 5=stock recieved, 6=partially added, 7=added
+    status         Int //-2=rejected, -1=back to sr, 0=pending, 1=in DA's inbox, 69= revised and in DA's inbox,70=ready for BOQ, -70=returned from da, 71=BOQ ready, 72=ready for tender form, -72=returned from da, 73=tender form ready, 2=released for tender,3=supplier assigned,4=stock partially recieved, 5=stock recieved, 6=partially added, 7=added
     createdAt      DateTime      @default(now())
     updatedAt      DateTime      @updatedAt
     procurement    procurement[]
@@ -81,6 +81,22 @@ model da_pre_procurement_inbox {
 }
 
 model da_pre_procurement_outbox {
+    id             String      @id @default(uuid())
+    procurement_no String      @unique
+    procurement    procurement @relation(fields: [procurement_no], references: [procurement_no])
+    createdAt      DateTime    @default(now())
+    updatedAt      DateTime    @updatedAt
+}
+
+model acc_pre_procurement_inbox {
+    id             String      @id @default(uuid())
+    procurement_no String      @unique
+    procurement    procurement @relation(fields: [procurement_no], references: [procurement_no])
+    createdAt      DateTime    @default(now())
+    updatedAt      DateTime    @updatedAt
+}
+
+model acc_pre_procurement_outbox {
     id             String      @id @default(uuid())
     procurement_no String      @unique
     procurement    procurement @relation(fields: [procurement_no], references: [procurement_no])
@@ -244,6 +260,9 @@ model procurement {
     da_received_inventory_outbox da_received_inventory_outbox?
     sr_received_inventory_inbox  sr_received_inventory_inbox?
     sr_received_inventory_outbox sr_received_inventory_outbox?
+    boq_procurement              boq_procurement[]
+    acc_pre_procurement_inbox    acc_pre_procurement_inbox?
+    acc_pre_procurement_outbox   acc_pre_procurement_outbox?
 }
 
 model post_procurement {
@@ -302,4 +321,45 @@ model note_sheet {
     uniqueId       String?
     createdAt      DateTime @default(now())
     updatedAt      DateTime @updatedAt
+}
+
+//BOQ============================================================================================================================================================================================================================================================================================================
+
+model boq {
+    id             String            @id @default(uuid())
+    reference_no   String            @unique
+    gst            Float?
+    estimated_cost Float?
+    remark         String?
+    createdAt      DateTime          @default(now())
+    updatedAt      DateTime          @updatedAt
+    revised        Boolean           @default(false)
+    procurements   boq_procurement[]
+    boq_doc        boq_doc[]
+}
+
+model boq_procurement {
+    id             String      @id @default(uuid())
+    reference_no   String
+    procurement_no String
+    quantity       Int?
+    unit           String?
+    rate           Float?
+    amount         Float?
+    remark         String?
+    createdAt      DateTime    @default(now())
+    updatedAt      DateTime    @updatedAt
+    procurement    procurement @relation(fields: [procurement_no], references: [procurement_no])
+    boq            boq         @relation(fields: [reference_no], references: [reference_no])
+}
+
+model boq_doc {
+    id           String   @id @default(uuid())
+    reference_no String
+    ReferenceNo  String
+    uniqueId     String?
+    remark       String?
+    createdAt    DateTime @default(now())
+    updatedAt    DateTime @updatedAt
+    boq          boq      @relation(fields: [reference_no], references: [reference_no])
 }

@@ -7,7 +7,7 @@ import {
     getPostProcurementByOrderNo
 } from "../../../controller/stockReceiver/srPostProcurement.controller";
 
-// router.use(srAuth)
+router.use(srAuth)
 
 router.get('/', getPostProcurement)
 router.get('/by-order-no/:order_no', getPostProcurementByOrderNo)
