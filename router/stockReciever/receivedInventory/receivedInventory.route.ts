@@ -11,7 +11,7 @@ import {
     getReceivedInventoryOutboxById
 } from "../../../controller/stockReceiver/srReceivedInventory.controller";
 
-// router.use(srAuth)
+router.use(srAuth)
 
 router.get('/', getReceivedInventory)
 router.get('/outbox', getReceivedInventoryOutbox)
