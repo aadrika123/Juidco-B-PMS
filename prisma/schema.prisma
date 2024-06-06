@@ -334,8 +334,14 @@ model boq {
     createdAt      DateTime          @default(now())
     updatedAt      DateTime          @updatedAt
     revised        Boolean           @default(false)
+    status         Int               @default(0) //-2=rejected, -1=returned to accountant, 0=pending, 1=approved by DA
+    isEdited       Boolean           @default(false)
     procurements   boq_procurement[]
     boq_doc        boq_doc[]
+    acc_boq_inbox  acc_boq_inbox?
+    acc_boq_outbox acc_boq_outbox?
+    da_boq_inbox   da_boq_inbox?
+    da_boq_outbox  da_boq_outbox?
 }
 
 model boq_procurement {
@@ -362,4 +368,36 @@ model boq_doc {
     createdAt    DateTime @default(now())
     updatedAt    DateTime @updatedAt
     boq          boq      @relation(fields: [reference_no], references: [reference_no])
+}
+
+model acc_boq_inbox {
+    id           String   @id @default(uuid())
+    reference_no String   @unique
+    boq          boq      @relation(fields: [reference_no], references: [reference_no])
+    createdAt    DateTime @default(now())
+    updatedAt    DateTime @updatedAt
+}
+
+model acc_boq_outbox {
+    id           String   @id @default(uuid())
+    reference_no String   @unique
+    boq          boq      @relation(fields: [reference_no], references: [reference_no])
+    createdAt    DateTime @default(now())
+    updatedAt    DateTime @updatedAt
+}
+
+model da_boq_inbox {
+    id           String   @id @default(uuid())
+    reference_no String   @unique
+    boq          boq      @relation(fields: [reference_no], references: [reference_no])
+    createdAt    DateTime @default(now())
+    updatedAt    DateTime @updatedAt
+}
+
+model da_boq_outbox {
+    id           String   @id @default(uuid())
+    reference_no String   @unique
+    boq          boq      @relation(fields: [reference_no], references: [reference_no])
+    createdAt    DateTime @default(now())
+    updatedAt    DateTime @updatedAt
 }
