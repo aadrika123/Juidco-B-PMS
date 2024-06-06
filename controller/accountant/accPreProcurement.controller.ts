@@ -1,16 +1,10 @@
 import { Request, Response } from "express";
 import {
     getPreProcurementDal,
-    // getPreProcurementByIdDal,
     getPreProcurementBulkByOrderNoDal,
     createBoqDal,
-    getPreProcurementForBoqDal
-    // backToSrDal,
-    // editPreProcurementDal,
-    // releaseForTenderDal,
-    // getPreProcurementOutboxDal,
-    // getPreProcurementOutboxtByIdDal,
-    // rejectDal
+    getPreProcurementForBoqDal,
+    getBoqInboxDal
 } from "../../dal/accountant/accPreProcurement.dal";
 
 
@@ -83,6 +77,24 @@ export const createBoq = async (req: Request, res: Response) => {
         res.status(404).json({
             status: false,
             message: `Error while creating BOQ`,
+            error: result?.message
+        })
+    }
+}
+
+
+export const getBoqInbox = async (req: Request, res: Response) => {
+    const result: any = await getBoqInboxDal(req)
+    if (!result?.error) {
+        res.status(200).json({
+            status: true,
+            message: `BOQ list fetched successfully`,
+            data: result
+        })
+    } else {
+        res.status(404).json({
+            status: false,
+            message: `Error while fetching BOQ`,
             error: result?.message
         })
     }
