@@ -455,6 +455,7 @@ export const createBoqDal = async (req: Request) => {
 
         }
 
+        //start transaction
         await prisma.$transaction(async (tx) => {
 
             await tx.boq.create({
@@ -481,8 +482,40 @@ export const createBoqDal = async (req: Request) => {
                             status: 71
                         }
                     })
+                    await tx.acc_pre_procurement_inbox.delete({
+                        where: {
+                            procurement_no: item?.procurement_no
+                        }
+                    })
+                    await tx.acc_pre_procurement_outbox.create({
+                        data: {
+                            procurement_no: item?.procurement_no
+                        }
+                    })
+                    await tx.da_pre_procurement_outbox.delete({
+                        where: {
+                            procurement_no: item?.procurement_no
+                        }
+                    })
+                    await tx.da_pre_procurement_inbox.create({
+                        data: {
+                            procurement_no: item?.procurement_no
+                        }
+                    })
                 })
             )
+
+            await prisma.acc_boq_outbox.create({
+                data: {
+                    reference_no: reference_no
+                }
+            })
+
+            await prisma.da_boq_inbox.create({
+                data: {
+                    reference_no: reference_no
+                }
+            })
 
         })
 
@@ -662,3 +695,176 @@ export const getPreProcurementOutboxDal = async (req: Request) => {
         return { error: true, message: getErrorMessage(err) }
     }
 }
+
+
+
+// export const getBoqInboxDal = async (req: Request) => {
+//     const page: number | undefined = Number(req?.query?.page)
+//     const take: number | undefined = Number(req?.query?.take)
+//     const startIndex: number | undefined = (page - 1) * take
+//     const endIndex: number | undefined = startIndex + take
+//     let count: number
+//     let totalPage: number
+//     let pagination: pagination = {}
+//     const whereClause: any = {};
+
+//     const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined
+
+//     const category: any[] = Array.isArray(req?.query?.category) ? req?.query?.category : [req?.query?.category]
+//     const subcategory: any[] = Array.isArray(req?.query?.scategory) ? req?.query?.scategory : [req?.query?.scategory]
+//     const status: any[] = Array.isArray(req?.query?.status) ? req?.query?.status : [req?.query?.status]
+//     const brand: any[] = Array.isArray(req?.query?.brand) ? req?.query?.brand : [req?.query?.brand]
+
+//     //creating search options for the query
+//     if (search) {
+//         whereClause.OR = [
+//             {
+//                 procurement_no: {
+//                     contains: search,
+//                     mode: 'insensitive'
+//                 }
+//             },
+//             {
+//                 procurement: {
+//                     description: {
+//                         contains: search,
+//                         mode: 'insensitive'
+//                     }
+//                 }
+//             }
+//         ];
+//     }
+
+//     //creating filter options for the query
+//     if (category[0]) {
+//         whereClause.procurement = {
+//             category_masterId: {
+//                 in: category
+//             }
+//         }
+//     }
+//     if (subcategory[0]) {
+//         whereClause.procurement = {
+//             subcategory_masterId: {
+//                 in: subcategory
+//             }
+//         }
+//     }
+//     if (status[0]) {
+//         whereClause.procurement = {
+//             status: {
+//                 status: {
+//                     in: status.map(Number)
+//                 }
+//             }
+//         }
+//     }
+//     if (brand[0]) {
+//         whereClause.procurement = {
+//             brand_masterId: {
+//                 in: brand
+//             }
+//         }
+//     }
+//     whereClause.NOT = [
+//         {
+//             procurement: {
+//                 status: {
+//                     status: -2
+//                 }
+//             }
+//         },
+//         {
+//             procurement: {
+//                 status: {
+//                     status: 2
+//                 }
+//             }
+//         },
+//     ]
+
+//     try {
+//         count = await prisma.acc_boq_inbox.count({
+//             where: whereClause
+//         })
+//         const result = await prisma.acc_boq_inbox.findMany({
+//             orderBy: {
+//                 createdAt: 'desc'
+//             },
+//             where: whereClause,
+//             ...(page && { skip: startIndex }),
+//             ...(take && { take: take }),
+//             select: {
+//                 id: true,
+//                 reference_no: true,
+//                 boq: {
+//                     select: {
+//                         reference_no: true,
+//                         gst: true,
+//                         estimated_cost: true,
+//                         remark: true,
+//                         status: true,
+//                         isEdited: true,
+//                         procurements: {
+//                             select: {
+//                                 procurement: {
+//                                     select: {
+//                                         category: {
+//                                             select: {
+//                                                 name: true
+//                                             }
+//                                         },
+//                                         subcategory: {
+//                                             select: {
+//                                                 name: true
+//                                             }
+//                                         },
+//                                         brand: {
+//                                             select: {
+//                                                 name: true
+//                                             }
+//                                         },
+//                                     }
+//                                 }
+//                             }
+//                         }
+//                     },
+//                 }
+//             }
+
+//         })
+
+//         let resultToSend: any[] = []
+
+//         result.map(async (item: any) => {
+//             const temp = { ...item?.procurement }
+//             delete item.procurement
+//             resultToSend.push({ ...item, ...temp })
+//         })
+
+//         totalPage = Math.ceil(count / take)
+//         if (endIndex < count) {
+//             pagination.next = {
+//                 page: page + 1,
+//                 take: take
+//             }
+//         }
+//         if (startIndex > 0) {
+//             pagination.prev = {
+//                 page: page - 1,
+//                 take: take
+//             }
+//         }
+//         pagination.currentPage = page
+//         pagination.currentTake = take
+//         pagination.totalPage = totalPage
+//         pagination.totalResult = count
+//         return {
+//             data: resultToSend,
+//             pagination: pagination
+//         }
+//     } catch (err: any) {
+//         console.log(err)
+//         return { error: true, message: getErrorMessage(err) }
+//     }
+// }
