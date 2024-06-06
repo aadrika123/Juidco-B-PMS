@@ -768,3 +768,71 @@ export const rejectDal = async (req: Request) => {
         return { error: true, message: getErrorMessage(err) }
     }
 }
+
+
+
+export const forwardToAccountantDal = async (req: Request) => {
+    const { preProcurement }: { preProcurement: string } = req.body
+    const img = req.files
+    try {
+        await Promise.all(
+            JSON.parse(preProcurement).map(async (item: string) => {
+                const inbox: any = await prisma.da_pre_procurement_inbox.findFirst({
+                    where: {
+                        id: item
+                    },
+                    select: {
+                        procurement_no: true,
+                    }
+                })
+
+                if (inbox === null) {
+                    throw { error: true, message: 'Invalid inbox ID' }
+                }
+
+                if (img) {
+                    const uploaded = await imageUploader(img)   //It will return reference number and unique id as an object after uploading.
+
+                    await Promise.all(
+                        uploaded.map(async (item) => {
+                            await prisma.note_sheet.create({
+                                data: {
+                                    procurement_no: inbox?.procurement_no,
+                                    ReferenceNo: item?.ReferenceNo,
+                                    uniqueId: item?.uniqueId,
+                                    operation: 11
+                                }
+                            })
+                        })
+                    )
+                }
+
+                await prisma.$transaction([
+                    prisma.da_pre_procurement_outbox.create({
+                        data: inbox
+                    }),
+                    prisma.acc_pre_procurement_inbox.create({
+                        data: inbox
+                    }),
+                    prisma.procurement_status.update({
+                        where: {
+                            procurement_no: inbox?.procurement_no
+                        },
+                        data: {
+                            status: 70
+                        }
+                    }),
+                    prisma.da_pre_procurement_inbox.delete({
+                        where: {
+                            id: item
+                        },
+                    })
+                ])
+            })
+        )
+        return "Released for BOQ"
+    } catch (err: any) {
+        console.log(err?.message)
+        return { error: true, message: getErrorMessage(err) }
+    }
+}

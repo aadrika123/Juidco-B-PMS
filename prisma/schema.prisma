@@ -316,7 +316,7 @@ model stock_addition_history {
 model note_sheet {
     id             String   @id @default(uuid())
     procurement_no String
-    operation      Int //1=forward to DA, 2=release for tender
+    operation      Int //1=forward to DA, 2=release for tender,11=forward for boq, 12=forward for pre-tendering form
     ReferenceNo    String
     uniqueId       String?
     createdAt      DateTime @default(now())
