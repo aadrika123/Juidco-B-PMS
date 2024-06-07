@@ -81,9 +81,9 @@ export const getPreProcurementForBoqDal = async (req: Request) => {
 
     try {
 
-        if (!category[0] && !subcategory[0]) {
-            throw { error: true, message: 'Both category and sub-category are required' }
-        }
+        // if (!category[0] && !subcategory[0]) {
+        //     throw { error: true, message: 'Both category and sub-category are required' }
+        // }
 
         count = await prisma.da_pre_procurement_inbox.count({
             where: whereClause
