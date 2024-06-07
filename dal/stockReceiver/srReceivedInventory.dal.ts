@@ -83,7 +83,7 @@ export const getReceivedInventoryDal = async (req: Request) => {
         })
         const result = await prisma.sr_received_inventory_inbox.findMany({
             orderBy: {
-                createdAt: 'desc'
+                updatedAt: 'desc'
             },
             where: whereClause,
             ...(page && { skip: startIndex }),
@@ -556,7 +556,7 @@ export const getReceivedInventoryOutboxDal = async (req: Request) => {
         })
         const result = await prisma.sr_received_inventory_outbox.findMany({
             orderBy: {
-                createdAt: 'desc'
+                updatedAt: 'desc'
             },
             where: whereClause,
             ...(page && { skip: startIndex }),

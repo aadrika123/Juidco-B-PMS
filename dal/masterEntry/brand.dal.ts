@@ -30,7 +30,7 @@ export const getBrandDal = async (req: Request) => {
     try {
         const result = await prisma.brand_master.findMany({
             orderBy: {
-                createdAt: 'desc'
+                updatedAt: 'desc'
             }
         })
         return result

@@ -159,7 +159,7 @@ export const getPreProcurementDal = async (req: Request) => {
         })
         const result = await prisma.sr_pre_procurement_inbox.findMany({
             orderBy: {
-                createdAt: 'desc'
+                updatedAt: 'desc'
             },
             where: whereClause,
             ...(page && { skip: startIndex }),
@@ -361,6 +361,7 @@ export const getPreProcurementByOrderNoDal = async (req: Request) => {
 export const forwardToDaDal = async (req: Request) => {
     const { preProcurement }: { preProcurement: string } = req.body
     const img = req.files
+    
     try {
         await Promise.all(
             JSON.parse(preProcurement).map(async (item: string) => {
@@ -554,7 +555,7 @@ export const getPreProcurementOutboxDal = async (req: Request) => {
         })
         const result = await prisma.sr_pre_procurement_outbox.findMany({
             orderBy: {
-                createdAt: 'desc'
+                updatedAt: 'desc'
             },
             where: whereClause,
             ...(page && { skip: startIndex }),
@@ -773,7 +774,7 @@ export const getPreProcurementRejectedDal = async (req: Request) => {
         })
         const result = await prisma.sr_pre_procurement_inbox.findMany({
             orderBy: {
-                createdAt: 'desc'
+                updatedAt: 'desc'
             },
             where: whereClause,
             ...(page && { skip: startIndex }),
@@ -930,7 +931,7 @@ export const getPreProcurementReleasedDal = async (req: Request) => {
         })
         const result = await prisma.sr_pre_procurement_inbox.findMany({
             orderBy: {
-                createdAt: 'desc'
+                updatedAt: 'desc'
             },
             where: whereClause,
             ...(page && { skip: startIndex }),

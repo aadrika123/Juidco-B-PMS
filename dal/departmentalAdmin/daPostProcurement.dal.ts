@@ -80,7 +80,7 @@ export const getPostProcurementDal = async (req: Request) => {
         })
         const result = await prisma.da_post_procurement_inbox.findMany({
             orderBy: {
-                createdAt: 'desc'
+                updatedAt: 'desc'
             },
             where: whereClause,
             ...(page && { skip: startIndex }),
@@ -484,7 +484,7 @@ export const getPostProcurementOutboxDal = async (req: Request) => {
         })
         const result = await prisma.da_post_procurement_outbox.findMany({
             orderBy: {
-                createdAt: 'desc'
+                updatedAt: 'desc'
             },
             where: whereClause,
             ...(page && { skip: startIndex }),
