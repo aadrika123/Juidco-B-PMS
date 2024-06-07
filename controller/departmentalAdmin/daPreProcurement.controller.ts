@@ -9,7 +9,9 @@ import {
     getPreProcurementOutboxDal,
     getPreProcurementOutboxtByIdDal,
     rejectDal,
-    forwardToAccountantDal
+    forwardToAccountantDal,
+    getBoqInboxDal,
+    getBoqOutboxDal
 } from "../../dal/departmentalAdmin/daPreProcurement.dal";
 
 
@@ -176,6 +178,7 @@ export const reject = async (req: Request, res: Response) => {
 }
 
 
+
 export const forwardToAccountant = async (req: Request, res: Response) => {
     const result: any = await forwardToAccountantDal(req)
     if (!result?.error) {
@@ -188,6 +191,44 @@ export const forwardToAccountant = async (req: Request, res: Response) => {
         res.status(404).json({
             status: false,
             message: `Error while forwarding`,
+            error: result?.message
+        })
+    }
+}
+
+
+
+export const getBoqInbox = async (req: Request, res: Response) => {
+    const result: any = await getBoqInboxDal(req)
+    if (!result?.error) {
+        res.status(200).json({
+            status: true,
+            message: `BPQ list fetched`,
+            data: result
+        })
+    } else {
+        res.status(404).json({
+            status: false,
+            message: `Error while fetching BOQ list`,
+            error: result?.message
+        })
+    }
+}
+
+
+
+export const getBoqOutbox = async (req: Request, res: Response) => {
+    const result: any = await getBoqOutboxDal(req)
+    if (!result?.error) {
+        res.status(200).json({
+            status: true,
+            message: `BPQ list fetched`,
+            data: result
+        })
+    } else {
+        res.status(404).json({
+            status: false,
+            message: `Error while fetching BOQ list`,
             error: result?.message
         })
     }

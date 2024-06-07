@@ -81,7 +81,7 @@ export const getPreProcurementDal = async (req: Request) => {
         })
         const result = await prisma.da_pre_procurement_inbox.findMany({
             orderBy: {
-                updatedAt: 'desc'
+                createdAt: 'desc'
             },
             where: whereClause,
             ...(page && { skip: startIndex }),
@@ -571,7 +571,7 @@ export const getPreProcurementOutboxDal = async (req: Request) => {
         })
         const result = await prisma.da_pre_procurement_outbox.findMany({
             orderBy: {
-                updatedAt: 'desc'
+                createdAt: 'desc'
             },
             where: whereClause,
             ...(page && { skip: startIndex }),
@@ -833,6 +833,414 @@ export const forwardToAccountantDal = async (req: Request) => {
         return "Released for BOQ"
     } catch (err: any) {
         console.log(err?.message)
+        return { error: true, message: getErrorMessage(err) }
+    }
+}
+
+
+
+export const getBoqInboxDal = async (req: Request) => {
+    const page: number | undefined = Number(req?.query?.page)
+    const take: number | undefined = Number(req?.query?.take)
+    const startIndex: number | undefined = (page - 1) * take
+    const endIndex: number | undefined = startIndex + take
+    let count: number
+    let totalPage: number
+    let pagination: pagination = {}
+    const whereClause: any = {};
+
+    const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined
+
+    const category: any[] = Array.isArray(req?.query?.category) ? req?.query?.category : [req?.query?.category]
+    const subcategory: any[] = Array.isArray(req?.query?.scategory) ? req?.query?.scategory : [req?.query?.scategory]
+    const status: any[] = Array.isArray(req?.query?.status) ? req?.query?.status : [req?.query?.status]
+    const brand: any[] = Array.isArray(req?.query?.brand) ? req?.query?.brand : [req?.query?.brand]
+
+    //creating search options for the query
+    if (search) {
+        whereClause.OR = [
+            {
+                reference_no: {
+                    contains: search,
+                    mode: 'insensitive'
+                }
+            },
+            {
+                boq: {
+                    procurements: {
+                        some: {
+                            procurement: {
+                                description: {
+                                    contains: search,
+                                    mode: 'insensitive'
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        ];
+    }
+
+    //creating filter options for the query
+    if (category[0]) {
+        whereClause.boq = {
+            procurements: {
+                some: {
+                    procurement: {
+                        category_masterId: {
+                            in: category
+                        }
+                    }
+                }
+            }
+        }
+    }
+    if (subcategory[0]) {
+        whereClause.boq = {
+            procurements: {
+                some: {
+                    procurement: {
+                        subcategory_masterId: {
+                            in: subcategory
+                        }
+                    }
+                }
+            }
+        }
+    }
+    if (status[0]) {
+        whereClause.boq = {
+            status: {
+                in: status.map(Number)
+            }
+
+        }
+    }
+    if (brand[0]) {
+        whereClause.boq = {
+            procurements: {
+                some: {
+                    procurement: {
+                        brand_masterId: {
+                            in: brand
+                        }
+                    }
+                }
+            }
+        }
+    }
+    // whereClause.NOT = [
+    //     {
+    //         procurement: {
+    //             status: {
+    //                 status: -2
+    //             }
+    //         }
+    //     },
+    //     {
+    //         procurement: {
+    //             status: {
+    //                 status: 2
+    //             }
+    //         }
+    //     },
+    // ]
+
+    try {
+        count = await prisma.da_boq_inbox.count({
+            where: whereClause
+        })
+        const result = await prisma.da_boq_inbox.findMany({
+            orderBy: {
+                updatedAt: 'desc'
+            },
+            where: whereClause,
+            ...(page && { skip: startIndex }),
+            ...(take && { take: take }),
+            select: {
+                id: true,
+                reference_no: true,
+                boq: {
+                    select: {
+                        reference_no: true,
+                        gst: true,
+                        estimated_cost: true,
+                        remark: true,
+                        status: true,
+                        isEdited: true,
+                        procurements: {
+                            select: {
+                                procurement_no: true,
+                                quantity: true,
+                                unit: true,
+                                rate: true,
+                                amount: true,
+                                remark: true,
+                                procurement: {
+                                    select: {
+                                        category: {
+                                            select: {
+                                                name: true
+                                            }
+                                        },
+                                        subcategory: {
+                                            select: {
+                                                name: true
+                                            }
+                                        },
+                                        brand: {
+                                            select: {
+                                                name: true
+                                            }
+                                        },
+                                        description: true,
+                                    }
+                                }
+                            }
+                        }
+                    },
+                }
+            }
+
+        })
+
+        result.map(async (item: any) => {
+            const updatedProcurements = item?.boq?.procurements.map((proc: any) => {
+                const temp = { ...proc.procurement };
+                // Delete the procurement property from proc
+                const { procurement, ...rest } = proc;
+                return { ...rest, ...temp };
+            });
+
+            // Assign the updated array back to item.boq.procurements
+            item.boq.procurements = updatedProcurements;
+        })
+
+        totalPage = Math.ceil(count / take)
+        if (endIndex < count) {
+            pagination.next = {
+                page: page + 1,
+                take: take
+            }
+        }
+        if (startIndex > 0) {
+            pagination.prev = {
+                page: page - 1,
+                take: take
+            }
+        }
+        pagination.currentPage = page
+        pagination.currentTake = take
+        pagination.totalPage = totalPage
+        pagination.totalResult = count
+        return {
+            data: result,
+            pagination: pagination
+        }
+    } catch (err: any) {
+        console.log(err)
+        return { error: true, message: getErrorMessage(err) }
+    }
+}
+
+
+
+export const getBoqOutboxDal = async (req: Request) => {
+    const page: number | undefined = Number(req?.query?.page)
+    const take: number | undefined = Number(req?.query?.take)
+    const startIndex: number | undefined = (page - 1) * take
+    const endIndex: number | undefined = startIndex + take
+    let count: number
+    let totalPage: number
+    let pagination: pagination = {}
+    const whereClause: any = {};
+
+    const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined
+
+    const category: any[] = Array.isArray(req?.query?.category) ? req?.query?.category : [req?.query?.category]
+    const subcategory: any[] = Array.isArray(req?.query?.scategory) ? req?.query?.scategory : [req?.query?.scategory]
+    const status: any[] = Array.isArray(req?.query?.status) ? req?.query?.status : [req?.query?.status]
+    const brand: any[] = Array.isArray(req?.query?.brand) ? req?.query?.brand : [req?.query?.brand]
+
+    //creating search options for the query
+    if (search) {
+        whereClause.OR = [
+            {
+                reference_no: {
+                    contains: search,
+                    mode: 'insensitive'
+                }
+            },
+            {
+                procurement: {
+                    description: {
+                        contains: search,
+                        mode: 'insensitive'
+                    }
+                }
+            }
+        ];
+    }
+
+    //creating filter options for the query
+    if (category[0]) {
+        whereClause.boq = {
+            procurements: {
+                some: {
+                    procurement: {
+                        category_masterId: {
+                            in: category
+                        }
+                    }
+                }
+            }
+        }
+    }
+    if (subcategory[0]) {
+        whereClause.boq = {
+            procurements: {
+                some: {
+                    procurement: {
+                        subcategory_masterId: {
+                            in: subcategory
+                        }
+                    }
+                }
+            }
+        }
+    }
+    if (status[0]) {
+        whereClause.boq = {
+            status: {
+                in: status.map(Number)
+            }
+
+        }
+    }
+    if (brand[0]) {
+        whereClause.boq = {
+            procurements: {
+                some: {
+                    procurement: {
+                        brand_masterId: {
+                            in: brand
+                        }
+                    }
+                }
+            }
+        }
+    }
+    // whereClause.NOT = [
+    //     {
+    //         procurement: {
+    //             status: {
+    //                 status: -2
+    //             }
+    //         }
+    //     },
+    //     {
+    //         procurement: {
+    //             status: {
+    //                 status: 2
+    //             }
+    //         }
+    //     },
+    // ]
+
+    try {
+        count = await prisma.da_boq_outbox.count({
+            where: whereClause
+        })
+        const result = await prisma.da_boq_outbox.findMany({
+            orderBy: {
+                updatedAt: 'desc'
+            },
+            where: whereClause,
+            ...(page && { skip: startIndex }),
+            ...(take && { take: take }),
+            select: {
+                id: true,
+                reference_no: true,
+                boq: {
+                    select: {
+                        reference_no: true,
+                        gst: true,
+                        estimated_cost: true,
+                        remark: true,
+                        status: true,
+                        isEdited: true,
+                        procurements: {
+                            select: {
+                                procurement_no: true,
+                                quantity: true,
+                                unit: true,
+                                rate: true,
+                                amount: true,
+                                remark: true,
+                                procurement: {
+                                    select: {
+                                        category: {
+                                            select: {
+                                                name: true
+                                            }
+                                        },
+                                        subcategory: {
+                                            select: {
+                                                name: true
+                                            }
+                                        },
+                                        brand: {
+                                            select: {
+                                                name: true
+                                            }
+                                        },
+                                        description: true,
+                                    }
+                                }
+                            }
+                        }
+                    },
+                }
+            }
+
+        })
+
+        result.map(async (item: any) => {
+            const updatedProcurements = item?.boq?.procurements.map((proc: any) => {
+                const temp = { ...proc.procurement };
+                // Delete the procurement property from proc
+                const { procurement, ...rest } = proc;
+                return { ...rest, ...temp };
+            });
+
+            // Assign the updated array back to item.boq.procurements
+            item.boq.procurements = updatedProcurements;
+        })
+
+        totalPage = Math.ceil(count / take)
+        if (endIndex < count) {
+            pagination.next = {
+                page: page + 1,
+                take: take
+            }
+        }
+        if (startIndex > 0) {
+            pagination.prev = {
+                page: page - 1,
+                take: take
+            }
+        }
+        pagination.currentPage = page
+        pagination.currentTake = take
+        pagination.totalPage = totalPage
+        pagination.totalResult = count
+        return {
+            data: result,
+            pagination: pagination
+        }
+    } catch (err: any) {
+        console.log(err)
         return { error: true, message: getErrorMessage(err) }
     }
 }

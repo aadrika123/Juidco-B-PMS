@@ -739,32 +739,49 @@ export const getBoqInboxDal = async (req: Request) => {
 
     //creating filter options for the query
     if (category[0]) {
-        whereClause.procurement = {
-            category_masterId: {
-                in: category
-            }
-        }
-    }
-    if (subcategory[0]) {
-        whereClause.procurement = {
-            subcategory_masterId: {
-                in: subcategory
-            }
-        }
-    }
-    if (status[0]) {
-        whereClause.procurement = {
-            status: {
-                status: {
-                    in: status.map(Number)
+        whereClause.boq = {
+            procurements: {
+                some: {
+                    procurement: {
+                        category_masterId: {
+                            in: category
+                        }
+                    }
                 }
             }
         }
     }
+    if (subcategory[0]) {
+        whereClause.boq = {
+            procurements: {
+                some: {
+                    procurement: {
+                        subcategory_masterId: {
+                            in: subcategory
+                        }
+                    }
+                }
+            }
+        }
+    }
+    if (status[0]) {
+        whereClause.boq = {
+            status: {
+                in: status.map(Number)
+            }
+
+        }
+    }
     if (brand[0]) {
-        whereClause.procurement = {
-            brand_masterId: {
-                in: brand
+        whereClause.boq = {
+            procurements: {
+                some: {
+                    procurement: {
+                        brand_masterId: {
+                            in: brand
+                        }
+                    }
+                }
             }
         }
     }
@@ -839,7 +856,9 @@ export const getBoqInboxDal = async (req: Request) => {
         result.map(async (item: any) => {
             const updatedProcurements = item?.boq?.procurements.map((proc: any) => {
                 const temp = { ...proc.procurement };
-                return { ...proc, ...temp };
+                // Delete the procurement property from proc
+                const { procurement, ...rest } = proc;
+                return { ...rest, ...temp };
             });
 
             // Assign the updated array back to item.boq.procurements
@@ -914,32 +933,49 @@ export const getBoqOutboxDal = async (req: Request) => {
 
     //creating filter options for the query
     if (category[0]) {
-        whereClause.procurement = {
-            category_masterId: {
-                in: category
-            }
-        }
-    }
-    if (subcategory[0]) {
-        whereClause.procurement = {
-            subcategory_masterId: {
-                in: subcategory
-            }
-        }
-    }
-    if (status[0]) {
-        whereClause.procurement = {
-            status: {
-                status: {
-                    in: status.map(Number)
+        whereClause.boq = {
+            procurements: {
+                some: {
+                    procurement: {
+                        category_masterId: {
+                            in: category
+                        }
+                    }
                 }
             }
         }
     }
+    if (subcategory[0]) {
+        whereClause.boq = {
+            procurements: {
+                some: {
+                    procurement: {
+                        subcategory_masterId: {
+                            in: subcategory
+                        }
+                    }
+                }
+            }
+        }
+    }
+    if (status[0]) {
+        whereClause.boq = {
+            status: {
+                in: status.map(Number)
+            }
+
+        }
+    }
     if (brand[0]) {
-        whereClause.procurement = {
-            brand_masterId: {
-                in: brand
+        whereClause.boq = {
+            procurements: {
+                some: {
+                    procurement: {
+                        brand_masterId: {
+                            in: brand
+                        }
+                    }
+                }
             }
         }
     }
@@ -1021,7 +1057,9 @@ export const getBoqOutboxDal = async (req: Request) => {
         result.map(async (item: any) => {
             const updatedProcurements = item?.boq?.procurements.map((proc: any) => {
                 const temp = { ...proc.procurement };
-                return { ...proc, ...temp };
+                // Delete the procurement property from proc
+                const { procurement, ...rest } = proc;
+                return { ...rest, ...temp };
             });
 
             // Assign the updated array back to item.boq.procurements
