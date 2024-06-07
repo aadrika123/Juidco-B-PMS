@@ -8,7 +8,8 @@ import {
     releaseForTenderDal,
     getPreProcurementOutboxDal,
     getPreProcurementOutboxtByIdDal,
-    rejectDal
+    rejectDal,
+    forwardToAccountantDal
 } from "../../dal/departmentalAdmin/daPreProcurement.dal";
 
 
@@ -169,6 +170,24 @@ export const reject = async (req: Request, res: Response) => {
         res.status(404).json({
             status: false,
             message: `Error while rejecting`,
+            error: result?.message
+        })
+    }
+}
+
+
+export const forwardToAccountant = async (req: Request, res: Response) => {
+    const result: any = await forwardToAccountantDal(req)
+    if (!result?.error) {
+        res.status(200).json({
+            status: true,
+            message: `Forwarded successfully`,
+            data: result
+        })
+    } else {
+        res.status(404).json({
+            status: false,
+            message: `Error while forwarding`,
             error: result?.message
         })
     }
