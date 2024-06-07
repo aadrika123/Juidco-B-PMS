@@ -25,6 +25,7 @@ export const getPreProcurementForBoqDal = async (req: Request) => {
     const category: any[] = Array.isArray(req?.query?.category) ? req?.query?.category : [req?.query?.category]
     const subcategory: any[] = Array.isArray(req?.query?.scategory) ? req?.query?.scategory : [req?.query?.scategory]
     const brand: any[] = Array.isArray(req?.query?.brand) ? req?.query?.brand : [req?.query?.brand]
+    const status: any[] = Array.isArray(req?.query?.status) ? req?.query?.status : [req?.query?.status]
 
     //creating search options for the query
     if (search) {
@@ -68,9 +69,13 @@ export const getPreProcurementForBoqDal = async (req: Request) => {
             }
         }
     }
-    whereClause.procurement = {
-        status: {
-            status: 70
+    if (status[0]) {
+        whereClause.procurement = {
+            status: {
+                status: {
+                    in: status.map(Number)
+                }
+            }
         }
     }
 
