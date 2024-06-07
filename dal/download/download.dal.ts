@@ -65,7 +65,7 @@ export const exportCsvDal = async (req: Request) => {
 
     const condition: any = {
         orderBy: {
-            createdAt: 'desc'
+            updatedAt: 'desc'
         },
         where: whereClause,
         select: {

@@ -29,7 +29,7 @@ export const getCategoryDal = async (req: Request) => {
     try {
         const result = await prisma.category_master.findMany({
             orderBy: {
-                createdAt: 'desc'
+                updatedAt: 'desc'
             }
         })
         return result

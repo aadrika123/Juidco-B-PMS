@@ -90,7 +90,7 @@ export const getItemDal = async (req: Request) => {
         })
         const result = await prisma.inventory.findMany({
             orderBy: {
-                createdAt: 'desc'
+                updatedAt: 'desc'
             },
             where: whereClause,
             ...(page && { skip: startIndex }),
@@ -202,7 +202,7 @@ export const getItemByFilterDal = async (req: Request) => {
         })
         const result = await prisma.inventory.findMany({
             orderBy: {
-                createdAt: 'desc'
+                updatedAt: 'desc'
             },
             where: whereClause,
             ...(page && { skip: startIndex }),

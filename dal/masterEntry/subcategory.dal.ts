@@ -31,7 +31,7 @@ export const getSubcategoryDal = async (req: Request) => {
     try {
         const result = await prisma.subcategory_master.findMany({
             orderBy: {
-                createdAt: 'desc'
+                updatedAt: 'desc'
             },
             include: {
                 category: true

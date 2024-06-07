@@ -4,7 +4,9 @@ import {
     getPreProcurementBulkByOrderNoDal,
     createBoqDal,
     getPreProcurementForBoqDal,
-    getBoqInboxDal
+    getBoqInboxDal,
+    getBoqOutboxDal,
+    getPreProcurementOutboxDal
 } from "../../dal/accountant/accPreProcurement.dal";
 
 
@@ -100,6 +102,24 @@ export const getBoqInbox = async (req: Request, res: Response) => {
     }
 }
 
+
+export const getBoqOutbox = async (req: Request, res: Response) => {
+    const result: any = await getBoqOutboxDal(req)
+    if (!result?.error) {
+        res.status(200).json({
+            status: true,
+            message: `BOQ list fetched successfully`,
+            data: result
+        })
+    } else {
+        res.status(404).json({
+            status: false,
+            message: `Error while fetching BOQ`,
+            error: result?.message
+        })
+    }
+}
+
 // export const editPreProcurement = async (req: Request, res: Response) => {
 //     const result: any = await editPreProcurementDal(req)
 //     if (!result?.error) {
@@ -135,23 +155,23 @@ export const getBoqInbox = async (req: Request, res: Response) => {
 // }
 
 
-// export const getPreProcurementOutbox = async (req: Request, res: Response) => {
-//     const result: any = await getPreProcurementOutboxDal(req)
-//     if (!result?.error) {
-//         res.status(200).json({
-//             status: true,
-//             message: `Pre procurement outbox list for DA fetched successfully`,
-//             data: result?.data,
-//             pagination: result?.pagination
-//         })
-//     } else {
-//         res.status(404).json({
-//             status: false,
-//             message: `Error while fetching Pre procurement outbox list for DA`,
-//             error: result?.message
-//         })
-//     }
-// }
+export const getPreProcurementOutbox = async (req: Request, res: Response) => {
+    const result: any = await getPreProcurementOutboxDal(req)
+    if (!result?.error) {
+        res.status(200).json({
+            status: true,
+            message: `Pre procurement outbox list for accountant fetched successfully`,
+            data: result?.data,
+            pagination: result?.pagination
+        })
+    } else {
+        res.status(404).json({
+            status: false,
+            message: `Error while fetching Pre procurement outbox list for accountant`,
+            error: result?.message
+        })
+    }
+}
 
 
 // export const getPreProcurementOutboxById = async (req: Request, res: Response) => {
