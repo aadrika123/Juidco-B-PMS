@@ -415,7 +415,6 @@ export const createBoqDal = async (req: Request) => {
                 const preparedData = {
                     reference_no: reference_no,
                     procurement_no: item?.procurement_no,
-                    description: item?.description,
                     quantity: item?.quantity,
                     unit: item?.unit,
                     rate: item?.rate,
@@ -1106,42 +1105,62 @@ export const getBoqOutboxDal = async (req: Request) => {
 
 
 
-// export const forwardToDa = async (req: Request) => {
-//     const { reference_no }: { reference_no: string } = req.body
-//     try {
+export const forwardToDaDal = async (req: Request) => {
+    const { reference_no }: { reference_no: string } = req.body
+    try {
 
-//         //start transaction
-//         await prisma.$transaction(async (tx) => {
+        const boqData = await prisma.boq.findFirst({
+            where: {
+                reference_no: reference_no
+            },
+            select: {
+                status: true
+            }
+        })
 
-//             await tx.acc_boq_inbox.delete({
-//                 where: {
-//                     reference_no: reference_no
-//                 }
-//             })
+        //start transaction
+        await prisma.$transaction(async (tx) => {
 
-//             await tx.acc_boq_outbox.create({
-//                 data: {
-//                     reference_no: reference_no
-//                 }
-//             })
+            await tx.acc_boq_inbox.delete({
+                where: {
+                    reference_no: reference_no
+                }
+            })
 
-//             await tx.da_boq_inbox.create({
-//                 data: {
-//                     reference_no: reference_no
-//                 }
-//             })
+            await tx.acc_boq_outbox.create({
+                data: {
+                    reference_no: reference_no
+                }
+            })
 
-//             await tx.da_boq_outbox.delete({
-//                 where: {
-//                     reference_no: reference_no
-//                 }
-//             })
+            await tx.da_boq_inbox.create({
+                data: {
+                    reference_no: reference_no
+                }
+            })
 
-//         })
+            await tx.da_boq_outbox.delete({
+                where: {
+                    reference_no: reference_no
+                }
+            })
 
-//         return "Forwarded to DA"
-//     } catch (err: any) {
-//         console.log(err)
-//         return { error: true, message: getErrorMessage(err) }
-//     }
-// }
+            if (boqData?.status === -1) {
+                await tx.boq.update({
+                    where: {
+                        reference_no: reference_no
+                    },
+                    data: {
+                        status: 1
+                    }
+                })
+            }
+
+        })
+
+        return "Forwarded to DA"
+    } catch (err: any) {
+        console.log(err)
+        return { error: true, message: getErrorMessage(err) }
+    }
+}
