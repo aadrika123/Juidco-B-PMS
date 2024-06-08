@@ -10,6 +10,14 @@ const options = {
             version: '1.0.0',
             description: 'This is the swagger documentation for Procurement and Inventory Management System.',
         },
+        components: {
+            securitySchemes: {
+                bearerAuth: {
+                    type: "http",
+                    scheme: "bearer"
+                }
+            }
+        },
         servers: [
             {
                 url: 'http://localhost:6969',
