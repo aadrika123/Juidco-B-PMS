@@ -1005,16 +1005,19 @@ export const getBoqInboxDal = async (req: Request) => {
 
         })
 
-        result.map(async (item: any) => {
+        let dataToSend: any[] = []
+        result.forEach((item: any) => {
             const updatedProcurements = item?.boq?.procurements.map((proc: any) => {
-                const temp = { ...proc.procurement };
-                // Delete the procurement property from proc
                 const { procurement, ...rest } = proc;
-                return { ...rest, ...temp };
+                return { ...rest, ...procurement };
             });
 
             // Assign the updated array back to item.boq.procurements
             item.boq.procurements = updatedProcurements;
+
+            //flatten the boq object
+            const { boq, ...rest } = item;
+            dataToSend.push({ ...rest, ...boq })
         })
 
         totalPage = Math.ceil(count / take)
@@ -1035,7 +1038,7 @@ export const getBoqInboxDal = async (req: Request) => {
         pagination.totalPage = totalPage
         pagination.totalResult = count
         return {
-            data: result,
+            data: dataToSend,
             pagination: pagination
         }
     } catch (err: any) {
@@ -1206,16 +1209,19 @@ export const getBoqOutboxDal = async (req: Request) => {
 
         })
 
-        result.map(async (item: any) => {
+        let dataToSend: any[] = []
+        result.forEach((item: any) => {
             const updatedProcurements = item?.boq?.procurements.map((proc: any) => {
-                const temp = { ...proc.procurement };
-                // Delete the procurement property from proc
                 const { procurement, ...rest } = proc;
-                return { ...rest, ...temp };
+                return { ...rest, ...procurement };
             });
 
             // Assign the updated array back to item.boq.procurements
             item.boq.procurements = updatedProcurements;
+
+            //flatten the boq object
+            const { boq, ...rest } = item;
+            dataToSend.push({ ...rest, ...boq })
         })
 
         totalPage = Math.ceil(count / take)
@@ -1236,7 +1242,7 @@ export const getBoqOutboxDal = async (req: Request) => {
         pagination.totalPage = totalPage
         pagination.totalResult = count
         return {
-            data: result,
+            data: dataToSend,
             pagination: pagination
         }
     } catch (err: any) {
