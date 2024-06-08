@@ -17,6 +17,7 @@ import srPostProcurementRoute from './router/stockReciever/postPrecurement/srPos
 import srReceivedInventoryRoute from './router/stockReciever/receivedInventory/receivedInventory.route'
 import inventoryRoute from './router/inventory/inventory.route'
 import accPreProcurementRoute from './router/accountant/preProcurement/accPreProcurement.route'
+import boqRoute from './router/boq/boq.route'
 
 
 config()
@@ -34,7 +35,7 @@ app.get('/api/pms', (req: Request, res: Response) => {
 // dev routes with protection
 app.use('/api/pms/dev', devRoute)
 
-//----------------------------routes--------------------------------------
+//----------------------------routes--------------------------------------------------------------------------------------------------------------------------
 //procurement route
 app.use('/api/pms/master', masterEntryRoute)
 app.use('/api/pms/sr', srPreProcurementRoute)
@@ -49,6 +50,12 @@ app.use('/api/pms/sr/rec-inv', srReceivedInventoryRoute)
 
 //inventory route
 app.use('/api/pms/inventory', inventoryRoute)
+
+
+//routes that are not for a single role only
+app.use('/api/pms/boq', boqRoute)
+
+//----------------------------routes--------------------------------------------------------------------------------------------------------------------------
 
 //swagger
 swagger(app)

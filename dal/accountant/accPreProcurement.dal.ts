@@ -1,5 +1,5 @@
 import { Request } from "express";
-import { PrismaClient, procurement } from "@prisma/client";
+import { PrismaClient } from "@prisma/client";
 import getErrorMessage from "../../lib/getErrorMessage";
 import { imageUploader } from "../../lib/imageUploader";
 import { pagination, uploadedDoc } from "../../type/common.type";
@@ -1092,3 +1092,4 @@ export const getBoqOutboxDal = async (req: Request) => {
         return { error: true, message: getErrorMessage(err) }
     }
 }
+
