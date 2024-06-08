@@ -18,6 +18,8 @@ router.get('/sub-category/by-category/:categoryId', getSubcategoryByCategoryId)
  *     summary: Create category.
  *     tags:
  *       - Category
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -53,6 +55,8 @@ router.post('/category', createCategory)
  *     description: Retrieve a list of categories.
  *     tags:
  *       - Category
+ *     security:
+ *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: A list of categories.

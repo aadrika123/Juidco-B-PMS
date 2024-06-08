@@ -17,15 +17,10 @@ import {
 router.get('/list-for-boq', getPreProcurementForBoq)
 router.get('/', getPreProcurement)
 router.get('/outbox', getPreProcurementOutbox)
-// router.get('/pre-procurement/outbox/:id', getPreProcurementOutboxById)
-// router.get('/pre-procurement/:id', getPreProcurementById)
 router.post('/bulk', getPreProcurementBulkByOrderNo)
 router.post('/boq', upload.array('img'), createBoq)
 router.get('/boq', getBoqInbox)
 router.get('/boq/outbox', getBoqOutbox)
-// router.post('/pre-procurement/edit', editPreProcurement)
-// router.post('/pre-procurement/release-tender', upload.array('img'), releaseForTender)
-// router.post('/pre-procurement/reject', reject)
 
 
 
