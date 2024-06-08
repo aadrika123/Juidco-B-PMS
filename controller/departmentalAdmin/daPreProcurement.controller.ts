@@ -11,8 +11,7 @@ import {
     rejectDal,
     forwardToAccountantDal,
     getBoqInboxDal,
-    getBoqOutboxDal,
-    returnToAccountantDal
+    getBoqOutboxDal
 } from "../../dal/departmentalAdmin/daPreProcurement.dal";
 
 
@@ -230,25 +229,6 @@ export const getBoqOutbox = async (req: Request, res: Response) => {
         res.status(404).json({
             status: false,
             message: `Error while fetching BOQ list`,
-            error: result?.message
-        })
-    }
-}
-
-
-
-export const returnToAccountant = async (req: Request, res: Response) => {
-    const result: any = await returnToAccountantDal(req)
-    if (!result?.error) {
-        res.status(200).json({
-            status: true,
-            message: `Returned successfully`,
-            data: result
-        })
-    } else {
-        res.status(404).json({
-            status: false,
-            message: `Error while returning`,
             error: result?.message
         })
     }
