@@ -334,7 +334,7 @@ model boq {
     createdAt      DateTime          @default(now())
     updatedAt      DateTime          @updatedAt
     revised        Boolean           @default(false)
-    status         Int               @default(0) //-2=rejected, -1=returned to accountant, 0=pending, 1=approved by DA
+    status         Int               @default(0) //-2=rejected, -1=returned to accountant, 0=pending, 1=revised, 2=approved by DA
     isEdited       Boolean           @default(false)
     procurements   boq_procurement[]
     boq_doc        boq_doc[]
