@@ -1,5 +1,6 @@
 
 export type boqData = {
+    reference_no:string,
     procurement: [
         {
             procurement_no: string,

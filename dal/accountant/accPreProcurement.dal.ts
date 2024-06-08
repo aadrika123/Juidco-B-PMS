@@ -25,7 +25,7 @@ export const getPreProcurementForBoqDal = async (req: Request) => {
     const category: any[] = Array.isArray(req?.query?.category) ? req?.query?.category : [req?.query?.category]
     const subcategory: any[] = Array.isArray(req?.query?.scategory) ? req?.query?.scategory : [req?.query?.scategory]
     const brand: any[] = Array.isArray(req?.query?.brand) ? req?.query?.brand : [req?.query?.brand]
-    const status: any[] = Array.isArray(req?.query?.status) ? req?.query?.status : [req?.query?.status]
+    // const status: any[] = Array.isArray(req?.query?.status) ? req?.query?.status : [req?.query?.status]
 
     //creating search options for the query
     if (search) {
@@ -69,13 +69,18 @@ export const getPreProcurementForBoqDal = async (req: Request) => {
             }
         }
     }
-    if (status[0]) {
-        whereClause.procurement = {
-            status: {
-                status: {
-                    in: status.map(Number)
-                }
-            }
+    // if (status[0]) {
+    //     whereClause.procurement = {
+    //         status: {
+    //             status: {
+    //                 in: status.map(Number)
+    //             }
+    //         }
+    //     }
+    // }
+    whereClause.procurement = {
+        status: {
+            status: 70
         }
     }
 
@@ -397,11 +402,11 @@ export const getPreProcurementBulkByOrderNoDal = async (req: Request) => {
 
 export const createBoqDal = async (req: Request) => {
     const { boqData } = req.body
-    const formattedBoqData: boqData = JSON.parse(boqData)
-    const img = req.files as Express.Multer.File[]
-    let arrayToSend: any[] = []
-    let docToSend: any[] = []
     try {
+        const formattedBoqData: boqData = JSON.parse(boqData)
+        const img = req.files as Express.Multer.File[]
+        let arrayToSend: any[] = []
+        let docToSend: any[] = []
 
         const reference_no: string = generateReferenceNumber(formattedBoqData?.ulb_id)
 
@@ -1099,3 +1104,44 @@ export const getBoqOutboxDal = async (req: Request) => {
     }
 }
 
+
+
+// export const forwardToDa = async (req: Request) => {
+//     const { reference_no }: { reference_no: string } = req.body
+//     try {
+
+//         //start transaction
+//         await prisma.$transaction(async (tx) => {
+
+//             await tx.acc_boq_inbox.delete({
+//                 where: {
+//                     reference_no: reference_no
+//                 }
+//             })
+
+//             await tx.acc_boq_outbox.create({
+//                 data: {
+//                     reference_no: reference_no
+//                 }
+//             })
+
+//             await tx.da_boq_inbox.create({
+//                 data: {
+//                     reference_no: reference_no
+//                 }
+//             })
+
+//             await tx.da_boq_outbox.delete({
+//                 where: {
+//                     reference_no: reference_no
+//                 }
+//             })
+
+//         })
+
+//         return "Forwarded to DA"
+//     } catch (err: any) {
+//         console.log(err)
+//         return { error: true, message: getErrorMessage(err) }
+//     }
+// }

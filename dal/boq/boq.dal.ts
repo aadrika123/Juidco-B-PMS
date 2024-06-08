@@ -3,6 +3,9 @@ import getErrorMessage from "../../lib/getErrorMessage";
 import {
     PrismaClient,
 } from "@prisma/client";
+import { boqData } from "../../type/accountant.type";
+import { uploadedDoc } from "../../type/common.type";
+import { imageUploader } from "../../lib/imageUploader";
 
 
 const prisma = new PrismaClient()
@@ -66,6 +69,94 @@ export const getBoqByRefNoDal = async (req: Request) => {
         result.procurements = updatedProcurements;
 
         return result
+    } catch (err: any) {
+        console.log(err)
+        return { error: true, message: getErrorMessage(err) }
+    }
+}
+
+
+
+export const editBoqDal = async (req: Request) => {
+    const { boqData } = req.body
+    try {
+        const formattedBoqData: boqData = JSON.parse(boqData)
+        const img = req.files as Express.Multer.File[]
+        let arrayToSend: any[] = []
+        let docToSend: any[] = []
+
+
+        await Promise.all(
+            formattedBoqData?.procurement.map(async (item) => {
+                const preparedData = {
+                    reference_no: formattedBoqData?.reference_no,
+                    procurement_no: item?.procurement_no,
+                    description: item?.description,
+                    quantity: item?.quantity,
+                    unit: item?.unit,
+                    rate: item?.rate,
+                    amount: item?.amount,
+                    remark: item?.remark,
+                }
+                arrayToSend.push(preparedData)
+            })
+        )
+
+        const preparedBoq = {
+            reference_no: formattedBoqData?.reference_no,
+            gst: formattedBoqData?.gst,
+            estimated_cost: formattedBoqData?.estimated_cost,
+            remark: formattedBoqData?.remark,
+            isEdited: true
+        }
+
+        if (img) {
+            const uploaded: uploadedDoc[] = await imageUploader(img)   //It will return reference number and unique id as an object after uploading.
+
+            uploaded.map((doc: uploadedDoc) => {
+                const preparedBoqDoc = {
+                    reference_no: formattedBoqData?.reference_no,
+                    ReferenceNo: doc?.ReferenceNo,
+                    uniqueId: doc?.uniqueId,
+                    remark: formattedBoqData?.remark
+                }
+                docToSend.push(preparedBoqDoc)
+            })
+
+        }
+
+        //start transaction
+        await prisma.$transaction(async (tx) => {
+
+            await tx.boq.update({
+                where: {
+                    reference_no: formattedBoqData?.reference_no
+                },
+                data: preparedBoq
+            })
+
+            await tx.boq_procurement.updateMany({
+                where: {
+                    reference_no: formattedBoqData?.reference_no
+                },
+                data: arrayToSend
+            })
+
+            if (img) {
+                await tx.boq_doc.deleteMany({
+                    where: {
+                        reference_no: formattedBoqData?.reference_no
+                    }
+                })
+                await tx.boq_doc.createMany({
+                    data: docToSend
+                })
+            }
+
+        })
+
+        return "BOQ Edited"
+
     } catch (err: any) {
         console.log(err)
         return { error: true, message: getErrorMessage(err) }
