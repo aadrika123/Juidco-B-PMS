@@ -9,8 +9,7 @@ import {
     getPreProcurementForBoq,
     getBoqInbox,
     getBoqOutbox,
-    getPreProcurementOutbox,
-    forwardToDa
+    getPreProcurementOutbox
 } from "../../../controller/accountant/accPreProcurement.controller";
 
 // router.use(accAuth)
@@ -22,7 +21,7 @@ router.post('/bulk', getPreProcurementBulkByOrderNo)
 router.post('/boq', upload.array('img'), createBoq)
 router.get('/boq', getBoqInbox)
 router.get('/boq/outbox', getBoqOutbox)
-router.post('/boq/to-da', forwardToDa)
+
 
 
 export default router
