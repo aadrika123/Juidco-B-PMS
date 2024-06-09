@@ -47,28 +47,61 @@ export const getPreProcurementForBoqDal = async (req: Request) => {
         ];
     }
 
-    //creating filter options for the query
-    if (category[0]) {
-        whereClause.procurement = {
-            category_masterId: {
-                in: category
-            }
-        }
+
+
+    if (category[0] || subcategory[0] || brand[0]) {
+        whereClause.AND = [
+            ...(category[0] ? [{
+                procurement: {
+                    category_masterId: {
+                        in: category
+                    }
+                }
+            }]:[]),
+            ...(subcategory[0] ? [{
+                procurement: {
+                    subcategory_masterId: {
+                        in: subcategory
+                    }
+                }
+            }]:[]),
+            ...(brand[0] ? [{
+                procurement: {
+                    brand_masterId: {
+                        in: brand
+                    }
+                }
+            }]:[])
+        ];
     }
-    if (subcategory[0]) {
-        whereClause.procurement = {
-            subcategory_masterId: {
-                in: subcategory
-            }
-        }
-    }
-    if (brand[0]) {
-        whereClause.procurement = {
-            brand_masterId: {
-                in: brand
-            }
-        }
-    }
+
+
+
+
+
+
+    // //creating filter options for the query
+    // if (category[0]) {
+    //     whereClause.procurement = {
+    //         category_masterId: {
+    //             in: category
+    //         }
+    //     }
+    // }
+    // if (subcategory[0]) {
+    //     whereClause.procurement = {
+    //         subcategory_masterId: {
+    //             in: subcategory
+    //         }
+    //     }
+    // }
+    // if (brand[0]) {
+    //     whereClause.procurement = {
+    //         brand_masterId: {
+    //             in: brand
+    //         }
+    //     }
+    // }
     // if (status[0]) {
     //     whereClause.procurement = {
     //         status: {

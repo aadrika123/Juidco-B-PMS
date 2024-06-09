@@ -1254,7 +1254,7 @@ export const getBoqOutboxDal = async (req: Request) => {
 
 
 export const returnToAccountantDal = async (req: Request) => {
-    const { reference_no }: { reference_no: string } = req.body
+    const { reference_no, remark }: { reference_no: string, remark: string } = req.body
     try {
 
         const boqData = await prisma.boq.findFirst({
@@ -1268,6 +1268,10 @@ export const returnToAccountantDal = async (req: Request) => {
 
         if (boqData?.status !== 0) {
             throw { error: true, message: 'Invalid status of BOQ for returning back to accountant' }
+        }
+
+        if (!remark) {
+            throw { error: true, message: 'Remark is mandatory' }
         }
 
         //start transaction
@@ -1302,7 +1306,8 @@ export const returnToAccountantDal = async (req: Request) => {
                     reference_no: reference_no
                 },
                 data: {
-                    status: -1
+                    status: -1,
+                    remark: remark
                 }
             })
 
