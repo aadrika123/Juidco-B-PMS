@@ -433,6 +433,7 @@ model tendeing_form {
     updatedAt     DateTime       @updatedAt
     boq           boq            @relation(fields: [reference_no], references: [reference_no])
     basic_details basic_details?
+    // cover_details cover_details?
 }
 
 model basic_details {
@@ -442,8 +443,8 @@ model basic_details {
     allow_resubmission       Boolean
     allow_withdrawl          Boolean
     payment_mode             payment_mode_enum
-    onlinePyment_mode        String
-    offline_banks            String
+    onlinePyment_mode        String?
+    offline_banks            String?
     contract_form            String[]
     tender_category          String[]
     tender_type              String[]
@@ -451,3 +452,20 @@ model basic_details {
     updatedAt                DateTime          @updatedAt
     tendeing_form            tendeing_form     @relation(fields: [tendeing_formId], references: [id])
 }
+
+// model cover_details {
+//     id                String            @id @default(uuid())
+//     tendeing_formId   String            @unique
+//     noOfCovers        Int
+//     content           String
+//     allow_withdrawl   Boolean
+//     payment_mode      payment_mode_enum
+//     onlinePyment_mode String
+//     offline_banks     String
+//     contract_form     String[]
+//     tender_category   String[]
+//     tender_type       String[]
+//     createdAt         DateTime          @default(now())
+//     updatedAt         DateTime          @updatedAt
+//     tendeing_form     tendeing_form     @relation(fields: [tendeing_formId], references: [id])
+// }

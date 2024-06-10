@@ -204,7 +204,8 @@ export const getBoqInbox = async (req: Request, res: Response) => {
         res.status(200).json({
             status: true,
             message: `BPQ list fetched`,
-            data: result
+            data: result?.data,
+            pagination: result?.pagination
         })
     } else {
         res.status(404).json({
@@ -223,7 +224,8 @@ export const getBoqOutbox = async (req: Request, res: Response) => {
         res.status(200).json({
             status: true,
             message: `BPQ list fetched`,
-            data: result
+            data: result?.data,
+            pagination: result?.pagination
         })
     } else {
         res.status(404).json({
