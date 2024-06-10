@@ -7,7 +7,8 @@ import {
     getBoqInboxDal,
     getBoqOutboxDal,
     getPreProcurementOutboxDal,
-    forwardToDaDal
+    forwardToDaDal,
+    getPreTenderingInboxDal
 } from "../../dal/accountant/accPreProcurement.dal";
 
 
@@ -177,37 +178,20 @@ export const getPreProcurementOutbox = async (req: Request, res: Response) => {
 }
 
 
-// export const getPreProcurementOutboxById = async (req: Request, res: Response) => {
-//     const result: any = await getPreProcurementOutboxtByIdDal(req)
-//     if (!result?.error) {
-//         res.status(200).json({
-//             status: true,
-//             message: `Pre procurement outbox for DA fetched successfully`,
-//             data: result
-//         })
-//     } else {
-//         res.status(404).json({
-//             status: false,
-//             message: `Error while fetching Pre procurement for DA`,
-//             error: result?.message
-//         })
-//     }
-// }
-
-
-// export const reject = async (req: Request, res: Response) => {
-//     const result: any = await rejectDal(req)
-//     if (!result?.error) {
-//         res.status(200).json({
-//             status: true,
-//             message: `Rejected successfully`,
-//             data: result
-//         })
-//     } else {
-//         res.status(404).json({
-//             status: false,
-//             message: `Error while rejecting`,
-//             error: result?.message
-//         })
-//     }
-// }
+export const getPreTenderingInbox = async (req: Request, res: Response) => {
+    const result: any = await getPreTenderingInboxDal(req)
+    if (!result?.error) {
+        res.status(200).json({
+            status: true,
+            message: `Pre tendering form list fetched successfully`,
+            data: result?.data,
+            pagination: result?.pagination
+        })
+    } else {
+        res.status(404).json({
+            status: false,
+            message: `Error while fetching Pre tendering form list`,
+            error: result?.message
+        })
+    }
+}
