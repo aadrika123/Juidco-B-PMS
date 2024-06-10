@@ -429,11 +429,15 @@ model tendering_form_docs {
 model tendeing_form {
     id            String         @id @default(uuid())
     reference_no  String         @unique
+    status        Int //-2=rejected, -1=returned, 0=pending, 1=DA, 2=revised, 3=released for tender 
+    isEdited      Boolean        @default(false)
+    isPartial     Boolean        @default(true)
     createdAt     DateTime       @default(now())
     updatedAt     DateTime       @updatedAt
     boq           boq            @relation(fields: [reference_no], references: [reference_no])
     basic_details basic_details?
-    // cover_details cover_details?
+    cover_details cover_details?
+    work_details  work_details?
 }
 
 model basic_details {
@@ -453,19 +457,50 @@ model basic_details {
     tendeing_form            tendeing_form     @relation(fields: [tendeing_formId], references: [id])
 }
 
-// model cover_details {
-//     id                String            @id @default(uuid())
-//     tendeing_formId   String            @unique
-//     noOfCovers        Int
-//     content           String
-//     allow_withdrawl   Boolean
-//     payment_mode      payment_mode_enum
-//     onlinePyment_mode String
-//     offline_banks     String
-//     contract_form     String[]
-//     tender_category   String[]
-//     tender_type       String[]
-//     createdAt         DateTime          @default(now())
-//     updatedAt         DateTime          @updatedAt
-//     tendeing_form     tendeing_form     @relation(fields: [tendeing_formId], references: [id])
-// }
+model cover_details_docs {
+    id              String        @id @default(uuid())
+    cover_detailsId String
+    type            String
+    ReferenceNo     String
+    uniqueId        String?
+    createdAt       DateTime      @default(now())
+    updatedAt       DateTime      @updatedAt
+    cover_details   cover_details @relation(fields: [cover_detailsId], references: [id])
+}
+
+model cover_details {
+    id                 String               @id @default(uuid())
+    tendeing_formId    String               @unique
+    noOfCovers         Int
+    content            String
+    createdAt          DateTime             @default(now())
+    updatedAt          DateTime             @updatedAt
+    tendeing_form      tendeing_form        @relation(fields: [tendeing_formId], references: [id])
+    cover_details_docs cover_details_docs[]
+}
+
+model work_details {
+    id                        String        @id @default(uuid())
+    tendeing_formId           String        @unique
+    workDiscription           String
+    pre_qualification_details String
+    product_category          String[]
+    productSubCategory        String
+    contract_type             String
+    tender_values             String
+    bid_validity              String
+    completionPeriod          Int
+    location                  String
+    pinCode                   String
+    pre_bid                   Boolean
+    preBidMeeting             String?
+    preBidMeetingAdd          String?
+    bidOpeningPlace           String
+    tenderer_class            String[]
+    invstOffName              String
+    invstOffAdd               String
+    invstOffEmail_Ph          String
+    createdAt                 DateTime      @default(now())
+    updatedAt                 DateTime      @updatedAt
+    tendeing_form             tendeing_form @relation(fields: [tendeing_formId], references: [id])
+}
