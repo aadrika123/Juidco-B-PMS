@@ -342,6 +342,7 @@ model boq {
     acc_boq_outbox acc_boq_outbox?
     da_boq_inbox   da_boq_inbox?
     da_boq_outbox  da_boq_outbox?
+    tendeing_form  tendeing_form?
 }
 
 model boq_procurement {
@@ -349,6 +350,7 @@ model boq_procurement {
     reference_no   String
     procurement_no String
     quantity       Int?
+    description    String?
     unit           String?
     rate           Float?
     amount         Float?
@@ -400,4 +402,52 @@ model da_boq_outbox {
     boq          boq      @relation(fields: [reference_no], references: [reference_no])
     createdAt    DateTime @default(now())
     updatedAt    DateTime @updatedAt
+}
+
+//Pre-tendering============================================================================================================================================================================================================================================================================================================
+
+//enums
+enum payment_mode_enum {
+    online
+    offline
+}
+
+enum tendering_form_docs_enum {
+    basic_details
+}
+
+model tendering_form_docs {
+    id           String                   @id @default(uuid())
+    reference_no String
+    form         tendering_form_docs_enum
+    ReferenceNo  String
+    uniqueId     String?
+    createdAt    DateTime                 @default(now())
+    updatedAt    DateTime                 @updatedAt
+}
+
+model tendeing_form {
+    id            String         @id @default(uuid())
+    reference_no  String         @unique
+    createdAt     DateTime       @default(now())
+    updatedAt     DateTime       @updatedAt
+    boq           boq            @relation(fields: [reference_no], references: [reference_no])
+    basic_details basic_details?
+}
+
+model basic_details {
+    id                       String            @id @default(uuid())
+    tendeing_formId          String            @unique
+    allow_offline_submission Boolean
+    allow_resubmission       Boolean
+    allow_withdrawl          Boolean
+    payment_mode             payment_mode_enum
+    onlinePyment_mode        String
+    offline_banks            String
+    contract_form            String[]
+    tender_category          String[]
+    tender_type              String[]
+    createdAt                DateTime          @default(now())
+    updatedAt                DateTime          @updatedAt
+    tendeing_form            tendeing_form     @relation(fields: [tendeing_formId], references: [id])
 }
