@@ -68,7 +68,7 @@ export const getBoqByRefNoDal = async (req: Request) => {
         // Assign the updated array back to item.boq.procurements
         result.procurements = updatedProcurements;
 
-        return result
+        return [result]
     } catch (err: any) {
         console.log(err)
         return { error: true, message: getErrorMessage(err) }
