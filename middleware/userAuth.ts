@@ -11,28 +11,30 @@ const extractRoles = async (userId: number) => {
 }
 
 export const srAuth = async (req: Request, res: Response, next: NextFunction) => {
-    const roles = await extractRoles(req?.body?.auth?.id)
-    if (!roles) {
-        res.status(401).send({ error: true, message: "Role ID is required" })
-    }
-    if (!roles.includes(59)) {
-        res.status(401).send({ error: true, message: "User not authorized to access this api" })
-    } else {
-        next()
-    }
+    // const roles = await extractRoles(req?.body?.auth?.id)
+    // if (!roles) {
+    //     res.status(401).send({ error: true, message: "Role ID is required" })
+    // }
+    // if (!roles.includes(59)) {
+    //     res.status(401).send({ error: true, message: "User not authorized to access this api" })
+    // } else {
+    //     next()
+    // }
+    next()
 }
 
 
 export const daAuth = async (req: Request, res: Response, next: NextFunction) => {
-    const roles = await extractRoles(req?.body?.auth?.id)
-    if (!roles) {
-        res.status(401).send({ error: true, message: "Role ID is required" })
-    }
-    if (!roles.includes(60)) {
-        res.status(401).send({ error: true, message: "User not authorized to access this api" })
-    } else {
-        next()
-    }
+    // const roles = await extractRoles(req?.body?.auth?.id)
+    // if (!roles) {
+    //     res.status(401).send({ error: true, message: "Role ID is required" })
+    // }
+    // if (!roles.includes(60)) {
+    //     res.status(401).send({ error: true, message: "User not authorized to access this api" })
+    // } else {
+    //     next()
+    // }
+    next()
 }
 
 
