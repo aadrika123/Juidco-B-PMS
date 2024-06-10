@@ -1139,9 +1139,22 @@ export const getBoqOutboxDal = async (req: Request) => {
 
 
 
-export const forwardToDa = async (req: Request) => {
+export const forwardToDaDal = async (req: Request) => {
     const { reference_no }: { reference_no: string } = req.body
     try {
+
+        const boq = await prisma.boq.findFirst({
+            where: {
+                reference_no: reference_no
+            },
+            select: {
+                status: true
+            }
+        })
+
+        if (boq?.status !== -1) {
+            throw { error: true, message: `Reference no. : ${reference_no} is not valid to be forwarded to DA.` }
+        }
 
         //start transaction
         await prisma.$transaction(async (tx) => {
@@ -1175,7 +1188,8 @@ export const forwardToDa = async (req: Request) => {
                     reference_no: reference_no
                 },
                 data: {
-                    status: 1
+                    status: 1,
+                    revised: true
                 }
             })
 

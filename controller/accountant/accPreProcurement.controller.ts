@@ -6,7 +6,8 @@ import {
     getPreProcurementForBoqDal,
     getBoqInboxDal,
     getBoqOutboxDal,
-    getPreProcurementOutboxDal
+    getPreProcurementOutboxDal,
+    forwardToDaDal
 } from "../../dal/accountant/accPreProcurement.dal";
 
 
@@ -120,22 +121,22 @@ export const getBoqOutbox = async (req: Request, res: Response) => {
     }
 }
 
-// export const editPreProcurement = async (req: Request, res: Response) => {
-//     const result: any = await editPreProcurementDal(req)
-//     if (!result?.error) {
-//         res.status(200).json({
-//             status: true,
-//             message: `Edit successful`,
-//             data: result
-//         })
-//     } else {
-//         res.status(404).json({
-//             status: false,
-//             message: `Error while editing`,
-//             error: result?.message
-//         })
-//     }
-// }
+export const forwardToDa = async (req: Request, res: Response) => {
+    const result: any = await forwardToDaDal(req)
+    if (!result?.error) {
+        res.status(200).json({
+            status: true,
+            message: `Forwarded to DA`,
+            data: result
+        })
+    } else {
+        res.status(404).json({
+            status: false,
+            message: `Error while forwarding to DA`,
+            error: result?.message
+        })
+    }
+}
 
 // export const releaseForTender = async (req: Request, res: Response) => {
 //     const result: any = await releaseForTenderDal(req)
