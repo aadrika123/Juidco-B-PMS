@@ -532,16 +532,16 @@ export const createBoqDal = async (req: Request) => {
                             procurement_no: item?.procurement_no
                         }
                     })
-                    await tx.da_pre_procurement_outbox.delete({
-                        where: {
-                            procurement_no: item?.procurement_no
-                        }
-                    })
-                    await tx.da_pre_procurement_inbox.create({
-                        data: {
-                            procurement_no: item?.procurement_no
-                        }
-                    })
+                    // await tx.da_pre_procurement_outbox.delete({
+                    //     where: {
+                    //         procurement_no: item?.procurement_no
+                    //     }
+                    // })
+                    // await tx.da_pre_procurement_inbox.create({
+                    //     data: {
+                    //         procurement_no: item?.procurement_no
+                    //     }
+                    // })
                 })
             )
 
