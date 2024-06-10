@@ -12,7 +12,7 @@ const prisma = new PrismaClient()
 
 
 export const getBoqByRefNoDal = async (req: Request) => {
-    const { reference_no }: { reference_no: string } = req.body
+    const { reference_no } = req.params
     try {
         const result: any = await prisma.boq.findFirst({
             where: {
