@@ -1,9 +1,9 @@
 import { Request } from "express";
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, basic_details } from "@prisma/client";
 import getErrorMessage from "../../lib/getErrorMessage";
 import { imageUploader } from "../../lib/imageUploader";
 import { pagination, uploadedDoc } from "../../type/common.type";
-import { basicDetailsPtType, boqData } from "../../type/accountant.type";
+import { boqData } from "../../type/accountant.type";
 import generateReferenceNumber from "../../lib/referenceNumberGenerator";
 import axios from "axios";
 
@@ -1666,18 +1666,110 @@ export const getPreTenderingOutboxDal = async (req: Request) => {
 
 //Pre-tender==================================================================================================================================================================================
 
+const checkExistence = async (reference_no: string) => {
+    try {
+
+        const count = await prisma.tendering_form.count({
+            where: {
+                reference_no: reference_no
+            }
+        })
+
+        return count !== 0 ? true : false
+    } catch (err: any) {
+        console.log(err)
+        return { error: true, message: getErrorMessage(err) }
+    }
+}
+
+
+const isBoqValid = async (reference_no: string) => {
+    try {
+
+        const boq = await prisma.boq.findFirst({
+            where: {
+                reference_no: reference_no
+            },
+            select: {
+                status: true
+            }
+        })
+
+        return boq?.status !== 2 ? false : true
+    } catch (err: any) {
+        console.log(err)
+        return { error: true, message: getErrorMessage(err) }
+    }
+}
+
+
 
 export const createBasicDetailsPtDal = async (req: Request) => {
     const { preTender } = req.body
     try {
-        const formattedData: basicDetailsPtType = JSON.parse(preTender)
+        const formattedData: basic_details = JSON.parse(preTender)
         const img = req.files as Express.Multer.File[]
 
         if (!formattedData?.reference_no) {
             throw { error: true, message: "Reference number is required as 'reference_no'" }
         }
 
-        return "BOQ Created"
+        const existence = await checkExistence(formattedData?.reference_no)
+
+
+        if (await isBoqValid(formattedData?.reference_no)) {
+            throw { error: true, message: "BOQ is not valid to be forwarded for pre tender" }
+        }
+        const tableExistence = await prisma.basic_details.count({
+            where: {
+                reference_no: formattedData?.reference_no
+            }
+        })
+
+        //start transaction
+        await prisma.$transaction(async (tx) => {
+
+            if (!existence) {
+                await tx.tendering_form.create({
+                    data: {
+                        reference_no: formattedData?.reference_no
+                    }
+                })
+            }
+
+            if (!tableExistence) {
+                await tx.basic_details.create({
+                    data: formattedData
+                })
+            } else {
+                await tx.basic_details.update({
+                    where: {
+                        reference_no: formattedData?.reference_no
+                    },
+                    data: formattedData
+                })
+            }
+
+            if (img) {
+                const uploaded = await imageUploader(img)   //It will return reference number and unique id as an object after uploading.
+
+                await Promise.all(
+                    uploaded.map(async (item) => {
+                        await tx.tendering_form_docs.create({
+                            data: {
+                                reference_no: formattedData?.reference_no,
+                                form: 'basic_details',
+                                ReferenceNo: item?.ReferenceNo,
+                                uniqueId: item?.uniqueId
+                            }
+                        })
+                    })
+                )
+            }
+
+        })
+
+        return !existence ? 'Basic details added' : 'Basic details updated'
     } catch (err: any) {
         console.log(err)
         return { error: true, message: getErrorMessage(err) }

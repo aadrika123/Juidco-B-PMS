@@ -28,7 +28,7 @@ export type basicDetailsPtType = {
     payment_mode: string,
     onlinePyment_mode?: String,
     offline_banks?: String,
-    contract_form: String[]
-    tender_category: String[]
+    contract_form: String[],
+    tender_category: String[],
     tender_type: String[]
 }
