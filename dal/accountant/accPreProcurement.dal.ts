@@ -1369,17 +1369,217 @@ export const getPreTenderingInboxDal = async (req: Request) => {
 
         let dataToSend: any[] = []
         result.forEach((item: any) => {
-            const updatedProcurements = item?.boq?.procurements.map((proc: any) => {
+            const updatedProcurements = item?.tendering_form?.boq?.procurements.map((proc: any) => {
                 const { procurement, ...rest } = proc;
                 return { ...rest, ...procurement };
             });
 
             // Assign the updated array back to item.boq.procurements
-            item.boq.procurements = updatedProcurements;
+            item.tendering_form.boq.procurements = updatedProcurements;
 
             //flatten the boq object
             const { boq, ...rest } = item;
-            dataToSend.push({ ...rest, ...boq })
+            const flattenedBoq = { ...rest, ...boq }
+
+            // Flatten the tendering_form object
+            const { tendering_form, ...restData } = item;
+            dataToSend.push({ ...rest, ...flattenedBoq })
+        })
+
+        totalPage = Math.ceil(count / take)
+        if (endIndex < count) {
+            pagination.next = {
+                page: page + 1,
+                take: take
+            }
+        }
+        if (startIndex > 0) {
+            pagination.prev = {
+                page: page - 1,
+                take: take
+            }
+        }
+        pagination.currentPage = page
+        pagination.currentTake = take
+        pagination.totalPage = totalPage
+        pagination.totalResult = count
+        return {
+            data: dataToSend,
+            pagination: pagination
+        }
+    } catch (err: any) {
+        console.log(err)
+        return { error: true, message: getErrorMessage(err) }
+    }
+}
+
+
+
+export const getPreTenderingOutboxDal = async (req: Request) => {
+    const page: number | undefined = Number(req?.query?.page)
+    const take: number | undefined = Number(req?.query?.take)
+    const startIndex: number | undefined = (page - 1) * take
+    const endIndex: number | undefined = startIndex + take
+    let count: number
+    let totalPage: number
+    let pagination: pagination = {}
+    const whereClause: any = {};
+
+    const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined
+
+    const category: any[] = Array.isArray(req?.query?.category) ? req?.query?.category : [req?.query?.category]
+    const subcategory: any[] = Array.isArray(req?.query?.scategory) ? req?.query?.scategory : [req?.query?.scategory]
+    const status: any[] = Array.isArray(req?.query?.status) ? req?.query?.status : [req?.query?.status]
+    const brand: any[] = Array.isArray(req?.query?.brand) ? req?.query?.brand : [req?.query?.brand]
+
+    //creating search options for the query
+    if (search) {
+        whereClause.OR = [
+            {
+                reference_no: {
+                    contains: search,
+                    mode: 'insensitive'
+                }
+            },
+            {
+                procurement: {
+                    description: {
+                        contains: search,
+                        mode: 'insensitive'
+                    }
+                }
+            }
+        ];
+    }
+
+    //creating filter options for the query
+    if (category[0] || subcategory[0] || brand[0]) {
+        whereClause.AND = [
+            ...(category[0] ? [{
+                boq: {
+                    procurements: {
+                        some: {
+                            procurement: {
+                                category_masterId: {
+                                    in: category
+                                }
+                            }
+                        }
+                    }
+                }
+            }] : []),
+
+            ...(subcategory[0] ? [{
+                boq: {
+                    procurements: {
+                        some: {
+                            procurement: {
+                                subcategory_masterId: {
+                                    in: subcategory
+                                }
+                            }
+                        }
+                    }
+                }
+            }] : []),
+
+            ...(brand[0] ? [{
+                boq: {
+                    status: {
+                        in: status.map(Number)
+                    }
+
+                }
+            }] : []),
+
+            ...(brand[0] ? [{
+                boq: {
+                    procurements: {
+                        some: {
+                            procurement: {
+                                brand_masterId: {
+                                    in: brand
+                                }
+                            }
+                        }
+                    }
+                }
+            }] : []),
+        ]
+    }
+
+    try {
+        count = await prisma.acc_pre_tender_outbox.count({
+            where: whereClause
+        })
+        const result = await prisma.acc_pre_tender_outbox.findMany({
+            orderBy: {
+                updatedAt: 'desc'
+            },
+            where: whereClause,
+            ...(page && { skip: startIndex }),
+            ...(take && { take: take }),
+            select: {
+                id: true,
+                reference_no: true,
+                tendering_form: {
+                    select: {
+                        boq: {
+                            select: {
+                                reference_no: true,
+                                gst: true,
+                                estimated_cost: true,
+                                remark: true,
+                                status: true,
+                                isEdited: true,
+                                procurements: {
+                                    select: {
+                                        procurement: {
+                                            select: {
+                                                category: {
+                                                    select: {
+                                                        name: true
+                                                    }
+                                                },
+                                                subcategory: {
+                                                    select: {
+                                                        name: true
+                                                    }
+                                                },
+                                                brand: {
+                                                    select: {
+                                                        name: true
+                                                    }
+                                                },
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                        }
+                    }
+                }
+            }
+
+        })
+
+        let dataToSend: any[] = []
+        result.forEach((item: any) => {
+            const updatedProcurements = item?.tendering_form?.boq?.procurements.map((proc: any) => {
+                const { procurement, ...rest } = proc;
+                return { ...rest, ...procurement };
+            });
+
+            // Assign the updated array back to item.boq.procurements
+            item.tendering_form.boq.procurements = updatedProcurements;
+
+            //flatten the boq object
+            const { boq, ...rest } = item;
+            const flattenedBoq = { ...rest, ...boq }
+
+            // Flatten the tendering_form object
+            const { tendering_form, ...restData } = item;
+            dataToSend.push({ ...rest, ...flattenedBoq })
         })
 
         totalPage = Math.ceil(count / take)

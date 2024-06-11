@@ -11,7 +11,8 @@ import {
     getBoqOutbox,
     getPreProcurementOutbox,
     forwardToDa,
-    getPreTenderingInbox
+    getPreTenderingInbox,
+    getPreTenderingOutbox
 } from "../../../controller/accountant/accPreProcurement.controller";
 
 // router.use(accAuth)
@@ -25,7 +26,7 @@ router.get('/boq', getBoqInbox)
 router.get('/boq/outbox', getBoqOutbox)
 router.post('/to-da', forwardToDa)
 router.get('/pre-tender', getPreTenderingInbox)
-// router.get('/pre-tender/outbox', getBoqOutbox)
+router.get('/pre-tender/outbox', getPreTenderingOutbox)
 
 
 export default router

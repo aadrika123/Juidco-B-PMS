@@ -7,12 +7,15 @@ import {
     editPreProcurementDal,
     releaseForTenderDal,
     getPreProcurementOutboxDal,
-    getPreProcurementOutboxtByIdDal,
+    getPreProcurementOutboxByIdDal,
     rejectDal,
+    rejectByProcurementNoDal,
     forwardToAccountantDal,
     getBoqInboxDal,
     getBoqOutboxDal,
-    returnToAccountantDal
+    returnToAccountantDal,
+    getPreTenderingInboxDal,
+    getPreTenderingOutboxDal
 } from "../../dal/departmentalAdmin/daPreProcurement.dal";
 
 
@@ -144,7 +147,7 @@ export const getPreProcurementOutbox = async (req: Request, res: Response) => {
 
 
 export const getPreProcurementOutboxById = async (req: Request, res: Response) => {
-    const result: any = await getPreProcurementOutboxtByIdDal(req)
+    const result: any = await getPreProcurementOutboxByIdDal(req)
     if (!result?.error) {
         res.status(200).json({
             status: true,
@@ -163,6 +166,25 @@ export const getPreProcurementOutboxById = async (req: Request, res: Response) =
 
 export const reject = async (req: Request, res: Response) => {
     const result: any = await rejectDal(req)
+    if (!result?.error) {
+        res.status(200).json({
+            status: true,
+            message: `Rejected successfully`,
+            data: result
+        })
+    } else {
+        res.status(404).json({
+            status: false,
+            message: `Error while rejecting`,
+            error: result?.message
+        })
+    }
+}
+
+
+
+export const rejectByProcurementNo = async (req: Request, res: Response) => {
+    const result: any = await rejectByProcurementNoDal(req)
     if (!result?.error) {
         res.status(200).json({
             status: true,
@@ -251,6 +273,46 @@ export const returnToAccountant = async (req: Request, res: Response) => {
         res.status(404).json({
             status: false,
             message: `Error while returning BOQ`,
+            error: result?.message
+        })
+    }
+}
+
+
+
+export const getPreTenderingInbox = async (req: Request, res: Response) => {
+    const result: any = await getPreTenderingInboxDal(req)
+    if (!result?.error) {
+        res.status(200).json({
+            status: true,
+            message: `Pre tendering form list fetched successfully`,
+            data: result?.data,
+            pagination: result?.pagination
+        })
+    } else {
+        res.status(404).json({
+            status: false,
+            message: `Error while fetching Pre tendering form list`,
+            error: result?.message
+        })
+    }
+}
+
+
+
+export const getPreTenderingOutbox = async (req: Request, res: Response) => {
+    const result: any = await getPreTenderingOutboxDal(req)
+    if (!result?.error) {
+        res.status(200).json({
+            status: true,
+            message: `Pre tendering form list fetched successfully`,
+            data: result?.data,
+            pagination: result?.pagination
+        })
+    } else {
+        res.status(404).json({
+            status: false,
+            message: `Error while fetching Pre tendering form list`,
             error: result?.message
         })
     }

@@ -649,7 +649,7 @@ export const getPreProcurementOutboxDal = async (req: Request) => {
 }
 
 
-export const getPreProcurementOutboxtByIdDal = async (req: Request) => {
+export const getPreProcurementOutboxByIdDal = async (req: Request) => {
     const { id } = req.params
     try {
         const result: any = await prisma.da_pre_procurement_outbox.findFirst({
@@ -708,6 +708,56 @@ export const getPreProcurementOutboxtByIdDal = async (req: Request) => {
         return { error: true, message: getErrorMessage(err) }
     }
 }
+
+
+export const rejectByProcurementNoDal = async (req: Request) => {
+    const { procurement_no, remark }: { procurement_no: string[], remark: string } = req.body
+    try {
+        procurement_no.map(async (item) => {
+            await prisma.$transaction([
+
+                prisma.da_pre_procurement_outbox.create({
+                    data: { procurement_no: item }
+                }),
+                prisma.sr_pre_procurement_inbox.create({
+                    data: { procurement_no: item }
+                }),
+                prisma.procurement.update({
+                    where: {
+                        procurement_no: item
+                    },
+                    data: {
+                        remark: remark
+                    }
+                }),
+                prisma.procurement_status.update({
+                    where: {
+                        procurement_no: item
+                    },
+                    data: {
+                        status: -2
+                    }
+                }),
+                prisma.da_pre_procurement_inbox.delete({
+                    where: {
+                        procurement_no: item
+                    },
+                }),
+                prisma.sr_pre_procurement_outbox.delete({
+                    where: {
+                        procurement_no: item
+                    },
+                })
+
+            ])
+        })
+        return "Rejected"
+    } catch (err: any) {
+        console.log(err?.message)
+        return { error: true, message: getErrorMessage(err) }
+    }
+}
+
 
 
 export const rejectDal = async (req: Request) => {
@@ -1313,7 +1363,480 @@ export const returnToAccountantDal = async (req: Request) => {
 
         })
 
-        return "Forwarded to DA"
+        return "Returned to accountant"
+    } catch (err: any) {
+        console.log(err)
+        return { error: true, message: getErrorMessage(err) }
+    }
+}
+
+
+
+export const rejectBoqDal = async (req: Request) => {
+    const { reference_no, remark }: { reference_no: string, remark: string } = req.body
+    try {
+
+        const boqData = await prisma.boq.findFirst({
+            where: {
+                reference_no: reference_no
+            },
+            select: {
+                status: true,
+                procurements: {
+                    select: {
+                        procurement_no: true
+                    }
+                }
+            }
+        })
+
+        if (boqData?.status !== 0) {
+            throw { error: true, message: 'Invalid status of BOQ for rejecting' }
+        }
+
+        if (!remark) {
+            throw { error: true, message: 'Remark is mandatory' }
+        }
+
+        //start transaction
+        await prisma.$transaction(async (tx) => {
+
+            await tx.da_boq_inbox.delete({
+                where: {
+                    reference_no: reference_no
+                }
+            })
+
+            await tx.acc_boq_inbox.create({
+                data: {
+                    reference_no: reference_no
+                }
+            })
+
+            await tx.da_boq_outbox.create({
+                data: {
+                    reference_no: reference_no
+                }
+            })
+
+            await tx.acc_boq_outbox.delete({
+                where: {
+                    reference_no: reference_no
+                }
+            })
+
+            await tx.boq.update({
+                where: {
+                    reference_no: reference_no
+                },
+                data: {
+                    status: -2,
+                    remark: remark
+                }
+            })
+        })
+
+        const procurement_no_array = boqData?.procurements.map((item) => item?.procurement_no)
+
+        req.body = {
+            procurement_no: procurement_no_array,
+            remark: 'BOQ rejected'
+        }
+        await rejectByProcurementNoDal(req)
+
+        return "Rejected"
+    } catch (err: any) {
+        console.log(err)
+        return { error: true, message: getErrorMessage(err) }
+    }
+}
+
+
+
+export const getPreTenderingInboxDal = async (req: Request) => {
+    const page: number | undefined = Number(req?.query?.page)
+    const take: number | undefined = Number(req?.query?.take)
+    const startIndex: number | undefined = (page - 1) * take
+    const endIndex: number | undefined = startIndex + take
+    let count: number
+    let totalPage: number
+    let pagination: pagination = {}
+    const whereClause: any = {};
+
+    const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined
+
+    const category: any[] = Array.isArray(req?.query?.category) ? req?.query?.category : [req?.query?.category]
+    const subcategory: any[] = Array.isArray(req?.query?.scategory) ? req?.query?.scategory : [req?.query?.scategory]
+    const status: any[] = Array.isArray(req?.query?.status) ? req?.query?.status : [req?.query?.status]
+    const brand: any[] = Array.isArray(req?.query?.brand) ? req?.query?.brand : [req?.query?.brand]
+
+    //creating search options for the query
+    if (search) {
+        whereClause.OR = [
+            {
+                reference_no: {
+                    contains: search,
+                    mode: 'insensitive'
+                }
+            },
+            {
+                procurement: {
+                    description: {
+                        contains: search,
+                        mode: 'insensitive'
+                    }
+                }
+            }
+        ];
+    }
+
+    //creating filter options for the query
+    if (category[0] || subcategory[0] || brand[0]) {
+        whereClause.AND = [
+            ...(category[0] ? [{
+                boq: {
+                    procurements: {
+                        some: {
+                            procurement: {
+                                category_masterId: {
+                                    in: category
+                                }
+                            }
+                        }
+                    }
+                }
+            }] : []),
+
+            ...(subcategory[0] ? [{
+                boq: {
+                    procurements: {
+                        some: {
+                            procurement: {
+                                subcategory_masterId: {
+                                    in: subcategory
+                                }
+                            }
+                        }
+                    }
+                }
+            }] : []),
+
+            ...(brand[0] ? [{
+                boq: {
+                    status: {
+                        in: status.map(Number)
+                    }
+
+                }
+            }] : []),
+
+            ...(brand[0] ? [{
+                boq: {
+                    procurements: {
+                        some: {
+                            procurement: {
+                                brand_masterId: {
+                                    in: brand
+                                }
+                            }
+                        }
+                    }
+                }
+            }] : []),
+        ]
+    }
+
+    try {
+        count = await prisma.da_pre_tender_inbox.count({
+            where: whereClause
+        })
+        const result = await prisma.da_pre_tender_inbox.findMany({
+            orderBy: {
+                updatedAt: 'desc'
+            },
+            where: whereClause,
+            ...(page && { skip: startIndex }),
+            ...(take && { take: take }),
+            select: {
+                id: true,
+                reference_no: true,
+                tendering_form: {
+                    select: {
+                        boq: {
+                            select: {
+                                reference_no: true,
+                                gst: true,
+                                estimated_cost: true,
+                                remark: true,
+                                status: true,
+                                isEdited: true,
+                                procurements: {
+                                    select: {
+                                        procurement: {
+                                            select: {
+                                                category: {
+                                                    select: {
+                                                        name: true
+                                                    }
+                                                },
+                                                subcategory: {
+                                                    select: {
+                                                        name: true
+                                                    }
+                                                },
+                                                brand: {
+                                                    select: {
+                                                        name: true
+                                                    }
+                                                },
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                        }
+                    }
+                }
+            }
+
+        })
+
+        let dataToSend: any[] = []
+        result.forEach((item: any) => {
+            const updatedProcurements = item?.tendering_form?.boq?.procurements.map((proc: any) => {
+                const { procurement, ...rest } = proc;
+                return { ...rest, ...procurement };
+            });
+
+            // Assign the updated array back to item.boq.procurements
+            item.tendering_form.boq.procurements = updatedProcurements;
+
+            //flatten the boq object
+            const { boq, ...rest } = item;
+            const flattenedBoq = { ...rest, ...boq }
+
+            // Flatten the tendering_form object
+            const { tendering_form, ...restData } = item;
+            dataToSend.push({ ...rest, ...flattenedBoq })
+        })
+
+        totalPage = Math.ceil(count / take)
+        if (endIndex < count) {
+            pagination.next = {
+                page: page + 1,
+                take: take
+            }
+        }
+        if (startIndex > 0) {
+            pagination.prev = {
+                page: page - 1,
+                take: take
+            }
+        }
+        pagination.currentPage = page
+        pagination.currentTake = take
+        pagination.totalPage = totalPage
+        pagination.totalResult = count
+        return {
+            data: dataToSend,
+            pagination: pagination
+        }
+    } catch (err: any) {
+        console.log(err)
+        return { error: true, message: getErrorMessage(err) }
+    }
+}
+
+
+
+export const getPreTenderingOutboxDal = async (req: Request) => {
+    const page: number | undefined = Number(req?.query?.page)
+    const take: number | undefined = Number(req?.query?.take)
+    const startIndex: number | undefined = (page - 1) * take
+    const endIndex: number | undefined = startIndex + take
+    let count: number
+    let totalPage: number
+    let pagination: pagination = {}
+    const whereClause: any = {};
+
+    const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined
+
+    const category: any[] = Array.isArray(req?.query?.category) ? req?.query?.category : [req?.query?.category]
+    const subcategory: any[] = Array.isArray(req?.query?.scategory) ? req?.query?.scategory : [req?.query?.scategory]
+    const status: any[] = Array.isArray(req?.query?.status) ? req?.query?.status : [req?.query?.status]
+    const brand: any[] = Array.isArray(req?.query?.brand) ? req?.query?.brand : [req?.query?.brand]
+
+    //creating search options for the query
+    if (search) {
+        whereClause.OR = [
+            {
+                reference_no: {
+                    contains: search,
+                    mode: 'insensitive'
+                }
+            },
+            {
+                procurement: {
+                    description: {
+                        contains: search,
+                        mode: 'insensitive'
+                    }
+                }
+            }
+        ];
+    }
+
+    //creating filter options for the query
+    if (category[0] || subcategory[0] || brand[0]) {
+        whereClause.AND = [
+            ...(category[0] ? [{
+                boq: {
+                    procurements: {
+                        some: {
+                            procurement: {
+                                category_masterId: {
+                                    in: category
+                                }
+                            }
+                        }
+                    }
+                }
+            }] : []),
+
+            ...(subcategory[0] ? [{
+                boq: {
+                    procurements: {
+                        some: {
+                            procurement: {
+                                subcategory_masterId: {
+                                    in: subcategory
+                                }
+                            }
+                        }
+                    }
+                }
+            }] : []),
+
+            ...(brand[0] ? [{
+                boq: {
+                    status: {
+                        in: status.map(Number)
+                    }
+
+                }
+            }] : []),
+
+            ...(brand[0] ? [{
+                boq: {
+                    procurements: {
+                        some: {
+                            procurement: {
+                                brand_masterId: {
+                                    in: brand
+                                }
+                            }
+                        }
+                    }
+                }
+            }] : []),
+        ]
+    }
+
+    try {
+        count = await prisma.da_pre_tender_outbox.count({
+            where: whereClause
+        })
+        const result = await prisma.da_pre_tender_outbox.findMany({
+            orderBy: {
+                updatedAt: 'desc'
+            },
+            where: whereClause,
+            ...(page && { skip: startIndex }),
+            ...(take && { take: take }),
+            select: {
+                id: true,
+                reference_no: true,
+                tendering_form: {
+                    select: {
+                        boq: {
+                            select: {
+                                reference_no: true,
+                                gst: true,
+                                estimated_cost: true,
+                                remark: true,
+                                status: true,
+                                isEdited: true,
+                                procurements: {
+                                    select: {
+                                        procurement: {
+                                            select: {
+                                                category: {
+                                                    select: {
+                                                        name: true
+                                                    }
+                                                },
+                                                subcategory: {
+                                                    select: {
+                                                        name: true
+                                                    }
+                                                },
+                                                brand: {
+                                                    select: {
+                                                        name: true
+                                                    }
+                                                },
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                        }
+                    }
+                }
+            }
+
+        })
+
+        let dataToSend: any[] = []
+        result.forEach((item: any) => {
+            const updatedProcurements = item?.tendering_form?.boq?.procurements.map((proc: any) => {
+                const { procurement, ...rest } = proc;
+                return { ...rest, ...procurement };
+            });
+
+            // Assign the updated array back to item.boq.procurements
+            item.tendering_form.boq.procurements = updatedProcurements;
+
+            //flatten the boq object
+            const { boq, ...rest } = item;
+            const flattenedBoq = { ...rest, ...boq }
+
+            // Flatten the tendering_form object
+            const { tendering_form, ...restData } = item;
+            dataToSend.push({ ...rest, ...flattenedBoq })
+        })
+
+        totalPage = Math.ceil(count / take)
+        if (endIndex < count) {
+            pagination.next = {
+                page: page + 1,
+                take: take
+            }
+        }
+        if (startIndex > 0) {
+            pagination.prev = {
+                page: page - 1,
+                take: take
+            }
+        }
+        pagination.currentPage = page
+        pagination.currentTake = take
+        pagination.totalPage = totalPage
+        pagination.totalResult = count
+        return {
+            data: dataToSend,
+            pagination: pagination
+        }
     } catch (err: any) {
         console.log(err)
         return { error: true, message: getErrorMessage(err) }
