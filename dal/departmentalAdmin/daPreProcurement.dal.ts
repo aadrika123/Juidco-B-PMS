@@ -3,6 +3,7 @@ import { PrismaClient } from "@prisma/client";
 import getErrorMessage from "../../lib/getErrorMessage";
 import { imageUploader } from "../../lib/imageUploader";
 import { pagination } from "../../type/common.type";
+import axios from "axios";
 
 
 const prisma = new PrismaClient()
@@ -1048,12 +1049,39 @@ export const getBoqInboxDal = async (req: Request) => {
                                     }
                                 }
                             }
+                        },
+                        boq_doc: {
+                            select: {
+                                ReferenceNo: true
+                            }
                         }
                     },
                 }
             }
 
         })
+
+
+        await Promise.all(
+            result.map(async (item) => {
+                await Promise.all(
+                    item?.boq?.boq_doc.map(async (doc: any) => {
+                        const headers = {
+                            "token": "8Ufn6Jio6Obv9V7VXeP7gbzHSyRJcKluQOGorAD58qA1IQKYE0"
+                        }
+                        await axios.post(process.env.DMS_GET || '', { "referenceNo": doc?.ReferenceNo }, { headers })
+                            .then((response) => {
+                                // console.log(response?.data?.data, 'res')
+                                doc.imageUrl = response?.data?.data?.fullPath
+                            }).catch((err) => {
+                                // console.log(err?.data?.data, 'err')
+                                // toReturn.push(err?.data?.data)
+                                throw err
+                            })
+                    })
+                )
+            })
+        )
 
         let dataToSend: any[] = []
         result.forEach((item: any) => {
@@ -1252,12 +1280,39 @@ export const getBoqOutboxDal = async (req: Request) => {
                                     }
                                 }
                             }
+                        },
+                        boq_doc: {
+                            select: {
+                                ReferenceNo: true
+                            }
                         }
                     },
                 }
             }
 
         })
+
+
+        await Promise.all(
+            result.map(async (item) => {
+                await Promise.all(
+                    item?.boq?.boq_doc.map(async (doc: any) => {
+                        const headers = {
+                            "token": "8Ufn6Jio6Obv9V7VXeP7gbzHSyRJcKluQOGorAD58qA1IQKYE0"
+                        }
+                        await axios.post(process.env.DMS_GET || '', { "referenceNo": doc?.ReferenceNo }, { headers })
+                            .then((response) => {
+                                // console.log(response?.data?.data, 'res')
+                                doc.imageUrl = response?.data?.data?.fullPath
+                            }).catch((err) => {
+                                // console.log(err?.data?.data, 'err')
+                                // toReturn.push(err?.data?.data)
+                                throw err
+                            })
+                    })
+                )
+            })
+        )
 
         let dataToSend: any[] = []
         result.forEach((item: any) => {
