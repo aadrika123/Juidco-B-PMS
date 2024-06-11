@@ -6,6 +6,7 @@ import {
 import { boqData } from "../../type/accountant.type";
 import { uploadedDoc } from "../../type/common.type";
 import { imageUploader } from "../../lib/imageUploader";
+import axios from "axios";
 
 
 const prisma = new PrismaClient()
@@ -54,9 +55,32 @@ export const getBoqByRefNoDal = async (req: Request) => {
                             }
                         }
                     }
+                },
+                boq_doc: {
+                    select: {
+                        ReferenceNo: true
+                    }
                 }
             },
         })
+
+        await Promise.all(
+            result?.boq_doc.map(async (doc: any) => {
+                const headers = {
+                    "token": "8Ufn6Jio6Obv9V7VXeP7gbzHSyRJcKluQOGorAD58qA1IQKYE0"
+                }
+                await axios.post(process.env.DMS_GET || '', { "referenceNo": doc?.ReferenceNo }, { headers })
+                    .then((response) => {
+                        // console.log(response?.data?.data, 'res')
+                        doc.imageUrl = response?.data?.data?.fullPath
+                    }).catch((err) => {
+                        // console.log(err?.data?.data, 'err')
+                        // toReturn.push(err?.data?.data)
+                        throw err
+                    })
+            })
+
+        )
 
         const updatedProcurements = result.procurements.map((proc: any) => {
             const temp = { ...proc.procurement };
