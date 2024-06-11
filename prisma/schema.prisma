@@ -342,7 +342,7 @@ model boq {
     acc_boq_outbox acc_boq_outbox?
     da_boq_inbox   da_boq_inbox?
     da_boq_outbox  da_boq_outbox?
-    tendeing_form  tendeing_form?
+    tendering_form  tendering_form?
 }
 
 model boq_procurement {
@@ -426,21 +426,25 @@ model tendering_form_docs {
     updatedAt    DateTime                 @updatedAt
 }
 
-model tendeing_form {
-    id             String          @id @default(uuid())
-    reference_no   String          @unique
-    status         Int //-2=rejected, -1=returned, 0=pending, 1=DA, 2=revised, 3=released for tender 
-    isEdited       Boolean         @default(false)
-    isPartial      Boolean         @default(true)
-    createdAt      DateTime        @default(now())
-    updatedAt      DateTime        @updatedAt
-    boq            boq             @relation(fields: [reference_no], references: [reference_no])
-    basic_details  basic_details?
-    cover_details  cover_details?
-    work_details   work_details?
-    fee_details    fee_details?
-    critical_dates critical_dates?
-    bid_openers    bid_openers?
+model tendering_form {
+    id                    String                 @id @default(uuid())
+    reference_no          String                 @unique
+    status                Int //-2=rejected, -1=returned, 0=pending, 1=DA, 2=revised, 3=released for tender 
+    isEdited              Boolean                @default(false)
+    isPartial             Boolean                @default(true)
+    createdAt             DateTime               @default(now())
+    updatedAt             DateTime               @updatedAt
+    boq                   boq                    @relation(fields: [reference_no], references: [reference_no])
+    basic_details         basic_details?
+    cover_details         cover_details?
+    work_details          work_details?
+    fee_details           fee_details?
+    critical_dates        critical_dates?
+    bid_openers           bid_openers?
+    acc_pre_tender_inbox  acc_pre_tender_inbox?
+    acc_pre_tender_outbox acc_pre_tender_outbox?
+    da_pre_tender_inbox   da_pre_tender_inbox?
+    da_pre_tender_outbox  da_pre_tender_outbox?
 }
 
 model basic_details {
@@ -457,7 +461,7 @@ model basic_details {
     tender_type              String[]
     createdAt                DateTime          @default(now())
     updatedAt                DateTime          @updatedAt
-    tendeing_form            tendeing_form     @relation(fields: [reference_no], references: [reference_no])
+    tendering_form            tendering_form     @relation(fields: [reference_no], references: [reference_no])
 }
 
 model cover_details_docs {
@@ -478,7 +482,7 @@ model cover_details {
     content            String
     createdAt          DateTime             @default(now())
     updatedAt          DateTime             @updatedAt
-    tendeing_form      tendeing_form        @relation(fields: [reference_no], references: [reference_no])
+    tendering_form      tendering_form        @relation(fields: [reference_no], references: [reference_no])
     cover_details_docs cover_details_docs[]
 }
 
@@ -505,7 +509,7 @@ model work_details {
     invstOffEmail_Ph          String
     createdAt                 DateTime      @default(now())
     updatedAt                 DateTime      @updatedAt
-    tendeing_form             tendeing_form @relation(fields: [reference_no], references: [reference_no])
+    tendering_form             tendering_form @relation(fields: [reference_no], references: [reference_no])
 }
 
 model fee_details {
@@ -525,7 +529,7 @@ model fee_details {
     emdFeePayableAt    String
     createdAt          DateTime      @default(now())
     updatedAt          DateTime      @updatedAt
-    tendeing_form      tendeing_form @relation(fields: [reference_no], references: [reference_no])
+    tendering_form      tendering_form @relation(fields: [reference_no], references: [reference_no])
 }
 
 model critical_dates {
@@ -542,7 +546,7 @@ model critical_dates {
     preBidMettingDate DateTime
     createdAt         DateTime      @default(now())
     updatedAt         DateTime      @updatedAt
-    tendeing_form     tendeing_form @relation(fields: [reference_no], references: [reference_no])
+    tendering_form     tendering_form @relation(fields: [reference_no], references: [reference_no])
 }
 
 enum bid_openers_docs_enum {
@@ -575,6 +579,38 @@ model bid_openers {
     b03Email         String?
     createdAt        DateTime           @default(now())
     updatedAt        DateTime           @updatedAt
-    tendeing_form    tendeing_form      @relation(fields: [reference_no], references: [reference_no])
+    tendering_form    tendering_form      @relation(fields: [reference_no], references: [reference_no])
     bid_openers_docs bid_openers_docs[]
+}
+
+model acc_pre_tender_inbox {
+    id            String        @id @default(uuid())
+    reference_no  String        @unique
+    tendering_form tendering_form @relation(fields: [reference_no], references: [reference_no])
+    createdAt     DateTime      @default(now())
+    updatedAt     DateTime      @updatedAt
+}
+
+model acc_pre_tender_outbox {
+    id            String        @id @default(uuid())
+    reference_no  String        @unique
+    tendering_form tendering_form @relation(fields: [reference_no], references: [reference_no])
+    createdAt     DateTime      @default(now())
+    updatedAt     DateTime      @updatedAt
+}
+
+model da_pre_tender_inbox {
+    id            String        @id @default(uuid())
+    reference_no  String        @unique
+    tendering_form tendering_form @relation(fields: [reference_no], references: [reference_no])
+    createdAt     DateTime      @default(now())
+    updatedAt     DateTime      @updatedAt
+}
+
+model da_pre_tender_outbox {
+    id            String        @id @default(uuid())
+    reference_no  String        @unique
+    tendering_form tendering_form @relation(fields: [reference_no], references: [reference_no])
+    createdAt     DateTime      @default(now())
+    updatedAt     DateTime      @updatedAt
 }

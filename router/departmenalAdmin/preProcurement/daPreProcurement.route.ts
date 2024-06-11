@@ -12,14 +12,20 @@ import {
     getPreProcurementOutbox,
     getPreProcurementOutboxById,
     reject,
+    rejectByProcurementNo,
     forwardToAccountant,
     getBoqInbox,
     getBoqOutbox,
-    returnToAccountant
+    returnToAccountant,
+    getPreTenderingInbox,
+    getPreTenderingOutbox
 } from "../../../controller/departmentalAdmin/daPreProcurement.controller";
 
 router.use(daAuth)
 
+
+router.get('/pre-procurement/pre-tender', getPreTenderingInbox)
+router.get('/pre-procurement/pre-tender/outbox', getPreTenderingOutbox)
 router.get('/pre-procurement/boq', getBoqInbox)
 router.get('/pre-procurement', getPreProcurement)
 router.get('/pre-procurement/boq/outbox', getBoqOutbox)
@@ -31,6 +37,7 @@ router.post('/pre-procurement/to-sr', backToSr)
 router.post('/pre-procurement/edit', editPreProcurement)
 router.post('/pre-procurement/release-tender', upload.array('img'), releaseForTender)
 router.post('/pre-procurement/reject', reject)
+router.post('/pre-procurement/reject-procurement-no', rejectByProcurementNo)
 router.post('/pre-procurement/to-acc-boq', upload.array('img'), forwardToAccountant)
 router.post('/pre-procurement/boq/return-boq', returnToAccountant)
 
