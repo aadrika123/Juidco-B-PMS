@@ -12,7 +12,8 @@ import {
     getPreProcurementOutbox,
     forwardToDa,
     getPreTenderingInbox,
-    getPreTenderingOutbox
+    getPreTenderingOutbox,
+    createBasicDetailsPt
 } from "../../../controller/accountant/accPreProcurement.controller";
 
 // router.use(accAuth)
@@ -27,6 +28,7 @@ router.get('/boq/outbox', getBoqOutbox)
 router.post('/to-da', forwardToDa)
 router.get('/pre-tender', getPreTenderingInbox)
 router.get('/pre-tender/outbox', getPreTenderingOutbox)
+router.post('/pre-tender/basic-details', upload.array('img'), createBasicDetailsPt)
 
 
 export default router

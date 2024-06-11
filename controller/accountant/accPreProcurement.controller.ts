@@ -8,7 +8,8 @@ import {
     getBoqOutboxDal,
     getPreProcurementOutboxDal,
     forwardToDaDal,
-    getPreTenderingInboxDal
+    getPreTenderingInboxDal,
+    createBasicDetailsPtDal
 } from "../../dal/accountant/accPreProcurement.dal";
 import { getPreTenderingOutboxDal } from "../../dal/departmentalAdmin/daPreProcurement.dal";
 
@@ -216,3 +217,30 @@ export const getPreTenderingOutbox = async (req: Request, res: Response) => {
         })
     }
 }
+
+
+
+
+//Pre-tender==================================================================================================================================================================================
+
+
+export const createBasicDetailsPt = async (req: Request, res: Response) => {
+    const result: any = await createBasicDetailsPtDal(req)
+    if (!result?.error) {
+        res.status(200).json({
+            status: true,
+            message: `Basic details added successfully`,
+            data: result
+        })
+    } else {
+        res.status(404).json({
+            status: false,
+            message: `Error while added Basic details`,
+            error: result?.message
+        })
+    }
+}
+
+
+
+//Pre-tender==================================================================================================================================================================================
