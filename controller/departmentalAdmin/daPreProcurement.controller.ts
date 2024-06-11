@@ -15,7 +15,8 @@ import {
     getBoqOutboxDal,
     returnToAccountantDal,
     getPreTenderingInboxDal,
-    getPreTenderingOutboxDal
+    getPreTenderingOutboxDal,
+    rejectBoqDal
 } from "../../dal/departmentalAdmin/daPreProcurement.dal";
 
 
@@ -313,6 +314,25 @@ export const getPreTenderingOutbox = async (req: Request, res: Response) => {
         res.status(404).json({
             status: false,
             message: `Error while fetching Pre tendering form list`,
+            error: result?.message
+        })
+    }
+}
+
+
+
+export const rejectBoq = async (req: Request, res: Response) => {
+    const result: any = await rejectBoqDal(req)
+    if (!result?.error) {
+        res.status(200).json({
+            status: true,
+            message: `Rejected successfully`,
+            data: result
+        })
+    } else {
+        res.status(404).json({
+            status: false,
+            message: `Error while rejecting`,
             error: result?.message
         })
     }

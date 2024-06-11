@@ -9,7 +9,9 @@ import {
     getPreProcurementOutboxDal,
     forwardToDaDal,
     getPreTenderingInboxDal,
-    createBasicDetailsPtDal
+    createBasicDetailsPtDal,
+    getBasicDetailsPtDal,
+    createWorkDetailsPtDal
 } from "../../dal/accountant/accPreProcurement.dal";
 import { getPreTenderingOutboxDal } from "../../dal/departmentalAdmin/daPreProcurement.dal";
 
@@ -34,6 +36,7 @@ export const getPreProcurementForBoq = async (req: Request, res: Response) => {
 }
 
 
+
 export const getPreProcurement = async (req: Request, res: Response) => {
     const result: any = await getPreProcurementDal(req)
     if (!result?.error) {
@@ -51,6 +54,7 @@ export const getPreProcurement = async (req: Request, res: Response) => {
         })
     }
 }
+
 
 
 export const getPreProcurementBulkByOrderNo = async (req: Request, res: Response) => {
@@ -71,6 +75,7 @@ export const getPreProcurementBulkByOrderNo = async (req: Request, res: Response
 }
 
 
+
 export const createBoq = async (req: Request, res: Response) => {
     const result: any = await createBoqDal(req)
     if (!result?.error) {
@@ -87,6 +92,7 @@ export const createBoq = async (req: Request, res: Response) => {
         })
     }
 }
+
 
 
 export const getBoqInbox = async (req: Request, res: Response) => {
@@ -108,6 +114,7 @@ export const getBoqInbox = async (req: Request, res: Response) => {
 }
 
 
+
 export const getBoqOutbox = async (req: Request, res: Response) => {
     const result: any = await getBoqOutboxDal(req)
     if (!result?.error) {
@@ -126,6 +133,8 @@ export const getBoqOutbox = async (req: Request, res: Response) => {
     }
 }
 
+
+
 export const forwardToDa = async (req: Request, res: Response) => {
     const result: any = await forwardToDaDal(req)
     if (!result?.error) {
@@ -143,22 +152,6 @@ export const forwardToDa = async (req: Request, res: Response) => {
     }
 }
 
-// export const releaseForTender = async (req: Request, res: Response) => {
-//     const result: any = await releaseForTenderDal(req)
-//     if (!result?.error) {
-//         res.status(200).json({
-//             status: true,
-//             message: `Released for tender successfully`,
-//             data: result
-//         })
-//     } else {
-//         res.status(404).json({
-//             status: false,
-//             message: `Error while releasing for tender`,
-//             error: result?.message
-//         })
-//     }
-// }
 
 
 export const getPreProcurementOutbox = async (req: Request, res: Response) => {
@@ -178,6 +171,7 @@ export const getPreProcurementOutbox = async (req: Request, res: Response) => {
         })
     }
 }
+
 
 
 export const getPreTenderingInbox = async (req: Request, res: Response) => {
@@ -227,15 +221,52 @@ export const getPreTenderingOutbox = async (req: Request, res: Response) => {
 export const createBasicDetailsPt = async (req: Request, res: Response) => {
     const result: any = await createBasicDetailsPtDal(req)
     if (!result?.error) {
-        res.status(200).json({
+        res.status(201).json({
             status: true,
             message: `Basic details added successfully`,
             data: result
         })
     } else {
+        res.status(500).json({
+            status: false,
+            message: `Error while adding Basic details`,
+            error: result?.message
+        })
+    }
+}
+
+
+export const getBasicDetailsPt = async (req: Request, res: Response) => {
+    const result: any = await getBasicDetailsPtDal(req)
+    if (!result?.error) {
+        res.status(200).json({
+            status: true,
+            message: `Basic details fetched successfully`,
+            data: result
+        })
+    } else {
         res.status(404).json({
             status: false,
-            message: `Error while added Basic details`,
+            message: `Error while fetching basic details`,
+            error: result?.message
+        })
+    }
+}
+
+
+
+export const createWorkDetailsPt = async (req: Request, res: Response) => {
+    const result: any = await createWorkDetailsPtDal(req)
+    if (!result?.error) {
+        res.status(201).json({
+            status: true,
+            message: `Work details added successfully`,
+            data: result
+        })
+    } else {
+        res.status(500).json({
+            status: false,
+            message: `Error while adding work details`,
             error: result?.message
         })
     }

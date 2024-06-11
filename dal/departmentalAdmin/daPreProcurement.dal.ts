@@ -1371,7 +1371,7 @@ export const returnToAccountantDal = async (req: Request) => {
             }
         })
 
-        if (boqData?.status !== 0) {
+        if (boqData?.status !== 0 && boqData?.status !== 1) {
             throw { error: true, message: 'Invalid status of BOQ for returning back to accountant' }
         }
 
