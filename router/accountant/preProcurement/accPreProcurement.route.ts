@@ -16,7 +16,9 @@ import {
     createBasicDetailsPt,
     getBasicDetailsPt,
     createWorkDetailsPt,
-    getWorkDetailsPt
+    getWorkDetailsPt,
+    createFeeDetailsPt,
+    getFeeDetailsPt
 } from "../../../controller/accountant/accPreProcurement.controller";
 
 // router.use(accAuth)
@@ -31,10 +33,13 @@ router.get('/boq/outbox', getBoqOutbox)
 router.post('/to-da', forwardToDa)
 router.get('/pre-tender', getPreTenderingInbox)
 router.get('/pre-tender/outbox', getPreTenderingOutbox)
+//pre tender creation and get-------
 router.post('/pre-tender/basic-details', upload.array('img'), createBasicDetailsPt)
-router.post('/pre-tender/work-details', upload.array('img'), createWorkDetailsPt)
+router.post('/pre-tender/work-details', createWorkDetailsPt)
+router.post('/pre-tender/fee-details', createFeeDetailsPt)
 router.get('/pre-tender/basic-details/:reference_no', getBasicDetailsPt)
 router.get('/pre-tender/work-details/:reference_no', getWorkDetailsPt)
+router.get('/pre-tender/fee-details/:reference_no', getFeeDetailsPt)
 
 
 export default router
