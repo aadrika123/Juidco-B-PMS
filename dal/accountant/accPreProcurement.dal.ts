@@ -1,5 +1,5 @@
 import { Request } from "express";
-import { PrismaClient, basic_details } from "@prisma/client";
+import { PrismaClient, basic_details, work_details } from "@prisma/client";
 import getErrorMessage from "../../lib/getErrorMessage";
 import { imageUploader } from "../../lib/imageUploader";
 import { pagination, uploadedDoc } from "../../type/common.type";
@@ -1717,7 +1717,7 @@ export const createBasicDetailsPtDal = async (req: Request) => {
         const existence = await checkExistence(formattedData?.reference_no)
 
 
-        if (await isBoqValid(formattedData?.reference_no)) {
+        if (!await isBoqValid(formattedData?.reference_no)) {
             throw { error: true, message: "BOQ is not valid to be forwarded for pre tender" }
         }
         const tableExistence = await prisma.basic_details.count({
@@ -1725,6 +1725,19 @@ export const createBasicDetailsPtDal = async (req: Request) => {
                 reference_no: formattedData?.reference_no
             }
         })
+
+        const preparedData = {
+            reference_no: formattedData?.reference_no,
+            allow_offline_submission: Boolean(formattedData?.allow_offline_submission),
+            allow_resubmission: Boolean(formattedData?.allow_resubmission),
+            allow_withdrawl: Boolean(formattedData?.allow_withdrawl),
+            payment_mode: formattedData?.payment_mode,
+            onlinePyment_mode: formattedData?.onlinePyment_mode,
+            offline_banks: formattedData?.offline_banks,
+            contract_form: formattedData?.contract_form,
+            tender_category: formattedData?.tender_category,
+            tender_type: formattedData?.tender_type,
+        }
 
         //start transaction
         await prisma.$transaction(async (tx) => {
@@ -1739,14 +1752,14 @@ export const createBasicDetailsPtDal = async (req: Request) => {
 
             if (!tableExistence) {
                 await tx.basic_details.create({
-                    data: formattedData
+                    data: preparedData
                 })
             } else {
                 await tx.basic_details.update({
                     where: {
                         reference_no: formattedData?.reference_no
                     },
-                    data: formattedData
+                    data: preparedData
                 })
             }
 
@@ -1770,6 +1783,125 @@ export const createBasicDetailsPtDal = async (req: Request) => {
         })
 
         return !existence ? 'Basic details added' : 'Basic details updated'
+    } catch (err: any) {
+        console.log(err)
+        return { error: true, message: getErrorMessage(err) }
+    }
+}
+
+
+
+export const getBasicDetailsPtDal = async (req: Request) => {
+    const { reference_no } = req.params
+    try {
+
+        if (!reference_no) {
+            throw { error: true, message: "Reference number is required as 'reference_no'" }
+        }
+
+        if (!await checkExistence(reference_no)) {
+            throw { error: true, message: "Invalid pre-tender form" }
+        }
+
+        const result = await prisma.basic_details.findFirst({
+            where: {
+                reference_no: reference_no
+            },
+            select: {
+                id: true,
+                reference_no: true,
+                allow_offline_submission: true,
+                allow_resubmission: true,
+                allow_withdrawl: true,
+                payment_mode: true,
+                onlinePyment_mode: true,
+                offline_banks: true,
+                contract_form: true,
+                tender_category: true,
+                tender_type: true,
+            }
+        })
+
+        const doc = await prisma.tendering_form_docs.findMany({
+            where: {
+                reference_no: reference_no,
+                form: 'basic_details'
+            },
+            select: {
+                ReferenceNo: true
+            }
+        })
+
+        await Promise.all(
+            doc.map(async (item: any) => {
+                const headers = {
+                    "token": "8Ufn6Jio6Obv9V7VXeP7gbzHSyRJcKluQOGorAD58qA1IQKYE0"
+                }
+                await axios.post(process.env.DMS_GET || '', { "referenceNo": item?.ReferenceNo }, { headers })
+                    .then((response) => {
+                        item.docUrl = response?.data?.data?.fullPath
+                    }).catch((err) => {
+                        throw err
+                    })
+            })
+        )
+
+        return { ...result, doc: doc }
+    } catch (err: any) {
+        console.log(err)
+        return { error: true, message: getErrorMessage(err) }
+    }
+}
+
+
+
+export const createWorkDetailsPtDal = async (req: Request) => {
+    const { preTender } = req.body
+    try {
+        const formattedData: work_details = JSON.parse(preTender)
+
+        if (!formattedData?.reference_no) {
+            throw { error: true, message: "Reference number is required as 'reference_no'" }
+        }
+
+        const existence = await checkExistence(formattedData?.reference_no)
+
+        if (!await isBoqValid(formattedData?.reference_no)) {
+            throw { error: true, message: "BOQ is not valid to be forwarded for pre tender" }
+        }
+        const tableExistence = await prisma.work_details.count({
+            where: {
+                reference_no: formattedData?.reference_no
+            }
+        })
+
+        //start transaction
+        await prisma.$transaction(async (tx) => {
+
+            if (!existence) {
+                await tx.tendering_form.create({
+                    data: {
+                        reference_no: formattedData?.reference_no
+                    }
+                })
+            }
+
+            if (!tableExistence) {
+                await tx.work_details.create({
+                    data: formattedData
+                })
+            } else {
+                await tx.work_details.update({
+                    where: {
+                        reference_no: formattedData?.reference_no
+                    },
+                    data: formattedData
+                })
+            }
+
+        })
+
+        return !existence ? 'Work details added' : 'Work details updated'
     } catch (err: any) {
         console.log(err)
         return { error: true, message: getErrorMessage(err) }
