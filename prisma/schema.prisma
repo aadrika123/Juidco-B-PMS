@@ -342,13 +342,13 @@ model boq {
     acc_boq_outbox acc_boq_outbox?
     da_boq_inbox   da_boq_inbox?
     da_boq_outbox  da_boq_outbox?
-    tendering_form  tendering_form?
+    tendering_form tendering_form?
 }
 
 model boq_procurement {
     id             String      @id @default(uuid())
     reference_no   String
-    procurement_no String
+    procurement_no String      @unique
     quantity       Int?
     description    String?
     unit           String?
@@ -461,7 +461,7 @@ model basic_details {
     tender_type              String[]
     createdAt                DateTime          @default(now())
     updatedAt                DateTime          @updatedAt
-    tendering_form            tendering_form     @relation(fields: [reference_no], references: [reference_no])
+    tendering_form           tendering_form    @relation(fields: [reference_no], references: [reference_no])
 }
 
 model cover_details_docs {
@@ -482,13 +482,13 @@ model cover_details {
     content            String
     createdAt          DateTime             @default(now())
     updatedAt          DateTime             @updatedAt
-    tendering_form      tendering_form        @relation(fields: [reference_no], references: [reference_no])
+    tendering_form     tendering_form       @relation(fields: [reference_no], references: [reference_no])
     cover_details_docs cover_details_docs[]
 }
 
 model work_details {
-    id                        String        @id @default(uuid())
-    reference_no              String        @unique
+    id                        String         @id @default(uuid())
+    reference_no              String         @unique
     workDiscription           String
     pre_qualification_details String
     product_category          String[]
@@ -507,14 +507,14 @@ model work_details {
     invstOffName              String
     invstOffAdd               String
     invstOffEmail_Ph          String
-    createdAt                 DateTime      @default(now())
-    updatedAt                 DateTime      @updatedAt
-    tendering_form             tendering_form @relation(fields: [reference_no], references: [reference_no])
+    createdAt                 DateTime       @default(now())
+    updatedAt                 DateTime       @updatedAt
+    tendering_form            tendering_form @relation(fields: [reference_no], references: [reference_no])
 }
 
 model fee_details {
-    id                 String        @id @default(uuid())
-    reference_no       String        @unique
+    id                 String         @id @default(uuid())
+    reference_no       String         @unique
     tenderFee          Float
     processingFee      Float
     tenderFeePayableTo String
@@ -527,14 +527,14 @@ model fee_details {
     emdAmount          Float?
     emdFeePayableTo    String
     emdFeePayableAt    String
-    createdAt          DateTime      @default(now())
-    updatedAt          DateTime      @updatedAt
-    tendering_form      tendering_form @relation(fields: [reference_no], references: [reference_no])
+    createdAt          DateTime       @default(now())
+    updatedAt          DateTime       @updatedAt
+    tendering_form     tendering_form @relation(fields: [reference_no], references: [reference_no])
 }
 
 model critical_dates {
-    id                String        @id @default(uuid())
-    reference_no      String        @unique
+    id                String         @id @default(uuid())
+    reference_no      String         @unique
     publishingDate    DateTime
     bidOpeningDate    DateTime
     docSaleStartDate  DateTime
@@ -544,9 +544,9 @@ model critical_dates {
     bidSubStrtDate    DateTime
     bidSubEndDate     DateTime
     preBidMettingDate DateTime
-    createdAt         DateTime      @default(now())
-    updatedAt         DateTime      @updatedAt
-    tendering_form     tendering_form @relation(fields: [reference_no], references: [reference_no])
+    createdAt         DateTime       @default(now())
+    updatedAt         DateTime       @updatedAt
+    tendering_form    tendering_form @relation(fields: [reference_no], references: [reference_no])
 }
 
 enum bid_openers_docs_enum {
@@ -579,38 +579,38 @@ model bid_openers {
     b03Email         String?
     createdAt        DateTime           @default(now())
     updatedAt        DateTime           @updatedAt
-    tendering_form    tendering_form      @relation(fields: [reference_no], references: [reference_no])
+    tendering_form   tendering_form     @relation(fields: [reference_no], references: [reference_no])
     bid_openers_docs bid_openers_docs[]
 }
 
 model acc_pre_tender_inbox {
-    id            String        @id @default(uuid())
-    reference_no  String        @unique
+    id             String         @id @default(uuid())
+    reference_no   String         @unique
     tendering_form tendering_form @relation(fields: [reference_no], references: [reference_no])
-    createdAt     DateTime      @default(now())
-    updatedAt     DateTime      @updatedAt
+    createdAt      DateTime       @default(now())
+    updatedAt      DateTime       @updatedAt
 }
 
 model acc_pre_tender_outbox {
-    id            String        @id @default(uuid())
-    reference_no  String        @unique
+    id             String         @id @default(uuid())
+    reference_no   String         @unique
     tendering_form tendering_form @relation(fields: [reference_no], references: [reference_no])
-    createdAt     DateTime      @default(now())
-    updatedAt     DateTime      @updatedAt
+    createdAt      DateTime       @default(now())
+    updatedAt      DateTime       @updatedAt
 }
 
 model da_pre_tender_inbox {
-    id            String        @id @default(uuid())
-    reference_no  String        @unique
+    id             String         @id @default(uuid())
+    reference_no   String         @unique
     tendering_form tendering_form @relation(fields: [reference_no], references: [reference_no])
-    createdAt     DateTime      @default(now())
-    updatedAt     DateTime      @updatedAt
+    createdAt      DateTime       @default(now())
+    updatedAt      DateTime       @updatedAt
 }
 
 model da_pre_tender_outbox {
-    id            String        @id @default(uuid())
-    reference_no  String        @unique
+    id             String         @id @default(uuid())
+    reference_no   String         @unique
     tendering_form tendering_form @relation(fields: [reference_no], references: [reference_no])
-    createdAt     DateTime      @default(now())
-    updatedAt     DateTime      @updatedAt
+    createdAt      DateTime       @default(now())
+    updatedAt      DateTime       @updatedAt
 }

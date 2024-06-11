@@ -3,7 +3,7 @@ import { PrismaClient } from "@prisma/client";
 import getErrorMessage from "../../lib/getErrorMessage";
 import { imageUploader } from "../../lib/imageUploader";
 import { pagination, uploadedDoc } from "../../type/common.type";
-import { boqData } from "../../type/accountant.type";
+import { basicDetailsPtType, boqData } from "../../type/accountant.type";
 import generateReferenceNumber from "../../lib/referenceNumberGenerator";
 import axios from "axios";
 
@@ -1661,3 +1661,32 @@ export const getPreTenderingOutboxDal = async (req: Request) => {
         return { error: true, message: getErrorMessage(err) }
     }
 }
+
+
+
+//Pre-tender==================================================================================================================================================================================
+
+
+export const createBasicDetailsPtDal = async (req: Request) => {
+    const { preTender } = req.body
+    try {
+        const formattedData: basicDetailsPtType = JSON.parse(preTender)
+        const img = req.files as Express.Multer.File[]
+
+        if (!formattedData?.reference_no) {
+            throw { error: true, message: "Reference number is required as 'reference_no'" }
+        }
+
+        return "BOQ Created"
+    } catch (err: any) {
+        console.log(err)
+        return { error: true, message: getErrorMessage(err) }
+    }
+}
+
+
+
+
+
+
+//Pre-tender==================================================================================================================================================================================
