@@ -113,7 +113,7 @@ export const editBoqDal = async (req: Request) => {
         await Promise.all(
             formattedBoqData?.procurement.map(async (item) => {
                 const preparedData = {
-                    reference_no: formattedBoqData?.reference_no,
+                    // reference_no: formattedBoqData?.reference_no,
                     procurement_no: item?.procurement_no,
                     description: item?.description,
                     quantity: item?.quantity,
@@ -127,7 +127,7 @@ export const editBoqDal = async (req: Request) => {
         )
 
         const preparedBoq = {
-            reference_no: formattedBoqData?.reference_no,
+            // reference_no: formattedBoqData?.reference_no,
             gst: formattedBoqData?.gst,
             estimated_cost: formattedBoqData?.estimated_cost,
             remark: formattedBoqData?.remark,
@@ -159,12 +159,33 @@ export const editBoqDal = async (req: Request) => {
                 data: preparedBoq
             })
 
-            await tx.boq_procurement.updateMany({
-                where: {
-                    reference_no: formattedBoqData?.reference_no
-                },
-                data: arrayToSend
-            })
+            // await tx.boq_procurement.updateMany({
+            //     where: {
+            //         reference_no: formattedBoqData?.reference_no
+            //     },
+            //     data: arrayToSend
+            // })
+
+            await Promise.all(
+                formattedBoqData?.procurement.map(async (item) => {
+                    const preparedData = {
+                        // reference_no: formattedBoqData?.reference_no,
+                        procurement_no: item?.procurement_no,
+                        description: item?.description,
+                        quantity: item?.quantity,
+                        unit: item?.unit,
+                        rate: item?.rate,
+                        amount: item?.amount,
+                        remark: item?.remark,
+                    }
+                    await tx.boq_procurement.update({
+                        where: {
+                            procurement_no: item?.procurement_no
+                        },
+                        data: preparedData
+                    })
+                })
+            )
 
             if (img) {
                 await tx.boq_doc.deleteMany({
