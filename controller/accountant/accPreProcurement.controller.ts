@@ -12,7 +12,9 @@ import {
     createBasicDetailsPtDal,
     getBasicDetailsPtDal,
     createWorkDetailsPtDal,
-    getWorkDetailsPtDal
+    getWorkDetailsPtDal,
+    createFeeDetailsPtDal,
+    getFeeDetailsPtDal
 } from "../../dal/accountant/accPreProcurement.dal";
 import { getPreTenderingOutboxDal } from "../../dal/departmentalAdmin/daPreProcurement.dal";
 
@@ -280,13 +282,51 @@ export const getWorkDetailsPt = async (req: Request, res: Response) => {
     if (!result?.error) {
         res.status(200).json({
             status: true,
-            message: `Basic details fetched successfully`,
+            message: `Work details fetched successfully`,
             data: result
         })
     } else {
         res.status(404).json({
             status: false,
-            message: `Error while fetching basic details`,
+            message: `Error while fetching Work details`,
+            error: result?.message
+        })
+    }
+}
+
+
+
+export const createFeeDetailsPt = async (req: Request, res: Response) => {
+    const result: any = await createFeeDetailsPtDal(req)
+    if (!result?.error) {
+        res.status(201).json({
+            status: true,
+            message: `Fee details added successfully`,
+            data: result
+        })
+    } else {
+        res.status(500).json({
+            status: false,
+            message: `Error while adding Fee details`,
+            error: result?.message
+        })
+    }
+}
+
+
+
+export const getFeeDetailsPt = async (req: Request, res: Response) => {
+    const result: any = await getFeeDetailsPtDal(req)
+    if (!result?.error) {
+        res.status(200).json({
+            status: true,
+            message: `Fee details fetched successfully`,
+            data: result
+        })
+    } else {
+        res.status(404).json({
+            status: false,
+            message: `Error while fetching Fee details`,
             error: result?.message
         })
     }

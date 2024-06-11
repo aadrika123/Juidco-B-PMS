@@ -1,5 +1,5 @@
 import { Request } from "express";
-import { PrismaClient, basic_details, work_details } from "@prisma/client";
+import { PrismaClient, basic_details, fee_details, work_details } from "@prisma/client";
 import getErrorMessage from "../../lib/getErrorMessage";
 import { imageUploader } from "../../lib/imageUploader";
 import { pagination, uploadedDoc } from "../../type/common.type";
@@ -1885,7 +1885,7 @@ export const createWorkDetailsPtDal = async (req: Request) => {
             contract_type: formattedData?.contract_type,
             tender_values: formattedData?.tender_values,
             bid_validity: formattedData?.bid_validity,
-            completionPeriod: formattedData?.completionPeriod,
+            completionPeriod: Number(formattedData?.completionPeriod),
             location: formattedData?.location,
             pinCode: formattedData?.pinCode,
             pre_bid: Boolean(formattedData?.pre_bid),
@@ -1982,6 +1982,117 @@ export const getWorkDetailsPtDal = async (req: Request) => {
 
 
 
+export const createFeeDetailsPtDal = async (req: Request) => {
+    const { preTender } = req.body
+    try {
+        const formattedData: fee_details = JSON.parse(preTender)
+
+        if (!formattedData?.reference_no) {
+            throw { error: true, message: "Reference number is required as 'reference_no'" }
+        }
+
+        const existence = await checkExistence(formattedData?.reference_no)
+
+        if (!await isBoqValid(formattedData?.reference_no)) {
+            throw { error: true, message: "BOQ is not valid to be forwarded for pre tender" }
+        }
+        const tableExistence = await prisma.fee_details.count({
+            where: {
+                reference_no: formattedData?.reference_no
+            }
+        })
+
+        const preparedData = {
+            reference_no: formattedData?.reference_no,
+            tenderFee: Number(formattedData?.tenderFee),
+            processingFee: Number(formattedData?.processingFee),
+            tenderFeePayableTo: formattedData?.tenderFeePayableTo,
+            tenderFeePayableAt: formattedData?.tenderFeePayableAt,
+            surcharges: Number(formattedData?.surcharges),
+            otherCharges: Number(formattedData?.otherCharges),
+            emd_exemption: Boolean(formattedData?.emd_exemption),
+            emd_fee: formattedData?.emd_fee,
+            emdPercentage: Number(formattedData?.emdPercentage),
+            emdAmount: Number(formattedData?.emdAmount),
+            emdFeePayableTo: formattedData?.emdFeePayableTo,
+            emdFeePayableAt: formattedData?.emdFeePayableAt,
+        }
+
+        //start transaction
+        await prisma.$transaction(async (tx) => {
+
+            if (!existence) {
+                await tx.tendering_form.create({
+                    data: {
+                        reference_no: formattedData?.reference_no
+                    }
+                })
+            }
+
+            if (!tableExistence) {
+                await tx.fee_details.create({
+                    data: preparedData
+                })
+            } else {
+                await tx.fee_details.update({
+                    where: {
+                        reference_no: formattedData?.reference_no
+                    },
+                    data: preparedData
+                })
+            }
+
+        })
+
+        return !existence ? 'Fee details added' : 'Fee details updated'
+    } catch (err: any) {
+        console.log(err)
+        return { error: true, message: getErrorMessage(err) }
+    }
+}
+
+
+
+export const getFeeDetailsPtDal = async (req: Request) => {
+    const { reference_no } = req.params
+    try {
+
+        if (!reference_no) {
+            throw { error: true, message: "Reference number is required as 'reference_no'" }
+        }
+
+        if (!await checkExistence(reference_no)) {
+            throw { error: true, message: "Invalid pre-tender form" }
+        }
+
+        const result = await prisma.fee_details.findFirst({
+            where: {
+                reference_no: reference_no
+            },
+            select: {
+                id: true,
+                reference_no: true,
+                tenderFee: true,
+                processingFee: true,
+                tenderFeePayableTo: true,
+                tenderFeePayableAt: true,
+                surcharges: true,
+                otherCharges: true,
+                emd_exemption: true,
+                emd_fee: true,
+                emdPercentage: true,
+                emdAmount: true,
+                emdFeePayableTo: true,
+                emdFeePayableAt: true
+            }
+        })
+
+        return result
+    } catch (err: any) {
+        console.log(err)
+        return { error: true, message: getErrorMessage(err) }
+    }
+}
 
 
 
