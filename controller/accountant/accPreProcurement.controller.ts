@@ -11,7 +11,8 @@ import {
     getPreTenderingInboxDal,
     createBasicDetailsPtDal,
     getBasicDetailsPtDal,
-    createWorkDetailsPtDal
+    createWorkDetailsPtDal,
+    getWorkDetailsPtDal
 } from "../../dal/accountant/accPreProcurement.dal";
 import { getPreTenderingOutboxDal } from "../../dal/departmentalAdmin/daPreProcurement.dal";
 
@@ -267,6 +268,25 @@ export const createWorkDetailsPt = async (req: Request, res: Response) => {
         res.status(500).json({
             status: false,
             message: `Error while adding work details`,
+            error: result?.message
+        })
+    }
+}
+
+
+
+export const getWorkDetailsPt = async (req: Request, res: Response) => {
+    const result: any = await getWorkDetailsPtDal(req)
+    if (!result?.error) {
+        res.status(200).json({
+            status: true,
+            message: `Basic details fetched successfully`,
+            data: result
+        })
+    } else {
+        res.status(404).json({
+            status: false,
+            message: `Error while fetching basic details`,
             error: result?.message
         })
     }

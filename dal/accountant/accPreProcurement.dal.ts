@@ -1664,7 +1664,8 @@ export const getPreTenderingOutboxDal = async (req: Request) => {
 
 
 
-//Pre-tender==================================================================================================================================================================================
+//Pre-tender|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+
 
 const checkExistence = async (reference_no: string) => {
     try {
@@ -1875,6 +1876,28 @@ export const createWorkDetailsPtDal = async (req: Request) => {
             }
         })
 
+        const preparedData = {
+            reference_no: formattedData?.reference_no,
+            workDiscription: formattedData?.workDiscription,
+            pre_qualification_details: formattedData?.pre_qualification_details,
+            product_category: formattedData?.product_category,
+            productSubCategory: formattedData?.productSubCategory,
+            contract_type: formattedData?.contract_type,
+            tender_values: formattedData?.tender_values,
+            bid_validity: formattedData?.bid_validity,
+            completionPeriod: formattedData?.completionPeriod,
+            location: formattedData?.location,
+            pinCode: formattedData?.pinCode,
+            pre_bid: Boolean(formattedData?.pre_bid),
+            preBidMeeting: formattedData?.preBidMeeting,
+            preBidMeetingAdd: formattedData?.preBidMeetingAdd,
+            bidOpeningPlace: formattedData?.bidOpeningPlace,
+            tenderer_class: formattedData?.tenderer_class,
+            invstOffName: formattedData?.invstOffName,
+            invstOffAdd: formattedData?.invstOffAdd,
+            invstOffEmail_Ph: formattedData?.invstOffEmail_Ph,
+        }
+
         //start transaction
         await prisma.$transaction(async (tx) => {
 
@@ -1888,14 +1911,14 @@ export const createWorkDetailsPtDal = async (req: Request) => {
 
             if (!tableExistence) {
                 await tx.work_details.create({
-                    data: formattedData
+                    data: preparedData
                 })
             } else {
                 await tx.work_details.update({
                     where: {
                         reference_no: formattedData?.reference_no
                     },
-                    data: formattedData
+                    data: preparedData
                 })
             }
 
@@ -1910,7 +1933,56 @@ export const createWorkDetailsPtDal = async (req: Request) => {
 
 
 
+export const getWorkDetailsPtDal = async (req: Request) => {
+    const { reference_no } = req.params
+    try {
+
+        if (!reference_no) {
+            throw { error: true, message: "Reference number is required as 'reference_no'" }
+        }
+
+        if (!await checkExistence(reference_no)) {
+            throw { error: true, message: "Invalid pre-tender form" }
+        }
+
+        const result = await prisma.work_details.findFirst({
+            where: {
+                reference_no: reference_no
+            },
+            select: {
+                id: true,
+                reference_no: true,
+                workDiscription: true,
+                pre_qualification_details: true,
+                product_category: true,
+                productSubCategory: true,
+                contract_type: true,
+                tender_values: true,
+                bid_validity: true,
+                completionPeriod: true,
+                location: true,
+                pinCode: true,
+                pre_bid: true,
+                preBidMeeting: true,
+                preBidMeetingAdd: true,
+                bidOpeningPlace: true,
+                tenderer_class: true,
+                invstOffName: true,
+                invstOffAdd: true,
+                invstOffEmail_Ph: true,
+            }
+        })
+
+        return result
+    } catch (err: any) {
+        console.log(err)
+        return { error: true, message: getErrorMessage(err) }
+    }
+}
 
 
 
-//Pre-tender==================================================================================================================================================================================
+
+
+
+//Pre-tender|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
