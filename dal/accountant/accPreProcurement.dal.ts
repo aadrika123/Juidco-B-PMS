@@ -1716,7 +1716,7 @@ export const createBasicDetailsPtDal = async (req: Request) => {
             throw { error: true, message: "Reference number is required as 'reference_no'" }
         }
 
-        // const existence = await checkExistence(formattedData?.reference_no)
+        const existence = await checkExistence(formattedData?.reference_no)
 
 
         if (!await isBoqValid(formattedData?.reference_no)) {
@@ -1801,9 +1801,9 @@ export const getBasicDetailsPtDal = async (req: Request) => {
             throw { error: true, message: "Reference number is required as 'reference_no'" }
         }
 
-        if (!await checkExistence(reference_no)) {
-            throw { error: true, message: "Invalid pre-tender form" }
-        }
+        // if (!await checkExistence(reference_no)) {
+        //     throw { error: true, message: "Invalid pre-tender form" }
+        // }
 
         const result = await prisma.basic_details.findFirst({
             where: {
