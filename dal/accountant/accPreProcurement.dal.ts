@@ -1,5 +1,5 @@
 import { Request } from "express";
-import { PrismaClient, basic_details, fee_details, work_details } from "@prisma/client";
+import { PrismaClient, basic_details, critical_dates, fee_details, work_details } from "@prisma/client";
 import getErrorMessage from "../../lib/getErrorMessage";
 import { imageUploader } from "../../lib/imageUploader";
 import { pagination, uploadedDoc } from "../../type/common.type";
@@ -1667,6 +1667,7 @@ export const getPreTenderingOutboxDal = async (req: Request) => {
 //Pre-tender|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 
 
+
 const checkExistence = async (reference_no: string) => {
     try {
 
@@ -2084,6 +2085,114 @@ export const getFeeDetailsPtDal = async (req: Request) => {
                 emdAmount: true,
                 emdFeePayableTo: true,
                 emdFeePayableAt: true
+            }
+        })
+
+        return result
+    } catch (err: any) {
+        console.log(err)
+        return { error: true, message: getErrorMessage(err) }
+    }
+}
+
+
+
+export const createCriticalDatesPtDal = async (req: Request) => {
+    const { preTender } = req.body
+    try {
+        const formattedData: critical_dates = JSON.parse(preTender)
+
+        if (!formattedData?.reference_no) {
+            throw { error: true, message: "Reference number is required as 'reference_no'" }
+        }
+
+        const existence = await checkExistence(formattedData?.reference_no)
+
+        if (!await isBoqValid(formattedData?.reference_no)) {
+            throw { error: true, message: "BOQ is not valid to be forwarded for pre tender" }
+        }
+        const tableExistence = await prisma.fee_details.count({
+            where: {
+                reference_no: formattedData?.reference_no
+            }
+        })
+
+        const preparedData = {
+            reference_no: formattedData?.reference_no,
+            publishingDate: new Date(formattedData?.publishingDate),
+            bidOpeningDate: new Date(formattedData?.bidOpeningDate),
+            docSaleStartDate: new Date(formattedData?.docSaleStartDate),
+            docSaleEndDate: new Date(formattedData?.docSaleEndDate),
+            seekClariStrtDate: new Date(formattedData?.seekClariStrtDate),
+            seekClariEndDate: new Date(formattedData?.seekClariEndDate),
+            bidSubStrtDate: new Date(formattedData?.bidSubStrtDate),
+            bidSubEndDate: new Date(formattedData?.bidSubEndDate),
+            preBidMettingDate: new Date(formattedData?.preBidMettingDate),
+        }
+
+        //start transaction
+        await prisma.$transaction(async (tx) => {
+
+            if (!existence) {
+                await tx.tendering_form.create({
+                    data: {
+                        reference_no: formattedData?.reference_no
+                    }
+                })
+            }
+
+            if (!tableExistence) {
+                await tx.critical_dates.create({
+                    data: preparedData
+                })
+            } else {
+                await tx.critical_dates.update({
+                    where: {
+                        reference_no: formattedData?.reference_no
+                    },
+                    data: preparedData
+                })
+            }
+
+        })
+
+        return !existence ? 'Critical dates added' : 'Critical dates updated'
+    } catch (err: any) {
+        console.log(err)
+        return { error: true, message: getErrorMessage(err) }
+    }
+}
+
+
+
+export const getCriticalDatesPtDal = async (req: Request) => {
+    const { reference_no } = req.params
+    try {
+
+        if (!reference_no) {
+            throw { error: true, message: "Reference number is required as 'reference_no'" }
+        }
+
+        if (!await checkExistence(reference_no)) {
+            throw { error: true, message: "Invalid pre-tender form" }
+        }
+
+        const result = await prisma.critical_dates.findFirst({
+            where: {
+                reference_no: reference_no
+            },
+            select: {
+                id: true,
+                reference_no: true,
+                publishingDate: true,
+                bidOpeningDate: true,
+                docSaleStartDate: true,
+                docSaleEndDate: true,
+                seekClariStrtDate: true,
+                seekClariEndDate: true,
+                bidSubStrtDate: true,
+                bidSubEndDate: true,
+                preBidMettingDate: true
             }
         })
 
