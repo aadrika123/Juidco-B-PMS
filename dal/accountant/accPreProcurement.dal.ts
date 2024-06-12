@@ -1,5 +1,5 @@
 import { Request } from "express";
-import { PrismaClient, basic_details, critical_dates, fee_details, work_details } from "@prisma/client";
+import { PrismaClient, basic_details, bid_openers, critical_dates, fee_details, work_details } from "@prisma/client";
 import getErrorMessage from "../../lib/getErrorMessage";
 import { imageUploader } from "../../lib/imageUploader";
 import { pagination, uploadedDoc } from "../../type/common.type";
@@ -1716,7 +1716,7 @@ export const createBasicDetailsPtDal = async (req: Request) => {
             throw { error: true, message: "Reference number is required as 'reference_no'" }
         }
 
-        const existence = await checkExistence(formattedData?.reference_no)
+        // const existence = await checkExistence(formattedData?.reference_no)
 
 
         if (!await isBoqValid(formattedData?.reference_no)) {
@@ -2197,6 +2197,92 @@ export const getCriticalDatesPtDal = async (req: Request) => {
         })
 
         return result
+    } catch (err: any) {
+        console.log(err)
+        return { error: true, message: getErrorMessage(err) }
+    }
+}
+
+
+
+export const createBidOpenersPtDal = async (req: Request) => {
+    const { preTender } = req.body
+    const {B01} = req.files as any
+    console.log(B01)
+    try {
+        // const formattedData: bid_openers = JSON.parse(preTender)
+        // const img = req.files as Express.Multer.File[]
+
+        // if (!formattedData?.reference_no) {
+        //     throw { error: true, message: "Reference number is required as 'reference_no'" }
+        // }
+
+        // const existence = await checkExistence(formattedData?.reference_no)
+
+
+        // if (!await isBoqValid(formattedData?.reference_no)) {
+        //     throw { error: true, message: "BOQ is not valid to be forwarded for pre tender" }
+        // }
+        // const tableExistence = await prisma.basic_details.count({
+        //     where: {
+        //         reference_no: formattedData?.reference_no
+        //     }
+        // })
+
+        // const preparedData = {
+        //     reference_no: formattedData?.reference_no,
+        //     b01NameDesig: formattedData?.b01NameDesig,
+        //     b01Email: formattedData?.b01Email,
+        //     b02NameDesig: formattedData?.b02NameDesig,
+        //     b02Email: formattedData?.b02Email,
+        //     b03NameDesig: formattedData?.b03NameDesig,
+        //     b03Email: formattedData?.b03Email,
+        // }
+
+        // //start transaction
+        // await prisma.$transaction(async (tx) => {
+
+        //     if (!existence) {
+        //         await tx.tendering_form.create({
+        //             data: {
+        //                 reference_no: formattedData?.reference_no
+        //             }
+        //         })
+        //     }
+
+        //     if (!tableExistence) {
+        //         await tx.bid_openers.create({
+        //             data: preparedData
+        //         })
+        //     } else {
+        //         await tx.bid_openers.update({
+        //             where: {
+        //                 reference_no: formattedData?.reference_no
+        //             },
+        //             data: preparedData
+        //         })
+        //     }
+
+        //     if (img) {
+        //         const uploaded = await imageUploader(img)   //It will return reference number and unique id as an object after uploading.
+
+        //         await Promise.all(
+        //             uploaded.map(async (item) => {
+        //                 await tx.tendering_form_docs.create({
+        //                     data: {
+        //                         reference_no: formattedData?.reference_no,
+        //                         form: 'basic_details',
+        //                         ReferenceNo: item?.ReferenceNo,
+        //                         uniqueId: item?.uniqueId
+        //                     }
+        //                 })
+        //             })
+        //         )
+        //     }
+
+        // })
+
+        // return !existence ? 'Basic details added' : 'Basic details updated'
     } catch (err: any) {
         console.log(err)
         return { error: true, message: getErrorMessage(err) }

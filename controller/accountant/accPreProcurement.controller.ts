@@ -16,7 +16,8 @@ import {
     createFeeDetailsPtDal,
     getFeeDetailsPtDal,
     createCriticalDatesPtDal,
-    getCriticalDatesPtDal
+    getCriticalDatesPtDal,
+    createBidOpenersPtDal
 } from "../../dal/accountant/accPreProcurement.dal";
 import { getPreTenderingOutboxDal } from "../../dal/departmentalAdmin/daPreProcurement.dal";
 
@@ -367,6 +368,25 @@ export const getCriticalDatesPt = async (req: Request, res: Response) => {
         res.status(404).json({
             status: false,
             message: `Error while fetching critical dates`,
+            error: result?.message
+        })
+    }
+}
+
+
+
+export const createBidOpenersPt = async (req: Request, res: Response) => {
+    const result: any = await createBidOpenersPtDal(req)
+    if (!result?.error) {
+        res.status(201).json({
+            status: true,
+            message: `Bid opener added successfully`,
+            data: result
+        })
+    } else {
+        res.status(500).json({
+            status: false,
+            message: `Error while adding bid opener`,
             error: result?.message
         })
     }
