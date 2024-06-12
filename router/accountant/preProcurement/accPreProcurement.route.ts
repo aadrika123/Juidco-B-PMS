@@ -21,7 +21,8 @@ import {
     getFeeDetailsPt,
     createCriticalDatesPt,
     getCriticalDatesPt,
-    createBidOpenersPt
+    createBidOpenersPt,
+    getBidOpenersPt
 } from "../../../controller/accountant/accPreProcurement.controller";
 
 // router.use(accAuth)
@@ -41,11 +42,12 @@ router.post('/pre-tender/basic-details', upload.array('img'), createBasicDetails
 router.post('/pre-tender/work-details', createWorkDetailsPt)
 router.post('/pre-tender/fee-details', createFeeDetailsPt)
 router.post('/pre-tender/critical-dates', createCriticalDatesPt)
-router.post('/pre-tender/bid-openers', upload.fields([{name:'B01'},{name:'B02'}]), createBidOpenersPt)
+router.post('/pre-tender/bid-openers', upload.fields([{ name: 'B01' }, { name: 'B02' }]), createBidOpenersPt)
 router.get('/pre-tender/basic-details/:reference_no', getBasicDetailsPt)
 router.get('/pre-tender/work-details/:reference_no', getWorkDetailsPt)
 router.get('/pre-tender/fee-details/:reference_no', getFeeDetailsPt)
 router.get('/pre-tender/critical-dates/:reference_no', getCriticalDatesPt)
+router.get('/pre-tender/bid-openers/:reference_no', getBidOpenersPt)
 
 
 export default router

@@ -1768,6 +1768,14 @@ export const createBasicDetailsPtDal = async (req: Request) => {
             if (img) {
                 const uploaded = await imageUploader(img)   //It will return reference number and unique id as an object after uploading.
 
+                if (tableExistence) {
+                    await tx.tendering_form_docs.deleteMany({
+                        where: {
+                            ReferenceNo: formattedData?.reference_no,
+                        }
+                    })
+                }
+
                 await Promise.all(
                     uploaded.map(async (item) => {
                         await tx.tendering_form_docs.create({
@@ -1784,7 +1792,7 @@ export const createBasicDetailsPtDal = async (req: Request) => {
 
         })
 
-        return !existence ? 'Basic details added' : 'Basic details updated'
+        return !tableExistence ? 'Basic details added' : 'Basic details updated'
     } catch (err: any) {
         console.log(err)
         return { error: true, message: getErrorMessage(err) }
@@ -1924,7 +1932,7 @@ export const createWorkDetailsPtDal = async (req: Request) => {
 
         })
 
-        return !existence ? 'Work details added' : 'Work details updated'
+        return !tableExistence ? 'Work details added' : 'Work details updated'
     } catch (err: any) {
         console.log(err)
         return { error: true, message: getErrorMessage(err) }
@@ -2044,7 +2052,7 @@ export const createFeeDetailsPtDal = async (req: Request) => {
 
         })
 
-        return !existence ? 'Fee details added' : 'Fee details updated'
+        return !tableExistence ? 'Fee details added' : 'Fee details updated'
     } catch (err: any) {
         console.log(err)
         return { error: true, message: getErrorMessage(err) }
@@ -2155,7 +2163,7 @@ export const createCriticalDatesPtDal = async (req: Request) => {
 
         })
 
-        return !existence ? 'Critical dates added' : 'Critical dates updated'
+        return !tableExistence ? 'Critical dates added' : 'Critical dates updated'
     } catch (err: any) {
         console.log(err)
         return { error: true, message: getErrorMessage(err) }
@@ -2205,83 +2213,186 @@ export const getCriticalDatesPtDal = async (req: Request) => {
 
 
 export const createBidOpenersPtDal = async (req: Request) => {
-    const { preTender } = req.body
-    const { B01 } = req.files as any
-    console.log(B01)
+    const { preTender, doc } = req.body
+    const { B01, B02 } = req.files as any
     try {
-        // const formattedData: bid_openers = JSON.parse(preTender)
-        // const img = req.files as Express.Multer.File[]
+        const formattedData: bid_openers = JSON.parse(typeof (preTender) !== 'string' ? JSON.stringify(preTender) : preTender)
+        const formattedDoc = JSON.parse(typeof (doc) !== 'string' ? JSON.stringify(doc) : doc)
 
-        // if (!formattedData?.reference_no) {
-        //     throw { error: true, message: "Reference number is required as 'reference_no'" }
-        // }
+        if (!formattedData?.reference_no) {
+            throw { error: true, message: "Reference number is required as 'reference_no'" }
+        }
 
-        // const existence = await checkExistence(formattedData?.reference_no)
+        const existence = await checkExistence(formattedData?.reference_no)
 
 
-        // if (!await isBoqValid(formattedData?.reference_no)) {
-        //     throw { error: true, message: "BOQ is not valid to be forwarded for pre tender" }
-        // }
-        // const tableExistence = await prisma.basic_details.count({
-        //     where: {
-        //         reference_no: formattedData?.reference_no
-        //     }
-        // })
+        if (!await isBoqValid(formattedData?.reference_no)) {
+            throw { error: true, message: "BOQ is not valid to be forwarded for pre tender" }
+        }
+        const tableExistence = await prisma.bid_openers.count({
+            where: {
+                reference_no: formattedData?.reference_no
+            }
+        })
 
-        // const preparedData = {
-        //     reference_no: formattedData?.reference_no,
-        //     b01NameDesig: formattedData?.b01NameDesig,
-        //     b01Email: formattedData?.b01Email,
-        //     b02NameDesig: formattedData?.b02NameDesig,
-        //     b02Email: formattedData?.b02Email,
-        //     b03NameDesig: formattedData?.b03NameDesig,
-        //     b03Email: formattedData?.b03Email,
-        // }
+        const preparedData = {
+            reference_no: formattedData?.reference_no,
+            b01NameDesig: formattedData?.b01NameDesig,
+            b01Email: formattedData?.b01Email,
+            b02NameDesig: formattedData?.b02NameDesig,
+            b02Email: formattedData?.b02Email,
+            b03NameDesig: formattedData?.b03NameDesig,
+            b03Email: formattedData?.b03Email,
+        }
+        let bid_openers_id: string | undefined = undefined
+        //start transaction
+        await prisma.$transaction(async (tx) => {
 
-        // //start transaction
-        // await prisma.$transaction(async (tx) => {
+            if (!existence) {
+                await tx.tendering_form.create({
+                    data: {
+                        reference_no: formattedData?.reference_no
+                    }
+                })
+            }
 
-        //     if (!existence) {
-        //         await tx.tendering_form.create({
-        //             data: {
-        //                 reference_no: formattedData?.reference_no
-        //             }
-        //         })
-        //     }
+            if (!tableExistence) {
+                const created = await tx.bid_openers.create({
+                    data: preparedData
+                })
+                bid_openers_id = created?.id
+            } else {
+                const updated = await tx.bid_openers.update({
+                    where: {
+                        reference_no: formattedData?.reference_no
+                    },
+                    data: preparedData
+                })
+                bid_openers_id = updated?.id
+            }
 
-        //     if (!tableExistence) {
-        //         await tx.bid_openers.create({
-        //             data: preparedData
-        //         })
-        //     } else {
-        //         await tx.bid_openers.update({
-        //             where: {
-        //                 reference_no: formattedData?.reference_no
-        //             },
-        //             data: preparedData
-        //         })
-        //     }
+            if (B01 && bid_openers_id) {
+                const uploaded = await imageUploader(B01)   //It will return reference number and unique id as an object after uploading.
 
-        //     if (img) {
-        //         const uploaded = await imageUploader(img)   //It will return reference number and unique id as an object after uploading.
+                if (tableExistence) {
+                    await tx.bid_openers_docs.deleteMany({
+                        where: {
+                            ReferenceNo: formattedData?.reference_no,
+                            type: 'B01'
+                        }
+                    })
+                }
 
-        //         await Promise.all(
-        //             uploaded.map(async (item) => {
-        //                 await tx.tendering_form_docs.create({
-        //                     data: {
-        //                         reference_no: formattedData?.reference_no,
-        //                         form: 'basic_details',
-        //                         ReferenceNo: item?.ReferenceNo,
-        //                         uniqueId: item?.uniqueId
-        //                     }
-        //                 })
-        //             })
-        //         )
-        //     }
+                await Promise.all(
+                    uploaded.map(async (item) => {
+                        await tx.bid_openers_docs.create({
+                            data: {
+                                bid_openersId: bid_openers_id,
+                                type: 'B01',
+                                ReferenceNo: item?.ReferenceNo,
+                                uniqueId: item?.uniqueId,
+                                nameDesig: formattedDoc?.B01?.nameDesig,
+                                description: formattedDoc?.B01?.description,
+                                docSize: formattedDoc?.B01?.docSize,
+                            } as any
+                        })
+                    })
+                )
+            }
 
-        // })
+            if (B02 && bid_openers_id) {
+                const uploaded = await imageUploader(B02)   //It will return reference number and unique id as an object after uploading.
 
-        // return !existence ? 'Basic details added' : 'Basic details updated'
+                if (tableExistence) {
+                    await tx.bid_openers_docs.deleteMany({
+                        where: {
+                            ReferenceNo: formattedData?.reference_no,
+                            type: 'B02'
+                        }
+                    })
+                }
+
+                await Promise.all(
+                    uploaded.map(async (item) => {
+                        await tx.bid_openers_docs.create({
+                            data: {
+                                bid_openersId: bid_openers_id,
+                                type: 'B02',
+                                ReferenceNo: item?.ReferenceNo,
+                                uniqueId: item?.uniqueId,
+                                nameDesig: formattedDoc?.B02?.nameDesig,
+                                description: formattedDoc?.B02?.description,
+                                docSize: formattedDoc?.B02?.docSize,
+                            } as any
+                        })
+                    })
+                )
+            }
+
+
+        })
+
+        return !tableExistence ? 'Bid openers added' : 'Bid openers updated'
+    } catch (err: any) {
+        console.log(err)
+        return { error: true, message: getErrorMessage(err) }
+    }
+}
+
+
+
+export const getBidOpenersPtDal = async (req: Request) => {
+    const { reference_no } = req.params
+    try {
+
+        if (!reference_no) {
+            throw { error: true, message: "Reference number is required as 'reference_no'" }
+        }
+
+        if (!await checkExistence(reference_no)) {
+            throw { error: true, message: "Invalid pre-tender form" }
+        }
+
+        const result = await prisma.bid_openers.findFirst({
+            where: {
+                reference_no: reference_no
+            },
+            select: {
+                id: true,
+                reference_no: true,
+                b01NameDesig: true,
+                b01Email: true,
+                b02NameDesig: true,
+                b02Email: true,
+                b03NameDesig: true,
+                b03Email: true,
+                bid_openers_docs: {
+                    select: {
+                        type: true,
+                        ReferenceNo: true,
+                        uniqueId: true,
+                        nameDesig: true,
+                        description: true,
+                        docSize: true,
+                    }
+                }
+            }
+        })
+
+        await Promise.all(
+            result?.bid_openers_docs.map(async (item: any) => {
+                const headers = {
+                    "token": "8Ufn6Jio6Obv9V7VXeP7gbzHSyRJcKluQOGorAD58qA1IQKYE0"
+                }
+                await axios.post(process.env.DMS_GET || '', { "referenceNo": item?.ReferenceNo }, { headers })
+                    .then((response) => {
+                        item.docUrl = response?.data?.data?.fullPath
+                    }).catch((err) => {
+                        throw err
+                    })
+            }) as any
+        )
+        return result ? result : null
     } catch (err: any) {
         console.log(err)
         return { error: true, message: getErrorMessage(err) }
