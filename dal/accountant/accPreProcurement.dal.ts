@@ -1709,7 +1709,7 @@ const isBoqValid = async (reference_no: string) => {
 export const createBasicDetailsPtDal = async (req: Request) => {
     const { preTender } = req.body
     try {
-        const formattedData: basic_details = JSON.parse(preTender)
+        const formattedData: basic_details = JSON.parse(typeof (preTender) !== 'string' ? JSON.stringify(preTender) : preTender)
         const img = req.files as Express.Multer.File[]
 
         if (!formattedData?.reference_no) {
@@ -1859,7 +1859,7 @@ export const getBasicDetailsPtDal = async (req: Request) => {
 export const createWorkDetailsPtDal = async (req: Request) => {
     const { preTender } = req.body
     try {
-        const formattedData: work_details = JSON.parse(JSON.stringify(preTender))
+        const formattedData: work_details = JSON.parse(typeof (preTender) !== 'string' ? JSON.stringify(preTender) : preTender)
 
         if (!formattedData?.reference_no) {
             throw { error: true, message: "Reference number is required as 'reference_no'" }
@@ -1985,7 +1985,7 @@ export const getWorkDetailsPtDal = async (req: Request) => {
 export const createFeeDetailsPtDal = async (req: Request) => {
     const { preTender } = req.body
     try {
-        const formattedData: fee_details = JSON.parse(JSON.stringify(preTender))
+        const formattedData: fee_details = JSON.parse(typeof (preTender) !== 'string' ? JSON.stringify(preTender) : preTender)
 
         if (!formattedData?.reference_no) {
             throw { error: true, message: "Reference number is required as 'reference_no'" }
@@ -2099,7 +2099,7 @@ export const getFeeDetailsPtDal = async (req: Request) => {
 export const createCriticalDatesPtDal = async (req: Request) => {
     const { preTender } = req.body
     try {
-        const formattedData: critical_dates = JSON.parse(JSON.stringify(preTender))
+        const formattedData: critical_dates = JSON.parse(typeof (preTender) !== 'string' ? JSON.stringify(preTender) : preTender)
 
         if (!formattedData?.reference_no) {
             throw { error: true, message: "Reference number is required as 'reference_no'" }
