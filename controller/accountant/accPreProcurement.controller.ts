@@ -14,7 +14,9 @@ import {
     createWorkDetailsPtDal,
     getWorkDetailsPtDal,
     createFeeDetailsPtDal,
-    getFeeDetailsPtDal
+    getFeeDetailsPtDal,
+    createCriticalDatesPtDal,
+    getCriticalDatesPtDal
 } from "../../dal/accountant/accPreProcurement.dal";
 import { getPreTenderingOutboxDal } from "../../dal/departmentalAdmin/daPreProcurement.dal";
 
@@ -327,6 +329,44 @@ export const getFeeDetailsPt = async (req: Request, res: Response) => {
         res.status(404).json({
             status: false,
             message: `Error while fetching Fee details`,
+            error: result?.message
+        })
+    }
+}
+
+
+
+export const createCriticalDatesPt = async (req: Request, res: Response) => {
+    const result: any = await createCriticalDatesPtDal(req)
+    if (!result?.error) {
+        res.status(201).json({
+            status: true,
+            message: `Critical dates added successfully`,
+            data: result
+        })
+    } else {
+        res.status(500).json({
+            status: false,
+            message: `Error while adding critical dates`,
+            error: result?.message
+        })
+    }
+}
+
+
+
+export const getCriticalDatesPt = async (req: Request, res: Response) => {
+    const result: any = await getCriticalDatesPtDal(req)
+    if (!result?.error) {
+        res.status(200).json({
+            status: true,
+            message: `Critical dates fetched successfully`,
+            data: result
+        })
+    } else {
+        res.status(404).json({
+            status: false,
+            message: `Error while fetching critical dates`,
             error: result?.message
         })
     }
