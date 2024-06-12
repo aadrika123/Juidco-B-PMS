@@ -1851,8 +1851,7 @@ export const getBasicDetailsPtDal = async (req: Request) => {
                     })
             })
         )
-        console.log(doc)
-        return { ...result, doc: doc }
+        return result ? { ...result, doc: doc } : null
     } catch (err: any) {
         console.log(err)
         return { error: true, message: getErrorMessage(err) }
@@ -1978,11 +1977,7 @@ export const getWorkDetailsPtDal = async (req: Request) => {
             }
         })
 
-        if (!result) {
-            throw { error: true, message: 'No data for the given reference number' }
-        }
-
-        return result
+        return result ? result : null
     } catch (err: any) {
         console.log(err)
         return { error: true, message: getErrorMessage(err) }
@@ -2096,11 +2091,7 @@ export const getFeeDetailsPtDal = async (req: Request) => {
             }
         })
 
-        if (!result) {
-            throw { error: true, message: 'No data for the given reference number' }
-        }
-
-        return result
+        return result ? result : null
     } catch (err: any) {
         console.log(err)
         return { error: true, message: getErrorMessage(err) }
@@ -2208,11 +2199,7 @@ export const getCriticalDatesPtDal = async (req: Request) => {
             }
         })
 
-        if (!result) {
-            throw { error: true, message: 'No data for the given reference number' }
-        }
-
-        return result
+        return result ? result : null
     } catch (err: any) {
         console.log(err)
         return { error: true, message: getErrorMessage(err) }
