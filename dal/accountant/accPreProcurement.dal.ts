@@ -1859,7 +1859,7 @@ export const getBasicDetailsPtDal = async (req: Request) => {
 export const createWorkDetailsPtDal = async (req: Request) => {
     const { preTender } = req.body
     try {
-        const formattedData: work_details = JSON.parse(preTender)
+        const formattedData: work_details = JSON.parse(JSON.stringify(preTender))
 
         if (!formattedData?.reference_no) {
             throw { error: true, message: "Reference number is required as 'reference_no'" }
@@ -1887,7 +1887,7 @@ export const createWorkDetailsPtDal = async (req: Request) => {
             bid_validity: formattedData?.bid_validity,
             completionPeriod: Number(formattedData?.completionPeriod),
             location: formattedData?.location,
-            pinCode: formattedData?.pinCode,
+            pinCode: String(formattedData?.pinCode),
             pre_bid: Boolean(formattedData?.pre_bid),
             preBidMeeting: formattedData?.preBidMeeting,
             preBidMeetingAdd: formattedData?.preBidMeetingAdd,
@@ -1985,7 +1985,7 @@ export const getWorkDetailsPtDal = async (req: Request) => {
 export const createFeeDetailsPtDal = async (req: Request) => {
     const { preTender } = req.body
     try {
-        const formattedData: fee_details = JSON.parse(preTender)
+        const formattedData: fee_details = JSON.parse(JSON.stringify(preTender))
 
         if (!formattedData?.reference_no) {
             throw { error: true, message: "Reference number is required as 'reference_no'" }
@@ -2099,7 +2099,7 @@ export const getFeeDetailsPtDal = async (req: Request) => {
 export const createCriticalDatesPtDal = async (req: Request) => {
     const { preTender } = req.body
     try {
-        const formattedData: critical_dates = JSON.parse(preTender)
+        const formattedData: critical_dates = JSON.parse(JSON.stringify(preTender))
 
         if (!formattedData?.reference_no) {
             throw { error: true, message: "Reference number is required as 'reference_no'" }
@@ -2110,7 +2110,7 @@ export const createCriticalDatesPtDal = async (req: Request) => {
         if (!await isBoqValid(formattedData?.reference_no)) {
             throw { error: true, message: "BOQ is not valid to be forwarded for pre tender" }
         }
-        const tableExistence = await prisma.fee_details.count({
+        const tableExistence = await prisma.critical_dates.count({
             where: {
                 reference_no: formattedData?.reference_no
             }
