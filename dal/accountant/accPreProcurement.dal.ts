@@ -1824,10 +1824,6 @@ export const getBasicDetailsPtDal = async (req: Request) => {
             }
         })
 
-        if (!result) {
-            throw { error: true, message: 'No data for the given reference number' }
-        }
-
         const doc = await prisma.tendering_form_docs.findMany({
             where: {
                 reference_no: reference_no,
