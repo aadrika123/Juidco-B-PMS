@@ -1824,6 +1824,10 @@ export const getBasicDetailsPtDal = async (req: Request) => {
             }
         })
 
+        if (!result) {
+            throw { error: true, message: 'No data for the given reference number' }
+        }
+
         const doc = await prisma.tendering_form_docs.findMany({
             where: {
                 reference_no: reference_no,
@@ -1847,7 +1851,7 @@ export const getBasicDetailsPtDal = async (req: Request) => {
                     })
             })
         )
-
+        console.log(doc)
         return { ...result, doc: doc }
     } catch (err: any) {
         console.log(err)
@@ -1974,6 +1978,10 @@ export const getWorkDetailsPtDal = async (req: Request) => {
             }
         })
 
+        if (!result) {
+            throw { error: true, message: 'No data for the given reference number' }
+        }
+
         return result
     } catch (err: any) {
         console.log(err)
@@ -2088,6 +2096,10 @@ export const getFeeDetailsPtDal = async (req: Request) => {
             }
         })
 
+        if (!result) {
+            throw { error: true, message: 'No data for the given reference number' }
+        }
+
         return result
     } catch (err: any) {
         console.log(err)
@@ -2196,6 +2208,10 @@ export const getCriticalDatesPtDal = async (req: Request) => {
             }
         })
 
+        if (!result) {
+            throw { error: true, message: 'No data for the given reference number' }
+        }
+
         return result
     } catch (err: any) {
         console.log(err)
@@ -2207,7 +2223,7 @@ export const getCriticalDatesPtDal = async (req: Request) => {
 
 export const createBidOpenersPtDal = async (req: Request) => {
     const { preTender } = req.body
-    const {B01} = req.files as any
+    const { B01 } = req.files as any
     console.log(B01)
     try {
         // const formattedData: bid_openers = JSON.parse(preTender)
