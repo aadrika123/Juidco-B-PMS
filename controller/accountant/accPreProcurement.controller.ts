@@ -9,6 +9,7 @@ import {
     getPreProcurementOutboxDal,
     forwardToDaDal,
     getPreTenderingInboxDal,
+    getPreTenderingOutboxDal,
     createBasicDetailsPtDal,
     getBasicDetailsPtDal,
     createWorkDetailsPtDal,
@@ -22,10 +23,9 @@ import {
     createCoverDetailsPtDal,
     getCoverDetailsPtDal,
     getPreTenderDal,
-    finalSubmissionPtDal
+    finalSubmissionPtDal,
+    forwardToDaPtDal
 } from "../../dal/accountant/accPreProcurement.dal";
-import { getPreTenderingOutboxDal } from "../../dal/departmentalAdmin/daPreProcurement.dal";
-
 
 
 export const getPreProcurementForBoq = async (req: Request, res: Response) => {
@@ -487,6 +487,25 @@ export const finalSubmissionPt = async (req: Request, res: Response) => {
         res.status(404).json({
             status: false,
             message: `Error while submitting`,
+            error: result?.message
+        })
+    }
+}
+
+
+
+export const forwardToDaPt = async (req: Request, res: Response) => {
+    const result: any = await forwardToDaPtDal(req)
+    if (!result?.error) {
+        res.status(200).json({
+            status: true,
+            message: `Forwarded`,
+            data: result
+        })
+    } else {
+        res.status(404).json({
+            status: false,
+            message: `Error while forwarding`,
             error: result?.message
         })
     }

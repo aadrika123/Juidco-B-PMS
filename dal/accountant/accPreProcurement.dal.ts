@@ -1383,12 +1383,6 @@ export const getPreTenderingInboxDal = async (req: Request) => {
                     select: {
                         boq: {
                             select: {
-                                reference_no: true,
-                                gst: true,
-                                estimated_cost: true,
-                                remark: true,
-                                status: true,
-                                isEdited: true,
                                 procurements: {
                                     select: {
                                         procurement: {
@@ -1413,7 +1407,10 @@ export const getPreTenderingInboxDal = async (req: Request) => {
                                     }
                                 }
                             },
-                        }
+                        },
+                        status: true,
+                        isEdited: true,
+                        isPartial: true
                     }
                 }
             }
@@ -1422,21 +1419,14 @@ export const getPreTenderingInboxDal = async (req: Request) => {
 
         let dataToSend: any[] = []
         result.forEach((item: any) => {
-            const updatedProcurements = item?.tendering_form?.boq?.procurements.map((proc: any) => {
-                const { procurement, ...rest } = proc;
-                return { ...rest, ...procurement };
-            });
-
-            // Assign the updated array back to item.boq.procurements
+            const updatedProcurements = item?.tendering_form?.boq?.procurements[0].procurement;
+            // Assign the updated array back
             item.tendering_form.boq.procurements = updatedProcurements;
-
-            //flatten the boq object
-            const { boq, ...rest } = item;
-            const flattenedBoq = { ...rest, ...boq }
 
             // Flatten the tendering_form object
             const { tendering_form, ...restData } = item;
-            dataToSend.push({ ...rest, ...flattenedBoq })
+            delete tendering_form.boq
+            dataToSend.push({ ...restData, ...updatedProcurements, ...tendering_form })
         })
 
         totalPage = Math.ceil(count / take)
@@ -1579,12 +1569,6 @@ export const getPreTenderingOutboxDal = async (req: Request) => {
                     select: {
                         boq: {
                             select: {
-                                reference_no: true,
-                                gst: true,
-                                estimated_cost: true,
-                                remark: true,
-                                status: true,
-                                isEdited: true,
                                 procurements: {
                                     select: {
                                         procurement: {
@@ -1609,7 +1593,10 @@ export const getPreTenderingOutboxDal = async (req: Request) => {
                                     }
                                 }
                             },
-                        }
+                        },
+                        status: true,
+                        isEdited: true,
+                        isPartial: true
                     }
                 }
             }
@@ -1618,21 +1605,14 @@ export const getPreTenderingOutboxDal = async (req: Request) => {
 
         let dataToSend: any[] = []
         result.forEach((item: any) => {
-            const updatedProcurements = item?.tendering_form?.boq?.procurements.map((proc: any) => {
-                const { procurement, ...rest } = proc;
-                return { ...rest, ...procurement };
-            });
-
-            // Assign the updated array back to item.boq.procurements
+            const updatedProcurements = item?.tendering_form?.boq?.procurements[0].procurement;
+            // Assign the updated array back
             item.tendering_form.boq.procurements = updatedProcurements;
-
-            //flatten the boq object
-            const { boq, ...rest } = item;
-            const flattenedBoq = { ...rest, ...boq }
 
             // Flatten the tendering_form object
             const { tendering_form, ...restData } = item;
-            dataToSend.push({ ...rest, ...flattenedBoq })
+            delete tendering_form.boq
+            dataToSend.push({ ...restData, ...updatedProcurements, ...tendering_form })
         })
 
         totalPage = Math.ceil(count / take)
@@ -2814,37 +2794,46 @@ export const forwardToDaPtDal = async (req: Request) => {
         //start transaction
         await prisma.$transaction(async (tx) => {
 
-            await tx.acc_boq_inbox.delete({
+            await tx.acc_pre_tender_inbox.delete({
                 where: {
                     reference_no: reference_no
                 }
             })
 
-            await tx.acc_boq_outbox.create({
+            await tx.acc_pre_tender_outbox.create({
                 data: {
                     reference_no: reference_no
                 }
             })
 
-            await tx.da_boq_inbox.create({
+            await tx.da_pre_tender_inbox.create({
                 data: {
                     reference_no: reference_no
                 }
             })
 
-            await tx.da_boq_outbox.delete({
-                where: {
-                    reference_no: reference_no
-                }
-            })
+            // await tx.da_pre_tender_outbox.delete({
+            //     where: {
+            //         reference_no: reference_no
+            //     }
+            // })
 
-            await tx.boq.update({
+            const record = await prisma.da_pre_tender_outbox.findUnique({
+                where: { reference_no: reference_no }
+            });
+
+            if (record) {
+                await tx.da_pre_tender_outbox.delete({
+                    where: { reference_no: reference_no }
+                });
+            }
+
+            await tx.tendering_form.update({
                 where: {
                     reference_no: reference_no
                 },
                 data: {
                     status: 1,
-                    revised: true
                 }
             })
 
