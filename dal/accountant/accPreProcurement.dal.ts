@@ -1771,7 +1771,8 @@ export const createBasicDetailsPtDal = async (req: Request) => {
                 if (tableExistence) {
                     await tx.tendering_form_docs.deleteMany({
                         where: {
-                            ReferenceNo: formattedData?.reference_no,
+                            reference_no: formattedData?.reference_no,
+                            form: 'basic_details'
                         }
                     })
                 }
