@@ -1894,7 +1894,7 @@ export const approveBoqForPtDal = async (req: Request) => {
         })
 
         if (boqData?.status !== 0 && boqData?.status !== 1) {
-            throw { error: true, message: 'Invalid status of BOQ for returning back to accountant' }
+            throw { error: true, message: 'Invalid status of BOQ to be approved' }
         }
 
         //start transaction
@@ -1942,3 +1942,69 @@ export const approveBoqForPtDal = async (req: Request) => {
         return { error: true, message: getErrorMessage(err) }
     }
 }
+
+
+
+// export const approvePreTenderDal = async (req: Request) => {
+//     const { reference_no }: { reference_no: string } = req.body
+//     try {
+
+//         const boqData = await prisma.tendering_form.findFirst({
+//             where: {
+//                 reference_no: reference_no
+//             },
+//             select: {
+//                 status: true,
+//                 isPartial: false
+//             }
+//         })
+
+//         if (boqData?.status !== 1 && boqData?.status !== 69) {
+//             throw { error: true, message: 'Invalid status of pre tender to be approved' }
+//         }
+
+//         //start transaction
+//         await prisma.$transaction(async (tx) => {
+
+//             await tx.da_pre_tender_inbox.delete({
+//                 where: {
+//                     reference_no: reference_no
+//                 }
+//             })
+
+//             await tx.acc_pre_tender_inbox.create({
+//                 data: {
+//                     reference_no: reference_no
+//                 }
+//             })
+
+//             await tx.da_pre_tender_outbox.create({
+//                 data: {
+//                     reference_no: reference_no
+//                 }
+//             })
+
+//             await tx.acc_pre_tender_outbox.delete({
+//                 where: {
+//                     reference_no: reference_no
+//                 }
+//             })
+
+//             await tx.boq.update({
+//                 where: {
+//                     reference_no: reference_no
+//                 },
+//                 data: {
+//                     status: 2,
+//                     remark: '' as string
+//                 }
+//             })
+
+//         })
+
+//         return "Released for tender"
+//     } catch (err: any) {
+//         console.log(err)
+//         return { error: true, message: getErrorMessage(err) }
+//     }
+// }

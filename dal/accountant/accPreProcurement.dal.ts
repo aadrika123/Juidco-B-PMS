@@ -2292,7 +2292,7 @@ export const createBidOpenersPtDal = async (req: Request) => {
                 if (tableExistence) {
                     await tx.bid_openers_docs.deleteMany({
                         where: {
-                            ReferenceNo: formattedData?.reference_no,
+                            bid_openersId: bid_openers_id,
                             type: 'B02'
                         }
                     })
