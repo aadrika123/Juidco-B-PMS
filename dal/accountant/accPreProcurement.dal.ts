@@ -1750,6 +1750,11 @@ export const createBasicDetailsPtDal = async (req: Request) => {
                         reference_no: formattedData?.reference_no
                     }
                 })
+                await tx.acc_pre_tender_inbox.create({
+                    data: {
+                        reference_no: formattedData?.reference_no
+                    }
+                })
             }
 
             if (!tableExistence) {
@@ -2711,48 +2716,146 @@ export const getPreTenderDal = async (req: Request) => {
 
 
 
-// export const finalSubmissionPt = async (req: Request) => {
-//     const { reference_no } = req.body
-//     try {
+export const finalSubmissionPtDal = async (req: Request) => {
+    const { reference_no } = req.body
+    try {
 
-//         if (!reference_no) {
-//             throw { error: true, message: "Reference number is required as 'reference_no'" }
-//         }
+        if (!reference_no) {
+            throw { error: true, message: "Reference number is required as 'reference_no'" }
+        }
 
-//         if (!await checkExistence(reference_no)) {
-//             throw { error: true, message: "Invalid pre-tender form" }
-//         }
+        if (!await checkExistence(reference_no)) {
+            throw { error: true, message: "Invalid pre-tender form" }
+        }
 
-//         //existence check for basic details
-//         const basicDetailsCount = await prisma.basic_details.count({
-//             where: {
-//                 reference_no: reference_no
-//             }
-//         })
-//         if (basicDetailsCount === 0) throw { error: true, message: 'Basic details form is not completely filled' }
+        //existence check for basic details
+        const basicDetailsCount = await prisma.basic_details.count({
+            where: {
+                reference_no: reference_no
+            }
+        })
+        if (basicDetailsCount === 0) throw { error: true, message: 'Basic details form is not filled completely' }
 
-//         //existence check for cover details
-//         const coverDetailsCount = await prisma.cover_details.count({
-//             where: {
-//                 reference_no: reference_no
-//             }
-//         })
-//         if (coverDetailsCount === 0) throw { error: true, message: 'Cover details form is not completely filled' }
+        //existence check for cover details
+        const coverDetailsCount = await prisma.cover_details.count({
+            where: {
+                reference_no: reference_no
+            }
+        })
+        if (coverDetailsCount === 0) throw { error: true, message: 'Cover details form is not filled completely' }
 
-//         //existence check for work details
-//         const workDetailsCount = await prisma.work_details.count({
-//             where: {
-//                 reference_no: reference_no
-//             }
-//         })
-//         if (workDetailsCount === 0) throw { error: true, message: 'Work details form is not completely filled' }
+        //existence check for work details
+        const workDetailsCount = await prisma.work_details.count({
+            where: {
+                reference_no: reference_no
+            }
+        })
+        if (workDetailsCount === 0) throw { error: true, message: 'Work details form is not filled completely' }
 
-//         return result ? result : null
-//     } catch (err: any) {
-//         console.log(err)
-//         return { error: true, message: getErrorMessage(err) }
-//     }
-// }
+        //existence check for fee details
+        const feeDetailsCount = await prisma.fee_details.count({
+            where: {
+                reference_no: reference_no
+            }
+        })
+        if (feeDetailsCount === 0) throw { error: true, message: 'Fee details form is not filled completely' }
+
+        //existence check for work details
+        const criticalDatesCount = await prisma.critical_dates.count({
+            where: {
+                reference_no: reference_no
+            }
+        })
+        if (criticalDatesCount === 0) throw { error: true, message: 'Critical dates form is not filled completely' }
+
+        //existence check for work details
+        const bidOpenersCount = await prisma.bid_openers.count({
+            where: {
+                reference_no: reference_no
+            }
+        })
+        if (bidOpenersCount === 0) throw { error: true, message: 'Bid openers form is not filled completely' }
+
+        await prisma.tendering_form.update({
+            where: {
+                reference_no: reference_no
+            },
+            data: {
+                isPartial: false
+            }
+        })
+
+        return ` ${reference_no} is filled completely and ready to be forwarded to DA`
+    } catch (err: any) {
+        console.log(err)
+        return { error: true, message: getErrorMessage(err) }
+    }
+}
+
+
+
+export const forwardToDaPtDal = async (req: Request) => {
+    const { reference_no }: { reference_no: string } = req.body
+    try {
+
+        const preTender = await prisma.tendering_form.findFirst({
+            where: {
+                reference_no: reference_no
+            },
+            select: {
+                status: true
+            }
+        })
+
+        if (preTender?.status !== -1 && preTender?.status !== 0) {
+            throw { error: true, message: `Reference no. : ${reference_no} is not valid to be forwarded to DA.` }
+        }
+
+        //start transaction
+        await prisma.$transaction(async (tx) => {
+
+            await tx.acc_boq_inbox.delete({
+                where: {
+                    reference_no: reference_no
+                }
+            })
+
+            await tx.acc_boq_outbox.create({
+                data: {
+                    reference_no: reference_no
+                }
+            })
+
+            await tx.da_boq_inbox.create({
+                data: {
+                    reference_no: reference_no
+                }
+            })
+
+            await tx.da_boq_outbox.delete({
+                where: {
+                    reference_no: reference_no
+                }
+            })
+
+            await tx.boq.update({
+                where: {
+                    reference_no: reference_no
+                },
+                data: {
+                    status: 1,
+                    revised: true
+                }
+            })
+
+        })
+
+        return "Forwarded to DA"
+    } catch (err: any) {
+        console.log(err)
+        return { error: true, message: getErrorMessage(err) }
+    }
+}
 
 
 

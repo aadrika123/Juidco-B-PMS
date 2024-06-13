@@ -21,7 +21,8 @@ import {
     getBidOpenersPtDal,
     createCoverDetailsPtDal,
     getCoverDetailsPtDal,
-    getPreTenderDal
+    getPreTenderDal,
+    finalSubmissionPtDal
 } from "../../dal/accountant/accPreProcurement.dal";
 import { getPreTenderingOutboxDal } from "../../dal/departmentalAdmin/daPreProcurement.dal";
 
@@ -467,6 +468,25 @@ export const getPreTender = async (req: Request, res: Response) => {
         res.status(404).json({
             status: false,
             message: `Error while fetching pre tender`,
+            error: result?.message
+        })
+    }
+}
+
+
+
+export const finalSubmissionPt = async (req: Request, res: Response) => {
+    const result: any = await finalSubmissionPtDal(req)
+    if (!result?.error) {
+        res.status(200).json({
+            status: true,
+            message: `Submitted`,
+            data: result
+        })
+    } else {
+        res.status(404).json({
+            status: false,
+            message: `Error while submitting`,
             error: result?.message
         })
     }
