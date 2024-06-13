@@ -19,7 +19,8 @@ import {
     getCriticalDatesPtDal,
     createBidOpenersPtDal,
     getBidOpenersPtDal,
-    createCoverDetailsPtDal
+    createCoverDetailsPtDal,
+    getCoverDetailsPtDal
 } from "../../dal/accountant/accPreProcurement.dal";
 import { getPreTenderingOutboxDal } from "../../dal/departmentalAdmin/daPreProcurement.dal";
 
@@ -427,6 +428,25 @@ export const createCoverDetailsPt = async (req: Request, res: Response) => {
         res.status(500).json({
             status: false,
             message: `Error while adding cover details`,
+            error: result?.message
+        })
+    }
+}
+
+
+
+export const getCoverDetailsPt = async (req: Request, res: Response) => {
+    const result: any = await getCoverDetailsPtDal(req)
+    if (!result?.error) {
+        res.status(200).json({
+            status: true,
+            message: `Cover details fetched successfully`,
+            data: result
+        })
+    } else {
+        res.status(404).json({
+            status: false,
+            message: `Error while fetching cover details`,
             error: result?.message
         })
     }
