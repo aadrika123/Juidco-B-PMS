@@ -1619,12 +1619,6 @@ export const getPreTenderingInboxDal = async (req: Request) => {
                     select: {
                         boq: {
                             select: {
-                                reference_no: true,
-                                gst: true,
-                                estimated_cost: true,
-                                remark: true,
-                                status: true,
-                                isEdited: true,
                                 procurements: {
                                     select: {
                                         procurement: {
@@ -1649,7 +1643,10 @@ export const getPreTenderingInboxDal = async (req: Request) => {
                                     }
                                 }
                             },
-                        }
+                        },
+                        status: true,
+                        isEdited: true,
+                        isPartial: true
                     }
                 }
             }
@@ -1658,21 +1655,14 @@ export const getPreTenderingInboxDal = async (req: Request) => {
 
         let dataToSend: any[] = []
         result.forEach((item: any) => {
-            const updatedProcurements = item?.tendering_form?.boq?.procurements.map((proc: any) => {
-                const { procurement, ...rest } = proc;
-                return { ...rest, ...procurement };
-            });
-
-            // Assign the updated array back to item.boq.procurements
+            const updatedProcurements = item?.tendering_form?.boq?.procurements[0].procurement;
+            // Assign the updated array back
             item.tendering_form.boq.procurements = updatedProcurements;
-
-            //flatten the boq object
-            const { boq, ...rest } = item;
-            const flattenedBoq = { ...rest, ...boq }
 
             // Flatten the tendering_form object
             const { tendering_form, ...restData } = item;
-            dataToSend.push({ ...rest, ...flattenedBoq })
+            delete tendering_form.boq
+            dataToSend.push({ ...restData, ...updatedProcurements, ...tendering_form })
         })
 
         totalPage = Math.ceil(count / take)
@@ -1815,12 +1805,6 @@ export const getPreTenderingOutboxDal = async (req: Request) => {
                     select: {
                         boq: {
                             select: {
-                                reference_no: true,
-                                gst: true,
-                                estimated_cost: true,
-                                remark: true,
-                                status: true,
-                                isEdited: true,
                                 procurements: {
                                     select: {
                                         procurement: {
@@ -1845,7 +1829,10 @@ export const getPreTenderingOutboxDal = async (req: Request) => {
                                     }
                                 }
                             },
-                        }
+                        },
+                        status: true,
+                        isEdited: true,
+                        isPartial: true
                     }
                 }
             }
@@ -1854,21 +1841,14 @@ export const getPreTenderingOutboxDal = async (req: Request) => {
 
         let dataToSend: any[] = []
         result.forEach((item: any) => {
-            const updatedProcurements = item?.tendering_form?.boq?.procurements.map((proc: any) => {
-                const { procurement, ...rest } = proc;
-                return { ...rest, ...procurement };
-            });
-
-            // Assign the updated array back to item.boq.procurements
+            const updatedProcurements = item?.tendering_form?.boq?.procurements[0].procurement;
+            // Assign the updated array back
             item.tendering_form.boq.procurements = updatedProcurements;
-
-            //flatten the boq object
-            const { boq, ...rest } = item;
-            const flattenedBoq = { ...rest, ...boq }
 
             // Flatten the tendering_form object
             const { tendering_form, ...restData } = item;
-            dataToSend.push({ ...rest, ...flattenedBoq })
+            delete tendering_form.boq
+            dataToSend.push({ ...restData, ...updatedProcurements, ...tendering_form })
         })
 
         totalPage = Math.ceil(count / take)
