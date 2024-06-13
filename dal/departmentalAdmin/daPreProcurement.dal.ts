@@ -1897,3 +1897,68 @@ export const getPreTenderingOutboxDal = async (req: Request) => {
         return { error: true, message: getErrorMessage(err) }
     }
 }
+
+
+
+export const approveBoqForPtDal = async (req: Request) => {
+    const { reference_no }: { reference_no: string } = req.body
+    try {
+
+        const boqData = await prisma.boq.findFirst({
+            where: {
+                reference_no: reference_no
+            },
+            select: {
+                status: true
+            }
+        })
+
+        if (boqData?.status !== 0 && boqData?.status !== 1) {
+            throw { error: true, message: 'Invalid status of BOQ for returning back to accountant' }
+        }
+
+        //start transaction
+        await prisma.$transaction(async (tx) => {
+
+            await tx.da_boq_inbox.delete({
+                where: {
+                    reference_no: reference_no
+                }
+            })
+
+            await tx.acc_boq_inbox.create({
+                data: {
+                    reference_no: reference_no
+                }
+            })
+
+            await tx.da_boq_outbox.create({
+                data: {
+                    reference_no: reference_no
+                }
+            })
+
+            await tx.acc_boq_outbox.delete({
+                where: {
+                    reference_no: reference_no
+                }
+            })
+
+            await tx.boq.update({
+                where: {
+                    reference_no: reference_no
+                },
+                data: {
+                    status: 2,
+                    remark: '' as string
+                }
+            })
+
+        })
+
+        return "Approved for pre tender"
+    } catch (err: any) {
+        console.log(err)
+        return { error: true, message: getErrorMessage(err) }
+    }
+}

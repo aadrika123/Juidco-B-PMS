@@ -2684,19 +2684,21 @@ export const getPreTenderDal = async (req: Request) => {
         }
 
         //Append document in bid openers
-        await Promise.all(
-            result?.bid_openers?.bid_openers_docs.map(async (item: any) => {
-                const headers = {
-                    "token": "8Ufn6Jio6Obv9V7VXeP7gbzHSyRJcKluQOGorAD58qA1IQKYE0"
-                }
-                await axios.post(process.env.DMS_GET || '', { "referenceNo": item?.ReferenceNo }, { headers })
-                    .then((response) => {
-                        item.docUrl = response?.data?.data?.fullPath
-                    }).catch((err) => {
-                        throw err
-                    })
-            }) as any
-        )
+        if (result?.bid_openers) {
+            await Promise.all(
+                result?.bid_openers?.bid_openers_docs.map(async (item: any) => {
+                    const headers = {
+                        "token": "8Ufn6Jio6Obv9V7VXeP7gbzHSyRJcKluQOGorAD58qA1IQKYE0"
+                    }
+                    await axios.post(process.env.DMS_GET || '', { "referenceNo": item?.ReferenceNo }, { headers })
+                        .then((response) => {
+                            item.docUrl = response?.data?.data?.fullPath
+                        }).catch((err) => {
+                            throw err
+                        })
+                }) as any
+            )
+        }
 
 
         return result ? result : null
@@ -2705,6 +2707,51 @@ export const getPreTenderDal = async (req: Request) => {
         return { error: true, message: getErrorMessage(err) }
     }
 }
+
+
+
+// export const finalSubmissionPt = async (req: Request) => {
+//     const { reference_no } = req.body
+//     try {
+
+//         if (!reference_no) {
+//             throw { error: true, message: "Reference number is required as 'reference_no'" }
+//         }
+
+//         if (!await checkExistence(reference_no)) {
+//             throw { error: true, message: "Invalid pre-tender form" }
+//         }
+
+//         //existence check for basic details
+//         const basicDetailsCount = await prisma.basic_details.count({
+//             where: {
+//                 reference_no: reference_no
+//             }
+//         })
+//         if (basicDetailsCount === 0) throw { error: true, message: 'Basic details form is not completely filled' }
+
+//         //existence check for cover details
+//         const coverDetailsCount = await prisma.cover_details.count({
+//             where: {
+//                 reference_no: reference_no
+//             }
+//         })
+//         if (coverDetailsCount === 0) throw { error: true, message: 'Cover details form is not completely filled' }
+
+//         //existence check for work details
+//         const workDetailsCount = await prisma.work_details.count({
+//             where: {
+//                 reference_no: reference_no
+//             }
+//         })
+//         if (workDetailsCount === 0) throw { error: true, message: 'Work details form is not completely filled' }
+
+//         return result ? result : null
+//     } catch (err: any) {
+//         console.log(err)
+//         return { error: true, message: getErrorMessage(err) }
+//     }
+// }
 
 
 
