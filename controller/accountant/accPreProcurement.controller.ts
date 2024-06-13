@@ -20,7 +20,8 @@ import {
     createBidOpenersPtDal,
     getBidOpenersPtDal,
     createCoverDetailsPtDal,
-    getCoverDetailsPtDal
+    getCoverDetailsPtDal,
+    getPreTenderDal
 } from "../../dal/accountant/accPreProcurement.dal";
 import { getPreTenderingOutboxDal } from "../../dal/departmentalAdmin/daPreProcurement.dal";
 
@@ -447,6 +448,25 @@ export const getCoverDetailsPt = async (req: Request, res: Response) => {
         res.status(404).json({
             status: false,
             message: `Error while fetching cover details`,
+            error: result?.message
+        })
+    }
+}
+
+
+//Get all at once
+export const getPreTender = async (req: Request, res: Response) => {
+    const result: any = await getPreTenderDal(req)
+    if (!result?.error) {
+        res.status(200).json({
+            status: true,
+            message: `Pre tender fetched successfully`,
+            data: result
+        })
+    } else {
+        res.status(404).json({
+            status: false,
+            message: `Error while fetching pre tender`,
             error: result?.message
         })
     }
