@@ -19,6 +19,7 @@ import inventoryRoute from './router/inventory/inventory.route'
 import accPreProcurementRoute from './router/accountant/preProcurement/accPreProcurement.route'
 import boqRoute from './router/boq/boq.route'
 import otherRoute from './router/other/imageUploader.route'
+import preTenderRoute from './router/preTender/preTender.route'
 
 
 config()
@@ -55,6 +56,7 @@ app.use('/api/pms/inventory', inventoryRoute)
 
 //routes that are not for a single role only
 app.use('/api/pms/boq', boqRoute)
+app.use('/api/pms/pre-tender', preTenderRoute)
 app.use('/api/pms/', otherRoute)
 
 //----------------------------routes--------------------------------------------------------------------------------------------------------------------------
