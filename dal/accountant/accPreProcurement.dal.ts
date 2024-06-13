@@ -2783,12 +2783,17 @@ export const forwardToDaPtDal = async (req: Request) => {
                 reference_no: reference_no
             },
             select: {
-                status: true
+                status: true,
+                isPartial: true
             }
         })
 
         if (preTender?.status !== -1 && preTender?.status !== 0) {
             throw { error: true, message: `Reference no. : ${reference_no} is not valid to be forwarded to DA.` }
+        }
+
+        if (preTender?.isPartial) {
+            throw { error: true, message: `Please fill all the forms and submit before forwarding to DA` }
         }
 
         //start transaction
