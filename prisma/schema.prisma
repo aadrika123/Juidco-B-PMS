@@ -468,8 +468,7 @@ model cover_details_docs {
     id              String        @id @default(uuid())
     cover_detailsId String
     type            String
-    ReferenceNo     String
-    uniqueId        String?
+    docPath         String[]
     createdAt       DateTime      @default(now())
     updatedAt       DateTime      @updatedAt
     cover_details   cover_details @relation(fields: [cover_detailsId], references: [id])

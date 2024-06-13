@@ -10,7 +10,7 @@ export const uploadGetUrl = async (req: Request, res: Response) => {
     } else {
         res.status(400).json({
             status: false,
-            message: `Pre procurement creation failed`,
+            message: `Upload failed`,
             error: result?.message
         })
     }

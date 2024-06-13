@@ -1,5 +1,5 @@
 import { Request } from "express";
-import { PrismaClient, basic_details, bid_openers, critical_dates, fee_details, work_details } from "@prisma/client";
+import { PrismaClient, basic_details, bid_openers, cover_details, cover_details_docs, critical_dates, fee_details, work_details } from "@prisma/client";
 import getErrorMessage from "../../lib/getErrorMessage";
 import { imageUploader } from "../../lib/imageUploader";
 import { pagination, uploadedDoc } from "../../type/common.type";
@@ -2277,7 +2277,7 @@ export const createBidOpenersPtDal = async (req: Request) => {
                 if (tableExistence) {
                     await tx.bid_openers_docs.deleteMany({
                         where: {
-                            ReferenceNo: formattedData?.reference_no,
+                            bid_openersId: bid_openers_id,
                             type: 'B01'
                         }
                     })
@@ -2402,134 +2402,124 @@ export const getBidOpenersPtDal = async (req: Request) => {
 
 
 export const createCoverDetailsPtDal = async (req: Request) => {
-    const { preTender, tabs } = req.body
-    // const { B01, B02 } = req.files as any
+    const preTender = req.body
     try {
-        // console.log('preTender',preTender)
-        // console.log('doc',doc)
-        console.log('body',typeof(JSON.parse(tabs)))
-        // tabs.map((item:any)=>{
-        //     console.log(item)
-        // })
+
+        const formattedData = JSON.parse(typeof (preTender) !== 'string' ? JSON.stringify(preTender) : preTender)
+
+        if (!formattedData?.reference_no) {
+            throw { error: true, message: "Reference number is required as 'reference_no'" }
+        }
+
+        const existence = await checkExistence(formattedData?.reference_no)
 
 
-        // const formattedData: bid_openers = JSON.parse(typeof (preTender) !== 'string' ? JSON.stringify(preTender) : preTender)
-        // const formattedDoc = JSON.parse(typeof (doc) !== 'string' ? JSON.stringify(doc) : doc)
+        if (!await isBoqValid(formattedData?.reference_no)) {
+            throw { error: true, message: "BOQ is not valid to be forwarded for pre tender" }
+        }
+        const tableExistence = await prisma.cover_details.count({
+            where: {
+                reference_no: formattedData?.reference_no
+            }
+        })
 
-        // if (!formattedData?.reference_no) {
-        //     throw { error: true, message: "Reference number is required as 'reference_no'" }
-        // }
+        const preparedData = {
+            reference_no: formattedData?.reference_no,
+            noOfCovers: Number(formattedData?.noOfCovers),
+            content: formattedData?.content
+        }
+        let cover_details_id: string | undefined = undefined
+        //start transaction
+        await prisma.$transaction(async (tx) => {
 
-        // const existence = await checkExistence(formattedData?.reference_no)
+            if (!existence) {
+                await tx.tendering_form.create({
+                    data: {
+                        reference_no: formattedData?.reference_no
+                    }
+                })
+            }
 
+            if (!tableExistence) {
+                const created = await tx.cover_details.create({
+                    data: preparedData
+                })
+                cover_details_id = created?.id
+            } else {
+                const updated = await tx.cover_details.update({
+                    where: {
+                        reference_no: formattedData?.reference_no
+                    },
+                    data: preparedData
+                })
+                cover_details_id = updated?.id
+            }
 
-        // if (!await isBoqValid(formattedData?.reference_no)) {
-        //     throw { error: true, message: "BOQ is not valid to be forwarded for pre tender" }
-        // }
-        // const tableExistence = await prisma.bid_openers.count({
-        //     where: {
-        //         reference_no: formattedData?.reference_no
-        //     }
-        // })
+            if (formattedData?.tabs.length > 0 && cover_details_id) {
 
-        // const preparedData = {
-        //     reference_no: formattedData?.reference_no,
-        //     b01NameDesig: formattedData?.b01NameDesig,
-        //     b01Email: formattedData?.b01Email,
-        //     b02NameDesig: formattedData?.b02NameDesig,
-        //     b02Email: formattedData?.b02Email,
-        //     b03NameDesig: formattedData?.b03NameDesig,
-        //     b03Email: formattedData?.b03Email,
-        // }
-        // let bid_openers_id: string | undefined = undefined
-        // //start transaction
-        // await prisma.$transaction(async (tx) => {
+                if (tableExistence) {
+                    await tx.cover_details_docs.deleteMany({
+                        where: {
+                            cover_detailsId: cover_details_id
+                        }
+                    })
+                }
 
-        //     if (!existence) {
-        //         await tx.tendering_form.create({
-        //             data: {
-        //                 reference_no: formattedData?.reference_no
-        //             }
-        //         })
-        //     }
+                await Promise.all(
+                    formattedData?.tabs.map(async (item: any) => {
+                        await tx.cover_details_docs.create({
+                            data: {
+                                cover_detailsId: cover_details_id,
+                                type: item?.value,
+                                docPath: item?.docs
+                            } as cover_details_docs
+                        })
+                    })
+                )
+            }
 
-        //     if (!tableExistence) {
-        //         const created = await tx.bid_openers.create({
-        //             data: preparedData
-        //         })
-        //         bid_openers_id = created?.id
-        //     } else {
-        //         const updated = await tx.bid_openers.update({
-        //             where: {
-        //                 reference_no: formattedData?.reference_no
-        //             },
-        //             data: preparedData
-        //         })
-        //         bid_openers_id = updated?.id
-        //     }
+        })
 
-        //     if (B01 && bid_openers_id) {
-        //         const uploaded = await imageUploader(B01)   //It will return reference number and unique id as an object after uploading.
-
-        //         if (tableExistence) {
-        //             await tx.bid_openers_docs.deleteMany({
-        //                 where: {
-        //                     ReferenceNo: formattedData?.reference_no,
-        //                     type: 'B01'
-        //                 }
-        //             })
-        //         }
-
-        //         await Promise.all(
-        //             uploaded.map(async (item) => {
-        //                 await tx.bid_openers_docs.create({
-        //                     data: {
-        //                         bid_openersId: bid_openers_id,
-        //                         type: 'B01',
-        //                         ReferenceNo: item?.ReferenceNo,
-        //                         uniqueId: item?.uniqueId,
-        //                         nameDesig: formattedDoc?.B01?.nameDesig,
-        //                         description: formattedDoc?.B01?.description,
-        //                         docSize: formattedDoc?.B01?.docSize,
-        //                     } as any
-        //                 })
-        //             })
-        //         )
-        //     }
-
-        //     if (B02 && bid_openers_id) {
-        //         const uploaded = await imageUploader(B02)   //It will return reference number and unique id as an object after uploading.
-
-        //         if (tableExistence) {
-        //             await tx.bid_openers_docs.deleteMany({
-        //                 where: {
-        //                     ReferenceNo: formattedData?.reference_no,
-        //                     type: 'B02'
-        //                 }
-        //             })
-        //         }
-
-        //         await Promise.all(
-        //             uploaded.map(async (item) => {
-        //                 await tx.bid_openers_docs.create({
-        //                     data: {
-        //                         bid_openersId: bid_openers_id,
-        //                         type: 'B02',
-        //                         ReferenceNo: item?.ReferenceNo,
-        //                         uniqueId: item?.uniqueId,
-        //                         nameDesig: formattedDoc?.B02?.nameDesig,
-        //                         description: formattedDoc?.B02?.description,
-        //                         docSize: formattedDoc?.B02?.docSize,
-        //                     } as any
-        //                 })
-        //             })
-        //         )
-        //     }
+        return !tableExistence ? 'Cover details added' : 'Cover details updated'
+    } catch (err: any) {
+        console.log(err)
+        return { error: true, message: getErrorMessage(err) }
+    }
+}
 
 
-        // })
 
-        // return !tableExistence ? 'Bid openers added' : 'Bid openers updated'
+export const getCoverDetailsPtDal = async (req: Request) => {
+    const { reference_no } = req.params
+    try {
+
+        if (!reference_no) {
+            throw { error: true, message: "Reference number is required as 'reference_no'" }
+        }
+
+        if (!await checkExistence(reference_no)) {
+            throw { error: true, message: "Invalid pre-tender form" }
+        }
+
+        const result = await prisma.cover_details.findFirst({
+            where: {
+                reference_no: reference_no
+            },
+            select: {
+                id: true,
+                reference_no: true,
+                noOfCovers: true,
+                content: true,
+                cover_details_docs: {
+                    select: {
+                        type: true,
+                        docPath: true
+                    }
+                }
+            }
+        })
+
+        return result ? result : null
     } catch (err: any) {
         console.log(err)
         return { error: true, message: getErrorMessage(err) }
