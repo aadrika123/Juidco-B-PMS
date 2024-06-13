@@ -24,7 +24,8 @@ import {
     createBidOpenersPt,
     getBidOpenersPt,
     createCoverDetailsPt,
-    getCoverDetailsPt
+    getCoverDetailsPt,
+    getPreTender
 } from "../../../controller/accountant/accPreProcurement.controller";
 
 // router.use(accAuth)
@@ -52,6 +53,7 @@ router.get('/pre-tender/fee-details/:reference_no', getFeeDetailsPt)
 router.get('/pre-tender/critical-dates/:reference_no', getCriticalDatesPt)
 router.get('/pre-tender/bid-openers/:reference_no', getBidOpenersPt)
 router.get('/pre-tender/cover-details/:reference_no', getCoverDetailsPt)
+router.get('/pre-tender/:reference_no', getPreTender)
 
 
 export default router
