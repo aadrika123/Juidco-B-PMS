@@ -2104,3 +2104,73 @@ export const rejectPreTenderDal = async (req: Request) => {
         return { error: true, message: getErrorMessage(err) }
     }
 }
+
+
+
+export const returnToAccPtDal = async (req: Request) => {
+    const { reference_no, remark }: { reference_no: string, remark: string } = req.body
+    try {
+
+        const preTenderData = await prisma.tendering_form.findFirst({
+            where: {
+                reference_no: reference_no
+            },
+            select: {
+                status: true,
+                isPartial: true,
+            }
+        })
+
+        if (preTenderData?.status !== 1 && preTenderData?.status !== 69) {
+            throw { error: true, message: 'Invalid status of pre tender to be rejected' }
+        }
+
+        if (preTenderData?.isPartial) {
+            throw { error: true, message: 'Pre tender form is partially filled' }
+        }
+
+        // start transaction
+        await prisma.$transaction(async (tx) => {
+
+            await tx.da_pre_tender_inbox.delete({
+                where: {
+                    reference_no: reference_no
+                }
+            })
+
+            await tx.acc_pre_tender_inbox.create({
+                data: {
+                    reference_no: reference_no
+                }
+            })
+
+            await tx.da_pre_tender_outbox.create({
+                data: {
+                    reference_no: reference_no
+                }
+            })
+
+            await tx.acc_pre_tender_outbox.delete({
+                where: {
+                    reference_no: reference_no
+                }
+            })
+
+            await tx.boq.update({
+                where: {
+                    reference_no: reference_no
+                },
+                data: {
+                    status: -1,
+                    remark: remark as string
+                }
+            })
+
+        })
+
+        return "Returned to accountant"
+    } catch (err: any) {
+        console.log(err)
+        return { error: true, message: getErrorMessage(err) }
+    }
+}

@@ -19,7 +19,8 @@ import {
     rejectBoqDal,
     approveBoqForPtDal,
     approvePreTenderDal,
-    rejectPreTenderDal
+    rejectPreTenderDal,
+    returnToAccPtDal
 } from "../../dal/departmentalAdmin/daPreProcurement.dal";
 
 
@@ -392,6 +393,25 @@ export const rejectPreTender = async (req: Request, res: Response) => {
         res.status(404).json({
             status: false,
             message: `Error while rejecting`,
+            error: result?.message
+        })
+    }
+}
+
+
+
+export const returnToAccPt = async (req: Request, res: Response) => {
+    const result: any = await returnToAccPtDal(req)
+    if (!result?.error) {
+        res.status(200).json({
+            status: true,
+            message: `Returned`,
+            data: result
+        })
+    } else {
+        res.status(404).json({
+            status: false,
+            message: `Error while returning`,
             error: result?.message
         })
     }
