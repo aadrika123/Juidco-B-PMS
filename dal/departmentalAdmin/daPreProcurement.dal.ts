@@ -1646,7 +1646,8 @@ export const getPreTenderingInboxDal = async (req: Request) => {
                         },
                         status: true,
                         isEdited: true,
-                        isPartial: true
+                        isPartial: true,
+                        remark: true
                     }
                 }
             }
@@ -1832,7 +1833,8 @@ export const getPreTenderingOutboxDal = async (req: Request) => {
                         },
                         status: true,
                         isEdited: true,
-                        isPartial: true
+                        isPartial: true,
+                        remark: true
                     }
                 }
             }
@@ -2003,7 +2005,7 @@ export const approvePreTenderDal = async (req: Request) => {
                 }
             })
 
-            await tx.boq.update({
+            await tx.tendering_form.update({
                 where: {
                     reference_no: reference_no
                 },
@@ -2079,7 +2081,7 @@ export const rejectPreTenderDal = async (req: Request) => {
                 }
             })
 
-            await tx.boq.update({
+            await tx.tendering_form.update({
                 where: {
                     reference_no: reference_no
                 },
@@ -2156,7 +2158,7 @@ export const returnToAccPtDal = async (req: Request) => {
                 }
             })
 
-            await tx.boq.update({
+            await tx.tendering_form.update({
                 where: {
                     reference_no: reference_no
                 },

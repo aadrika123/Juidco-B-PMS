@@ -1410,7 +1410,8 @@ export const getPreTenderingInboxDal = async (req: Request) => {
                         },
                         status: true,
                         isEdited: true,
-                        isPartial: true
+                        isPartial: true,
+                        remark: true
                     }
                 }
             }
@@ -1596,7 +1597,8 @@ export const getPreTenderingOutboxDal = async (req: Request) => {
                         },
                         status: true,
                         isEdited: true,
-                        isPartial: true
+                        isPartial: true,
+                        remark: true
                     }
                 }
             }
