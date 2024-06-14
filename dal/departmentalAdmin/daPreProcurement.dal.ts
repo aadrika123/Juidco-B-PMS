@@ -2102,7 +2102,7 @@ export const approvePreTenderDal = async (req: Request) => {
             await Promise.all(
                 procurement.map(async (procurement_no: string) => {
 
-                    const proc = await prisma.procurement.findFirst({
+                    const proc: any = await prisma.procurement.findFirst({
                         where: {
                             procurement_no: procurement_no
                         },
@@ -2120,6 +2120,8 @@ export const approvePreTenderDal = async (req: Request) => {
                         }
                     })
 
+                    console.log(proc)
+
                     const boqProc = await prisma.boq_procurement.findFirst({
                         where: {
                             procurement_no: procurement_no
@@ -2133,7 +2135,7 @@ export const approvePreTenderDal = async (req: Request) => {
                     })
 
                     await tx.procurement_before_boq.create({
-                        data: proc as procurement
+                        data: proc
                     })
 
                     await tx.procurement.update({
