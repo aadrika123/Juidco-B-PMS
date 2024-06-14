@@ -1,5 +1,5 @@
 import { Request } from "express";
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, procurement } from "@prisma/client";
 import getErrorMessage from "../../lib/getErrorMessage";
 import { imageUploader } from "../../lib/imageUploader";
 import { pagination } from "../../type/common.type";
@@ -2102,7 +2102,25 @@ export const approvePreTenderDal = async (req: Request) => {
             await Promise.all(
                 procurement.map(async (procurement_no: string) => {
 
-                    const boqProc = await tx.boq_procurement.findFirst({
+                    const proc = await prisma.procurement.findFirst({
+                        where: {
+                            procurement_no: procurement_no
+                        },
+                        select: {
+                            procurement_no: true,
+                            category_masterId: true,
+                            subcategory_masterId: true,
+                            brand_masterId: true,
+                            description: true,
+                            quantity: true,
+                            rate: true,
+                            unit: true,
+                            total_rate: true,
+                            remark: true
+                        }
+                    })
+
+                    const boqProc = await prisma.boq_procurement.findFirst({
                         where: {
                             procurement_no: procurement_no
                         },
@@ -2112,6 +2130,10 @@ export const approvePreTenderDal = async (req: Request) => {
                             amount: true,
                             remark: true
                         }
+                    })
+
+                    await tx.procurement_before_boq.create({
+                        data: proc as procurement
                     })
 
                     await tx.procurement.update({

@@ -10,39 +10,42 @@ datasource db {
 //Master entry=======================================================================================================================================================
 
 model category_master {
-    id                  String                @id @default(uuid())
-    name                String                @unique
-    subcategory_master  subcategory_master[]
-    createdAt           DateTime              @default(now())
-    updatedAt           DateTime              @updatedAt
-    inventory           inventory[]
-    procurement         procurement[]
-    procurement_history procurement_history[]
+    id                     String                   @id @default(uuid())
+    name                   String                   @unique
+    subcategory_master     subcategory_master[]
+    createdAt              DateTime                 @default(now())
+    updatedAt              DateTime                 @updatedAt
+    inventory              inventory[]
+    procurement            procurement[]
+    procurement_history    procurement_history[]
+    procurement_before_boq procurement_before_boq[]
 }
 
 model subcategory_master {
-    id                  String                @id @default(uuid())
-    name                String                @unique
-    category            category_master       @relation(fields: [category_masterId], references: [id])
-    category_masterId   String
-    createdAt           DateTime              @default(now())
-    updatedAt           DateTime              @updatedAt
-    inventory           inventory[]
-    brand_master        brand_master[]
-    procurement         procurement[]
-    procurement_history procurement_history[]
+    id                     String                   @id @default(uuid())
+    name                   String                   @unique
+    category               category_master          @relation(fields: [category_masterId], references: [id])
+    category_masterId      String
+    createdAt              DateTime                 @default(now())
+    updatedAt              DateTime                 @updatedAt
+    inventory              inventory[]
+    brand_master           brand_master[]
+    procurement            procurement[]
+    procurement_history    procurement_history[]
+    procurement_before_boq procurement_before_boq[]
 }
 
 model brand_master {
-    id                   String                @id @default(uuid())
-    name                 String
-    subcategory          subcategory_master?   @relation(fields: [subcategory_masterId], references: [id])
-    subcategory_masterId String?
-    createdAt            DateTime              @default(now())
-    updatedAt            DateTime              @updatedAt
-    inventory            inventory[]
-    procurement          procurement[]
-    procurement_history  procurement_history[]
+    id                     String                   @id @default(uuid())
+    name                   String
+    subcategory            subcategory_master?      @relation(fields: [subcategory_masterId], references: [id])
+    subcategory_masterId   String?
+    createdAt              DateTime                 @default(now())
+    updatedAt              DateTime                 @updatedAt
+    inventory              inventory[]
+    procurement            procurement[]
+    procurement_history    procurement_history[]
+    procurement_before_boq procurement_before_boq[]
 }
 
 // pre-procurement============================================================================================================================================================================================================================================================================================================
@@ -264,6 +267,25 @@ model procurement {
     boq_procurement              boq_procurement[]
     acc_pre_procurement_inbox    acc_pre_procurement_inbox?
     acc_pre_procurement_outbox   acc_pre_procurement_outbox?
+}
+
+model procurement_before_boq {
+    id                   String              @id @default(uuid())
+    procurement_no       String              @unique
+    category             category_master?    @relation(fields: [category_masterId], references: [id])
+    category_masterId    String?
+    subcategory          subcategory_master? @relation(fields: [subcategory_masterId], references: [id])
+    subcategory_masterId String?
+    brand                brand_master?       @relation(fields: [brand_masterId], references: [id])
+    brand_masterId       String?
+    description          String?
+    quantity             Int                 @default(0)
+    rate                 Float?
+    unit                 String?
+    total_rate           Float?
+    remark               String?
+    createdAt            DateTime            @default(now())
+    updatedAt            DateTime            @updatedAt
 }
 
 model post_procurement {
