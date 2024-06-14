@@ -499,6 +499,81 @@ export const releaseForTenderDal = async (req: Request) => {
 }
 
 
+
+export const releaseForTenderByProcNoDal = async (req: Request) => {
+    const { procurement }: { procurement: string } = req.body
+    const img = req.files
+    const formattedProcurement = typeof (procurement) !== 'string' ? JSON.stringify(procurement) : procurement
+    try {
+        await Promise.all(
+            JSON.parse(formattedProcurement).map(async (procurement_no: string) => {
+                const inbox: number = await prisma.da_pre_procurement_inbox.count({
+                    where: {
+                        procurement_no: procurement_no
+                    }
+                })
+
+                if (inbox === 0) {
+                    throw { error: true, message: 'Invalid inbox ID' }
+                }
+
+                if (img) {
+                    const uploaded = await imageUploader(img)   //It will return reference number and unique id as an object after uploading.
+
+                    await Promise.all(
+                        uploaded.map(async (item) => {
+                            await prisma.note_sheet.create({
+                                data: {
+                                    procurement_no: procurement_no,
+                                    ReferenceNo: item?.ReferenceNo,
+                                    uniqueId: item?.uniqueId,
+                                    operation: 2
+                                }
+                            })
+                        })
+                    )
+                }
+
+                await prisma.$transaction([
+                    prisma.da_pre_procurement_outbox.create({
+                        data: { procurement_no: procurement_no }
+                    }),
+                    prisma.sr_pre_procurement_inbox.create({
+                        data: { procurement_no: procurement_no }
+                    }),
+                    prisma.da_post_procurement_inbox.create({
+                        data: { procurement_no: procurement_no }
+                    }),
+                    prisma.procurement_status.update({
+                        where: {
+                            procurement_no: procurement_no
+                        },
+                        data: {
+                            status: 2
+                        }
+                    }),
+                    prisma.da_pre_procurement_inbox.delete({
+                        where: {
+                            procurement_no: procurement_no
+                        },
+                    }),
+                    prisma.sr_pre_procurement_outbox.delete({
+                        where: {
+                            procurement_no: procurement_no
+                        },
+                    })
+                ])
+            })
+        )
+        return "Released for tender"
+    } catch (err: any) {
+        console.log(err)
+        return { error: true, message: getErrorMessage(err) }
+    }
+}
+
+
+
 export const getPreProcurementOutboxDal = async (req: Request) => {
     const page: number | undefined = Number(req?.query?.page)
     const take: number | undefined = Number(req?.query?.take)
@@ -1489,15 +1564,21 @@ export const rejectBoqDal = async (req: Request) => {
                     remark: remark
                 }
             })
+
+            const procurement_no_array = boqData?.procurements.map((item) => item?.procurement_no)
+
+            req.body = {
+                procurement_no: procurement_no_array,
+                remark: 'BOQ rejected'
+            }
+            const result: any = await rejectByProcurementNoDal(req)
+            if (result?.error) {
+                throw { error: true, message: 'Error while rejecting procurement' }
+            }
+
         })
 
-        const procurement_no_array = boqData?.procurements.map((item) => item?.procurement_no)
 
-        req.body = {
-            procurement_no: procurement_no_array,
-            remark: 'BOQ rejected'
-        }
-        await rejectByProcurementNoDal(req)
 
         return "Rejected"
     } catch (err: any) {
@@ -2015,13 +2096,16 @@ export const approvePreTenderDal = async (req: Request) => {
                 }
             })
 
+            const procurement = preTenderData?.boq?.procurements.map((item) => item?.procurement_no)              //append all procurement numbers inside an array to send
+
+            req.body.procurement = procurement
+
+            const result: any = await releaseForTenderByProcNoDal(req)
+            if (result?.error) {
+                throw { error: true, message: 'Error while releasing procurement' }
+            }
+
         })
-
-        const preProcurement = preTenderData?.boq?.procurements.map((item) => item?.procurement_no)              //append all procurement numbers inside an array to send
-
-        req.body.preProcurement = preProcurement
-
-        await releaseForTenderDal(req)
 
         return "Released for tender"
     } catch (err: any) {
@@ -2091,14 +2175,17 @@ export const rejectPreTenderDal = async (req: Request) => {
                 }
             })
 
+            req.body = {
+                reference_no: reference_no,
+                remark: 'Pre tender rejected'
+            }
+
+            const result: any = await rejectBoqDal(req)
+            if (result?.error) {
+                throw { error: true, message: 'Error while rejecting BOQ' }
+            }
+
         })
-
-        req.body = {
-            reference_no: reference_no,
-            remark: 'Pre tender rejected'
-        }
-
-        await rejectBoqDal(req)
 
         return "Released for tender"
     } catch (err: any) {

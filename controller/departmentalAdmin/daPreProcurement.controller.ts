@@ -6,6 +6,7 @@ import {
     backToSrDal,
     editPreProcurementDal,
     releaseForTenderDal,
+    releaseForTenderByProcNoDal,
     getPreProcurementOutboxDal,
     getPreProcurementOutboxByIdDal,
     rejectDal,
@@ -126,6 +127,24 @@ export const releaseForTender = async (req: Request, res: Response) => {
         res.status(404).json({
             status: false,
             message: `Error while releasing for tender`,
+            error: result?.message
+        })
+    }
+}
+
+
+export const releaseForTenderByProcNo = async (req: Request, res: Response) => {
+    const result: any = await releaseForTenderByProcNoDal(req)
+    if (!result?.error) {
+        res.status(200).json({
+            status: true,
+            message: `Released successfully`,
+            data: result
+        })
+    } else {
+        res.status(404).json({
+            status: false,
+            message: `Error while releasing`,
             error: result?.message
         })
     }
