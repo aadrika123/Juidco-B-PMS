@@ -20,7 +20,8 @@ import {
     getPreTenderingInbox,
     getPreTenderingOutbox,
     rejectBoq,
-    approveBoqForPt
+    approveBoqForPt,
+    approvePreTender
 } from "../../../controller/departmentalAdmin/daPreProcurement.controller";
 
 router.use(daAuth)
@@ -44,6 +45,7 @@ router.post('/pre-procurement/to-acc-boq', upload.array('img'), forwardToAccount
 router.post('/pre-procurement/boq/return-boq', returnToAccountant)
 router.post('/pre-procurement/boq/reject', rejectBoq)
 router.post('/pre-procurement/boq/approve', approveBoqForPt)
+router.post('/pre-procurement/pre-tender/approve', upload.array('img'), approvePreTender)
 
 
 
