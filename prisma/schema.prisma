@@ -239,6 +239,7 @@ model procurement {
     description                  String?
     quantity                     Int                           @default(0)
     rate                         Float?
+    unit                         String?
     total_rate                   Float?
     isEdited                     Boolean                       @default(false)
     is_partial                   Boolean                       @default(true)

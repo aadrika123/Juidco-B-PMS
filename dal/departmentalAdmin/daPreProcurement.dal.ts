@@ -2096,7 +2096,38 @@ export const approvePreTenderDal = async (req: Request) => {
                 }
             })
 
-            const procurement = preTenderData?.boq?.procurements.map((item) => item?.procurement_no)              //append all procurement numbers inside an array to send
+            const procurement = preTenderData?.boq?.procurements.map((item) => item?.procurement_no)  //append all procurement numbers inside an array to send
+
+            //update the original procurement using BOQ procurement which was approved
+            await Promise.all(
+                procurement.map(async (procurement_no: string) => {
+
+                    const boqProc = await tx.boq_procurement.findFirst({
+                        where: {
+                            procurement_no: procurement_no
+                        },
+                        select: {
+                            unit: true,
+                            rate: true,
+                            amount: true,
+                            remark: true
+                        }
+                    })
+
+                    await tx.procurement.update({
+                        where: {
+                            procurement_no: procurement_no
+                        },
+                        data: {
+                            rate: boqProc?.rate,
+                            total_rate: boqProc?.amount,
+                            remark: boqProc?.remark,
+                            unit: boqProc?.unit
+                        }
+                    })
+
+                })
+            )
 
             req.body.procurement = procurement
 
