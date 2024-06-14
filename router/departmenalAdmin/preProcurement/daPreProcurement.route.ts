@@ -23,7 +23,8 @@ import {
     approveBoqForPt,
     approvePreTender,
     rejectPreTender,
-    returnToAccPt
+    returnToAccPt,
+    releaseForTenderByProcNo,
 } from "../../../controller/departmentalAdmin/daPreProcurement.controller";
 
 router.use(daAuth)
@@ -41,6 +42,7 @@ router.get('/pre-procurement/by-order-no/:order_no', getPreProcurementByOrderNo)
 router.post('/pre-procurement/to-sr', backToSr)
 router.post('/pre-procurement/edit', editPreProcurement)
 router.post('/pre-procurement/release-tender', upload.array('img'), releaseForTender)
+router.post('/pre-procurement/release-tender-by-proc', upload.array('img'), releaseForTenderByProcNo)
 router.post('/pre-procurement/reject', reject)
 router.post('/pre-procurement/reject-procurement-no', rejectByProcurementNo)
 router.post('/pre-procurement/to-acc-boq', upload.array('img'), forwardToAccountant)
