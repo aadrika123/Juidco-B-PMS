@@ -433,6 +433,7 @@ model tendering_form {
     isEdited              Boolean                @default(false)
     isPartial             Boolean                @default(true)
     createdAt             DateTime               @default(now())
+    remark                String?
     updatedAt             DateTime               @updatedAt
     boq                   boq                    @relation(fields: [reference_no], references: [reference_no])
     basic_details         basic_details?
