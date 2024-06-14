@@ -1,5 +1,5 @@
 import { Request } from "express";
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, procurement } from "@prisma/client";
 import getErrorMessage from "../../lib/getErrorMessage";
 import { imageUploader } from "../../lib/imageUploader";
 import { pagination } from "../../type/common.type";
@@ -2096,7 +2096,60 @@ export const approvePreTenderDal = async (req: Request) => {
                 }
             })
 
-            const procurement = preTenderData?.boq?.procurements.map((item) => item?.procurement_no)              //append all procurement numbers inside an array to send
+            const procurement = preTenderData?.boq?.procurements.map((item) => item?.procurement_no)  //append all procurement numbers inside an array to send
+
+            //update the original procurement using BOQ procurement which was approved
+            await Promise.all(
+                procurement.map(async (procurement_no: string) => {
+
+                    const proc = await prisma.procurement.findFirst({
+                        where: {
+                            procurement_no: procurement_no
+                        },
+                        select: {
+                            procurement_no: true,
+                            category_masterId: true,
+                            subcategory_masterId: true,
+                            brand_masterId: true,
+                            description: true,
+                            quantity: true,
+                            rate: true,
+                            unit: true,
+                            total_rate: true,
+                            remark: true
+                        }
+                    })
+
+                    const boqProc = await prisma.boq_procurement.findFirst({
+                        where: {
+                            procurement_no: procurement_no
+                        },
+                        select: {
+                            unit: true,
+                            rate: true,
+                            amount: true,
+                            remark: true
+                        }
+                    })
+
+                    await tx.procurement_before_boq.create({
+                        data: proc as procurement
+                    })
+
+                    await tx.procurement.update({
+                        where: {
+                            procurement_no: procurement_no
+                        },
+                        data: {
+                            rate: boqProc?.rate,
+                            total_rate: boqProc?.amount,
+                            remark: boqProc?.remark,
+                            unit: boqProc?.unit
+                        }
+                    })
+
+                })
+            )
 
             req.body.procurement = procurement
 
