@@ -514,7 +514,7 @@ export const releaseForTenderByProcNoDal = async (req: Request) => {
                 })
 
                 if (inbox === 0) {
-                    throw { error: true, message: 'Invalid inbox ID' }
+                    throw { error: true, message: 'Invalid procurement number' }
                 }
 
                 if (img) {
@@ -534,35 +534,90 @@ export const releaseForTenderByProcNoDal = async (req: Request) => {
                     )
                 }
 
-                await prisma.$transaction([
-                    prisma.da_pre_procurement_outbox.create({
+                await prisma.$transaction(async (tx) => {
+
+                    await tx.da_pre_procurement_outbox.create({
                         data: { procurement_no: procurement_no }
-                    }),
-                    prisma.sr_pre_procurement_inbox.create({
+                    })
+
+                    await tx.sr_pre_procurement_inbox.create({
                         data: { procurement_no: procurement_no }
-                    }),
-                    prisma.da_post_procurement_inbox.create({
+                    })
+
+                    await tx.da_post_procurement_inbox.create({
                         data: { procurement_no: procurement_no }
-                    }),
-                    prisma.procurement_status.update({
+                    })
+
+                    await tx.procurement_status.update({
                         where: {
                             procurement_no: procurement_no
                         },
                         data: {
                             status: 2
                         }
-                    }),
-                    prisma.da_pre_procurement_inbox.delete({
+                    })
+
+                    await tx.da_pre_procurement_inbox.delete({
                         where: {
                             procurement_no: procurement_no
-                        },
-                    }),
-                    prisma.sr_pre_procurement_outbox.delete({
+                        }
+                    })
+
+                    await tx.sr_pre_procurement_outbox.delete({
                         where: {
                             procurement_no: procurement_no
                         },
                     })
-                ])
+
+                    //update the original procurement using BOQ procurement which was approved
+                    const proc: any = await tx.procurement.findFirst({
+                        where: {
+                            procurement_no: procurement_no
+                        },
+                        select: {
+                            procurement_no: true,
+                            category_masterId: true,
+                            subcategory_masterId: true,
+                            brand_masterId: true,
+                            description: true,
+                            quantity: true,
+                            rate: true,
+                            unit: true,
+                            total_rate: true,
+                            remark: true
+                        }
+                    })
+
+                    const boqProc = await tx.boq_procurement.findFirst({
+                        where: {
+                            procurement_no: procurement_no
+                        },
+                        select: {
+                            unit: true,
+                            rate: true,
+                            amount: true,
+                            remark: true
+                        }
+                    })
+
+                    await tx.procurement_before_boq.create({
+                        data: proc
+                    })
+
+                    await tx.procurement.update({
+                        where: {
+                            procurement_no: procurement_no
+                        },
+                        data: {
+                            rate: boqProc?.rate,
+                            total_rate: boqProc?.amount,
+                            remark: boqProc?.remark,
+                            unit: boqProc?.unit
+                        }
+                    })
+
+
+                })
             })
         )
         return "Released for tender"
@@ -2098,60 +2153,6 @@ export const approvePreTenderDal = async (req: Request) => {
 
             const procurement = preTenderData?.boq?.procurements.map((item) => item?.procurement_no)  //append all procurement numbers inside an array to send
 
-            //update the original procurement using BOQ procurement which was approved
-            await Promise.all(
-                procurement.map(async (procurement_no: string) => {
-
-                    const proc: any = await prisma.procurement.findFirst({
-                        where: {
-                            procurement_no: procurement_no
-                        },
-                        select: {
-                            procurement_no: true,
-                            category_masterId: true,
-                            subcategory_masterId: true,
-                            brand_masterId: true,
-                            description: true,
-                            quantity: true,
-                            rate: true,
-                            unit: true,
-                            total_rate: true,
-                            remark: true
-                        }
-                    })
-
-                    console.log(proc)
-
-                    const boqProc = await prisma.boq_procurement.findFirst({
-                        where: {
-                            procurement_no: procurement_no
-                        },
-                        select: {
-                            unit: true,
-                            rate: true,
-                            amount: true,
-                            remark: true
-                        }
-                    })
-
-                    await tx.procurement_before_boq.create({
-                        data: proc
-                    })
-
-                    await tx.procurement.update({
-                        where: {
-                            procurement_no: procurement_no
-                        },
-                        data: {
-                            rate: boqProc?.rate,
-                            total_rate: boqProc?.amount,
-                            remark: boqProc?.remark,
-                            unit: boqProc?.unit
-                        }
-                    })
-
-                })
-            )
 
             req.body.procurement = procurement
 
