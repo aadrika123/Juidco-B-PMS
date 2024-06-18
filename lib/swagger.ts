@@ -29,13 +29,16 @@ const options = {
             },
         ],
     },
-    apis: ['**/*.ts'], // Adjust path to match your project structure
+    apis: ['**/*.ts'], // Path to the swagger documentation(in this case - all '.ts' files)
 };
 
 const specs = swaggerJsdoc(options);
 
 const uiOptions = {
     customCss: '.swagger-ui .topbar { display: none }',
+    swaggerOptions: {
+        docExpansion: 'none' // Ensure tags are not expanded by default
+    }
 };
 
 export default (app: Application): void => {

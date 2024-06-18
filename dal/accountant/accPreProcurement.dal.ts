@@ -573,7 +573,7 @@ export const createBoqDal = async (req: Request) => {
             });
         });
 
-        return 'BOQ Created';
+        return reference_no;
     } catch (err: any) {
         console.log(err);
         return { error: true, message: getErrorMessage(err) };
