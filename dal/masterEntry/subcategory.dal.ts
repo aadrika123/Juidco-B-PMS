@@ -15,12 +15,12 @@ export const createSubcategoryDal = async (req: Request) => {
     }
 
     try {
-        const result = prisma.subcategory_master.create({
+        const result = await prisma.subcategory_master.create({
             data: data
         })
         return result
     } catch (err: any) {
-        console.log(err?.message)
+        console.log(err)
         return { error: true, message: err?.message }
     }
 }
@@ -39,7 +39,7 @@ export const getSubcategoryDal = async (req: Request) => {
         })
         return result
     } catch (err: any) {
-        console.log(err?.message)
+        console.log(err)
         return { error: true, message: err?.message }
     }
 }
@@ -55,7 +55,7 @@ export const getSubcategoryByCategoryIdDal = async (req: Request) => {
         })
         return result
     } catch (err: any) {
-        console.log(err?.message)
+        console.log(err)
         return { error: true, message: err?.message }
     }
 }
