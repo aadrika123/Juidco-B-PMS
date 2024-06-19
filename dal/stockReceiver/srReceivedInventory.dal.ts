@@ -1003,6 +1003,15 @@ export const addToInventoryDal = async (req: Request) => {
                 })
                 if (!srRecInvInDel) throw { error: true, message: 'Error while deleting SR inbox' }
             }
+
+            await tx.notification.create({
+				data: {
+					role_id: Number(process.env.ROLE_DA),
+					title: 'Stock added to inventory',
+					destination: 23,
+					description: `Stock having procurement Number : ${procurement_no} has been added to inventory.`,
+				},
+			})
         })
 
         return {
