@@ -25,7 +25,7 @@ router.get('/pre-procurement/outbox', getPreProcurementOutbox)
 router.get('/pre-procurement/outbox/:id', getPreProcurementOutboxById)
 router.get('/pre-procurement/:id', getPreProcurementById)
 router.get('/pre-procurement/by-order-no/:order_no', getPreProcurementByOrderNo)
-router.post('/pre-procurement/to-da', upload.array('img'), forwardToDa)
+router.post('/pre-procurement/to-da', upload.array('img'), srAuth, forwardToDa)
 router.post('/pre-procurement/edit', editPreProcurement)
 
 
