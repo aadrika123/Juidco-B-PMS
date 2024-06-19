@@ -637,3 +637,16 @@ model da_pre_tender_outbox {
     createdAt      DateTime       @default(now())
     updatedAt      DateTime       @updatedAt
 }
+
+// notification================================================================================================================================================================
+
+model notification {
+    id          String   @id @default(uuid())
+    role_id     Int
+    title       String
+    description String?
+    isSeen      Boolean  @default(false)
+    destination Int? //10=sr pre-proc inbox, 20=da pre-proc inbox, 21=da boq inbox, 22=da pre-tender inbox, 30=acc pre-proc inbox, 31=acc boq inbox, 32=acc pre-tender inbox, 11=sr post-proc inbox, 12=sr rec-inv inbox, 23=da post proc inbox, 24=da rec-inv inbox,
+    createdAt   DateTime @default(now())
+    updatedAt   DateTime @updatedAt
+}
