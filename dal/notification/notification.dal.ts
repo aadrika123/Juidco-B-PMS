@@ -9,6 +9,21 @@ export const getNotificationsDal = async (req: Request) => {
 	const authData = typeof req?.body?.auth === 'string' ? JSON.parse(req?.body?.auth) : req?.body?.auth
 	try {
 		const roles = await extractRoles(authData?.id)
+		const totalCount = await prisma.notification.count({
+			where: {
+				role_id: {
+					in: roles,
+				},
+			},
+		})
+		const unseenCount = await prisma.notification.count({
+			where: {
+				role_id: {
+					in: roles,
+				},
+				isSeen: false,
+			},
+		})
 		const notifications = await prisma.notification.findMany({
 			where: {
 				role_id: {
@@ -23,11 +38,11 @@ export const getNotificationsDal = async (req: Request) => {
 				destination: true,
 				createdAt: true,
 			},
-            orderBy:{
-                createdAt:'desc'
-            }
+			orderBy: {
+				createdAt: 'desc',
+			},
 		})
-		return notifications ? notifications : null
+		return notifications ? { notifications: notifications, totalCount: totalCount, unseenCount: unseenCount } : null
 	} catch (err: any) {
 		console.log(err)
 		return { error: true, message: getErrorMessage(err) }
@@ -35,7 +50,7 @@ export const getNotificationsDal = async (req: Request) => {
 }
 
 export const readNotificationDal = async (req: Request) => {
-	const {notification_id} = req?.body
+	const { notification_id } = req?.body
 	try {
 		await prisma.notification.update({
 			where: {

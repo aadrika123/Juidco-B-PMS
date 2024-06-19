@@ -7,7 +7,9 @@ export const getNotifications = async (req: Request, res: Response) => {
 		res.status(200).json({
 			status: true,
 			message: `Notifications fetched successfully`,
-			data: result,
+			data: result?.notifications,
+			totalCount: result?.totalCount,
+			unseenCount: result?.unseenCount,
 		})
 	} else {
 		res.status(404).json({
