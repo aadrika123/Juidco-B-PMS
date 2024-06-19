@@ -3,9 +3,7 @@ import { config } from 'dotenv'
 import swagger from './lib/swagger'
 const cors = require('cors')
 
-
 import devRoute from './router/dev/dev.route'
-
 
 import masterEntryRoute from './router/masterEntry/masterEntry.route'
 import srPreProcurementRoute from './router/stockReciever/preProcurement/srPreProcurement.route'
@@ -20,19 +18,19 @@ import accPreProcurementRoute from './router/accountant/preProcurement/accPrePro
 import boqRoute from './router/boq/boq.route'
 import otherRoute from './router/other/imageUploader.route'
 import preTenderRoute from './router/preTender/preTender.route'
-
+import notificationRoute from './router/notification/notofication.route'
 
 config()
 
 const app = express()
 const port = process.env.PORT || 6969
-app.use(cors());
+app.use(cors())
 
 app.use(express.json())
-app.use(express.urlencoded({ extended: true }));
+app.use(express.urlencoded({ extended: true }))
 
 app.get('/api/pms', (req: Request, res: Response) => {
-    res.send('Procurement and Inventory Management System backend')
+	res.send('Procurement and Inventory Management System backend')
 })
 // dev routes with protection
 app.use('/api/pms/dev', devRoute)
@@ -49,15 +47,16 @@ app.use('/api/pms/da/rec-inv', daReceivedInventoryRoute)
 app.use('/api/pms/sr/post-procurement', srPostProcurementRoute)
 app.use('/api/pms/sr/rec-inv', srReceivedInventoryRoute)
 
-
 //inventory route
 app.use('/api/pms/inventory', inventoryRoute)
-
 
 //routes that are not for a single role only
 app.use('/api/pms/boq', boqRoute)
 app.use('/api/pms/pre-tender', preTenderRoute)
 app.use('/api/pms/', otherRoute)
+
+//notification route
+app.use('/api/pms/notification', notificationRoute)
 
 //----------------------------routes--------------------------------------------------------------------------------------------------------------------------
 
@@ -65,5 +64,5 @@ app.use('/api/pms/', otherRoute)
 swagger(app)
 
 app.listen(port, () => {
-    console.log(`Procurement and Inventory Management System is listening on port ${port}`)
+	console.log(`Procurement and Inventory Management System is listening on port ${port}`)
 })

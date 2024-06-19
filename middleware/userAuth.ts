@@ -3,7 +3,7 @@ import { Request, Response, NextFunction } from 'express'
 
 const prisma = new PrismaClient()
 
-const extractRoles = async (userId: number) => {
+export const extractRoles = async (userId: number) => {
 	const data: any = await prisma.$queryRaw`
     select wf_role_id from wf_roleusermaps where user_id=${userId}
     `

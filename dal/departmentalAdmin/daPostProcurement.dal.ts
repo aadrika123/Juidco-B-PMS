@@ -399,7 +399,15 @@ export const SaveAdditionalDetailsProcurementDal = async (req: Request) => {
                 data: {
                     procurement_no: procurement_no
                 }
-            })
+            }),
+            prisma.notification.create({
+                data: {
+                    role_id: Number(process.env.ROLE_SR),
+                    title: 'Supplier assigned',
+                    destination: 11,
+                    description: `Supplier assigned for procurement number : ${procurement_no}`,
+                },
+            }),
         ])
 
         return 'Additional Details Saved'
