@@ -1,17 +1,18 @@
-import { Request, Response } from "express";
-import { uploadGetUrlDal } from "../../dal/other/upload.dal";
+import { Request, Response } from 'express'
+import { uploadGetUrlDal } from '../../dal/other/upload.dal'
 
 export const uploadGetUrl = async (req: Request, res: Response) => {
-    const result: any = await uploadGetUrlDal(req)
-    if (!result?.error) {
-        res.setHeader('Content-Type', 'text/csv');
-        res.setHeader('Content-Disposition', 'attachment; filename="exported_data.csv"');
-        res.status(200).send(result);
-    } else {
-        res.status(400).json({
-            status: false,
-            message: `Upload failed`,
-            error: result?.message
-        })
-    }
+	const result: any = await uploadGetUrlDal(req)
+	if (!result?.error) {
+		res.status(200).json({
+			status: true,
+			data: result,
+		})
+	} else {
+		res.status(400).json({
+			status: false,
+			message: `Upload failed`,
+			error: result?.message,
+		})
+	}
 }
