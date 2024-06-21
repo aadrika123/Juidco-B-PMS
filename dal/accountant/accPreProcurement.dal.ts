@@ -2855,7 +2855,7 @@ export const forwardToDaPtDal = async (req: Request) => {
 				data: {
 					role_id: Number(process.env.ROLE_DA),
 					title: 'Pre-tendering form to be approved',
-					destination: 32,
+					destination: 22,
 					description: `There is a pre-tendering form to be approved. Reference Number : ${reference_no}`,
 				},
 			})
