@@ -30,7 +30,7 @@ import {
 	forwardToDaPt,
 } from '../../../controller/accountant/accPreProcurement.controller'
 
-// router.use(accAuth)
+router.use(accAuth)
 
 router.get('/list-for-boq', getPreProcurementForBoq)
 router.get('/', getPreProcurement)

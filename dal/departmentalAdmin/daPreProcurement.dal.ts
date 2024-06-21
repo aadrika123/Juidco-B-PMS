@@ -562,7 +562,7 @@ export const releaseForTenderByProcNoDal = async (req: Request) => {
 						data: {
 							role_id: Number(process.env.ROLE_SR),
 							title: 'Procurement released for tender',
-							destination: 10,
+							destination: 15,
 							description: `There is a procurement released for tender. Procurement Number : ${procurement_no}`,
 						},
 					}),
@@ -827,7 +827,7 @@ export const rejectByProcurementNoDal = async (req: Request) => {
 					data: {
 						role_id: Number(process.env.ROLE_SR),
 						title: 'Procurement rejected',
-						destination: 10,
+						destination: 14,
 						description: `There is a procurement rejected. Procurement Number : ${procurement_no}`,
 					},
 				}),
@@ -892,7 +892,7 @@ export const rejectDal = async (req: Request) => {
 					data: {
 						role_id: Number(process.env.ROLE_SR),
 						title: 'Procurement rejected',
-						destination: 10,
+						destination: 14,
 						description: `There is a procurement rejected. Procurement Number : ${inbox?.procurement_no}`,
 					},
 				}),
