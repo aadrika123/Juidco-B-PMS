@@ -2225,7 +2225,7 @@ export const getCriticalDatesPtDal = async (req: Request) => {
 
 export const createBidOpenersPtDal = async (req: Request) => {
 	const { preTender, doc } = req.body
-	const { B01, B02 } = req.files as any
+	const { B01, B02 } = req.files as any || {}
 	try {
 		const formattedData: bid_openers = JSON.parse(typeof preTender !== 'string' ? JSON.stringify(preTender) : preTender)
 		const formattedDoc = JSON.parse(typeof doc !== 'string' ? JSON.stringify(doc) : doc)
