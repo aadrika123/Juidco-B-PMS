@@ -19,6 +19,8 @@ model category_master {
     procurement            procurement[]
     procurement_history    procurement_history[]
     procurement_before_boq procurement_before_boq[]
+    stock_request          stock_request[]
+    stock_request_history  stock_request_history[]
 }
 
 model subcategory_master {
@@ -33,6 +35,8 @@ model subcategory_master {
     procurement            procurement[]
     procurement_history    procurement_history[]
     procurement_before_boq procurement_before_boq[]
+    stock_request          stock_request[]
+    stock_request_history  stock_request_history[]
 }
 
 model brand_master {
@@ -46,6 +50,8 @@ model brand_master {
     procurement            procurement[]
     procurement_history    procurement_history[]
     procurement_before_boq procurement_before_boq[]
+    stock_request          stock_request[]
+    stock_request_history  stock_request_history[]
 }
 
 // pre-procurement============================================================================================================================================================================================================================================================================================================
@@ -204,6 +210,7 @@ model inventory {
     brand_masterId         String?
     description            String?
     quantity               Int                      @default(0)
+    warranty               Boolean                  @default(false)
     createdAt              DateTime                 @default(now())
     updatedAt              DateTime                 @updatedAt
     stock_addition_history stock_addition_history[]
@@ -315,7 +322,7 @@ model procurement_history {
     brand_masterId       String?
     description          String?
     quantity             Int                 @default(0)
-    isEdited             Boolean             @default(false)
+    isEdited             Boolean             @default(true)
     status               Int
     rate                 Float?
     total_rate           Float?
@@ -650,3 +657,79 @@ model notification {
     createdAt   DateTime @default(now())
     updatedAt   DateTime @updatedAt
 }
+
+// notification================================================================================================================================================================
+
+// stock request================================================================================================================================================================
+
+model stock_request {
+    id                    String                 @id @default(uuid())
+    stock_handover_no     String                 @unique
+    emp_id                String
+    category              category_master?       @relation(fields: [category_masterId], references: [id])
+    category_masterId     String?
+    subCategory           subcategory_master?    @relation(fields: [subcategory_masterId], references: [id])
+    subcategory_masterId  String?
+    brand                 brand_master?          @relation(fields: [brand_masterId], references: [id])
+    brand_masterId        String
+    allotted_quantity     Float
+    status                Int //-2=rejected, -1=returned, 0=pending, 1=revised, 2= forwarded to SR, 3=approved
+    isEdited              Boolean                @default(false)
+    createdAt             DateTime               @default(now())
+    updatedAt             DateTime               @updatedAt
+    dist_stock_req_inbox  dist_stock_req_inbox[]
+    dist_stock_req_outbox dist_stock_req_outbox?
+    sr_stock_req_inbox    sr_stock_req_inbox?
+    sr_stock_req_outbox   sr_stock_req_outbox?
+}
+
+model stock_request_history {
+    id                   String              @id @default(uuid())
+    stock_handover_no    String              @unique
+    emp_id               String
+    category             category_master?    @relation(fields: [category_masterId], references: [id])
+    category_masterId    String?
+    subCategory          subcategory_master? @relation(fields: [subcategory_masterId], references: [id])
+    subcategory_masterId String?
+    brand                brand_master?       @relation(fields: [brand_masterId], references: [id])
+    brand_masterId       String
+    allotted_quantity    Float
+    status               Int //-2=rejected, -1=returned, 0=pending, 1=revised, 2= forwarded to SR, 3=approved
+    isEdited             Boolean             @default(true)
+    createdAt            DateTime            @default(now())
+    updatedAt            DateTime            @updatedAt
+}
+
+model dist_stock_req_inbox {
+    id                String        @id @default(uuid())
+    stock_handover_no String        @unique
+    stock_request     stock_request @relation(fields: [stock_handover_no], references: [stock_handover_no])
+    createdAt         DateTime      @default(now())
+    updatedAt         DateTime      @updatedAt
+}
+
+model dist_stock_req_outbox {
+    id                String        @id @default(uuid())
+    stock_handover_no String        @unique
+    stock_request     stock_request @relation(fields: [stock_handover_no], references: [stock_handover_no])
+    createdAt         DateTime      @default(now())
+    updatedAt         DateTime      @updatedAt
+}
+
+model sr_stock_req_inbox {
+    id                String        @id @default(uuid())
+    stock_handover_no String        @unique
+    stock_request     stock_request @relation(fields: [stock_handover_no], references: [stock_handover_no])
+    createdAt         DateTime      @default(now())
+    updatedAt         DateTime      @updatedAt
+}
+
+model sr_stock_req_outbox {
+    id                String        @id @default(uuid())
+    stock_handover_no String        @unique
+    stock_request     stock_request @relation(fields: [stock_handover_no], references: [stock_handover_no])
+    createdAt         DateTime      @default(now())
+    updatedAt         DateTime      @updatedAt
+}
+
+// stock request================================================================================================================================================================
