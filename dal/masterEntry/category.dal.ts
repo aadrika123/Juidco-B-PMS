@@ -54,7 +54,10 @@ export const getCategoryByName = async (name: string) => {
 	try {
 		const result = await prisma.category_master.findFirst({
 			where: {
-				name: name,
+				name: {
+					equals: name,
+					mode: 'insensitive',
+				},
 			},
 		})
 		return result

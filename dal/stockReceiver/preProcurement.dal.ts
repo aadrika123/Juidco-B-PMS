@@ -14,14 +14,14 @@ export const createPreProcurementDal = async (req: Request) => {
 	const { category, subcategory, brand, description, rate, total_rate, quantity, ulb_id } = req.body
 
 	let procurement_no: string
-	let isOthers = false
+	// let isOthers = false
 
 	let processedCategory = category
 	let processedSubcategory = subcategory
 	let processedBrand = brand
 
 	if (String(category).toLowerCase() === 'others') {
-		isOthers = true
+		// isOthers = true
 		const fetchedCategory = (await getCategoryByName(category)) as category_master
 		processedCategory = fetchedCategory?.id
 		const createdSubcategory = (await createSubcategoryNoReqDal(subcategory, fetchedCategory?.id)) as subcategory_master
