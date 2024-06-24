@@ -19,6 +19,9 @@ import boqRoute from './router/boq/boq.route'
 import otherRoute from './router/other/imageUploader.route'
 import preTenderRoute from './router/preTender/preTender.route'
 import notificationRoute from './router/notification/notofication.route'
+import distStockRequestRoute from './router/distributor/distStockRequest.route'
+import srStockRequestRoute from './router/stockReciever/stockRequest/srStockReq.route'
+import stockRequestRoute from './router/stockRequest/stockReq.route'
 
 config()
 
@@ -36,7 +39,7 @@ app.get('/api/pms', (req: Request, res: Response) => {
 app.use('/api/pms/dev', devRoute)
 
 //----------------------------routes--------------------------------------------------------------------------------------------------------------------------
-//procurement route
+//procurement routes
 app.use('/api/pms/master', masterEntryRoute)
 app.use('/api/pms/sr', srPreProcurementRoute)
 app.use('/api/pms/da', daPreProcurementRoute)
@@ -47,7 +50,14 @@ app.use('/api/pms/da/rec-inv', daReceivedInventoryRoute)
 app.use('/api/pms/sr/post-procurement', srPostProcurementRoute)
 app.use('/api/pms/sr/rec-inv', srReceivedInventoryRoute)
 
-//inventory route
+//stock request routes
+app.use('/api/pms/dist/stock-request', distStockRequestRoute)
+app.use('/api/pms/sr/stock-request', srStockRequestRoute)
+
+//unprotected stock request routes
+app.use('/api/pms/stock-request', stockRequestRoute)
+
+//inventory routes
 app.use('/api/pms/inventory', inventoryRoute)
 
 //routes that are not for a single role only
@@ -55,7 +65,7 @@ app.use('/api/pms/boq', boqRoute)
 app.use('/api/pms/pre-tender', preTenderRoute)
 app.use('/api/pms/', otherRoute)
 
-//notification route
+//notification routes
 app.use('/api/pms/notification', notificationRoute)
 
 //----------------------------routes--------------------------------------------------------------------------------------------------------------------------
