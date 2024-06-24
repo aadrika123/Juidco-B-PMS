@@ -1,22 +1,43 @@
-import { Request, Response } from 'express'
-import { PrismaClient } from '@prisma/client'
+import { Request } from 'express'
+import { PrismaClient, brand_master, category_master, subcategory_master } from '@prisma/client'
 import generateOrderNumber from '../../lib/orderNumberGenerator'
 import getErrorMessage from '../../lib/getErrorMessage'
 import { imageUploader } from '../../lib/imageUploader'
 import { pagination } from '../../type/common.type'
+import { getCategoryByName } from '../masterEntry/category.dal'
+import { createSubcategoryNoReqDal } from '../masterEntry/subcategory.dal'
+import { createBrandNoReqDal } from '../masterEntry/brand.dal'
 
 const prisma = new PrismaClient()
 
 export const createPreProcurementDal = async (req: Request) => {
-	let procurement_no: string
 	const { category, subcategory, brand, description, rate, total_rate, quantity, ulb_id } = req.body
+
+	let procurement_no: string
+	// let isOthers = false
+
+	let processedCategory = category
+	let processedSubcategory = subcategory
+	let processedBrand = brand
+
+	if (String(category).toLowerCase() === 'others') {
+		// isOthers = true
+		const fetchedCategory = (await getCategoryByName(category)) as category_master
+		processedCategory = fetchedCategory?.id
+		const createdSubcategory = (await createSubcategoryNoReqDal(subcategory, fetchedCategory?.id)) as subcategory_master
+		processedSubcategory = createdSubcategory?.id
+		if (brand) {
+			const createdBrand = (await createBrandNoReqDal(brand, createdSubcategory?.id)) as brand_master
+			processedBrand = createdBrand?.id
+		}
+	}
 
 	procurement_no = generateOrderNumber(ulb_id)
 
 	const data: any = {
-		category: { connect: { id: category } },
-		subcategory: { connect: { id: subcategory } },
-		brand: { connect: { id: brand } },
+		category: { connect: { id: processedCategory } },
+		subcategory: { connect: { id: processedSubcategory } },
+		brand: { connect: { id: processedBrand } },
 		description: description,
 		procurement_no: procurement_no,
 		rate: Number(rate),
