@@ -1,5 +1,5 @@
 import { Request, Response } from 'express'
-import { getStockReqInboxDal, getStockReqOutboxDal, approveStockReqDal } from '../../dal/stockReceiver/srStockReq.dal'
+import { getStockReqInboxDal, getStockReqOutboxDal, approveStockReqDal, returnStockReqDal, rejectStockReqDal } from '../../dal/stockReceiver/srStockReq.dal'
 
 export const getStockReqInbox = async (req: Request, res: Response) => {
 	const result: any = await getStockReqInboxDal(req)
@@ -48,6 +48,40 @@ export const approveStockReq = async (req: Request, res: Response) => {
 		res.status(404).json({
 			status: false,
 			message: `Error while approving`,
+			error: result?.message,
+		})
+	}
+}
+
+export const returnStockReq = async (req: Request, res: Response) => {
+	const result: any = await returnStockReqDal(req)
+	if (!result?.error) {
+		res.status(200).json({
+			status: true,
+			message: `Returned successfully`,
+			data: result,
+		})
+	} else {
+		res.status(404).json({
+			status: false,
+			message: `Error while returning`,
+			error: result?.message,
+		})
+	}
+}
+
+export const rejectStockReq = async (req: Request, res: Response) => {
+	const result: any = await rejectStockReqDal(req)
+	if (!result?.error) {
+		res.status(200).json({
+			status: true,
+			message: `Rejected successfully`,
+			data: result,
+		})
+	} else {
+		res.status(404).json({
+			status: false,
+			message: `Error while rejecting`,
 			error: result?.message,
 		})
 	}

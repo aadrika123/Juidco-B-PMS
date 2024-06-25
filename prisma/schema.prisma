@@ -709,7 +709,7 @@ model stock_request_history {
     brand                brand_master?       @relation(fields: [brand_masterId], references: [id])
     brand_masterId       String
     allotted_quantity    Float
-    status               Int //-2=rejected, -1=returned, 0=pending, 1=revised, 2= forwarded to SR, 3=approved
+    status               Int
     isEdited             Boolean             @default(true)
     createdAt            DateTime            @default(now())
     updatedAt            DateTime            @updatedAt
