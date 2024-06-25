@@ -25,8 +25,17 @@ export const createStockRequestDal = async (req: Request) => {
 			},
 		})
 
-		if (Number(allotted_quantity) > Number(invData?.quantity)) {
-			throw { error: true, message: 'Allotted quantity cannot be more than the available stock' }
+		const invBuffer: any = await prisma.inventory_buffer.aggregate({
+			where: {
+				inventoryId: inventory,
+			},
+			_sum: {
+				reserved_quantity: true,
+			},
+		})
+
+		if (Number(allotted_quantity) > (Number(invData?.quantity) - invBuffer?._sum?.reserved_quantity || 0)) {
+			throw { error: true, message: `Allotted quantity cannot be more than the available stock. Available stock : ${Number(invData?.quantity) - invBuffer?._sum?.reserved_quantity || 0} ` }
 		}
 
 		const stock_handover_no = generateStockHandoverNumber(ulb_id)
@@ -54,6 +63,14 @@ export const createStockRequestDal = async (req: Request) => {
 			await tx.dist_stock_req_inbox.create({
 				data: {
 					stock_handover_no: stock_handover_no,
+				},
+			})
+
+			await tx.inventory_buffer.create({
+				data: {
+					stock_handover_no: stock_handover_no,
+					reserved_quantity: allotted_quantity,
+					inventory: { connect: { id: inventory } },
 				},
 			})
 		})
