@@ -1,0 +1,54 @@
+import { Request, Response } from 'express'
+import { getStockReqInboxDal, getStockReqOutboxDal, approveStockReqDal } from '../../dal/stockReceiver/srStockReq.dal'
+
+export const getStockReqInbox = async (req: Request, res: Response) => {
+	const result: any = await getStockReqInboxDal(req)
+	if (!result?.error) {
+		res.status(200).json({
+			status: true,
+			message: `Stock request list fetched successfully`,
+			data: result?.data,
+			pagination: result?.pagination,
+		})
+	} else {
+		res.status(404).json({
+			status: false,
+			message: `Error while fetching Stock request list`,
+			error: result?.message,
+		})
+	}
+}
+
+export const getStockReqOutbox = async (req: Request, res: Response) => {
+	const result: any = await getStockReqOutboxDal(req)
+	if (!result?.error) {
+		res.status(200).json({
+			status: true,
+			message: `Stock request fetched successfully`,
+			data: result,
+		})
+	} else {
+		res.status(404).json({
+			status: false,
+			message: `Error while fetching Stock request`,
+			error: result?.message,
+		})
+	}
+}
+
+export const approveStockReq = async (req: Request, res: Response) => {
+	const result: any = await approveStockReqDal(req)
+	if (!result?.error) {
+		res.status(200).json({
+			status: true,
+			message: `Approved successfully`,
+			data: result,
+		})
+	} else {
+		res.status(404).json({
+			status: false,
+			message: `Error while approving`,
+			error: result?.message,
+		})
+	}
+}
