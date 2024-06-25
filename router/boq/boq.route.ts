@@ -8,7 +8,7 @@ import { upload } from "../../config/multer.config";
 
 
 router.get('/by-ref/:reference_no', getBoqByRefNo)
-router.put('/', upload.array('img'), editBoq)
+router.post('/edit', upload.array('img'), editBoq)
 
 
 export default router
