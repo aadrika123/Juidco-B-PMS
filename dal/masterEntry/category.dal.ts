@@ -1,5 +1,6 @@
 import { Request, Response } from 'express'
 import { PrismaClient } from '@prisma/client'
+import { error } from 'console'
 
 const prisma = new PrismaClient()
 
@@ -87,6 +88,9 @@ export const getCategoryActiveOnlyDal = async (req: Request) => {
 export const editCategoryDal = async (req: Request) => {
 	const { id, name } = req.body
 	try {
+		if (!id) {
+			throw { error: true, message: "ID i required as 'id'" }
+		}
 		const result = await prisma.category_master.update({
 			where: {
 				id: id,
