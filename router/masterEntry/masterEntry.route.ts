@@ -1,13 +1,17 @@
 import express from 'express'
 const router = express.Router()
-import { createSubCategory, getSubcategory, getSubcategoryByCategoryId } from './../../controller/masterEntry/subcategory.controller'
+import { createSubCategory, getSubcategory, getSubcategoryByCategoryId, getSubcategoryActiveOnly, editSubcategory, switchStatus as subSwitch, getSubcategoryByCategoryIdActiveOnly } from './../../controller/masterEntry/subcategory.controller'
 import { createCategory, getCategory, getCategoryById, editCategory, switchStatus, getCategoryActiveOnly } from '../../controller/masterEntry/category.controller'
 import { createBrand, getBrand, getBrandBySubcategoryId } from '../../controller/masterEntry/brand.controller'
 
 //sub-category
 router.post('/sub-category', createSubCategory)
 router.get('/sub-category', getSubcategory)
+router.get('/sub-category/active', getSubcategoryActiveOnly)
+router.post('/sub-category/update', editSubcategory)
+router.post('/sub-category/switch', subSwitch)
 router.get('/sub-category/by-category/:categoryId', getSubcategoryByCategoryId)
+router.get('/sub-category/by-category/active/:categoryId', getSubcategoryByCategoryIdActiveOnly)
 
 //category
 router.post('/category', createCategory)

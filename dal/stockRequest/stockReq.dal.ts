@@ -36,6 +36,11 @@ export const getStockReqByStockHandoverNoDal = async (req: Request) => {
 				isEdited: true,
 				status: true,
 				createdAt: true,
+				inventory: {
+					select: {
+						description: true,
+					},
+				},
 			},
 		})
 		let resultToSend: any = {}

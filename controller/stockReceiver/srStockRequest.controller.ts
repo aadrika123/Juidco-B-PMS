@@ -25,7 +25,8 @@ export const getStockReqOutbox = async (req: Request, res: Response) => {
 		res.status(200).json({
 			status: true,
 			message: `Stock request fetched successfully`,
-			data: result,
+			data: result?.data,
+			pagination: result?.pagination,
 		})
 	} else {
 		res.status(404).json({
