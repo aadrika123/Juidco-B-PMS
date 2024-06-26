@@ -7,7 +7,7 @@ import { pagination } from '../../type/common.type'
 const prisma = new PrismaClient()
 
 export const createStockRequestDal = async (req: Request) => {
-	const { category, subcategory, brand, inventory, emp_id, allotted_quantity, auth } = req.body
+	const { category, subcategory, brand, inventory, emp_id, emp_name, allotted_quantity, auth } = req.body
 
 	const ulb_id = auth?.ulb_id
 
@@ -46,6 +46,7 @@ export const createStockRequestDal = async (req: Request) => {
 			brand: { connect: { id: brand } },
 			inventory: { connect: { id: inventory } },
 			emp_id: emp_id,
+			emp_name: emp_name,
 			stock_handover_no: stock_handover_no,
 			allotted_quantity: Number(allotted_quantity),
 			ulb_id: ulb_id,
@@ -201,6 +202,8 @@ export const getStockReqInboxDal = async (req: Request) => {
 							},
 						},
 						ulb_id: true,
+						emp_id: true,
+						emp_name: true,
 						allotted_quantity: true,
 						isEdited: true,
 						status: true,
@@ -363,6 +366,8 @@ export const getStockReqOutboxDal = async (req: Request) => {
 							},
 						},
 						ulb_id: true,
+						emp_id: true,
+						emp_name: true,
 						allotted_quantity: true,
 						isEdited: true,
 						status: true,
