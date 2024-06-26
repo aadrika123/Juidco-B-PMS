@@ -66,3 +66,49 @@ export const getCategoryByName = async (name: string) => {
 		return { error: true, message: err?.message }
 	}
 }
+
+export const getCategoryActiveOnlyDal = async (req: Request) => {
+	try {
+		const result = await prisma.category_master.findMany({
+			where: {
+				status: true,
+			},
+			orderBy: {
+				updatedAt: 'desc',
+			},
+		})
+		return result
+	} catch (err: any) {
+		console.log(err)
+		return { error: true, message: err?.message }
+	}
+}
+
+export const editCategoryDal = async (req: Request) => {
+	const { id, name } = req.body
+	try {
+		const result = await prisma.category_master.update({
+			where: {
+				id: id,
+			},
+			data: {
+				name: name,
+			},
+		})
+		return result
+	} catch (err: any) {
+		console.log(err)
+		return { error: true, message: err?.message }
+	}
+}
+
+export const switchStatusDal = async (req: Request) => {
+	const { id } = req.body
+	try {
+		const result = await prisma.$executeRaw`update category_master set status = not status where id=${id}`
+		return result
+	} catch (err: any) {
+		console.log(err)
+		return { error: true, message: err?.message }
+	}
+}

@@ -12,6 +12,7 @@ datasource db {
 model category_master {
     id                     String                   @id @default(uuid())
     name                   String                   @unique
+    status                 Boolean                  @default(true)
     subcategory_master     subcategory_master[]
     createdAt              DateTime                 @default(now())
     updatedAt              DateTime                 @updatedAt
@@ -26,6 +27,7 @@ model category_master {
 model subcategory_master {
     id                     String                   @id @default(uuid())
     name                   String                   @unique
+    status                 Boolean                  @default(true)
     category               category_master          @relation(fields: [category_masterId], references: [id])
     category_masterId      String
     createdAt              DateTime                 @default(now())
@@ -42,8 +44,9 @@ model subcategory_master {
 model brand_master {
     id                     String                   @id @default(uuid())
     name                   String
-    subcategory            subcategory_master?      @relation(fields: [subcategory_masterId], references: [id])
-    subcategory_masterId   String?
+    status                 Boolean                  @default(true)
+    subcategory            subcategory_master       @relation(fields: [subcategory_masterId], references: [id])
+    subcategory_masterId   String
     createdAt              DateTime                 @default(now())
     updatedAt              DateTime                 @updatedAt
     inventory              inventory[]
@@ -668,6 +671,7 @@ model stock_request {
     id                    String                 @id @default(uuid())
     stock_handover_no     String                 @unique
     emp_id                String
+    emp_name              String?
     category              category_master?       @relation(fields: [category_masterId], references: [id])
     category_masterId     String?
     subcategory           subcategory_master?    @relation(fields: [subcategory_masterId], references: [id])
@@ -702,6 +706,7 @@ model stock_request_history {
     id                   String              @id @default(uuid())
     stock_handover_no    String              @unique
     emp_id               String
+    emp_name             String?
     category             category_master?    @relation(fields: [category_masterId], references: [id])
     category_masterId    String?
     subCategory          subcategory_master? @relation(fields: [subcategory_masterId], references: [id])

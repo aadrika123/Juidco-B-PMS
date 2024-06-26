@@ -30,6 +30,8 @@ export const getStockReqByStockHandoverNoDal = async (req: Request) => {
 					},
 				},
 				ulb_id: true,
+				emp_id: true,
+				emp_name: true,
 				allotted_quantity: true,
 				isEdited: true,
 				status: true,
@@ -50,7 +52,7 @@ export const getStockReqByStockHandoverNoDal = async (req: Request) => {
 }
 
 export const editStockRequestDal = async (req: Request) => {
-	const { stock_handover_no, category, subcategory, brand, inventory, emp_id, allotted_quantity } = req.body
+	const { stock_handover_no, category, subcategory, brand, inventory, emp_id, emp_name, allotted_quantity } = req.body
 
 	try {
 		const invData = await prisma.inventory.findFirst({
@@ -81,8 +83,9 @@ export const editStockRequestDal = async (req: Request) => {
 			brand: { connect: { id: brand } },
 			inventory: { connect: { id: inventory } },
 			emp_id: emp_id,
+			emp_name: emp_name,
 			allotted_quantity: Number(allotted_quantity),
-			isEdited:true
+			isEdited: true,
 		}
 
 		let stockReq: any
@@ -103,6 +106,7 @@ export const editStockRequestDal = async (req: Request) => {
 				data: {
 					stock_handover_no: oldStockReq?.stock_handover_no,
 					emp_id: oldStockReq?.emp_id,
+					emp_name: oldStockReq?.emp_name,
 					category_masterId: oldStockReq?.category_masterId,
 					subcategory_masterId: oldStockReq?.subcategory_masterId,
 					brand_masterId: oldStockReq?.brand_masterId,
