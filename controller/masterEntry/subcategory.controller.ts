@@ -79,7 +79,7 @@ export const getSubcategoryActiveOnly = async (req: Request, res: Response) => {
 	} else {
 		res.status(400).json({
 			status: false,
-			message: `Subcategory update failed`,
+			message: `Error while fetching active subcategory`,
 			error: result?.message,
 		})
 	}

@@ -62,7 +62,7 @@ export const getCategoryActiveOnly = async (req: Request, res: Response) => {
 	} else {
 		res.status(400).json({
 			status: false,
-			message: `Category update failed`,
+			message: `Error while fetching category`,
 			error: result?.message,
 		})
 	}

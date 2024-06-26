@@ -69,3 +69,72 @@ export const createBrandNoReqDal = async (name: string, subcategory: string) => 
 		return { error: true, message: err?.message }
 	}
 }
+
+export const getBrandBySubcategoryIdActiveOnlyDal = async (req: Request) => {
+	const { subcategory } = req.params
+	try {
+		const result = await prisma.brand_master.findMany({
+			where: {
+				subcategory_masterId: subcategory,
+				status: true,
+			},
+			orderBy: {
+				updatedAt: 'desc',
+			},
+		})
+		return result
+	} catch (err: any) {
+		console.log(err)
+		return { error: true, message: err?.message }
+	}
+}
+
+export const getBrandActiveOnlyDal = async (req: Request) => {
+	try {
+		const result = await prisma.brand_master.findMany({
+			where: {
+				status: true,
+			},
+			orderBy: {
+				updatedAt: 'desc',
+			},
+		})
+		return result
+	} catch (err: any) {
+		console.log(err)
+		return { error: true, message: err?.message }
+	}
+}
+
+export const editBrandDal = async (req: Request) => {
+	const { id, name, subcategory } = req.body
+	try {
+		if (!id) {
+			throw { error: true, message: "ID i required as 'id'" }
+		}
+		const result = await prisma.brand_master.update({
+			where: {
+				id: id,
+			},
+			data: {
+				name: name,
+				subcategory_masterId: subcategory,
+			},
+		})
+		return result
+	} catch (err: any) {
+		console.log(err)
+		return { error: true, message: err?.message }
+	}
+}
+
+export const switchStatusDal = async (req: Request) => {
+	const { id } = req.body
+	try {
+		const result = await prisma.$executeRaw`update brand_master set status = not status where id=${id}`
+		return result
+	} catch (err: any) {
+		console.log(err)
+		return { error: true, message: err?.message }
+	}
+}
