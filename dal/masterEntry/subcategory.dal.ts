@@ -19,7 +19,7 @@ export const createSubcategoryDal = async (req: Request) => {
 				data: data,
 			})
 			await tx.$queryRawUnsafe(`
-				create table product_${name.toLowerCase()} (
+				create table product.product_${name.toLowerCase()} (
 					id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
 					subcategory_masterId varchar(255) DEFAULT '${result?.id}',
 					inventoryId varchar(255),
