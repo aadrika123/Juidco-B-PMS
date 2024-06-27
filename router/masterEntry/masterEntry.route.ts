@@ -3,6 +3,7 @@ const router = express.Router()
 import { createSubCategory, getSubcategory, getSubcategoryByCategoryId, getSubcategoryActiveOnly, editSubcategory, switchStatus as subSwitch, getSubcategoryByCategoryIdActiveOnly } from './../../controller/masterEntry/subcategory.controller'
 import { createCategory, getCategory, getCategoryById, editCategory, switchStatus, getCategoryActiveOnly } from '../../controller/masterEntry/category.controller'
 import { createBrand, getBrand, getBrandBySubcategoryId, getBrandActiveOnly, getBrandBySubcategoryIdActiveOnly, editBrand, switchStatus as brandSwitch } from '../../controller/masterEntry/brand.controller'
+import { createUnit, getUnit, getUnitById, editUnit, switchStatus as unitSwitch, getUnitActiveOnly } from '../../controller/masterEntry/unit.controller'
 
 //sub-category
 router.post('/sub-category', createSubCategory)
@@ -30,5 +31,13 @@ router.get('/brand/active', getBrandActiveOnly)
 router.post('/brand/update', editBrand)
 router.post('/brand/switch', brandSwitch)
 // router.get('/brand/by-subcategory/:subcategoryId', getBrandBySubcategoryId)
+
+//unit
+router.post('/unit', createUnit)
+router.get('/unit', getUnit)
+router.get('/unit/active', getUnitActiveOnly)
+router.post('/unit/update', editUnit)
+router.post('/unit/switch', unitSwitch)
+router.get('/unit/:id', getUnitById)
 
 export default router

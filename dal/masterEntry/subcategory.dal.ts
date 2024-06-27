@@ -223,6 +223,9 @@ export const switchStatusDal = async (req: Request) => {
 	const { id } = req.body
 	try {
 		const result = await prisma.$executeRaw`update subcategory_master set status = not status where id=${id}`
+		if (result === 0) {
+			throw { error: true, message: 'Error while switching status' }
+		}
 		return result
 	} catch (err: any) {
 		console.log(err)
