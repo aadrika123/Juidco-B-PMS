@@ -6,7 +6,7 @@ export const createSubCategory = async (req: Request, res: Response) => {
 	if (!result?.error) {
 		res.status(201).json({
 			status: true,
-			message: `Sub category created having id : ${result.id}`,
+			message: `Sub category created having id : ${result?.id}`,
 		})
 	} else {
 		res.status(400).json({
@@ -90,7 +90,7 @@ export const editSubcategory = async (req: Request, res: Response) => {
 	if (!result?.error) {
 		res.status(201).json({
 			status: true,
-			message: `Subcategory updated having id : ${result.id}`,
+			message: `Subcategory updated having id : ${result?.id}`,
 		})
 	} else {
 		res.status(400).json({

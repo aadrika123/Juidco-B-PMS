@@ -1,4 +1,4 @@
-import { Request, Response } from 'express'
+import { Request } from 'express'
 import { PrismaClient } from '@prisma/client'
 import { pagination } from '../../type/common.type'
 
@@ -13,8 +13,21 @@ export const createSubcategoryDal = async (req: Request) => {
 	}
 
 	try {
-		const result = await prisma.subcategory_master.create({
-			data: data,
+		let result
+		await prisma.$transaction(async tx => {
+			result = await tx.subcategory_master.create({
+				data: data,
+			})
+			await tx.$queryRawUnsafe(`
+				create table product_${name.toLowerCase()} (
+					id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+					subcategory_masterId varchar(255) DEFAULT '${result?.id}',
+					inventoryId varchar(255),
+					serial_no varchar(255),
+					createdAt TIMESTAMP WITH TIME ZONE DEFAULT now(),
+      				updatedAt TIMESTAMP WITH TIME ZONE DEFAULT now()
+				)
+			`)
 		})
 		return result
 	} catch (err: any) {
