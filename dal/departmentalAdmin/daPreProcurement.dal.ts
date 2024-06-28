@@ -2186,7 +2186,7 @@ export const approvePreTenderDal = async (req: Request) => {
 							rate: boqProc?.rate,
 							total_rate: boqProc?.amount,
 							remark: boqProc?.remark,
-							unit: boqProc?.unit,
+							// unit: boqProc?.unit,
 						},
 					})
 				})

@@ -233,7 +233,7 @@ model inventory {
     stock_addition_history stock_addition_history[]
     stock_request          stock_request[]
     inventory_buffer       inventory_buffer[]
-    unit            unit_master?             @relation(fields: [unit_masterId], references: [id])
+    unit                   unit_master?             @relation(fields: [unit_masterId], references: [id])
     unit_masterId          String?
 }
 
@@ -294,7 +294,7 @@ model procurement {
     boq_procurement              boq_procurement[]
     acc_pre_procurement_inbox    acc_pre_procurement_inbox?
     acc_pre_procurement_outbox   acc_pre_procurement_outbox?
-    unit                  unit_master?                  @relation(fields: [unit_masterId], references: [id])
+    unit                         unit_master?                  @relation(fields: [unit_masterId], references: [id])
     unit_masterId                String?
 }
 
@@ -314,7 +314,7 @@ model procurement_before_boq {
     remark               String?
     createdAt            DateTime            @default(now())
     updatedAt            DateTime            @updatedAt
-    unit          unit_master?        @relation(fields: [unit_masterId], references: [id])
+    unit                 unit_master?        @relation(fields: [unit_masterId], references: [id])
     unit_masterId        String?
 }
 
@@ -353,7 +353,7 @@ model procurement_history {
     remark               String?
     createdAt            DateTime            @default(now())
     updatedAt            DateTime            @updatedAt
-    unit          unit_master?        @relation(fields: [unit_masterId], references: [id])
+    unit                 unit_master?        @relation(fields: [unit_masterId], references: [id])
     unit_masterId        String?
 }
 
@@ -710,7 +710,7 @@ model stock_request {
     dist_stock_req_outbox dist_stock_req_outbox?
     sr_stock_req_inbox    sr_stock_req_inbox?
     sr_stock_req_outbox   sr_stock_req_outbox?
-    unit           unit_master?           @relation(fields: [unit_masterId], references: [id])
+    unit                  unit_master?           @relation(fields: [unit_masterId], references: [id])
     unit_masterId         String?
 }
 
@@ -740,7 +740,7 @@ model stock_request_history {
     isEdited             Boolean             @default(true)
     createdAt            DateTime            @default(now())
     updatedAt            DateTime            @updatedAt
-    unit          unit_master?        @relation(fields: [unit_masterId], references: [id])
+    unit                 unit_master?        @relation(fields: [unit_masterId], references: [id])
     unit_masterId        String?
 }
 

@@ -23,7 +23,11 @@ export const createSubcategoryDal = async (req: Request) => {
 					id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
 					subcategory_masterId varchar(255) DEFAULT '${result?.id}',
 					inventoryId varchar(255),
+					procurement_no varchar(255),
 					serial_no varchar(255),
+					quantity FLOAT DEFAULT 1,
+					is_added BOOLEAN DEFAULT FALSE, 
+					is_available BOOLEAN DEFAULT FALSE,
 					createdAt TIMESTAMP WITH TIME ZONE DEFAULT now(),
       				updatedAt TIMESTAMP WITH TIME ZONE DEFAULT now()
 				)

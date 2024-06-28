@@ -1018,3 +1018,68 @@ export const addToInventoryDal = async (req: Request) => {
 		return { error: true, message: err?.message }
 	}
 }
+
+export const addProductDal = async (req: Request) => {
+	type productType = {
+		quantity: number
+		serial_no: string
+	}
+	const { product, procurement_no }: { product: productType[]; procurement_no: string } = req.body
+	try {
+		const totalNonAddedReceiving: any = await prisma.receivings.aggregate({
+			where: {
+				procurement_no: procurement_no || '',
+				is_added: false,
+			},
+			_sum: {
+				received_quantity: true,
+			},
+		})
+
+		if (totalNonAddedReceiving?._sum?.received_quantity === null) {
+			throw { error: true, message: 'No receiving to be added' }
+		}
+
+		const procData = await prisma.procurement.findFirst({
+			where: { procurement_no: procurement_no },
+			select: { subcategory_masterId: true },
+		})
+
+		const subcategory = await prisma.subcategory_master.findFirst({
+			where: {
+				id: procData?.subcategory_masterId as string,
+			},
+		})
+
+		const totalQuantity: any[] = await prisma.$queryRawUnsafe(`
+			SELECT SUM(quantity) as total_quantity
+			FROM product.product_${subcategory?.name.toLowerCase()}
+			WHERE is_added = false
+		`)
+
+		// console.log(totalNonAddedReceiving?._sum?.received_quantity)
+		// console.log(totalQuantity[0]?.total_quantity)
+
+		// if (totalNonAddedReceiving?._sum?.received_quantity < totalQuantity[0]?.total_quantity) {
+		// 	throw { error: true, message: '' }
+		// }
+
+		await prisma.$transaction(async tx => {
+			await Promise.all(
+				product.map(async item => {
+					await tx.$queryRawUnsafe(`
+					INSERT INTO product.product_${subcategory?.name.toLowerCase()} (
+					serial_no,
+					quantity
+					) VALUES ('${item?.serial_no}',${item?.quantity ? item?.quantity : 1})
+					`)
+				})
+			)
+		})
+
+		return { message: 'abc test' }
+	} catch (err: any) {
+		console.log(err)
+		return { error: true, message: err?.meta?.message }
+	}
+}
