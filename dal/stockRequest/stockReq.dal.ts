@@ -16,16 +16,19 @@ export const getStockReqByStockHandoverNoDal = async (req: Request) => {
 				stock_handover_no: true,
 				category: {
 					select: {
+						id:true,
 						name: true,
 					},
 				},
 				subcategory: {
 					select: {
+						id:true,
 						name: true,
 					},
 				},
 				brand: {
 					select: {
+						id:true,
 						name: true,
 					},
 				},
@@ -38,6 +41,7 @@ export const getStockReqByStockHandoverNoDal = async (req: Request) => {
 				createdAt: true,
 				inventory: {
 					select: {
+						id:true,
 						description: true,
 					},
 				},

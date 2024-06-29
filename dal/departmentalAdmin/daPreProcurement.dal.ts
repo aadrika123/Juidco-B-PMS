@@ -406,14 +406,14 @@ export const editPreProcurementDal = async (req: Request) => {
 				},
 				data: data,
 			}),
-            prisma.notification.create({
-                data: {
-                    role_id: Number(process.env.ROLE_SR),
-                    title: 'Procurement edited by DA',
-                    destination: 10,
-                    description: `There is a procurement Edited by DA. Procurement Number : ${procurement_no}`,
-                },
-            }),
+			prisma.notification.create({
+				data: {
+					role_id: Number(process.env.ROLE_SR),
+					title: 'Procurement edited by DA',
+					destination: 10,
+					description: `There is a procurement Edited by DA. Procurement Number : ${procurement_no}`,
+				},
+			}),
 		])
 		return 'Edited'
 	} catch (err: any) {
@@ -1589,7 +1589,7 @@ export const rejectBoqDal = async (req: Request) => {
 				throw { error: true, message: 'Error while rejecting procurement' }
 			}
 
-            await tx.notification.create({
+			await tx.notification.create({
 				data: {
 					role_id: Number(process.env.ROLE_ACC),
 					title: 'BOQ rejected',
@@ -2056,7 +2056,7 @@ export const approveBoqForPtDal = async (req: Request) => {
 				},
 			})
 
-            await tx.notification.create({
+			await tx.notification.create({
 				data: {
 					role_id: Number(process.env.ROLE_ACC),
 					title: 'BOQ approved',
@@ -2175,7 +2175,18 @@ export const approvePreTenderDal = async (req: Request) => {
 					})
 
 					await tx.procurement_before_boq.create({
-						data: proc,
+						data: {
+							procurement_no: proc.procurement_no,
+							category_masterId: proc.category_masterId,
+							subcategory_masterId: proc.subcategory_masterId,
+							brand_masterId: proc.brand_masterId,
+							description: proc.description,
+							quantity: proc.quantity,
+							rate: proc.rate,
+							unit: proc.unit ?? undefined,
+							total_rate: proc.total_rate,
+							remark: proc.remark ?? undefined,
+						},
 					})
 
 					await tx.procurement.update({
@@ -2199,7 +2210,7 @@ export const approvePreTenderDal = async (req: Request) => {
 				throw { error: true, message: 'Error while releasing procurement' }
 			}
 
-            await tx.notification.create({
+			await tx.notification.create({
 				data: {
 					role_id: Number(process.env.ROLE_ACC),
 					title: 'Pre-tendering form approved',
@@ -2283,7 +2294,7 @@ export const rejectPreTenderDal = async (req: Request) => {
 				throw { error: true, message: 'Error while rejecting BOQ' }
 			}
 
-            await tx.notification.create({
+			await tx.notification.create({
 				data: {
 					role_id: Number(process.env.ROLE_ACC),
 					title: 'Pre-tendering form rejected',
@@ -2357,7 +2368,7 @@ export const returnToAccPtDal = async (req: Request) => {
 				},
 			})
 
-            await tx.notification.create({
+			await tx.notification.create({
 				data: {
 					role_id: Number(process.env.ROLE_ACC),
 					title: 'Pre-tendering form returned',

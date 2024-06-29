@@ -866,6 +866,23 @@ export const addToInventoryDal = async (req: Request) => {
 			where: { procurement_no: procurement_no },
 		})
 
+		const subcategory = await prisma.subcategory_master.findFirst({
+			where: {
+				id: procData?.subcategory_masterId as string,
+			},
+		})
+
+		const query = `
+			SELECT SUM(quantity) as total_quantity
+			FROM product.product_${subcategory?.name.toLowerCase()}
+			 WHERE procurement_no = '${procurement_no}' AND is_added = false
+		`
+		const totalQuantity: any[] = await prisma.$queryRawUnsafe(query)
+
+		if (totalQuantity[0]?.total_quantity !== totalNonAddedReceiving?._sum?.received_quantity) {
+			throw { error: true, message: 'Number of added products must be equal to received stocks' }
+		}
+
 		await prisma.$transaction(async tx => {
 			await Promise.all(
 				NonAddedReceiving.map(async (item: any) => {
@@ -999,6 +1016,12 @@ export const addToInventoryDal = async (req: Request) => {
 				if (!srRecInvInDel) throw { error: true, message: 'Error while deleting SR inbox' }
 			}
 
+			await tx.$queryRawUnsafe(`
+				UPDATE product.product_${subcategory?.name.toLowerCase()}
+				SET is_added = true, is_available = true
+				WHERE procurement_no = '${procurement_no}'
+			`)
+
 			await tx.notification.create({
 				data: {
 					role_id: Number(process.env.ROLE_DA),
@@ -1026,6 +1049,20 @@ export const addProductDal = async (req: Request) => {
 	}
 	const { product, procurement_no }: { product: productType[]; procurement_no: string } = req.body
 	try {
+		if (!procurement_no) {
+			throw { error: true, meta: { message: "Procurement number is required as 'procurement_no'" } }
+		}
+
+		const procExist = await prisma.procurement.count({
+			where: {
+				procurement_no: procurement_no,
+			},
+		})
+
+		if (procExist === 0) {
+			throw { error: true, meta: { message: "Procurement number is invalid" } }
+		}
+
 		const totalNonAddedReceiving: any = await prisma.receivings.aggregate({
 			where: {
 				procurement_no: procurement_no || '',
@@ -1037,7 +1074,7 @@ export const addProductDal = async (req: Request) => {
 		})
 
 		if (totalNonAddedReceiving?._sum?.received_quantity === null) {
-			throw { error: true, message: 'No receiving to be added' }
+			throw { error: true, meta: { message: 'No receiving to be added' } }
 		}
 
 		const procData = await prisma.procurement.findFirst({
@@ -1051,18 +1088,18 @@ export const addProductDal = async (req: Request) => {
 			},
 		})
 
-		const totalQuantity: any[] = await prisma.$queryRawUnsafe(`
+		const query = `
 			SELECT SUM(quantity) as total_quantity
 			FROM product.product_${subcategory?.name.toLowerCase()}
-			WHERE is_added = false
-		`)
+			 WHERE procurement_no = '${procurement_no}' AND is_added = false
+		`
+		const totalQuantity: any[] = await prisma.$queryRawUnsafe(query)
 
-		// console.log(totalNonAddedReceiving?._sum?.received_quantity)
-		// console.log(totalQuantity[0]?.total_quantity)
+		const sumOfQuantity = product.reduce((total, product) => total + (product?.quantity ? product?.quantity : 1), 0)
 
-		// if (totalNonAddedReceiving?._sum?.received_quantity < totalQuantity[0]?.total_quantity) {
-		// 	throw { error: true, message: '' }
-		// }
+		if (totalQuantity[0]?.total_quantity + sumOfQuantity > totalNonAddedReceiving?._sum?.received_quantity) {
+			throw { error: true, meta: { message: 'Number of added products cannot be more than received stocks' } }
+		}
 
 		await prisma.$transaction(async tx => {
 			await Promise.all(
@@ -1070,14 +1107,15 @@ export const addProductDal = async (req: Request) => {
 					await tx.$queryRawUnsafe(`
 					INSERT INTO product.product_${subcategory?.name.toLowerCase()} (
 					serial_no,
-					quantity
-					) VALUES ('${item?.serial_no}',${item?.quantity ? item?.quantity : 1})
+					quantity,
+					procurement_no
+					) VALUES ('${item?.serial_no}',${item?.quantity ? item?.quantity : 1},'${procurement_no}')
 					`)
 				})
 			)
 		})
 
-		return { message: 'abc test' }
+		return 'Products added'
 	} catch (err: any) {
 		console.log(err)
 		return { error: true, message: err?.meta?.message }
