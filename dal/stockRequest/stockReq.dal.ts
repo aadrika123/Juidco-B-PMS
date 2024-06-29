@@ -16,19 +16,19 @@ export const getStockReqByStockHandoverNoDal = async (req: Request) => {
 				stock_handover_no: true,
 				category: {
 					select: {
-						id:true,
+						id: true,
 						name: true,
 					},
 				},
 				subcategory: {
 					select: {
-						id:true,
+						id: true,
 						name: true,
 					},
 				},
 				brand: {
 					select: {
-						id:true,
+						id: true,
 						name: true,
 					},
 				},
@@ -41,7 +41,7 @@ export const getStockReqByStockHandoverNoDal = async (req: Request) => {
 				createdAt: true,
 				inventory: {
 					select: {
-						id:true,
+						id: true,
 						description: true,
 					},
 				},
@@ -109,20 +109,28 @@ export const editStockRequestDal = async (req: Request) => {
 			throw { error: true, message: `Invalid stock handover number` }
 		}
 
+		const historyExist = await prisma.stock_request_history.count({
+			where: {
+				stock_handover_no: stock_handover_no,
+			},
+		})
+
 		//start transaction
 		await prisma.$transaction(async tx => {
-			await tx.stock_request_history.create({
-				data: {
-					stock_handover_no: oldStockReq?.stock_handover_no,
-					emp_id: oldStockReq?.emp_id,
-					emp_name: oldStockReq?.emp_name,
-					category_masterId: oldStockReq?.category_masterId,
-					subcategory_masterId: oldStockReq?.subcategory_masterId,
-					brand_masterId: oldStockReq?.brand_masterId,
-					allotted_quantity: oldStockReq?.allotted_quantity,
-					status: oldStockReq?.status,
-				},
-			})
+			if (historyExist === 0) {
+				await tx.stock_request_history.create({
+					data: {
+						stock_handover_no: oldStockReq?.stock_handover_no,
+						emp_id: oldStockReq?.emp_id,
+						emp_name: oldStockReq?.emp_name,
+						category_masterId: oldStockReq?.category_masterId,
+						subcategory_masterId: oldStockReq?.subcategory_masterId,
+						brand_masterId: oldStockReq?.brand_masterId,
+						allotted_quantity: oldStockReq?.allotted_quantity,
+						status: oldStockReq?.status,
+					},
+				})
+			}
 
 			stockReq = await tx.stock_request.update({
 				where: { stock_handover_no: stock_handover_no },

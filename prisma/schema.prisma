@@ -699,7 +699,7 @@ model stock_request {
     brand                 brand_master?          @relation(fields: [brand_masterId], references: [id])
     brand_masterId        String
     allotted_quantity     Float
-    status                Int //-2=rejected, -1=returned, 0=pending, 1=revised, 2= forwarded to SR, 3=approved
+    status                Int //-2=rejected, -1=returned, 0=pending, 1=revised, 2= forwarded to SR, 3=approved, 4=handed over
     ulb_id                Int?
     inventory             inventory?             @relation(fields: [inventoryId], references: [id])
     inventoryId           String?

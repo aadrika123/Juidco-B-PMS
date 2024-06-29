@@ -874,7 +874,7 @@ export const addToInventoryDal = async (req: Request) => {
 
 		const query = `
 			SELECT SUM(quantity) as total_quantity
-			FROM product.product_${subcategory?.name.toLowerCase()}
+			FROM product.product_${subcategory?.name.toLowerCase().replace(/\s/g, '')}
 			 WHERE procurement_no = '${procurement_no}' AND is_added = false
 		`
 		const totalQuantity: any[] = await prisma.$queryRawUnsafe(query)
@@ -1017,7 +1017,7 @@ export const addToInventoryDal = async (req: Request) => {
 			}
 
 			await tx.$queryRawUnsafe(`
-				UPDATE product.product_${subcategory?.name.toLowerCase()}
+				UPDATE product.product_${subcategory?.name.toLowerCase().replace(/\s/g, '')}
 				SET is_added = true, is_available = true
 				WHERE procurement_no = '${procurement_no}'
 			`)
@@ -1060,7 +1060,7 @@ export const addProductDal = async (req: Request) => {
 		})
 
 		if (procExist === 0) {
-			throw { error: true, meta: { message: "Procurement number is invalid" } }
+			throw { error: true, meta: { message: 'Procurement number is invalid' } }
 		}
 
 		const totalNonAddedReceiving: any = await prisma.receivings.aggregate({
@@ -1090,7 +1090,7 @@ export const addProductDal = async (req: Request) => {
 
 		const query = `
 			SELECT SUM(quantity) as total_quantity
-			FROM product.product_${subcategory?.name.toLowerCase()}
+			FROM product.product_${subcategory?.name.toLowerCase().replace(/\s/g, '')}
 			 WHERE procurement_no = '${procurement_no}' AND is_added = false
 		`
 		const totalQuantity: any[] = await prisma.$queryRawUnsafe(query)
@@ -1105,7 +1105,7 @@ export const addProductDal = async (req: Request) => {
 			await Promise.all(
 				product.map(async item => {
 					await tx.$queryRawUnsafe(`
-					INSERT INTO product.product_${subcategory?.name.toLowerCase()} (
+					INSERT INTO product.product_${subcategory?.name.toLowerCase().replace(/\s/g, '')} (
 					serial_no,
 					quantity,
 					procurement_no
