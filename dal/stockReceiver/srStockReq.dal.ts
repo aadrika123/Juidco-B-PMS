@@ -537,3 +537,61 @@ export const rejectStockReqDal = async (req: Request) => {
 		return { error: true, message: getErrorMessage(err) }
 	}
 }
+
+// export const handoverDal = async (req: Request) => {
+// 	const { stock_handover_no }: { stock_handover_no: string } = req.body
+
+// 	try {
+// 		const status: any = await prisma.stock_request.findFirst({
+// 			where: {
+// 				stock_handover_no: stock_handover_no,
+// 			},
+// 			select: {
+// 				status: true,
+// 			},
+// 		})
+// 		if (status?.status < 1 || status?.status > 2) {
+// 			throw { error: true, message: 'Stock request is not valid to be rejected' }
+// 		}
+
+// 		await prisma.$transaction([
+// 			prisma.sr_stock_req_outbox.create({
+// 				data: { stock_handover_no: stock_handover_no },
+// 			}),
+// 			prisma.dist_stock_req_inbox.create({
+// 				data: { stock_handover_no: stock_handover_no },
+// 			}),
+// 			prisma.stock_request.update({
+// 				where: {
+// 					stock_handover_no: stock_handover_no,
+// 				},
+// 				data: {
+// 					status: -2,
+// 				},
+// 			}),
+// 			prisma.sr_stock_req_inbox.delete({
+// 				where: {
+// 					stock_handover_no: stock_handover_no,
+// 				},
+// 			}),
+// 			prisma.dist_stock_req_outbox.delete({
+// 				where: {
+// 					stock_handover_no: stock_handover_no,
+// 				},
+// 			}),
+// 			prisma.notification.create({
+// 				data: {
+// 					role_id: Number(process.env.ROLE_DIST),
+// 					title: 'Stock rejected',
+// 					destination: 40,
+// 					description: `stock request : ${stock_handover_no} has rejected`,
+// 				},
+// 			}),
+// 		])
+
+// 		return 'Returned'
+// 	} catch (err: any) {
+// 		console.log(err)
+// 		return { error: true, message: getErrorMessage(err) }
+// 	}
+// }
