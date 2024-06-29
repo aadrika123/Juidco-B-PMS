@@ -1049,6 +1049,20 @@ export const addProductDal = async (req: Request) => {
 	}
 	const { product, procurement_no }: { product: productType[]; procurement_no: string } = req.body
 	try {
+		if (!procurement_no) {
+			throw { error: true, meta: { message: "Procurement number is required as 'procurement_no'" } }
+		}
+
+		const procExist = await prisma.procurement.count({
+			where: {
+				procurement_no: procurement_no,
+			},
+		})
+
+		if (procExist === 0) {
+			throw { error: true, meta: { message: "Procurement number is invalid" } }
+		}
+
 		const totalNonAddedReceiving: any = await prisma.receivings.aggregate({
 			where: {
 				procurement_no: procurement_no || '',
@@ -1060,7 +1074,7 @@ export const addProductDal = async (req: Request) => {
 		})
 
 		if (totalNonAddedReceiving?._sum?.received_quantity === null) {
-			throw { error: true, message: 'No receiving to be added' }
+			throw { error: true, meta: { message: 'No receiving to be added' } }
 		}
 
 		const procData = await prisma.procurement.findFirst({
@@ -1081,16 +1095,11 @@ export const addProductDal = async (req: Request) => {
 		`
 		const totalQuantity: any[] = await prisma.$queryRawUnsafe(query)
 
-		const sumOfQuantity = product.reduce((total, product) => (total + product?.quantity ? product?.quantity : 1), 0)
+		const sumOfQuantity = product.reduce((total, product) => total + (product?.quantity ? product?.quantity : 1), 0)
 
 		if (totalQuantity[0]?.total_quantity + sumOfQuantity > totalNonAddedReceiving?._sum?.received_quantity) {
 			throw { error: true, meta: { message: 'Number of added products cannot be more than received stocks' } }
 		}
-
-		console.log(query)
-		console.log(totalQuantity)
-		console.log(sumOfQuantity)
-		console.log(totalQuantity[0]?.total_quantity)
 
 		await prisma.$transaction(async tx => {
 			await Promise.all(
