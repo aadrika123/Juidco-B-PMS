@@ -252,6 +252,27 @@ model inventory {
     unit_masterId          String?
     supplier_master        supplier_master?         @relation(fields: [supplier_masterId], references: [id])
     supplier_masterId      String?
+    inventory_dead_stock   inventory_dead_stock[]
+}
+
+model inventory_dead_stock {
+    id                         String                       @id @default(uuid())
+    inventoryId                String
+    serial_no                  String
+    quantity                   Int
+    createdAt                  DateTime                     @default(now())
+    updatedAt                  DateTime                     @updatedAt
+    inventory_dead_stock_image inventory_dead_stock_image[]
+    inventory                  inventory                    @relation(fields: [inventoryId], references: [id])
+}
+
+model inventory_dead_stock_image {
+    id                     String               @id @default(uuid())
+    doc_path               String
+    inventory_dead_stock   inventory_dead_stock @relation(fields: [inventory_dead_stockId], references: [id])
+    inventory_dead_stockId String
+    createdAt              DateTime             @default(now())
+    updatedAt              DateTime             @updatedAt
 }
 
 model dead_stock {
@@ -721,8 +742,8 @@ model stock_request {
     subcategory_masterId  String?
     brand                 brand_master?          @relation(fields: [brand_masterId], references: [id])
     brand_masterId        String
-    allotted_quantity     Float
-    status                Int //-2=rejected, -1=returned, 0=pending, 1=revised, 2= forwarded to SR, 3=approved, 4=handed over
+    allotted_quantity     Float                  @default(1)
+    status                Int //-2=rejected, -1=returned, 0=pending, 1=revised, 2= forwarded to SR, 3=approved, 4=handover pending, 41=alloted, 5=return pending, 51= returned to inventory, 6=dead stock pending, 61=added to dead stock
     ulb_id                Int?
     inventory             inventory?             @relation(fields: [inventoryId], references: [id])
     inventoryId           String?
@@ -737,6 +758,10 @@ model stock_request {
     unit_masterId         String?
     supplier_master       supplier_master?       @relation(fields: [supplier_masterId], references: [id])
     supplier_masterId     String?
+    allotment_date        DateTime?
+    release_date          DateTime?
+    is_alloted            Boolean                @default(false)
+    serial_no             String?                @unique
 }
 
 model inventory_buffer {
