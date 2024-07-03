@@ -1,5 +1,5 @@
 import { Request, Response } from 'express'
-import { getStockReqInboxDal, getStockReqOutboxDal, approveStockReqDal, returnStockReqDal, rejectStockReqDal, stockReturnApprovalDal, deadStockApprovalDal } from '../../dal/stockReceiver/srStockReq.dal'
+import { getStockReqInboxDal, getStockReqOutboxDal, approveStockReqDal, returnStockReqDal, rejectStockReqDal, stockReturnApprovalDal, deadStockApprovalDal, claimWarrantyDal } from '../../dal/stockReceiver/srStockReq.dal'
 
 export const getStockReqInbox = async (req: Request, res: Response) => {
 	const result: any = await getStockReqInboxDal(req)
@@ -107,6 +107,23 @@ export const stockReturnApproval = async (req: Request, res: Response) => {
 
 export const deadStockApproval = async (req: Request, res: Response) => {
 	const result: any = await deadStockApprovalDal(req)
+	if (!result?.error) {
+		res.status(200).json({
+			status: true,
+			message: `Approved`,
+			data: result,
+		})
+	} else {
+		res.status(500).json({
+			status: false,
+			message: `Error while approving`,
+			error: result?.message,
+		})
+	}
+}
+
+export const claimWarranty = async (req: Request, res: Response) => {
+	const result: any = await claimWarrantyDal(req)
 	if (!result?.error) {
 		res.status(200).json({
 			status: true,
