@@ -488,3 +488,151 @@ export const forwardToSrDal = async (req: Request) => {
 		return { error: true, message: getErrorMessage(err) }
 	}
 }
+
+export const handoverDal = async (req: Request) => {
+	const { stock_handover_no }: { stock_handover_no: string } = req.body
+
+	try {
+		const status: any = await prisma.stock_request.findFirst({
+			where: {
+				stock_handover_no: stock_handover_no,
+			},
+			select: {
+				status: true,
+			},
+		})
+		if (status?.status !== 3) {
+			throw { error: true, message: 'Stock request is not valid to be handed over' }
+		}
+
+		await prisma.$transaction(async tx => {
+			await tx.stock_request.update({
+				where: {
+					stock_handover_no: stock_handover_no,
+				},
+				data: {
+					status: 4,
+				},
+			})
+		})
+
+		return 'Handed over'
+	} catch (err: any) {
+		console.log(err)
+		return { error: true, message: getErrorMessage(err) }
+	}
+}
+
+export const stockReturnDal = async (req: Request) => {
+	const { stock_handover_no }: { stock_handover_no: string } = req.body
+
+	try {
+		const status: any = await prisma.stock_request.findFirst({
+			where: {
+				stock_handover_no: stock_handover_no,
+			},
+			select: {
+				status: true,
+			},
+		})
+		if (status?.status < 3) {
+			throw { error: true, message: 'Stock request is not valid to be returned to inventory' }
+		}
+
+		await prisma.$transaction(async tx => {
+			await tx.dist_stock_req_outbox.create({
+				data: { stock_handover_no: stock_handover_no },
+			})
+
+			await tx.sr_stock_req_inbox.create({
+				data: { stock_handover_no: stock_handover_no },
+			})
+
+			await tx.stock_request.update({
+				where: {
+					stock_handover_no: stock_handover_no,
+				},
+				data: {
+					status: 5,
+				},
+			})
+
+			await tx.dist_stock_req_inbox.delete({
+				where: {
+					stock_handover_no: stock_handover_no,
+				},
+			})
+
+			await tx.notification.create({
+				data: {
+					role_id: Number(process.env.ROLE_SR),
+					title: 'A stock to be returned',
+					destination: 13,
+					description: `There is a stock to be returned  : ${stock_handover_no}`,
+				},
+			})
+		})
+
+		return 'Forwarded to SR for approval'
+	} catch (err: any) {
+		console.log(err)
+		return { error: true, message: getErrorMessage(err) }
+	}
+}
+
+export const AddDeadStockDal = async (req: Request) => {
+	const { stock_handover_no }: { stock_handover_no: string } = req.body
+
+	try {
+		const status: any = await prisma.stock_request.findFirst({
+			where: {
+				stock_handover_no: stock_handover_no,
+			},
+			select: {
+				status: true,
+			},
+		})
+		if (status?.status < 3) {
+			throw { error: true, message: 'Stock request is not valid to be added to dead stock' }
+		}
+
+		await prisma.$transaction(async tx => {
+			await tx.dist_stock_req_outbox.create({
+				data: { stock_handover_no: stock_handover_no },
+			})
+
+			await tx.sr_stock_req_inbox.create({
+				data: { stock_handover_no: stock_handover_no },
+			})
+
+			await tx.stock_request.update({
+				where: {
+					stock_handover_no: stock_handover_no,
+				},
+				data: {
+					status: 6,
+				},
+			})
+
+			await tx.dist_stock_req_inbox.delete({
+				where: {
+					stock_handover_no: stock_handover_no,
+				},
+			})
+
+			await tx.notification.create({
+				data: {
+					role_id: Number(process.env.ROLE_SR),
+					title: 'A stock to be added to dead stock',
+					destination: 13,
+					description: `There is a stock to be added to dead stock  : ${stock_handover_no}`,
+				},
+			})
+		})
+
+		return 'Forwarded to SR for approval'
+	} catch (err: any) {
+		console.log(err)
+		return { error: true, message: getErrorMessage(err) }
+	}
+}

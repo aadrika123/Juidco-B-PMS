@@ -835,7 +835,7 @@ export const addToInventoryDal = async (req: Request) => {
 	const img = req.files
 	let inventoryId = inventory
 	let exist: boolean = false
-	// console.log(img)
+	let currentInventoryId: string
 	try {
 		const totalNonAddedReceiving: any = await prisma.receivings.aggregate({
 			where: {
@@ -963,6 +963,9 @@ export const addToInventoryDal = async (req: Request) => {
 						},
 					},
 				})
+
+				currentInventoryId = updatedInv?.id
+
 				if (!exist) {
 					const historyCreation = await tx.stock_addition_history.create({
 						data: {
@@ -984,6 +987,9 @@ export const addToInventoryDal = async (req: Request) => {
 						...(warranty && { warranty: Boolean(warranty) }),
 					},
 				})
+
+				currentInventoryId = createdInv?.id
+
 				if (!createdInv) throw { error: true, message: 'Error while creating inventory' }
 				const historyCreation = await tx.stock_addition_history.create({
 					data: {
@@ -1018,8 +1024,8 @@ export const addToInventoryDal = async (req: Request) => {
 
 			await tx.$queryRawUnsafe(`
 				UPDATE product.product_${subcategory?.name.toLowerCase().replace(/\s/g, '')}
-				SET is_added = true, is_available = true
-				WHERE procurement_no = '${procurement_no}'
+				SET is_added = true, is_available = true, inventoryId = '${currentInventoryId}'
+				WHERE procurement_no = '${procurement_no}' AND is_added = false AND is_available = false
 			`)
 
 			await tx.notification.create({
