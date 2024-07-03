@@ -793,7 +793,7 @@ export const claimWarrantyDal = async (req: Request) => {
 		})
 
 		if (stockReq?.status !== 7) {
-			throw { error: true, message: 'Stock return request is not valid' }
+			throw { error: true, message: 'Stock request is not valid' }
 		}
 
 		if (!stockReq?.inventory?.warranty) {
