@@ -640,6 +640,124 @@ export const stockReturnApprovalDal = async (req: Request) => {
 	}
 }
 
+export const stockReturnRejectDal = async (req: Request) => {
+	const { stock_handover_no, remark }: { stock_handover_no: string; remark: string } = req.body
+
+	try {
+		const stockReq = await prisma.stock_request.findFirst({
+			where: {
+				stock_handover_no: stock_handover_no,
+			},
+			select: {
+				status: true,
+			},
+		})
+
+		if (stockReq?.status !== 5) {
+			throw { error: true, message: 'Stock return request is not valid' }
+		}
+
+		await prisma.$transaction(async tx => {
+			await tx.sr_stock_req_outbox.create({
+				data: { stock_handover_no: stock_handover_no },
+			})
+
+			await tx.dist_stock_req_inbox.create({
+				data: { stock_handover_no: stock_handover_no },
+			})
+
+			await tx.stock_request.update({
+				where: {
+					stock_handover_no: stock_handover_no,
+				},
+				data: {
+					status: -5,
+					remark: remark,
+				},
+			})
+
+			await tx.sr_stock_req_inbox.delete({
+				where: {
+					stock_handover_no: stock_handover_no,
+				},
+			})
+
+			await tx.notification.create({
+				data: {
+					role_id: Number(process.env.ROLE_DIST),
+					title: 'Stock return request rejected',
+					destination: 40,
+					description: `Return request for ${stock_handover_no} has been rejected`,
+				},
+			})
+		})
+
+		return 'return request rejected'
+	} catch (err: any) {
+		console.log(err)
+		return { error: true, message: getErrorMessage(err) }
+	}
+}
+
+export const stockReturnReqReturnDal = async (req: Request) => {
+	const { stock_handover_no, remark }: { stock_handover_no: string; remark: string } = req.body
+
+	try {
+		const stockReq = await prisma.stock_request.findFirst({
+			where: {
+				stock_handover_no: stock_handover_no,
+			},
+			select: {
+				status: true,
+			},
+		})
+
+		if (stockReq?.status !== 5) {
+			throw { error: true, message: 'Stock return request is not valid' }
+		}
+
+		await prisma.$transaction(async tx => {
+			await tx.sr_stock_req_outbox.create({
+				data: { stock_handover_no: stock_handover_no },
+			})
+
+			await tx.dist_stock_req_inbox.create({
+				data: { stock_handover_no: stock_handover_no },
+			})
+
+			await tx.stock_request.update({
+				where: {
+					stock_handover_no: stock_handover_no,
+				},
+				data: {
+					status: 52,
+					remark: remark,
+				},
+			})
+
+			await tx.sr_stock_req_inbox.delete({
+				where: {
+					stock_handover_no: stock_handover_no,
+				},
+			})
+
+			await tx.notification.create({
+				data: {
+					role_id: Number(process.env.ROLE_DIST),
+					title: 'Stock return request returned back',
+					destination: 40,
+					description: `Return request for ${stock_handover_no} has been Returned back`,
+				},
+			})
+		})
+
+		return 'returned back to departmental distributor'
+	} catch (err: any) {
+		console.log(err)
+		return { error: true, message: getErrorMessage(err) }
+	}
+}
+
 const addToDeadStock = async (serial_no: string, subcategory_name: string, tx: Prisma.TransactionClient) => {
 	const product = await prisma
 		.$queryRawUnsafe(
@@ -720,7 +838,7 @@ export const deadStockApprovalDal = async (req: Request) => {
 		}
 
 		if (stockReq?.status !== 6) {
-			throw { error: true, message: 'Stock dead stock request is not valid' }
+			throw { error: true, message: 'Dead stock request is not valid' }
 		}
 
 		await prisma.$transaction(async tx => {
@@ -759,7 +877,125 @@ export const deadStockApprovalDal = async (req: Request) => {
 			})
 		})
 
-		return 'returned to inventory'
+		return 'added to dead stock'
+	} catch (err: any) {
+		console.log(err)
+		return { error: true, message: getErrorMessage(err) }
+	}
+}
+
+export const deadStockRejectDal = async (req: Request) => {
+	const { stock_handover_no, remark }: { stock_handover_no: string; remark: string } = req.body
+
+	try {
+		const stockReq = await prisma.stock_request.findFirst({
+			where: {
+				stock_handover_no: stock_handover_no,
+			},
+			select: {
+				status: true,
+			},
+		})
+
+		if (stockReq?.status !== 6) {
+			throw { error: true, message: 'Dead stock request is not valid' }
+		}
+
+		await prisma.$transaction(async tx => {
+			await tx.sr_stock_req_outbox.create({
+				data: { stock_handover_no: stock_handover_no },
+			})
+
+			await tx.dist_stock_req_inbox.create({
+				data: { stock_handover_no: stock_handover_no },
+			})
+
+			await tx.stock_request.update({
+				where: {
+					stock_handover_no: stock_handover_no,
+				},
+				data: {
+					status: -6,
+					remark: remark,
+				},
+			})
+
+			await tx.sr_stock_req_inbox.delete({
+				where: {
+					stock_handover_no: stock_handover_no,
+				},
+			})
+
+			await tx.notification.create({
+				data: {
+					role_id: Number(process.env.ROLE_DIST),
+					title: 'Dead stock request rejected',
+					destination: 40,
+					description: `Dead stock request for ${stock_handover_no} has been rejected`,
+				},
+			})
+		})
+
+		return 'Dead stock request rejected'
+	} catch (err: any) {
+		console.log(err)
+		return { error: true, message: getErrorMessage(err) }
+	}
+}
+
+export const deadStockReturnDal = async (req: Request) => {
+	const { stock_handover_no, remark }: { stock_handover_no: string; remark: String } = req.body
+
+	try {
+		const stockReq = await prisma.stock_request.findFirst({
+			where: {
+				stock_handover_no: stock_handover_no,
+			},
+			select: {
+				status: true,
+			},
+		})
+
+		if (stockReq?.status !== 6) {
+			throw { error: true, message: 'Dead stock request is not valid' }
+		}
+
+		await prisma.$transaction(async tx => {
+			await tx.sr_stock_req_outbox.create({
+				data: { stock_handover_no: stock_handover_no },
+			})
+
+			await tx.dist_stock_req_inbox.create({
+				data: { stock_handover_no: stock_handover_no },
+			})
+
+			await tx.stock_request.update({
+				where: {
+					stock_handover_no: stock_handover_no,
+				},
+				data: {
+					status: 62,
+					remark: remark as string,
+				},
+			})
+
+			await tx.sr_stock_req_inbox.delete({
+				where: {
+					stock_handover_no: stock_handover_no,
+				},
+			})
+
+			await tx.notification.create({
+				data: {
+					role_id: Number(process.env.ROLE_DIST),
+					title: 'Dead stock request returned',
+					destination: 40,
+					description: `Dead stock request for ${stock_handover_no} has been returned`,
+				},
+			})
+		})
+
+		return 'Dead stock request returned'
 	} catch (err: any) {
 		console.log(err)
 		return { error: true, message: getErrorMessage(err) }
@@ -835,6 +1071,124 @@ export const claimWarrantyDal = async (req: Request) => {
 		})
 
 		return 'Warranty claimed successfully'
+	} catch (err: any) {
+		console.log(err)
+		return { error: true, message: getErrorMessage(err) }
+	}
+}
+
+export const warrantyClaimRejectDal = async (req: Request) => {
+	const { stock_handover_no, remark }: { stock_handover_no: string; remark: string } = req.body
+
+	try {
+		const stockReq = await prisma.stock_request.findFirst({
+			where: {
+				stock_handover_no: stock_handover_no,
+			},
+			select: {
+				status: true,
+			},
+		})
+
+		if (stockReq?.status !== 7) {
+			throw { error: true, message: 'Dead stock request is not valid' }
+		}
+
+		await prisma.$transaction(async tx => {
+			await tx.sr_stock_req_outbox.create({
+				data: { stock_handover_no: stock_handover_no },
+			})
+
+			await tx.dist_stock_req_inbox.create({
+				data: { stock_handover_no: stock_handover_no },
+			})
+
+			await tx.stock_request.update({
+				where: {
+					stock_handover_no: stock_handover_no,
+				},
+				data: {
+					status: -7,
+					remark: remark,
+				},
+			})
+
+			await tx.sr_stock_req_inbox.delete({
+				where: {
+					stock_handover_no: stock_handover_no,
+				},
+			})
+
+			await tx.notification.create({
+				data: {
+					role_id: Number(process.env.ROLE_DIST),
+					title: 'Warranty claim rejected',
+					destination: 40,
+					description: `Warranty claim request for ${stock_handover_no} has been rejected`,
+				},
+			})
+		})
+
+		return 'Warranty claim rejected'
+	} catch (err: any) {
+		console.log(err)
+		return { error: true, message: getErrorMessage(err) }
+	}
+}
+
+export const warrantyClaimReturnDal = async (req: Request) => {
+	const { stock_handover_no, remark }: { stock_handover_no: string; remark: string } = req.body
+
+	try {
+		const stockReq = await prisma.stock_request.findFirst({
+			where: {
+				stock_handover_no: stock_handover_no,
+			},
+			select: {
+				status: true,
+			},
+		})
+
+		if (stockReq?.status !== 7) {
+			throw { error: true, message: 'Dead stock request is not valid' }
+		}
+
+		await prisma.$transaction(async tx => {
+			await tx.sr_stock_req_outbox.create({
+				data: { stock_handover_no: stock_handover_no },
+			})
+
+			await tx.dist_stock_req_inbox.create({
+				data: { stock_handover_no: stock_handover_no },
+			})
+
+			await tx.stock_request.update({
+				where: {
+					stock_handover_no: stock_handover_no,
+				},
+				data: {
+					status: 72,
+					remark: remark,
+				},
+			})
+
+			await tx.sr_stock_req_inbox.delete({
+				where: {
+					stock_handover_no: stock_handover_no,
+				},
+			})
+
+			await tx.notification.create({
+				data: {
+					role_id: Number(process.env.ROLE_DIST),
+					title: 'Warranty claim returned',
+					destination: 40,
+					description: `Warranty claim request for ${stock_handover_no} has been returned`,
+				},
+			})
+		})
+
+		return 'Warranty claim returned'
 	} catch (err: any) {
 		console.log(err)
 		return { error: true, message: getErrorMessage(err) }

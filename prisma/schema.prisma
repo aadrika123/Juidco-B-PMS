@@ -294,7 +294,6 @@ model dead_stock_image {
     updatedAt      DateTime   @updatedAt
 }
 
-
 //procurement============================================================================================================================================================================================================================================================================================================
 
 model procurement {
@@ -744,7 +743,7 @@ model stock_request {
     brand                 brand_master?          @relation(fields: [brand_masterId], references: [id])
     brand_masterId        String
     allotted_quantity     Float                  @default(1)
-    status                Int //-2=rejected, -1=returned, 0=pending, 1=revised, 2= forwarded to SR, 3=approved, 4=handover pending, 41=allotted, 5=return pending, 51= returned to inventory, 6=dead stock pending, 61=added to dead stock, 7=warranty claim pending, 71=warranty claimed 
+    status                Int //-2=rejected, -1=returned, 0=pending, 1=revised, 2= forwarded to SR, 3=approved, 4=handover pending, 41=allotted, 5=return pending, 51= returned to inventory, 52=returned to DD, -5= rejected, 6=dead stock pending, 61=added to dead stock, 62=returned to DD, -6= rejected, 7=warranty claim pending, 71=warranty claimed, 72=returned to DD, -7= rejected, 
     ulb_id                Int?
     inventory             inventory?             @relation(fields: [inventoryId], references: [id])
     inventoryId           String?
@@ -763,6 +762,7 @@ model stock_request {
     release_date          DateTime?
     is_alloted            Boolean                @default(false)
     serial_no             String?                @unique
+    remark                String?
 }
 
 model inventory_buffer {

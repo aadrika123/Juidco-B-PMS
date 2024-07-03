@@ -1,5 +1,5 @@
 import { Request, Response } from 'express'
-import { getStockReqInboxDal, getStockReqOutboxDal, approveStockReqDal, returnStockReqDal, rejectStockReqDal, stockReturnApprovalDal, deadStockApprovalDal, claimWarrantyDal } from '../../dal/stockReceiver/srStockReq.dal'
+import { getStockReqInboxDal, getStockReqOutboxDal, approveStockReqDal, returnStockReqDal, rejectStockReqDal, stockReturnApprovalDal, deadStockApprovalDal, claimWarrantyDal, stockReturnRejectDal, stockReturnReqReturnDal, deadStockRejectDal, deadStockReturnDal, warrantyClaimRejectDal, warrantyClaimReturnDal } from '../../dal/stockReceiver/srStockReq.dal'
 
 export const getStockReqInbox = async (req: Request, res: Response) => {
 	const result: any = await getStockReqInboxDal(req)
@@ -105,6 +105,40 @@ export const stockReturnApproval = async (req: Request, res: Response) => {
 	}
 }
 
+export const stockReturnReject = async (req: Request, res: Response) => {
+	const result: any = await stockReturnRejectDal(req)
+	if (!result?.error) {
+		res.status(200).json({
+			status: true,
+			message: `Rejected`,
+			data: result,
+		})
+	} else {
+		res.status(500).json({
+			status: false,
+			message: `Error while rejecting`,
+			error: result?.message,
+		})
+	}
+}
+
+export const stockReturnReqReturn = async (req: Request, res: Response) => {
+	const result: any = await stockReturnReqReturnDal(req)
+	if (!result?.error) {
+		res.status(200).json({
+			status: true,
+			message: `Returned`,
+			data: result,
+		})
+	} else {
+		res.status(500).json({
+			status: false,
+			message: `Error while returning`,
+			error: result?.message,
+		})
+	}
+}
+
 export const deadStockApproval = async (req: Request, res: Response) => {
 	const result: any = await deadStockApprovalDal(req)
 	if (!result?.error) {
@@ -122,6 +156,40 @@ export const deadStockApproval = async (req: Request, res: Response) => {
 	}
 }
 
+export const deadStockReject = async (req: Request, res: Response) => {
+	const result: any = await deadStockRejectDal(req)
+	if (!result?.error) {
+		res.status(200).json({
+			status: true,
+			message: `Rejected`,
+			data: result,
+		})
+	} else {
+		res.status(500).json({
+			status: false,
+			message: `Error while rejecting`,
+			error: result?.message,
+		})
+	}
+}
+
+export const deadStockReturn = async (req: Request, res: Response) => {
+	const result: any = await deadStockReturnDal(req)
+	if (!result?.error) {
+		res.status(200).json({
+			status: true,
+			message: `Returned`,
+			data: result,
+		})
+	} else {
+		res.status(500).json({
+			status: false,
+			message: `Error while returning`,
+			error: result?.message,
+		})
+	}
+}
+
 export const claimWarranty = async (req: Request, res: Response) => {
 	const result: any = await claimWarrantyDal(req)
 	if (!result?.error) {
@@ -134,6 +202,40 @@ export const claimWarranty = async (req: Request, res: Response) => {
 		res.status(500).json({
 			status: false,
 			message: `Error while approving`,
+			error: result?.message,
+		})
+	}
+}
+
+export const warrantyClaimReject = async (req: Request, res: Response) => {
+	const result: any = await warrantyClaimRejectDal(req)
+	if (!result?.error) {
+		res.status(200).json({
+			status: true,
+			message: `Rejected`,
+			data: result,
+		})
+	} else {
+		res.status(500).json({
+			status: false,
+			message: `Error while rejecting`,
+			error: result?.message,
+		})
+	}
+}
+
+export const warrantyClaimReturn = async (req: Request, res: Response) => {
+	const result: any = await warrantyClaimReturnDal(req)
+	if (!result?.error) {
+		res.status(200).json({
+			status: true,
+			message: `Returned`,
+			data: result,
+		})
+	} else {
+		res.status(500).json({
+			status: false,
+			message: `Error while returning`,
 			error: result?.message,
 		})
 	}
