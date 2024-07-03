@@ -1,5 +1,5 @@
 import { Request, Response } from 'express'
-import { createStockRequestDal, getStockReqInboxDal, getStockReqOutboxDal, forwardToSrDal, handoverDal, stockReturnDal, AddDeadStockDal } from '../../dal/distributor/distStockReq.dal'
+import { createStockRequestDal, getStockReqInboxDal, getStockReqOutboxDal, forwardToSrDal, handoverDal, stockReturnDal, AddDeadStockDal, warrantyClaimReqDal } from '../../dal/distributor/distStockReq.dal'
 
 export const createStockRequest = async (req: Request, res: Response) => {
 	const result: any = await createStockRequestDal(req)
@@ -117,6 +117,23 @@ export const AddDeadStock = async (req: Request, res: Response) => {
 		res.status(500).json({
 			status: false,
 			message: `Error while forwarding dead stock request`,
+			error: result?.message,
+		})
+	}
+}
+
+export const warrantyClaimReq = async (req: Request, res: Response) => {
+	const result: any = await warrantyClaimReqDal(req)
+	if (!result?.error) {
+		res.status(200).json({
+			status: true,
+			message: `Forwarded to SR for approval successfully`,
+			data: result,
+		})
+	} else {
+		res.status(500).json({
+			status: false,
+			message: `Error while forwarding warranty claim request`,
 			error: result?.message,
 		})
 	}
