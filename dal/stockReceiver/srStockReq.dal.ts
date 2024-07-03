@@ -720,7 +720,7 @@ export const deadStockApprovalDal = async (req: Request) => {
 		}
 
 		if (stockReq?.status !== 6) {
-			throw { error: true, message: 'Stock return request is not valid' }
+			throw { error: true, message: 'Stock dead stock request is not valid' }
 		}
 
 		await prisma.$transaction(async tx => {
@@ -760,6 +760,81 @@ export const deadStockApprovalDal = async (req: Request) => {
 		})
 
 		return 'returned to inventory'
+	} catch (err: any) {
+		console.log(err)
+		return { error: true, message: getErrorMessage(err) }
+	}
+}
+
+export const claimWarrantyDal = async (req: Request) => {
+	const { stock_handover_no }: { stock_handover_no: string } = req.body
+
+	try {
+		const stockReq = await prisma.stock_request.findFirst({
+			where: {
+				stock_handover_no: stock_handover_no,
+			},
+			select: {
+				status: true,
+				serial_no: true,
+				inventoryId: true,
+				allotted_quantity: true,
+				subcategory: {
+					select: {
+						name: true,
+					},
+				},
+				inventory: {
+					select: {
+						warranty: true,
+					},
+				},
+			},
+		})
+
+		if (stockReq?.status !== 7) {
+			throw { error: true, message: 'Stock return request is not valid' }
+		}
+
+		if (!stockReq?.inventory?.warranty) {
+			throw { error: true, message: 'The item has no option to claim warranty' }
+		}
+
+		await prisma.$transaction(async tx => {
+			await tx.sr_stock_req_outbox.create({
+				data: { stock_handover_no: stock_handover_no },
+			})
+
+			await tx.dist_stock_req_inbox.create({
+				data: { stock_handover_no: stock_handover_no },
+			})
+
+			await tx.stock_request.update({
+				where: {
+					stock_handover_no: stock_handover_no,
+				},
+				data: {
+					status: 71,
+				},
+			})
+
+			await tx.sr_stock_req_inbox.delete({
+				where: {
+					stock_handover_no: stock_handover_no,
+				},
+			})
+
+			await tx.notification.create({
+				data: {
+					role_id: Number(process.env.ROLE_DIST),
+					title: 'Warranty claimed',
+					destination: 40,
+					description: `Warranty claim request for ${stock_handover_no} has been successfully approved`,
+				},
+			})
+		})
+
+		return 'Warranty claimed successfully'
 	} catch (err: any) {
 		console.log(err)
 		return { error: true, message: getErrorMessage(err) }

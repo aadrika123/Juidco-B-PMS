@@ -241,7 +241,7 @@ model inventory {
     brand                  brand_master?            @relation(fields: [brand_masterId], references: [id])
     brand_masterId         String?
     description            String?
-    quantity               Int                      @default(0)
+    quantity               Float                    @default(0)
     warranty               Boolean                  @default(false)
     createdAt              DateTime                 @default(now())
     updatedAt              DateTime                 @updatedAt
@@ -259,7 +259,7 @@ model inventory_dead_stock {
     id                         String                       @id @default(uuid())
     inventoryId                String
     serial_no                  String
-    quantity                   Int
+    quantity                   Float
     createdAt                  DateTime                     @default(now())
     updatedAt                  DateTime                     @updatedAt
     inventory_dead_stock_image inventory_dead_stock_image[]
@@ -278,7 +278,7 @@ model inventory_dead_stock_image {
 model dead_stock {
     id               String             @id @default(uuid())
     procurement_no   String             @unique
-    quantity         Int
+    quantity         Float
     createdAt        DateTime           @default(now())
     updatedAt        DateTime           @updatedAt
     dead_stock_image dead_stock_image[]
@@ -293,6 +293,7 @@ model dead_stock_image {
     createdAt      DateTime   @default(now())
     updatedAt      DateTime   @updatedAt
 }
+
 
 //procurement============================================================================================================================================================================================================================================================================================================
 
@@ -743,7 +744,7 @@ model stock_request {
     brand                 brand_master?          @relation(fields: [brand_masterId], references: [id])
     brand_masterId        String
     allotted_quantity     Float                  @default(1)
-    status                Int //-2=rejected, -1=returned, 0=pending, 1=revised, 2= forwarded to SR, 3=approved, 4=handover pending, 41=alloted, 5=return pending, 51= returned to inventory, 6=dead stock pending, 61=added to dead stock
+    status                Int //-2=rejected, -1=returned, 0=pending, 1=revised, 2= forwarded to SR, 3=approved, 4=handover pending, 41=allotted, 5=return pending, 51= returned to inventory, 6=dead stock pending, 61=added to dead stock, 7=warranty claim pending, 71=warranty claimed 
     ulb_id                Int?
     inventory             inventory?             @relation(fields: [inventoryId], references: [id])
     inventoryId           String?

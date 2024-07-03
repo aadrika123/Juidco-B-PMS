@@ -636,3 +636,85 @@ export const AddDeadStockDal = async (req: Request) => {
 		return { error: true, message: getErrorMessage(err) }
 	}
 }
+
+export const warrantyClaimReqDal = async (req: Request) => {
+	const { stock_handover_no }: { stock_handover_no: string } = req.body
+
+	try {
+		const stockReq = await prisma.stock_request.findFirst({
+			where: {
+				stock_handover_no: stock_handover_no,
+			},
+			select: {
+				status: true,
+				inventory: {
+					select: {
+						warranty: true,
+					},
+				},
+			},
+		})
+		if (!stockReq) {
+			throw { error: true, message: 'Invalid stock request' }
+		}
+		if (stockReq?.status < 3) {
+			throw { error: true, message: 'Stock request is not valid to be claimed for warranty' }
+		}
+		if (!stockReq?.inventory?.warranty) {
+			throw { error: true, message: 'The item has no option to claim warranty' }
+		}
+
+		const srOutbox = await prisma.sr_stock_req_outbox.count({
+			where: {
+				stock_handover_no: stock_handover_no,
+			},
+		})
+
+		await prisma.$transaction(async tx => {
+			await tx.dist_stock_req_outbox.create({
+				data: { stock_handover_no: stock_handover_no },
+			})
+
+			await tx.sr_stock_req_inbox.create({
+				data: { stock_handover_no: stock_handover_no },
+			})
+
+			await tx.stock_request.update({
+				where: {
+					stock_handover_no: stock_handover_no,
+				},
+				data: {
+					status: 71,
+				},
+			})
+
+			await tx.dist_stock_req_inbox.delete({
+				where: {
+					stock_handover_no: stock_handover_no,
+				},
+			})
+
+			if (srOutbox !== 0) {
+				await tx.sr_stock_req_outbox.delete({
+					where: {
+						stock_handover_no: stock_handover_no,
+					},
+				})
+			}
+
+			await tx.notification.create({
+				data: {
+					role_id: Number(process.env.ROLE_SR),
+					title: 'A warranty claim request',
+					destination: 13,
+					description: `There is a new warranty claim request having stock request number : ${stock_handover_no}`,
+				},
+			})
+		})
+
+		return 'Forwarded to SR for approval'
+	} catch (err: any) {
+		console.log(err)
+		return { error: true, message: getErrorMessage(err) }
+	}
+}
