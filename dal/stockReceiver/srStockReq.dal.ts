@@ -123,6 +123,11 @@ export const getStockReqInboxDal = async (req: Request) => {
 								name: true,
 							},
 						},
+						unit: {
+							select: {
+								name: true,
+							},
+						},
 						ulb_id: true,
 						emp_id: true,
 						emp_name: true,
@@ -287,6 +292,11 @@ export const getStockReqOutboxDal = async (req: Request) => {
 								name: true,
 							},
 						},
+						unit: {
+							select: {
+								name: true,
+							},
+						},
 						ulb_id: true,
 						emp_id: true,
 						emp_name: true,
@@ -367,6 +377,7 @@ export const approveStockReqDal = async (req: Request) => {
 						SELECT *
 						FROM product.product_${stockReq?.subcategory?.name.toLowerCase().replace(/\s/g, '')}
 						WHERE is_available = true AND inventory_id = '${stockReq?.inventoryId as string}'
+						LIMIT 1
 						`
 					)
 					.then((result: any) => result[0])

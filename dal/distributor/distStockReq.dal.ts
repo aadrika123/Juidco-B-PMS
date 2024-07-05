@@ -7,7 +7,7 @@ import { pagination } from '../../type/common.type'
 const prisma = new PrismaClient()
 
 export const createStockRequestDal = async (req: Request) => {
-	const { category, subcategory, brand, inventory, emp_id, emp_name, allotted_quantity, auth } = req.body
+	const { category, subcategory, brand, inventory, emp_id, emp_name, allotted_quantity, auth, unit } = req.body
 
 	const ulb_id = auth?.ulb_id
 
@@ -44,6 +44,7 @@ export const createStockRequestDal = async (req: Request) => {
 			...(category && { category: { connect: { id: category } } }),
 			subcategory: { connect: { id: subcategory } },
 			brand: { connect: { id: brand } },
+			...(unit && { unit: { connect: { id: unit } } }),
 			inventory: { connect: { id: inventory } },
 			emp_id: emp_id,
 			emp_name: emp_name,
@@ -201,12 +202,18 @@ export const getStockReqInboxDal = async (req: Request) => {
 								name: true,
 							},
 						},
+						unit: {
+							select: {
+								name: true,
+							},
+						},
 						ulb_id: true,
 						emp_id: true,
 						emp_name: true,
 						allotted_quantity: true,
 						isEdited: true,
 						status: true,
+						serial_no: true,
 					},
 				},
 			},
@@ -365,12 +372,18 @@ export const getStockReqOutboxDal = async (req: Request) => {
 								name: true,
 							},
 						},
+						unit: {
+							select: {
+								name: true,
+							},
+						},
 						ulb_id: true,
 						emp_id: true,
 						emp_name: true,
 						allotted_quantity: true,
 						isEdited: true,
 						status: true,
+						serial_no: true,
 					},
 				},
 			},
@@ -501,7 +514,7 @@ export const handoverDal = async (req: Request) => {
 				status: true,
 			},
 		})
-		if (status?.status !== 3) {
+		if (status?.status < 3) {
 			throw { error: true, message: 'Stock request is not valid to be handed over' }
 		}
 

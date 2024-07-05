@@ -11,7 +11,7 @@ import { createBrandNoReqDal } from '../masterEntry/brand.dal'
 const prisma = new PrismaClient()
 
 export const createPreProcurementDal = async (req: Request) => {
-	const { category, subcategory, brand, description, rate, total_rate, quantity, ulb_id } = req.body
+	const { category, subcategory, brand, description, rate, total_rate, quantity, ulb_id, unit } = req.body
 
 	let procurement_no: string
 	// let isOthers = false
@@ -38,6 +38,7 @@ export const createPreProcurementDal = async (req: Request) => {
 		category: { connect: { id: processedCategory } },
 		subcategory: { connect: { id: processedSubcategory } },
 		brand: { connect: { id: processedBrand } },
+		...(unit && { unit: { connect: { id: unit } } }),
 		description: description,
 		procurement_no: procurement_no,
 		rate: Number(rate),
@@ -191,6 +192,11 @@ export const getPreProcurementDal = async (req: Request) => {
 								name: true,
 							},
 						},
+						unit: {
+							select: {
+								name: true,
+							},
+						},
 						description: true,
 						quantity: true,
 						rate: true,
@@ -326,6 +332,11 @@ export const getPreProcurementByOrderNoDal = async (req: Request) => {
 							},
 						},
 						brand: {
+							select: {
+								name: true,
+							},
+						},
+						unit: {
 							select: {
 								name: true,
 							},
@@ -589,6 +600,11 @@ export const getPreProcurementOutboxDal = async (req: Request) => {
 								name: true,
 							},
 						},
+						unit: {
+							select: {
+								name: true,
+							},
+						},
 						description: true,
 						quantity: true,
 						rate: true,
@@ -804,6 +820,11 @@ export const getPreProcurementRejectedDal = async (req: Request) => {
 								name: true,
 							},
 						},
+						unit: {
+							select: {
+								name: true,
+							},
+						},
 						description: true,
 						quantity: true,
 						rate: true,
@@ -959,6 +980,11 @@ export const getPreProcurementReleasedDal = async (req: Request) => {
 								name: true,
 							},
 						},
+						unit: {
+							select: {
+								name: true,
+							},
+						},
 						description: true,
 						quantity: true,
 						rate: true,
@@ -1011,12 +1037,13 @@ export const getPreProcurementReleasedDal = async (req: Request) => {
 }
 
 export const editPreProcurementDal = async (req: Request) => {
-	const { procurement_no, category, subcategory, brand, description, rate, quantity, total_rate, remark } = req.body
+	const { procurement_no, category, subcategory, brand, description, rate, quantity, total_rate, remark, unit } = req.body
 
 	const data = {
 		category: { connect: { id: category } },
 		subcategory: { connect: { id: subcategory } },
 		brand: { connect: { id: brand } },
+		...(unit && { unit: { connect: { id: unit } } }),
 		description: description,
 		rate: Number(rate),
 		quantity: Number(quantity),
@@ -1045,6 +1072,7 @@ export const editPreProcurementDal = async (req: Request) => {
 		category: { connect: { id: procurement?.category_masterId } },
 		subcategory: { connect: { id: procurement?.subcategory_masterId } },
 		brand: { connect: { id: procurement?.brand_masterId } },
+		...(unit && { unit: { connect: { id: unit } } }),
 		description: procurement?.description,
 		rate: procurement?.rate,
 		quantity: procurement?.quantity,

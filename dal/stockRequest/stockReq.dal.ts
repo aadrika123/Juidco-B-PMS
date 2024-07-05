@@ -61,7 +61,7 @@ export const getStockReqByStockHandoverNoDal = async (req: Request) => {
 }
 
 export const editStockRequestDal = async (req: Request) => {
-	const { stock_handover_no, category, subcategory, brand, inventory, emp_id, emp_name, allotted_quantity } = req.body
+	const { stock_handover_no, category, subcategory, brand, inventory, emp_id, emp_name, allotted_quantity, unit } = req.body
 
 	try {
 		const invData = await prisma.inventory.findFirst({
@@ -90,6 +90,7 @@ export const editStockRequestDal = async (req: Request) => {
 			...(category && { category: { connect: { id: category } } }),
 			subcategory: { connect: { id: subcategory } },
 			brand: { connect: { id: brand } },
+			...(unit && { unit: { connect: { id: unit } } }),
 			inventory: { connect: { id: inventory } },
 			emp_id: emp_id,
 			emp_name: emp_name,

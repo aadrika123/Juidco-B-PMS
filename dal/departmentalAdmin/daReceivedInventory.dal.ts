@@ -108,6 +108,11 @@ export const getReceivedInventoryDal = async (req: Request) => {
 								name: true,
 							},
 						},
+						unit: {
+							select: {
+								name: true,
+							},
+						},
 						post_procurement: {
 							select: {
 								procurement_no: true,
@@ -381,6 +386,11 @@ export const getReceivedInventoryByOrderNoDal = async (req: Request) => {
 							},
 						},
 						brand: {
+							select: {
+								name: true,
+							},
+						},
+						unit: {
 							select: {
 								name: true,
 							},
@@ -734,6 +744,11 @@ export const getReceivedInventoryOutboxDal = async (req: Request) => {
 							},
 						},
 						brand: {
+							select: {
+								name: true,
+							},
+						},
+						unit: {
 							select: {
 								name: true,
 							},

@@ -107,6 +107,11 @@ export const getReceivedInventoryDal = async (req: Request) => {
 								name: true,
 							},
 						},
+						unit: {
+							select: {
+								name: true,
+							},
+						},
 						post_procurement: {
 							select: {
 								procurement_no: true,
@@ -384,6 +389,11 @@ export const getReceivedInventoryByOrderNoDal = async (req: Request) => {
 								name: true,
 							},
 						},
+						unit: {
+							select: {
+								name: true,
+							},
+						},
 						post_procurement: {
 							select: {
 								procurement_no: true,
@@ -578,6 +588,11 @@ export const getReceivedInventoryOutboxDal = async (req: Request) => {
 							},
 						},
 						brand: {
+							select: {
+								name: true,
+							},
+						},
+						unit: {
 							select: {
 								name: true,
 							},
@@ -862,7 +877,7 @@ export const addToInventoryDal = async (req: Request) => {
 			throw { error: true, message: 'If there is any dead stock, at least one image is mandatory.' }
 		}
 
-		const procData: any = await prisma.procurement.findFirst({
+		const procData = await prisma.procurement.findFirst({
 			where: { procurement_no: procurement_no },
 		})
 
@@ -982,6 +997,7 @@ export const addToInventoryDal = async (req: Request) => {
 						category: { connect: { id: procData?.category_masterId } },
 						subcategory: { connect: { id: procData?.subcategory_masterId } },
 						brand: { connect: { id: procData?.brand_masterId } },
+						unit: { connect: { id: procData?.unit_masterId } },
 						description: procData?.description,
 						quantity: dead_stock ? totalNonAddedReceiving?._sum?.received_quantity - Number(dead_stock) : totalNonAddedReceiving?._sum?.received_quantity,
 						...(warranty && { warranty: Boolean(warranty) }),

@@ -153,6 +153,11 @@ export const getPreProcurementForBoqDal = async (req: Request) => {
 								name: true,
 							},
 						},
+						unit: {
+							select: {
+								name: true,
+							},
+						},
 						description: true,
 						remark: true,
 						quantity: true,
@@ -317,6 +322,11 @@ export const getPreProcurementDal = async (req: Request) => {
 							},
 						},
 						brand: {
+							select: {
+								name: true,
+							},
+						},
+						unit: {
 							select: {
 								name: true,
 							},
@@ -538,14 +548,14 @@ export const createBoqDal = async (req: Request) => {
 							procurement_no: item?.procurement_no,
 						},
 					})
-                    await tx.notification.create({
-                        data: {
-                            role_id: Number(process.env.ROLE_SR),
-                            title: 'BOQ created',
-                            destination: 10,
-                            description: `BOQ created for procurement Number : ${item?.procurement_no}`,
-                        },
-                    })
+					await tx.notification.create({
+						data: {
+							role_id: Number(process.env.ROLE_SR),
+							title: 'BOQ created',
+							destination: 10,
+							description: `BOQ created for procurement Number : ${item?.procurement_no}`,
+						},
+					})
 				})
 			)
 
@@ -682,6 +692,11 @@ export const getPreProcurementOutboxDal = async (req: Request) => {
 							},
 						},
 						brand: {
+							select: {
+								name: true,
+							},
+						},
+						unit: {
 							select: {
 								name: true,
 							},
@@ -1288,7 +1303,7 @@ export const forwardToDaDal = async (req: Request) => {
 				},
 			})
 
-            await tx.notification.create({
+			await tx.notification.create({
 				data: {
 					role_id: Number(process.env.ROLE_DA),
 					title: 'BOQ to be approved',
@@ -2225,7 +2240,7 @@ export const getCriticalDatesPtDal = async (req: Request) => {
 
 export const createBidOpenersPtDal = async (req: Request) => {
 	const { preTender, doc } = req.body
-	const { B01, B02 } = req.files as any || {}
+	const { B01, B02 } = (req.files as any) || {}
 	try {
 		const formattedData: bid_openers = JSON.parse(typeof preTender !== 'string' ? JSON.stringify(preTender) : preTender)
 		const formattedDoc = JSON.parse(typeof doc !== 'string' ? JSON.stringify(doc) : doc)
@@ -2851,7 +2866,7 @@ export const forwardToDaPtDal = async (req: Request) => {
 				},
 			})
 
-            await tx.notification.create({
+			await tx.notification.create({
 				data: {
 					role_id: Number(process.env.ROLE_DA),
 					title: 'Pre-tendering form to be approved',

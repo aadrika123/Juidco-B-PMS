@@ -22,6 +22,7 @@ import notificationRoute from './router/notification/notofication.route'
 import distStockRequestRoute from './router/distributor/distStockRequest.route'
 import srStockRequestRoute from './router/stockReciever/stockRequest/srStockReq.route'
 import stockRequestRoute from './router/stockRequest/stockReq.route'
+import hrmsRoute from './router/hrms/hrms.route'
 
 config()
 
@@ -67,6 +68,9 @@ app.use('/api/pms/', otherRoute)
 
 //notification routes
 app.use('/api/pms/notification', notificationRoute)
+
+//hrms stock handover routes
+app.use('/api/pms/stock-handover', hrmsRoute)
 
 //----------------------------routes--------------------------------------------------------------------------------------------------------------------------
 
