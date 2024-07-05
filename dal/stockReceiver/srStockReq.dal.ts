@@ -377,6 +377,7 @@ export const approveStockReqDal = async (req: Request) => {
 						SELECT *
 						FROM product.product_${stockReq?.subcategory?.name.toLowerCase().replace(/\s/g, '')}
 						WHERE is_available = true AND inventory_id = '${stockReq?.inventoryId as string}'
+						LIMIT 1
 						`
 					)
 					.then((result: any) => result[0])

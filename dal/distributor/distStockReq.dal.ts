@@ -213,6 +213,7 @@ export const getStockReqInboxDal = async (req: Request) => {
 						allotted_quantity: true,
 						isEdited: true,
 						status: true,
+						serial_no: true,
 					},
 				},
 			},
@@ -382,6 +383,7 @@ export const getStockReqOutboxDal = async (req: Request) => {
 						allotted_quantity: true,
 						isEdited: true,
 						status: true,
+						serial_no: true,
 					},
 				},
 			},
@@ -512,7 +514,7 @@ export const handoverDal = async (req: Request) => {
 				status: true,
 			},
 		})
-		if (status?.status !== 3) {
+		if (status?.status < 3) {
 			throw { error: true, message: 'Stock request is not valid to be handed over' }
 		}
 
