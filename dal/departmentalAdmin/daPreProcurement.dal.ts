@@ -106,6 +106,11 @@ export const getPreProcurementDal = async (req: Request) => {
 								name: true,
 							},
 						},
+						unit: {
+							select: {
+								name: true,
+							},
+						},
 						description: true,
 						remark: true,
 						quantity: true,
@@ -342,12 +347,13 @@ export const backToSrDal = async (req: Request) => {
 }
 
 export const editPreProcurementDal = async (req: Request) => {
-	const { procurement_no, category, subcategory, brand, description, rate, quantity, total_rate, remark } = req.body
+	const { procurement_no, category, subcategory, brand, description, rate, quantity, total_rate, remark, unit } = req.body
 
 	const data = {
 		category: { connect: { id: category } },
 		subcategory: { connect: { id: subcategory } },
 		brand: { connect: { id: brand } },
+		...(unit && { unit: { connect: { id: unit } } }),
 		description: description,
 		rate: Number(rate),
 		quantity: Number(quantity),
@@ -375,6 +381,7 @@ export const editPreProcurementDal = async (req: Request) => {
 		procurement_no: procurement_no,
 		category: { connect: { id: procurement?.category_masterId } },
 		subcategory: { connect: { id: procurement?.subcategory_masterId } },
+		...(unit && { unit: { connect: { id: unit } } }),
 		brand: { connect: { id: procurement?.brand_masterId } },
 		description: procurement?.description,
 		rate: procurement?.rate,
@@ -671,6 +678,11 @@ export const getPreProcurementOutboxDal = async (req: Request) => {
 							},
 						},
 						brand: {
+							select: {
+								name: true,
+							},
+						},
+						unit: {
 							select: {
 								name: true,
 							},

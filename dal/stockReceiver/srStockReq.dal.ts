@@ -123,6 +123,11 @@ export const getStockReqInboxDal = async (req: Request) => {
 								name: true,
 							},
 						},
+						unit: {
+							select: {
+								name: true,
+							},
+						},
 						ulb_id: true,
 						emp_id: true,
 						emp_name: true,
@@ -283,6 +288,11 @@ export const getStockReqOutboxDal = async (req: Request) => {
 							},
 						},
 						brand: {
+							select: {
+								name: true,
+							},
+						},
+						unit: {
 							select: {
 								name: true,
 							},
