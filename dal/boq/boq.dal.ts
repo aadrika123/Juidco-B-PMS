@@ -23,6 +23,7 @@ export const getBoqByRefNoDal = async (req: Request) => {
                 reference_no: true,
                 gst: true,
                 estimated_cost: true,
+                hsn_code: true,
                 remark: true,
                 status: true,
                 isEdited: true,
@@ -131,7 +132,8 @@ export const editBoqDal = async (req: Request) => {
             gst: formattedBoqData?.gst,
             estimated_cost: formattedBoqData?.estimated_cost,
             remark: formattedBoqData?.remark,
-            isEdited: true
+            isEdited: true,
+            hsn_code: formattedBoqData?.hsn_code
         }
 
         if (img) {
