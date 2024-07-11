@@ -486,6 +486,7 @@ export const createBoqDal = async (req: Request) => {
 			gst: formattedBoqData?.gst,
 			estimated_cost: formattedBoqData?.estimated_cost,
 			remark: formattedBoqData?.remark,
+            hsn_code:formattedBoqData?.hsn_code
 		}
 
 		if (img) {
@@ -898,6 +899,7 @@ export const getBoqInboxDal = async (req: Request) => {
 						remark: true,
 						status: true,
 						isEdited: true,
+                        hsn_code:true,
 						procurements: {
 							select: {
 								procurement: {
@@ -1143,6 +1145,7 @@ export const getBoqOutboxDal = async (req: Request) => {
 						remark: true,
 						status: true,
 						isEdited: true,
+                        hsn_code:true,
 						procurements: {
 							select: {
 								procurement_no: true,

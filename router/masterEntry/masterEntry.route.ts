@@ -1,8 +1,8 @@
 import express from 'express'
 const router = express.Router()
-import { createSubCategory, getSubcategory, getSubcategoryByCategoryId, getSubcategoryActiveOnly, editSubcategory, switchStatus as subSwitch, getSubcategoryByCategoryIdActiveOnly } from './../../controller/masterEntry/subcategory.controller'
+import { createSubCategory, getSubcategory, getSubcategoryByCategoryId, getSubcategoryActiveOnly, editSubcategory, switchStatus as subSwitch, getSubcategoryByCategoryIdActiveOnly, getSubcategoryById } from './../../controller/masterEntry/subcategory.controller'
 import { createCategory, getCategory, getCategoryById, editCategory, switchStatus, getCategoryActiveOnly } from '../../controller/masterEntry/category.controller'
-import { createBrand, getBrand, getBrandBySubcategoryId, getBrandActiveOnly, getBrandBySubcategoryIdActiveOnly, editBrand, switchStatus as brandSwitch } from '../../controller/masterEntry/brand.controller'
+import { createBrand, getBrand, getBrandBySubcategoryId, getBrandActiveOnly, getBrandBySubcategoryIdActiveOnly, editBrand, switchStatus as brandSwitch, getBrandById } from '../../controller/masterEntry/brand.controller'
 import { createUnit, getUnit, getUnitById, editUnit, switchStatus as unitSwitch, getUnitActiveOnly } from '../../controller/masterEntry/unit.controller'
 import { createSupplier, getSupplier, getSupplierById, editSupplier, switchStatus as supplierSwitch, getSupplierActiveOnly } from '../../controller/masterEntry/supplier.controller'
 
@@ -14,6 +14,7 @@ router.post('/sub-category/update', editSubcategory)
 router.post('/sub-category/switch', subSwitch)
 router.get('/sub-category/by-category/:categoryId', getSubcategoryByCategoryId)
 router.get('/sub-category/by-category/active/:categoryId', getSubcategoryByCategoryIdActiveOnly)
+router.get('/sub-category/:id', getSubcategoryById)
 
 //category
 router.post('/category', createCategory)
@@ -31,6 +32,7 @@ router.get('/brand', getBrand)
 router.get('/brand/active', getBrandActiveOnly)
 router.post('/brand/update', editBrand)
 router.post('/brand/switch', brandSwitch)
+router.get('/brand/:id', getBrandById)
 // router.get('/brand/by-subcategory/:subcategoryId', getBrandBySubcategoryId)
 
 //unit
@@ -41,7 +43,7 @@ router.post('/unit/update', editUnit)
 router.post('/unit/switch', unitSwitch)
 router.get('/unit/:id', getUnitById)
 
-//unit
+//supplier
 router.post('/supplier', createSupplier)
 router.get('/supplier', getSupplier)
 router.get('/supplier/active', getSupplierActiveOnly)

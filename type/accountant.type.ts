@@ -16,6 +16,7 @@ export type boqData = {
     estimated_cost?: number,
     remark?: string,
     ulb_id: string
+    hsn_code?: string
 }
 
 
