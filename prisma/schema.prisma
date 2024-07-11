@@ -435,6 +435,7 @@ model boq {
     revised        Boolean           @default(false)
     status         Int               @default(0) //-2=rejected, -1=returned to accountant, 0=pending, 1=revised, 2=approved by DA
     isEdited       Boolean           @default(false)
+    hsn_code       String?
     procurements   boq_procurement[]
     boq_doc        boq_doc[]
     acc_boq_inbox  acc_boq_inbox?
