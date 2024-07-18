@@ -486,7 +486,7 @@ export const createBoqDal = async (req: Request) => {
 			gst: formattedBoqData?.gst,
 			estimated_cost: formattedBoqData?.estimated_cost,
 			remark: formattedBoqData?.remark,
-            hsn_code:formattedBoqData?.hsn_code
+			hsn_code: formattedBoqData?.hsn_code,
 		}
 
 		if (img) {
@@ -529,26 +529,26 @@ export const createBoqDal = async (req: Request) => {
 							status: 70,
 						},
 					})
-					await tx.acc_pre_procurement_inbox.delete({
-						where: {
-							procurement_no: item?.procurement_no,
-						},
-					})
-					await tx.acc_pre_procurement_outbox.create({
-						data: {
-							procurement_no: item?.procurement_no,
-						},
-					})
-					await tx.da_pre_procurement_outbox.delete({
-						where: {
-							procurement_no: item?.procurement_no,
-						},
-					})
-					await tx.da_pre_procurement_inbox.create({
-						data: {
-							procurement_no: item?.procurement_no,
-						},
-					})
+					// await tx.acc_pre_procurement_inbox.delete({
+					// 	where: {
+					// 		procurement_no: item?.procurement_no,
+					// 	},
+					// })
+					// await tx.acc_pre_procurement_outbox.create({
+					// 	data: {
+					// 		procurement_no: item?.procurement_no,
+					// 	},
+					// })
+					// await tx.da_pre_procurement_outbox.delete({
+					// 	where: {
+					// 		procurement_no: item?.procurement_no,
+					// 	},
+					// })
+					// await tx.da_pre_procurement_inbox.create({
+					// 	data: {
+					// 		procurement_no: item?.procurement_no,
+					// 	},
+					// })
 					await tx.notification.create({
 						data: {
 							role_id: Number(process.env.ROLE_SR),
@@ -560,11 +560,11 @@ export const createBoqDal = async (req: Request) => {
 				})
 			)
 
-			await tx.acc_boq_outbox.create({
-				data: {
-					reference_no: reference_no,
-				},
-			})
+			// await tx.acc_boq_outbox.create({
+			// 	data: {
+			// 		reference_no: reference_no,
+			// 	},
+			// })
 
 			await tx.da_boq_inbox.create({
 				data: {
@@ -899,7 +899,7 @@ export const getBoqInboxDal = async (req: Request) => {
 						remark: true,
 						status: true,
 						isEdited: true,
-                        hsn_code:true,
+						hsn_code: true,
 						procurements: {
 							select: {
 								procurement: {
@@ -1145,7 +1145,7 @@ export const getBoqOutboxDal = async (req: Request) => {
 						remark: true,
 						status: true,
 						isEdited: true,
-                        hsn_code:true,
+						hsn_code: true,
 						procurements: {
 							select: {
 								procurement_no: true,
@@ -1749,7 +1749,7 @@ const isBoqValid = async (reference_no: string) => {
 			},
 		})
 
-		return boq?.status !== 2 ? false : true
+		return boq?.status !== 0 ? false : true
 	} catch (err: any) {
 		console.log(err)
 		return { error: true, message: getErrorMessage(err) }
@@ -2790,7 +2790,7 @@ export const finalSubmissionPtDal = async (req: Request) => {
 			},
 		})
 
-		return ` ${reference_no} is filled completely and ready to be forwarded to DA`
+		return ` ${reference_no} is filled completely and ready to be forwarded`
 	} catch (err: any) {
 		console.log(err)
 		return { error: true, message: getErrorMessage(err) }
