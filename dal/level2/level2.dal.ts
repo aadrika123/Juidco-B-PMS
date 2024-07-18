@@ -134,10 +134,10 @@ export const getBoqInboxDal = async (req: Request) => {
 	// ]
 
 	try {
-		count = await prisma.level1_inbox.count({
+		count = await prisma.level2_inbox.count({
 			where: whereClause,
 		})
-		const result = await prisma.level1_inbox.findMany({
+		const result = await prisma.level2_inbox.findMany({
 			orderBy: {
 				updatedAt: 'desc',
 			},
@@ -379,10 +379,10 @@ export const getBoqOutboxDal = async (req: Request) => {
 	// ]
 
 	try {
-		count = await prisma.level1_outbox.count({
+		count = await prisma.level2_outbox.count({
 			where: whereClause,
 		})
-		const result = await prisma.level1_outbox.findMany({
+		const result = await prisma.level2_outbox.findMany({
 			orderBy: {
 				updatedAt: 'desc',
 			},
@@ -499,102 +499,102 @@ export const getBoqOutboxDal = async (req: Request) => {
 	}
 }
 
-export const forwardToLevel2Dal = async (req: Request) => {
-	const { reference_no }: { reference_no: string } = req.body
-	try {
-		const boq = await prisma.boq.findFirst({
-			where: {
-				reference_no: reference_no,
-			},
-			select: {
-				status: true,
-			},
-		})
+// export const forwardToLevel2Dal = async (req: Request) => {
+// 	const { reference_no }: { reference_no: string } = req.body
+// 	try {
+// 		const boq = await prisma.boq.findFirst({
+// 			where: {
+// 				reference_no: reference_no,
+// 			},
+// 			select: {
+// 				status: true,
+// 			},
+// 		})
 
-		if (boq?.status !== 1) {
-			throw {
-				error: true,
-				message: `Reference no. : ${reference_no} is not valid BOQ to be forwarded.`,
-			}
-		}
+// 		if (boq?.status !== 1) {
+// 			throw {
+// 				error: true,
+// 				message: `Reference no. : ${reference_no} is not valid BOQ to be forwarded.`,
+// 			}
+// 		}
 
-		const preTender = await prisma.tendering_form.findFirst({
-			where: {
-				reference_no: reference_no,
-			},
-			select: {
-				status: true,
-				isPartial: true,
-			},
-		})
+// 		const preTender = await prisma.tendering_form.findFirst({
+// 			where: {
+// 				reference_no: reference_no,
+// 			},
+// 			select: {
+// 				status: true,
+// 				isPartial: true,
+// 			},
+// 		})
 
-		if (preTender?.status !== 1 && preTender?.isPartial === false) {
-			throw {
-				error: true,
-				message: `Reference no. : ${reference_no} is not valid Pre tender form to be forwarded.`,
-			}
-		}
+// 		if (preTender?.status !== 1 && preTender?.isPartial === false) {
+// 			throw {
+// 				error: true,
+// 				message: `Reference no. : ${reference_no} is not valid Pre tender form to be forwarded.`,
+// 			}
+// 		}
 
-		//start transaction
-		await prisma.$transaction(async tx => {
-			await tx.level1_inbox.delete({
-				where: {
-					reference_no: reference_no,
-				},
-			})
+// 		//start transaction
+// 		await prisma.$transaction(async tx => {
+// 			await tx.level1_inbox.delete({
+// 				where: {
+// 					reference_no: reference_no,
+// 				},
+// 			})
 
-			await tx.level1_outbox.create({
-				data: {
-					reference_no: reference_no,
-				},
-			})
+// 			await tx.level1_outbox.create({
+// 				data: {
+// 					reference_no: reference_no,
+// 				},
+// 			})
 
-			await tx.level2_inbox.create({
-				data: {
-					reference_no: reference_no,
-				},
-			})
+// 			await tx.level2_inbox.create({
+// 				data: {
+// 					reference_no: reference_no,
+// 				},
+// 			})
 
-			// await tx.da_boq_outbox.delete({
-			// 	where: {
-			// 		reference_no: reference_no,
-			// 	},
-			// })
+// 			// await tx.da_boq_outbox.delete({
+// 			// 	where: {
+// 			// 		reference_no: reference_no,
+// 			// 	},
+// 			// })
 
-			await tx.boq.update({
-				where: {
-					reference_no: reference_no,
-				},
-				data: {
-					status: 2,
-				},
-			})
+// 			await tx.boq.update({
+// 				where: {
+// 					reference_no: reference_no,
+// 				},
+// 				data: {
+// 					status: 2,
+// 				},
+// 			})
 
-			await tx.tendering_form.update({
-				where: {
-					reference_no: reference_no,
-				},
-				data: {
-					status: 2,
-				},
-			})
+// 			await tx.tendering_form.update({
+// 				where: {
+// 					reference_no: reference_no,
+// 				},
+// 				data: {
+// 					status: 2,
+// 				},
+// 			})
 
-			await tx.notification.create({
-				data: {
-					role_id: Number(process.env.ROLE_LEVEL2),
-					title: 'BOQ and Pre tender form to be approved',
-					destination: 21,
-					description: `There is a BOQ and Pre tender form to be approved. Reference Number : ${reference_no}`,
-				},
-			})
-		})
+// 			await tx.notification.create({
+// 				data: {
+// 					role_id: Number(process.env.ROLE_LEVEL2),
+// 					title: 'BOQ and Pre tender form to be approved',
+// 					destination: 21,
+// 					description: `There is a BOQ and Pre tender form to be approved. Reference Number : ${reference_no}`,
+// 				},
+// 			})
+// 		})
 
-		return 'Forwarded to level 2'
-	} catch (err: any) {
-		console.log(err)
-		return { error: true, message: getErrorMessage(err) }
-	}
-}
+// 		return 'Forwarded to level 2'
+// 	} catch (err: any) {
+// 		console.log(err)
+// 		return { error: true, message: getErrorMessage(err) }
+// 	}
+// }
 
 //Pre-tender|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 
