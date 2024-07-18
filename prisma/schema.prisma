@@ -433,7 +433,7 @@ model boq {
     createdAt      DateTime          @default(now())
     updatedAt      DateTime          @updatedAt
     revised        Boolean           @default(false)
-    status         Int               @default(0) //-2=rejected, -1=returned to accountant, 0=pending, 1=revised, 2=approved by DA
+    status         Int               @default(0) //-2=rejected, -1=returned, 0=pending, 1=level1, 12=level1 approved 2=level2, 21=level2 approved
     isEdited       Boolean           @default(false)
     hsn_code       String?
     procurements   boq_procurement[]
@@ -533,7 +533,7 @@ model tendering_form_docs {
 model tendering_form {
     id                    String                 @id @default(uuid())
     reference_no          String                 @unique
-    status                Int                    @default(0) //-2=rejected, -1=returned, 0=pending, 1=DA, 69=revised, 2=released for tender , 
+    status                Int                    @default(0) //-2=rejected, -1=returned, 0=pending, 1=level1, 12=level1 approved 2=level2, 21=level2 approved
     isEdited              Boolean                @default(false)
     isPartial             Boolean                @default(true)
     createdAt             DateTime               @default(now())
