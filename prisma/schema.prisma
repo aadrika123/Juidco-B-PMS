@@ -443,6 +443,10 @@ model boq {
     da_boq_inbox   da_boq_inbox?
     da_boq_outbox  da_boq_outbox?
     tendering_form tendering_form?
+    lvel1_inbox    level1_inbox?
+    lvel1_outbox   level1_outbox?
+    lvel2_inbox    level2_inbox?
+    lvel2_outbox   level2_outbox?
 }
 
 model boq_procurement {
@@ -831,3 +835,39 @@ model sr_stock_req_outbox {
 }
 
 // stock request================================================================================================================================================================
+
+// level 1 & 2================================================================================================================================================================
+
+model level1_inbox {
+    id           String   @id @default(uuid())
+    reference_no String   @unique
+    boq          boq?     @relation(fields: [reference_no], references: [reference_no])
+    createdAt    DateTime @default(now())
+    updatedAt    DateTime @updatedAt
+}
+
+model level1_outbox {
+    id           String   @id @default(uuid())
+    reference_no String   @unique
+    boq          boq?     @relation(fields: [reference_no], references: [reference_no])
+    createdAt    DateTime @default(now())
+    updatedAt    DateTime @updatedAt
+}
+
+model level2_inbox {
+    id           String   @id @default(uuid())
+    reference_no String   @unique
+    boq          boq?     @relation(fields: [reference_no], references: [reference_no])
+    createdAt    DateTime @default(now())
+    updatedAt    DateTime @updatedAt
+}
+
+model level2_outbox {
+    id           String   @id @default(uuid())
+    reference_no String   @unique
+    boq          boq?     @relation(fields: [reference_no], references: [reference_no])
+    createdAt    DateTime @default(now())
+    updatedAt    DateTime @updatedAt
+}
+
+// level 1 & 2================================================================================================================================================================
