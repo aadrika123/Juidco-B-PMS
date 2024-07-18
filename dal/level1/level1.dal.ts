@@ -9,750 +9,6 @@ import axios from 'axios'
 
 const prisma = new PrismaClient()
 
-export const getPreProcurementForBoqDal = async (req: Request) => {
-	const page: number | undefined = Number(req?.query?.page)
-	const take: number | undefined = Number(req?.query?.take)
-	const startIndex: number | undefined = (page - 1) * take
-	const endIndex: number | undefined = startIndex + take
-	let count: number
-	let totalPage: number
-	let pagination: pagination = {}
-	const whereClause: any = {}
-
-	const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined
-
-	const category: any[] = Array.isArray(req?.query?.category) ? req?.query?.category : [req?.query?.category]
-	const subcategory: any[] = Array.isArray(req?.query?.scategory) ? req?.query?.scategory : [req?.query?.scategory]
-	const brand: any[] = Array.isArray(req?.query?.brand) ? req?.query?.brand : [req?.query?.brand]
-	// const status: any[] = Array.isArray(req?.query?.status) ? req?.query?.status : [req?.query?.status]
-
-	//creating search options for the query
-	if (search) {
-		whereClause.OR = [
-			{
-				procurement_no: {
-					contains: search,
-					mode: 'insensitive',
-				},
-			},
-			{
-				procurement: {
-					description: {
-						contains: search,
-						mode: 'insensitive',
-					},
-				},
-			},
-		]
-	}
-
-	if (category[0] || subcategory[0] || brand[0]) {
-		whereClause.AND = [
-			...(category[0]
-				? [
-						{
-							procurement: {
-								category_masterId: {
-									in: category,
-								},
-							},
-						},
-					]
-				: []),
-			...(subcategory[0]
-				? [
-						{
-							procurement: {
-								subcategory_masterId: {
-									in: subcategory,
-								},
-							},
-						},
-					]
-				: []),
-			...(brand[0]
-				? [
-						{
-							procurement: {
-								brand_masterId: {
-									in: brand,
-								},
-							},
-						},
-					]
-				: []),
-		]
-	}
-
-	// //creating filter options for the query
-	// if (category[0]) {
-	//     whereClause.procurement = {
-	//         category_masterId: {
-	//             in: category
-	//         }
-	//     }
-	// }
-	// if (subcategory[0]) {
-	//     whereClause.procurement = {
-	//         subcategory_masterId: {
-	//             in: subcategory
-	//         }
-	//     }
-	// }
-	// if (brand[0]) {
-	//     whereClause.procurement = {
-	//         brand_masterId: {
-	//             in: brand
-	//         }
-	//     }
-	// }
-	// if (status[0]) {
-	//     whereClause.procurement = {
-	//         status: {
-	//             status: {
-	//                 in: status.map(Number)
-	//             }
-	//         }
-	//     }
-	// }
-	whereClause.procurement = {
-		status: {
-			status: 1,
-		},
-	}
-
-	try {
-		count = await prisma.acc_pre_procurement_inbox.count({
-			where: whereClause,
-		})
-		const result = await prisma.acc_pre_procurement_inbox.findMany({
-			orderBy: {
-				updatedAt: 'desc',
-			},
-			where: whereClause,
-			...(page && { skip: startIndex }),
-			...(take && { take: take }),
-			select: {
-				id: true,
-				procurement_no: true,
-				procurement: {
-					select: {
-						procurement_no: true,
-						category: {
-							select: {
-								name: true,
-							},
-						},
-						subcategory: {
-							select: {
-								name: true,
-							},
-						},
-						brand: {
-							select: {
-								name: true,
-							},
-						},
-						unit: {
-							select: {
-								name: true,
-							},
-						},
-						description: true,
-						remark: true,
-						quantity: true,
-						rate: true,
-						total_rate: true,
-						isEdited: true,
-						status: {
-							select: {
-								status: true,
-							},
-						},
-					},
-				},
-			},
-		})
-
-		let resultToSend: any[] = []
-
-		result.map(async (item: any) => {
-			const temp = { ...item?.procurement }
-			delete item.procurement
-			resultToSend.push({ ...item, ...temp })
-		})
-
-		totalPage = Math.ceil(count / take)
-		if (endIndex < count) {
-			pagination.next = {
-				page: page + 1,
-				take: take,
-			}
-		}
-		if (startIndex > 0) {
-			pagination.prev = {
-				page: page - 1,
-				take: take,
-			}
-		}
-		pagination.currentPage = page
-		pagination.currentTake = take
-		pagination.totalPage = totalPage
-		pagination.totalResult = count
-		return {
-			data: resultToSend,
-			pagination: pagination,
-		}
-	} catch (err: any) {
-		console.log(err)
-		return { error: true, message: getErrorMessage(err) }
-	}
-}
-
-export const getPreProcurementDal = async (req: Request) => {
-	const page: number | undefined = Number(req?.query?.page)
-	const take: number | undefined = Number(req?.query?.take)
-	const startIndex: number | undefined = (page - 1) * take
-	const endIndex: number | undefined = startIndex + take
-	let count: number
-	let totalPage: number
-	let pagination: pagination = {}
-	const whereClause: any = {}
-
-	const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined
-
-	const category: any[] = Array.isArray(req?.query?.category) ? req?.query?.category : [req?.query?.category]
-	const subcategory: any[] = Array.isArray(req?.query?.scategory) ? req?.query?.scategory : [req?.query?.scategory]
-	const status: any[] = Array.isArray(req?.query?.status) ? req?.query?.status : [req?.query?.status]
-	const brand: any[] = Array.isArray(req?.query?.brand) ? req?.query?.brand : [req?.query?.brand]
-
-	//creating search options for the query
-	if (search) {
-		whereClause.OR = [
-			{
-				procurement_no: {
-					contains: search,
-					mode: 'insensitive',
-				},
-			},
-			{
-				procurement: {
-					description: {
-						contains: search,
-						mode: 'insensitive',
-					},
-				},
-			},
-		]
-	}
-
-	//creating filter options for the query
-	if (category[0]) {
-		whereClause.procurement = {
-			category_masterId: {
-				in: category,
-			},
-		}
-	}
-	if (subcategory[0]) {
-		whereClause.procurement = {
-			subcategory_masterId: {
-				in: subcategory,
-			},
-		}
-	}
-	if (status[0]) {
-		whereClause.procurement = {
-			status: {
-				status: {
-					in: status.map(Number),
-				},
-			},
-		}
-	}
-	if (brand[0]) {
-		whereClause.procurement = {
-			brand_masterId: {
-				in: brand,
-			},
-		}
-	}
-	// whereClause.NOT = [
-	//     {
-	//         procurement: {
-	//             status: {
-	//                 status: -70
-	//             }
-	//         }
-	//     },
-	//     {
-	//         procurement: {
-	//             status: {
-	//                 status: 70
-	//             }
-	//         }
-	//     },
-	// ]
-
-	try {
-		count = await prisma.acc_pre_procurement_inbox.count({
-			where: whereClause,
-		})
-		const result = await prisma.acc_pre_procurement_inbox.findMany({
-			orderBy: {
-				updatedAt: 'desc',
-			},
-			where: whereClause,
-			...(page && { skip: startIndex }),
-			...(take && { take: take }),
-			select: {
-				id: true,
-				procurement_no: true,
-				procurement: {
-					select: {
-						procurement_no: true,
-						category: {
-							select: {
-								name: true,
-							},
-						},
-						subcategory: {
-							select: {
-								name: true,
-							},
-						},
-						brand: {
-							select: {
-								name: true,
-							},
-						},
-						unit: {
-							select: {
-								name: true,
-							},
-						},
-						description: true,
-						quantity: true,
-						rate: true,
-						total_rate: true,
-						isEdited: true,
-						remark: true,
-						status: {
-							select: {
-								status: true,
-							},
-						},
-					},
-				},
-			},
-		})
-
-		let resultToSend: any[] = []
-
-		result.map(async (item: any) => {
-			const temp = { ...item?.procurement }
-			delete item.procurement
-			resultToSend.push({ ...item, ...temp })
-		})
-
-		totalPage = Math.ceil(count / take)
-		if (endIndex < count) {
-			pagination.next = {
-				page: page + 1,
-				take: take,
-			}
-		}
-		if (startIndex > 0) {
-			pagination.prev = {
-				page: page - 1,
-				take: take,
-			}
-		}
-		pagination.currentPage = page
-		pagination.currentTake = take
-		pagination.totalPage = totalPage
-		pagination.totalResult = count
-		return {
-			data: resultToSend,
-			pagination: pagination,
-		}
-	} catch (err: any) {
-		console.log(err)
-		return { error: true, message: getErrorMessage(err) }
-	}
-}
-
-export const getPreProcurementBulkByOrderNoDal = async (req: Request) => {
-	const { procurement_no }: { procurement_no: string[] } = req.body
-	let resultToSend: any = []
-	try {
-		await Promise.all(
-			procurement_no.map(async (item: string) => {
-				const result: any = await prisma.procurement.findFirst({
-					where: {
-						procurement_no: item,
-					},
-					select: {
-						id: true,
-						procurement_no: true,
-						category: {
-							select: {
-								id: true,
-								name: true,
-							},
-						},
-						subcategory: {
-							select: {
-								id: true,
-								name: true,
-							},
-						},
-						brand: {
-							select: {
-								id: true,
-								name: true,
-							},
-						},
-						description: true,
-						quantity: true,
-						rate: true,
-						total_rate: true,
-						isEdited: true,
-						remark: true,
-						status: {
-							select: {
-								status: true,
-							},
-						},
-					},
-				})
-
-				resultToSend.push(result)
-			})
-		)
-
-		return resultToSend
-	} catch (err: any) {
-		console.log(err)
-		return { error: true, message: getErrorMessage(err) }
-	}
-}
-
-export const createBoqDal = async (req: Request) => {
-	const { boqData } = req.body
-	try {
-		const formattedBoqData: boqData = JSON.parse(boqData)
-		const img = req.files as Express.Multer.File[]
-		let arrayToSend: any[] = []
-		let docToSend: any[] = []
-
-		const reference_no: string = generateReferenceNumber(formattedBoqData?.ulb_id)
-
-		await Promise.all(
-			formattedBoqData?.procurement.map(async item => {
-				const preparedData = {
-					reference_no: reference_no,
-					procurement_no: item?.procurement_no,
-					description: item?.description,
-					quantity: item?.quantity,
-					unit: item?.unit,
-					rate: item?.rate,
-					amount: item?.amount,
-					remark: item?.remark,
-				}
-
-				const status = await prisma.procurement_status.findFirst({
-					where: {
-						procurement_no: item?.procurement_no,
-					},
-					select: {
-						status: true,
-					},
-				})
-
-				if (status?.status !== 1) {
-					throw {
-						error: true,
-						message: `Procurement : ${item?.procurement_no} is not valid for BOQ`,
-					}
-				}
-
-				arrayToSend.push(preparedData)
-			})
-		)
-
-		const preparedBoq = {
-			reference_no: reference_no,
-			gst: formattedBoqData?.gst,
-			estimated_cost: formattedBoqData?.estimated_cost,
-			remark: formattedBoqData?.remark,
-			hsn_code: formattedBoqData?.hsn_code,
-		}
-
-		if (img) {
-			const uploaded: uploadedDoc[] = await imageUploader(img) //It will return reference number and unique id as an object after uploading.
-
-			uploaded.map((doc: uploadedDoc) => {
-				const preparedBoqDoc = {
-					reference_no: reference_no,
-					ReferenceNo: doc?.ReferenceNo,
-					uniqueId: doc?.uniqueId,
-					remark: formattedBoqData?.remark,
-				}
-				docToSend.push(preparedBoqDoc)
-			})
-		}
-
-		//start transaction
-		await prisma.$transaction(async tx => {
-			await tx.boq.create({
-				data: preparedBoq,
-			})
-
-			await tx.boq_procurement.createMany({
-				data: arrayToSend,
-			})
-
-			if (img) {
-				await tx.boq_doc.createMany({
-					data: docToSend,
-				})
-			}
-
-			await Promise.all(
-				formattedBoqData?.procurement.map(async item => {
-					await tx.procurement_status.update({
-						where: {
-							procurement_no: item?.procurement_no,
-						},
-						data: {
-							status: 70,
-						},
-					})
-					// await tx.acc_pre_procurement_inbox.delete({
-					// 	where: {
-					// 		procurement_no: item?.procurement_no,
-					// 	},
-					// })
-					// await tx.acc_pre_procurement_outbox.create({
-					// 	data: {
-					// 		procurement_no: item?.procurement_no,
-					// 	},
-					// })
-					// await tx.da_pre_procurement_outbox.delete({
-					// 	where: {
-					// 		procurement_no: item?.procurement_no,
-					// 	},
-					// })
-					// await tx.da_pre_procurement_inbox.create({
-					// 	data: {
-					// 		procurement_no: item?.procurement_no,
-					// 	},
-					// })
-					await tx.notification.create({
-						data: {
-							role_id: Number(process.env.ROLE_SR),
-							title: 'BOQ created',
-							destination: 10,
-							description: `BOQ created for procurement Number : ${item?.procurement_no}`,
-						},
-					})
-				})
-			)
-
-			// await tx.acc_boq_outbox.create({
-			// 	data: {
-			// 		reference_no: reference_no,
-			// 	},
-			// })
-
-			await tx.da_boq_inbox.create({
-				data: {
-					reference_no: reference_no,
-				},
-			})
-		})
-
-		return reference_no
-	} catch (err: any) {
-		console.log(err)
-		return { error: true, message: getErrorMessage(err) }
-	}
-}
-
-export const getPreProcurementOutboxDal = async (req: Request) => {
-	const page: number | undefined = Number(req?.query?.page)
-	const take: number | undefined = Number(req?.query?.take)
-	const startIndex: number | undefined = (page - 1) * take
-	const endIndex: number | undefined = startIndex + take
-	let count: number
-	let totalPage: number
-	let pagination: pagination = {}
-	const whereClause: any = {}
-
-	const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined
-
-	const category: any[] = Array.isArray(req?.query?.category) ? req?.query?.category : [req?.query?.category]
-	const subcategory: any[] = Array.isArray(req?.query?.scategory) ? req?.query?.scategory : [req?.query?.scategory]
-	const status: any[] = Array.isArray(req?.query?.status) ? req?.query?.status : [req?.query?.status]
-	const brand: any[] = Array.isArray(req?.query?.brand) ? req?.query?.brand : [req?.query?.brand]
-
-	//creating search options for the query
-	if (search) {
-		whereClause.OR = [
-			{
-				procurement_no: {
-					contains: search,
-					mode: 'insensitive',
-				},
-			},
-			{
-				procurement: {
-					description: {
-						contains: search,
-						mode: 'insensitive',
-					},
-				},
-			},
-		]
-	}
-
-	//creating filter options for the query
-	if (category[0]) {
-		whereClause.procurement = {
-			category_masterId: {
-				in: category,
-			},
-		}
-	}
-	if (subcategory[0]) {
-		whereClause.procurement = {
-			subcategory_masterId: {
-				in: subcategory,
-			},
-		}
-	}
-	if (status[0]) {
-		whereClause.procurement = {
-			status: {
-				status: {
-					in: status.map(Number),
-				},
-			},
-		}
-	}
-	if (brand[0]) {
-		whereClause.procurement = {
-			brand_masterId: {
-				in: brand,
-			},
-		}
-	}
-	// whereClause.NOT = [
-	//     {
-	//         procurement: {
-	//             status: {
-	//                 status: -70
-	//             }
-	//         }
-	//     },
-	//     {
-	//         procurement: {
-	//             status: {
-	//                 status: 70
-	//             }
-	//         }
-	//     },
-	// ]
-
-	try {
-		count = await prisma.acc_pre_procurement_outbox.count({
-			where: whereClause,
-		})
-		const result = await prisma.acc_pre_procurement_outbox.findMany({
-			orderBy: {
-				updatedAt: 'desc',
-			},
-			where: whereClause,
-			...(page && { skip: startIndex }),
-			...(take && { take: take }),
-			select: {
-				id: true,
-				procurement_no: true,
-				procurement: {
-					select: {
-						procurement_no: true,
-						category: {
-							select: {
-								name: true,
-							},
-						},
-						subcategory: {
-							select: {
-								name: true,
-							},
-						},
-						brand: {
-							select: {
-								name: true,
-							},
-						},
-						unit: {
-							select: {
-								name: true,
-							},
-						},
-						description: true,
-						quantity: true,
-						rate: true,
-						total_rate: true,
-						isEdited: true,
-						remark: true,
-						status: {
-							select: {
-								status: true,
-							},
-						},
-					},
-				},
-			},
-		})
-
-		let resultToSend: any[] = []
-
-		result.map(async (item: any) => {
-			const temp = { ...item?.procurement }
-			delete item.procurement
-			resultToSend.push({ ...item, ...temp })
-		})
-
-		totalPage = Math.ceil(count / take)
-		if (endIndex < count) {
-			pagination.next = {
-				page: page + 1,
-				take: take,
-			}
-		}
-		if (startIndex > 0) {
-			pagination.prev = {
-				page: page - 1,
-				take: take,
-			}
-		}
-		pagination.currentPage = page
-		pagination.currentTake = take
-		pagination.totalPage = totalPage
-		pagination.totalResult = count
-		return {
-			data: resultToSend,
-			pagination: pagination,
-		}
-	} catch (err: any) {
-		console.log(err)
-		return { error: true, message: getErrorMessage(err) }
-	}
-}
-
 export const getBoqInboxDal = async (req: Request) => {
 	const page: number | undefined = Number(req?.query?.page)
 	const take: number | undefined = Number(req?.query?.take)
@@ -878,10 +134,10 @@ export const getBoqInboxDal = async (req: Request) => {
 	// ]
 
 	try {
-		count = await prisma.acc_boq_inbox.count({
+		count = await prisma.level1_inbox.count({
 			where: whereClause,
 		})
-		const result = await prisma.acc_boq_inbox.findMany({
+		const result = await prisma.level1_inbox.findMany({
 			orderBy: {
 				updatedAt: 'desc',
 			},
@@ -933,28 +189,28 @@ export const getBoqInboxDal = async (req: Request) => {
 			},
 		})
 
-		await Promise.all(
-			result.map(async item => {
-				await Promise.all(
-					item?.boq?.boq_doc.map(async (doc: any) => {
-						const headers = {
-							token: '8Ufn6Jio6Obv9V7VXeP7gbzHSyRJcKluQOGorAD58qA1IQKYE0',
-						}
-						await axios
-							.post(process.env.DMS_GET || '', { referenceNo: doc?.ReferenceNo }, { headers })
-							.then(response => {
-								// console.log(response?.data?.data, 'res')
-								doc.imageUrl = response?.data?.data?.fullPath
-							})
-							.catch(err => {
-								// console.log(err?.data?.data, 'err')
-								// toReturn.push(err?.data?.data)
-								throw err
-							})
-					})
-				)
-			})
-		)
+		// await Promise.all(
+		// 	result.map(async item => {
+		// 		await Promise.all(
+		// 			item?.boq?.boq_doc.map(async (doc: any) => {
+		// 				const headers = {
+		// 					token: '8Ufn6Jio6Obv9V7VXeP7gbzHSyRJcKluQOGorAD58qA1IQKYE0',
+		// 				}
+		// 				await axios
+		// 					.post(process.env.DMS_GET || '', { referenceNo: doc?.ReferenceNo }, { headers })
+		// 					.then(response => {
+		// 						// console.log(response?.data?.data, 'res')
+		// 						doc.imageUrl = response?.data?.data?.fullPath
+		// 					})
+		// 					.catch(err => {
+		// 						// console.log(err?.data?.data, 'err')
+		// 						// toReturn.push(err?.data?.data)
+		// 						throw err
+		// 					})
+		// 			})
+		// 		)
+		// 	})
+		// )
 
 		let dataToSend: any[] = []
 		result.forEach((item: any) => {
@@ -1035,7 +291,6 @@ export const getBoqOutboxDal = async (req: Request) => {
 		]
 	}
 
-	//creating filter options for the query
 	//creating filter options for the query
 	if (category[0] || subcategory[0] || brand[0]) {
 		whereClause.AND = [
@@ -1124,10 +379,10 @@ export const getBoqOutboxDal = async (req: Request) => {
 	// ]
 
 	try {
-		count = await prisma.acc_boq_outbox.count({
+		count = await prisma.level1_outbox.count({
 			where: whereClause,
 		})
-		const result = await prisma.acc_boq_outbox.findMany({
+		const result = await prisma.level1_outbox.findMany({
 			orderBy: {
 				updatedAt: 'desc',
 			},
@@ -1148,12 +403,6 @@ export const getBoqOutboxDal = async (req: Request) => {
 						hsn_code: true,
 						procurements: {
 							select: {
-								procurement_no: true,
-								quantity: true,
-								unit: true,
-								rate: true,
-								amount: true,
-								remark: true,
 								procurement: {
 									select: {
 										category: {
@@ -1171,7 +420,6 @@ export const getBoqOutboxDal = async (req: Request) => {
 												name: true,
 											},
 										},
-										description: true,
 									},
 								},
 							},
@@ -1186,28 +434,28 @@ export const getBoqOutboxDal = async (req: Request) => {
 			},
 		})
 
-		await Promise.all(
-			result.map(async item => {
-				await Promise.all(
-					item?.boq?.boq_doc.map(async (doc: any) => {
-						const headers = {
-							token: '8Ufn6Jio6Obv9V7VXeP7gbzHSyRJcKluQOGorAD58qA1IQKYE0',
-						}
-						await axios
-							.post(process.env.DMS_GET || '', { referenceNo: doc?.ReferenceNo }, { headers })
-							.then(response => {
-								// console.log(response?.data?.data, 'res')
-								doc.imageUrl = response?.data?.data?.fullPath
-							})
-							.catch(err => {
-								// console.log(err?.data?.data, 'err')
-								// toReturn.push(err?.data?.data)
-								throw err
-							})
-					})
-				)
-			})
-		)
+		// await Promise.all(
+		// 	result.map(async item => {
+		// 		await Promise.all(
+		// 			item?.boq?.boq_doc.map(async (doc: any) => {
+		// 				const headers = {
+		// 					token: '8Ufn6Jio6Obv9V7VXeP7gbzHSyRJcKluQOGorAD58qA1IQKYE0',
+		// 				}
+		// 				await axios
+		// 					.post(process.env.DMS_GET || '', { referenceNo: doc?.ReferenceNo }, { headers })
+		// 					.then(response => {
+		// 						// console.log(response?.data?.data, 'res')
+		// 						doc.imageUrl = response?.data?.data?.fullPath
+		// 					})
+		// 					.catch(err => {
+		// 						// console.log(err?.data?.data, 'err')
+		// 						// toReturn.push(err?.data?.data)
+		// 						throw err
+		// 					})
+		// 			})
+		// 		)
+		// 	})
+		// )
 
 		let dataToSend: any[] = []
 		result.forEach((item: any) => {
@@ -1251,79 +499,7 @@ export const getBoqOutboxDal = async (req: Request) => {
 	}
 }
 
-// export const forwardToDaDal = async (req: Request) => {
-// 	const { reference_no }: { reference_no: string } = req.body
-// 	try {
-// 		const boq = await prisma.boq.findFirst({
-// 			where: {
-// 				reference_no: reference_no,
-// 			},
-// 			select: {
-// 				status: true,
-// 			},
-// 		})
-
-// 		if (boq?.status !== -1) {
-// 			throw {
-// 				error: true,
-// 				message: `Reference no. : ${reference_no} is not valid to be forwarded to DA.`,
-// 			}
-// 		}
-
-// 		//start transaction
-// 		await prisma.$transaction(async tx => {
-// 			await tx.acc_boq_inbox.delete({
-// 				where: {
-// 					reference_no: reference_no,
-// 				},
-// 			})
-
-// 			await tx.acc_boq_outbox.create({
-// 				data: {
-// 					reference_no: reference_no,
-// 				},
-// 			})
-
-// 			await tx.da_boq_inbox.create({
-// 				data: {
-// 					reference_no: reference_no,
-// 				},
-// 			})
-
-// 			await tx.da_boq_outbox.delete({
-// 				where: {
-// 					reference_no: reference_no,
-// 				},
-// 			})
-
-// 			await tx.boq.update({
-// 				where: {
-// 					reference_no: reference_no,
-// 				},
-// 				data: {
-// 					status: 1,
-// 					revised: true,
-// 				},
-// 			})
-
-// 			await tx.notification.create({
-// 				data: {
-// 					role_id: Number(process.env.ROLE_DA),
-// 					title: 'BOQ to be approved',
-// 					destination: 21,
-// 					description: `There is a BOQ to be approved. Reference Number : ${reference_no}`,
-// 				},
-// 			})
-// 		})
-
-// 		return 'Forwarded to DA'
-// 	} catch (err: any) {
-// 		console.log(err)
-// 		return { error: true, message: getErrorMessage(err) }
-// 	}
-// }
-
-export const forwardToDaDal = async (req: Request) => {
+export const forwardToLevel2Dal = async (req: Request) => {
 	const { reference_no }: { reference_no: string } = req.body
 	try {
 		const boq = await prisma.boq.findFirst({
@@ -1335,7 +511,7 @@ export const forwardToDaDal = async (req: Request) => {
 			},
 		})
 
-		if (boq?.status !== 0) {
+		if (boq?.status !== 1) {
 			throw {
 				error: true,
 				message: `Reference no. : ${reference_no} is not valid BOQ to be forwarded.`,
@@ -1352,7 +528,7 @@ export const forwardToDaDal = async (req: Request) => {
 			},
 		})
 
-		if (preTender?.status !== 0 && preTender?.isPartial === false) {
+		if (preTender?.status !== 1 && preTender?.isPartial === false) {
 			throw {
 				error: true,
 				message: `Reference no. : ${reference_no} is not valid Pre tender form to be forwarded.`,
@@ -1361,30 +537,36 @@ export const forwardToDaDal = async (req: Request) => {
 
 		//start transaction
 		await prisma.$transaction(async tx => {
-			await tx.da_boq_inbox.delete({
+			await tx.level1_inbox.delete({
 				where: {
 					reference_no: reference_no,
 				},
 			})
 
-			await tx.da_boq_outbox.create({
+			await tx.level1_outbox.create({
 				data: {
 					reference_no: reference_no,
 				},
 			})
 
-			await tx.level1_inbox.create({
+			await tx.level2_inbox.create({
 				data: {
 					reference_no: reference_no,
 				},
 			})
+
+			// await tx.da_boq_outbox.delete({
+			// 	where: {
+			// 		reference_no: reference_no,
+			// 	},
+			// })
 
 			await tx.boq.update({
 				where: {
 					reference_no: reference_no,
 				},
 				data: {
-					status: 1,
+					status: 2,
 				},
 			})
 
@@ -1393,13 +575,13 @@ export const forwardToDaDal = async (req: Request) => {
 					reference_no: reference_no,
 				},
 				data: {
-					status: 1,
+					status: 2,
 				},
 			})
 
 			await tx.notification.create({
 				data: {
-					role_id: Number(process.env.ROLE_LEVEL1),
+					role_id: Number(process.env.ROLE_LEVEL2),
 					title: 'BOQ and Pre tender form to be approved',
 					destination: 21,
 					description: `There is a BOQ and Pre tender form to be approved. Reference Number : ${reference_no}`,
@@ -1407,7 +589,7 @@ export const forwardToDaDal = async (req: Request) => {
 			})
 		})
 
-		return 'Forwarded to level 1'
+		return 'Forwarded to level 2'
 	} catch (err: any) {
 		console.log(err)
 		return { error: true, message: getErrorMessage(err) }
@@ -2631,189 +1813,6 @@ export const getCoverDetailsPtDal = async (req: Request) => {
 	} catch (err: any) {
 		console.log(err)
 		return { error: true, message: getErrorMessage(err) }
-	}
-}
-
-export const getPreTenderV2Dal = async (req: Request) => {
-	const { reference_no } = req.params
-	try {
-		if (!reference_no) {
-			throw { error: true, message: "Reference number is required as 'reference_no'" }
-		}
-
-		if (!(await checkExistence(reference_no))) {
-			throw { error: true, message: 'Invalid pre-tender form', ignore: true }
-		}
-
-		const result: any = await prisma.tendering_form.findFirst({
-			where: {
-				reference_no: reference_no,
-			},
-			select: {
-				id: true,
-				reference_no: true,
-				status: true,
-				isEdited: true,
-				isPartial: true,
-				basic_details: {
-					select: {
-						allow_offline_submission: true,
-						allow_resubmission: true,
-						allow_withdrawl: true,
-						payment_mode: true,
-						onlinePyment_mode: true,
-						offline_banks: true,
-						contract_form: true,
-						tender_category: true,
-						tender_type: true,
-					},
-				},
-				cover_details: {
-					select: {
-						noOfCovers: true,
-						content: true,
-						cover_details_docs: {
-							select: {
-								type: true,
-								docPath: true,
-							},
-						},
-					},
-				},
-				work_details: {
-					select: {
-						workDiscription: true,
-						pre_qualification_details: true,
-						product_category: true,
-						productSubCategory: true,
-						contract_type: true,
-						tender_values: true,
-						bid_validity: true,
-						completionPeriod: true,
-						location: true,
-						pinCode: true,
-						pre_bid: true,
-						preBidMeeting: true,
-						preBidMeetingAdd: true,
-						bidOpeningPlace: true,
-						tenderer_class: true,
-						invstOffName: true,
-						invstOffAdd: true,
-						invstOffEmail_Ph: true,
-					},
-				},
-				fee_details: {
-					select: {
-						tenderFee: true,
-						processingFee: true,
-						tenderFeePayableTo: true,
-						tenderFeePayableAt: true,
-						surcharges: true,
-						otherCharges: true,
-						emd_exemption: true,
-						emd_fee: true,
-						emdPercentage: true,
-						emdAmount: true,
-						emdFeePayableTo: true,
-						emdFeePayableAt: true,
-					},
-				},
-				critical_dates: {
-					select: {
-						publishingDate: true,
-						bidOpeningDate: true,
-						docSaleStartDate: true,
-						docSaleEndDate: true,
-						seekClariStrtDate: true,
-						seekClariEndDate: true,
-						bidSubStrtDate: true,
-						bidSubEndDate: true,
-						preBidMettingDate: true,
-					},
-				},
-				bid_openers: {
-					select: {
-						id: true,
-						reference_no: true,
-						b01NameDesig: true,
-						b01Email: true,
-						b02NameDesig: true,
-						b02Email: true,
-						b03NameDesig: true,
-						b03Email: true,
-						bid_openers_docs: {
-							select: {
-								type: true,
-								ReferenceNo: true,
-								uniqueId: true,
-								nameDesig: true,
-								description: true,
-								docSize: true,
-							},
-						},
-					},
-				},
-			},
-		})
-
-		//Append document in basic details
-		if (result?.basic_details) {
-			const basicDetailsDoc = await prisma.tendering_form_docs.findMany({
-				where: {
-					reference_no: reference_no,
-					form: 'basic_details',
-				},
-				select: {
-					ReferenceNo: true,
-				},
-			})
-
-			await Promise.all(
-				basicDetailsDoc.map(async (item: any) => {
-					const headers = {
-						token: '8Ufn6Jio6Obv9V7VXeP7gbzHSyRJcKluQOGorAD58qA1IQKYE0',
-					}
-					await axios
-						.post(process.env.DMS_GET || '', { referenceNo: item?.ReferenceNo }, { headers })
-						.then(response => {
-							item.docUrl = response?.data?.data?.fullPath
-						})
-						.catch(err => {
-							throw err
-						})
-				})
-			)
-
-			result.basic_details.doc = basicDetailsDoc
-		}
-
-		//Append document in bid openers
-		if (result?.bid_openers) {
-			await Promise.all(
-				result?.bid_openers?.bid_openers_docs.map(async (item: any) => {
-					const headers = {
-						token: '8Ufn6Jio6Obv9V7VXeP7gbzHSyRJcKluQOGorAD58qA1IQKYE0',
-					}
-					await axios
-						.post(process.env.DMS_GET || '', { referenceNo: item?.ReferenceNo }, { headers })
-						.then(response => {
-							item.docUrl = response?.data?.data?.fullPath
-						})
-						.catch(err => {
-							throw err
-						})
-				}) as any
-			)
-		}
-
-		return result ? result : null
-	} catch (err: any) {
-		console.log(err)
-		if (err?.ignore) {
-			return null
-		} else {
-			return { error: true, message: getErrorMessage(err) }
-		}
 	}
 }
 

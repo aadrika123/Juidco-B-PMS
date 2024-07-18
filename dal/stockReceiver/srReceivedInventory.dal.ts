@@ -1040,7 +1040,7 @@ export const addToInventoryDal = async (req: Request) => {
 
 			await tx.$queryRawUnsafe(`
 				UPDATE product.product_${subcategory?.name.toLowerCase().replace(/\s/g, '')}
-				SET is_added = true, is_available = true, inventoryId = '${currentInventoryId}'
+				SET is_added = true, is_available = true, inventory_id = '${currentInventoryId}'
 				WHERE procurement_no = '${procurement_no}' AND is_added = false AND is_available = false
 			`)
 
