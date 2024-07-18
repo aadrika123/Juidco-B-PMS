@@ -91,7 +91,7 @@ model supplier_master {
 model procurement_status {
     id             String        @id @default(uuid())
     procurement_no String        @unique
-    status         Int //-2=rejected, -1=back to sr, 0=pending, 1=in DA's inbox, 69= revised and in DA's inbox,70=ready for BOQ, -70=returned from da, 71=BOQ ready, 72=ready for tender form, -72=returned from da, 73=tender form ready, 2=released for tender,3=supplier assigned,4=stock partially recieved, 5=stock recieved, 6=partially added, 7=added
+    status         Int //-2=rejected, -1=back to sr, 0=pending, 1=in DA's inbox, 69= revised and in DA's inbox, 70=BOQ ready, 71=Pre Tender ready, 72=level 1, 73=lvel 2, 74=ready to release, 2=released for tender, 3=supplier assigned, 4=stock partially recieved, 5=stock recieved, 6=partially added, 7=added
     createdAt      DateTime      @default(now())
     updatedAt      DateTime      @updatedAt
     procurement    procurement[]
