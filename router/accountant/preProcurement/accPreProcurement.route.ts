@@ -1,6 +1,6 @@
 import express from 'express'
 import { upload } from '../../../config/multer.config'
-import { accAuth } from '../../../middleware/userAuth'
+import { daAuth } from '../../../middleware/userAuth'
 const router = express.Router()
 import {
 	getPreProcurement,
@@ -30,13 +30,13 @@ import {
 	forwardToDaPt,
 } from '../../../controller/accountant/accPreProcurement.controller'
 
-router.use(accAuth)
+router.use(daAuth)
 
 router.get('/list-for-boq', getPreProcurementForBoq)
 router.get('/', getPreProcurement)
 router.get('/outbox', getPreProcurementOutbox)
 router.post('/bulk', getPreProcurementBulkByOrderNo)
-router.post('/boq', upload.array('img'), accAuth, createBoq)
+router.post('/boq', upload.array('img'), daAuth, createBoq)
 router.get('/boq', getBoqInbox)
 router.get('/boq/outbox', getBoqOutbox)
 router.post('/to-da', forwardToDa)
@@ -46,12 +46,12 @@ router.post('/pre-tender/submit', finalSubmissionPt)
 router.post('/pre-tender/to-da', forwardToDaPt)
 
 //pre tender creation and get-------
-router.post('/pre-tender/basic-details', upload.array('img'), accAuth, createBasicDetailsPt)
+router.post('/pre-tender/basic-details', upload.array('img'), daAuth, createBasicDetailsPt)
 router.post('/pre-tender/work-details', createWorkDetailsPt)
 router.post('/pre-tender/fee-details', createFeeDetailsPt)
 router.post('/pre-tender/critical-dates', createCriticalDatesPt)
-router.post('/pre-tender/bid-openers', upload.fields([{ name: 'B01' }, { name: 'B02' }]), accAuth, createBidOpenersPt)
-router.post('/pre-tender/cover-details', upload.array('img'), accAuth, createCoverDetailsPt)
+router.post('/pre-tender/bid-openers', upload.fields([{ name: 'B01' }, { name: 'B02' }]), daAuth, createBidOpenersPt)
+router.post('/pre-tender/cover-details', upload.array('img'), daAuth, createCoverDetailsPt)
 router.get('/pre-tender/basic-details/:reference_no', getBasicDetailsPt)
 router.get('/pre-tender/work-details/:reference_no', getWorkDetailsPt)
 router.get('/pre-tender/fee-details/:reference_no', getFeeDetailsPt)

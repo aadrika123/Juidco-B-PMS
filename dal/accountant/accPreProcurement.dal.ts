@@ -117,7 +117,7 @@ export const getPreProcurementForBoqDal = async (req: Request) => {
 	// }
 	whereClause.procurement = {
 		status: {
-			status: 70,
+			status: 1,
 		},
 	}
 
@@ -470,7 +470,7 @@ export const createBoqDal = async (req: Request) => {
 					},
 				})
 
-				if (status?.status !== 70) {
+				if (status?.status !== 1) {
 					throw {
 						error: true,
 						message: `Procurement : ${item?.procurement_no} is not valid for BOQ`,
@@ -526,7 +526,7 @@ export const createBoqDal = async (req: Request) => {
 							procurement_no: item?.procurement_no,
 						},
 						data: {
-							status: 71,
+							status: 70,
 						},
 					})
 					await tx.acc_pre_procurement_inbox.delete({
