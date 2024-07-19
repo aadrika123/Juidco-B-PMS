@@ -23,6 +23,8 @@ import distStockRequestRoute from './router/distributor/distStockRequest.route'
 import srStockRequestRoute from './router/stockReciever/stockRequest/srStockReq.route'
 import stockRequestRoute from './router/stockRequest/stockReq.route'
 import hrmsRoute from './router/hrms/hrms.route'
+import level1Routes from './router/level1/level1.route'
+import level2Routes from './router/level2/level2.route'
 
 config()
 
@@ -50,6 +52,9 @@ app.use('/api/pms/da/post-procurement', daPostProcurementRoute)
 app.use('/api/pms/da/rec-inv', daReceivedInventoryRoute)
 app.use('/api/pms/sr/post-procurement', srPostProcurementRoute)
 app.use('/api/pms/sr/rec-inv', srReceivedInventoryRoute)
+//level 1 & 2
+app.use('/api/pms/level1', level1Routes)
+app.use('/api/pms/level2', level2Routes)
 
 //stock request routes
 app.use('/api/pms/dist/stock-request', distStockRequestRoute)
@@ -71,6 +76,7 @@ app.use('/api/pms/notification', notificationRoute)
 
 //hrms stock handover routes
 app.use('/api/pms/stock-handover', hrmsRoute)
+
 
 //----------------------------routes--------------------------------------------------------------------------------------------------------------------------
 
