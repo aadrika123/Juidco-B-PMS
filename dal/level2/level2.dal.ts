@@ -499,123 +499,10 @@ export const getBoqOutboxDal = async (req: Request) => {
 	}
 }
 
-// export const forwardToLevel2Dal = async (req: Request) => {
-// 	const { reference_no }: { reference_no: string } = req.body
-// 	try {
-// 		const boq = await prisma.boq.findFirst({
-// 			where: {
-// 				reference_no: reference_no,
-// 			},
-// 			select: {
-// 				status: true,
-// 			},
-// 		})
-
-// 		if (boq?.status !== 1) {
-// 			throw {
-// 				error: true,
-// 				message: `Reference no. : ${reference_no} is not valid BOQ to be forwarded.`,
-// 			}
-// 		}
-
-// 		const preTender = await prisma.tendering_form.findFirst({
-// 			where: {
-// 				reference_no: reference_no,
-// 			},
-// 			select: {
-// 				status: true,
-// 				isPartial: true,
-// 			},
-// 		})
-
-// 		if (preTender?.status !== 1 && preTender?.isPartial === false) {
-// 			throw {
-// 				error: true,
-// 				message: `Reference no. : ${reference_no} is not valid Pre tender form to be forwarded.`,
-// 			}
-// 		}
-
-// 		//start transaction
-// 		await prisma.$transaction(async tx => {
-// 			await tx.level1_inbox.delete({
-// 				where: {
-// 					reference_no: reference_no,
-// 				},
-// 			})
-
-// 			await tx.level1_outbox.create({
-// 				data: {
-// 					reference_no: reference_no,
-// 				},
-// 			})
-
-// 			await tx.level2_inbox.create({
-// 				data: {
-// 					reference_no: reference_no,
-// 				},
-// 			})
-
-// 			// await tx.da_boq_outbox.delete({
-// 			// 	where: {
-// 			// 		reference_no: reference_no,
-// 			// 	},
-// 			// })
-
-// 			await tx.boq.update({
-// 				where: {
-// 					reference_no: reference_no,
-// 				},
-// 				data: {
-// 					status: 2,
-// 				},
-// 			})
-
-// 			await tx.tendering_form.update({
-// 				where: {
-// 					reference_no: reference_no,
-// 				},
-// 				data: {
-// 					status: 2,
-// 				},
-// 			})
-
-// 			await tx.notification.create({
-// 				data: {
-// 					role_id: Number(process.env.ROLE_LEVEL2),
-// 					title: 'BOQ and Pre tender form to be approved',
-// 					destination: 21,
-// 					description: `There is a BOQ and Pre tender form to be approved. Reference Number : ${reference_no}`,
-// 				},
-// 			})
-// 		})
-
-// 		return 'Forwarded to level 2'
-// 	} catch (err: any) {
-// 		console.log(err)
-// 		return { error: true, message: getErrorMessage(err) }
-// 	}
-// }
-
-//Pre-tender|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
-
-const checkExistence = async (reference_no: string) => {
+export const returnToLevel1Dal = async (req: Request) => {
+	const { reference_no, remark }: { reference_no: string; remark: string } = req.body
 	try {
-		const count = await prisma.tendering_form.count({
-			where: {
-				reference_no: reference_no,
-			},
-		})
-
-		return count !== 0 ? true : false
-	} catch (err: any) {
-		console.log(err)
-		return { error: true, message: getErrorMessage(err) }
-	}
-}
-
-const isBoqValid = async (reference_no: string) => {
-	try {
-		const boq = await prisma.boq.findFirst({
+		const boqData = await prisma.boq.findFirst({
 			where: {
 				reference_no: reference_no,
 			},
@@ -624,11 +511,265 @@ const isBoqValid = async (reference_no: string) => {
 			},
 		})
 
-		return boq?.status !== 0 ? false : true
+		if (boqData?.status !== 2) {
+			throw {
+				error: true,
+				message: 'Invalid status of BOQ to return',
+			}
+		}
+
+		if (!remark) {
+			throw { error: true, message: 'Remark is mandatory' }
+		}
+
+		//start transaction
+		await prisma.$transaction(async tx => {
+			await tx.level2_inbox.delete({
+				where: {
+					reference_no: reference_no,
+				},
+			})
+
+			await tx.level1_inbox.create({
+				data: {
+					reference_no: reference_no,
+				},
+			})
+
+			await tx.level2_outbox.create({
+				data: {
+					reference_no: reference_no,
+				},
+			})
+
+			await tx.level1_outbox.delete({
+				where: {
+					reference_no: reference_no,
+				},
+			})
+
+			await tx.boq.update({
+				where: {
+					reference_no: reference_no,
+				},
+				data: {
+					status: 12,
+					remark: remark,
+				},
+			})
+
+			await tx.tendering_form.update({
+				where: {
+					reference_no: reference_no,
+				},
+				data: {
+					status: 12,
+				},
+			})
+
+			await tx.notification.create({
+				data: {
+					role_id: Number(process.env.ROLE_DA),
+					title: 'BOQ returned',
+					destination: 50,
+					description: `There is a BOQ returned from level 2. Reference Number : ${reference_no}`,
+				},
+			})
+		})
+
+		return 'Returned to level 1'
 	} catch (err: any) {
 		console.log(err)
 		return { error: true, message: getErrorMessage(err) }
 	}
 }
 
-//Pre-tender|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+export const approvalByLevel2Dal = async (req: Request) => {
+	const { reference_no }: { reference_no: string } = req.body
+	try {
+		const boqData = await prisma.boq.findFirst({
+			where: {
+				reference_no: reference_no,
+			},
+			select: {
+				status: true,
+			},
+		})
+
+		if (boqData?.status !== 2) {
+			throw { error: true, message: 'Invalid status of BOQ to be approved' }
+		}
+
+		const preTender = await prisma.tendering_form.findFirst({
+			where: {
+				reference_no: reference_no,
+			},
+			select: {
+				status: true,
+				isPartial: true,
+			},
+		})
+
+		if (preTender?.status !== 2 && preTender?.isPartial === false) {
+			throw {
+				error: true,
+				message: `Reference no. : ${reference_no} is not valid Pre tender form to be approved.`,
+			}
+		}
+
+		//start transaction
+		await prisma.$transaction(async tx => {
+			await tx.level2_inbox.delete({
+				where: {
+					reference_no: reference_no,
+				},
+			})
+
+			await tx.level2_outbox.create({
+				data: {
+					reference_no: reference_no,
+				},
+			})
+
+			await tx.da_boq_inbox.create({
+				data: {
+					reference_no: reference_no,
+				},
+			})
+
+			await tx.da_boq_outbox.delete({
+				where: {
+					reference_no: reference_no,
+				},
+			})
+
+			await tx.boq.update({
+				where: {
+					reference_no: reference_no,
+				},
+				data: {
+					status: 21,
+					remark: '' as string,
+				},
+			})
+
+			await tx.tendering_form.update({
+				where: {
+					reference_no: reference_no,
+				},
+				data: {
+					status: 21,
+				},
+			})
+
+			await tx.notification.create({
+				data: {
+					role_id: Number(process.env.ROLE_DA),
+					title: 'BOQ and pre tender approved by level 2',
+					destination: 21,
+					description: `There are BOQ and pre tender approved by level 2. Reference Number : ${reference_no}`,
+				},
+			})
+		})
+
+		return 'Approved by level 2'
+	} catch (err: any) {
+		console.log(err)
+		return { error: true, message: getErrorMessage(err) }
+	}
+}
+
+export const rejectionByLevel2Dal = async (req: Request) => {
+	const { reference_no }: { reference_no: string } = req.body
+	try {
+		const boqData = await prisma.boq.findFirst({
+			where: {
+				reference_no: reference_no,
+			},
+			select: {
+				status: true,
+			},
+		})
+
+		if (boqData?.status !== 1) {
+			throw { error: true, message: 'Invalid status of BOQ to be rejected' }
+		}
+
+		const preTender = await prisma.tendering_form.findFirst({
+			where: {
+				reference_no: reference_no,
+			},
+			select: {
+				status: true,
+				isPartial: true,
+			},
+		})
+
+		if (preTender?.status !== 1 && preTender?.isPartial === false) {
+			throw {
+				error: true,
+				message: `Reference no. : ${reference_no} is not valid Pre tender form to be rejected.`,
+			}
+		}
+
+		//start transaction
+		await prisma.$transaction(async tx => {
+			await tx.level2_inbox.delete({
+				where: {
+					reference_no: reference_no,
+				},
+			})
+
+			await tx.level2_outbox.create({
+				data: {
+					reference_no: reference_no,
+				},
+			})
+
+			await tx.da_boq_inbox.create({
+				data: {
+					reference_no: reference_no,
+				},
+			})
+
+			await tx.da_boq_outbox.delete({
+				where: {
+					reference_no: reference_no,
+				},
+			})
+
+			await tx.boq.update({
+				where: {
+					reference_no: reference_no,
+				},
+				data: {
+					status: 21,
+					remark: '' as string,
+				},
+			})
+
+			await tx.tendering_form.update({
+				where: {
+					reference_no: reference_no,
+				},
+				data: {
+					status: 21,
+				},
+			})
+
+			await tx.notification.create({
+				data: {
+					role_id: Number(process.env.ROLE_DA),
+					title: 'BOQ and pre tender approved by level 2',
+					destination: 21,
+					description: `There are BOQ and pre tender approved by level 2. Reference Number : ${reference_no}`,
+				},
+			})
+		})
+
+		return 'Approved by level 1'
+	} catch (err: any) {
+		console.log(err)
+		return { error: true, message: getErrorMessage(err) }
+	}
+}
