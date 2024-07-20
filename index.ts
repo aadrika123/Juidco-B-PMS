@@ -25,6 +25,7 @@ import stockRequestRoute from './router/stockRequest/stockReq.route'
 import hrmsRoute from './router/hrms/hrms.route'
 import level1Routes from './router/level1/level1.route'
 import level2Routes from './router/level2/level2.route'
+import financeRoutes from './router/finance/finance.route'
 
 config()
 
@@ -77,6 +78,8 @@ app.use('/api/pms/notification', notificationRoute)
 //hrms stock handover routes
 app.use('/api/pms/stock-handover', hrmsRoute)
 
+//finance routes
+app.use('/api/pms/finance', financeRoutes)
 
 //----------------------------routes--------------------------------------------------------------------------------------------------------------------------
 
