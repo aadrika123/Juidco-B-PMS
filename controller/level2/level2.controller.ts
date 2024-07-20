@@ -1,20 +1,19 @@
 import { Request, Response } from 'express'
 import { getBoqInboxDal, getBoqOutboxDal, returnToLevel1Dal, approvalByLevel2Dal, rejectionByLevel2Dal } from '../../dal/level2/level2.dal'
 
-
 export const getBoqInbox = async (req: Request, res: Response) => {
 	const result: any = await getBoqInboxDal(req)
 	if (!result?.error) {
 		res.status(200).json({
 			status: true,
-			message: `BPQ list fetched`,
+			message: `BPQ and pre tender list fetched`,
 			data: result?.data,
 			pagination: result?.pagination,
 		})
 	} else {
 		res.status(404).json({
 			status: false,
-			message: `Error while fetching BOQ list`,
+			message: `Error while fetching BOQ and pre tender list`,
 			error: result?.message,
 		})
 	}
@@ -25,14 +24,14 @@ export const getBoqOutbox = async (req: Request, res: Response) => {
 	if (!result?.error) {
 		res.status(200).json({
 			status: true,
-			message: `BPQ list fetched`,
+			message: `BPQ and pre tender list fetched`,
 			data: result?.data,
 			pagination: result?.pagination,
 		})
 	} else {
 		res.status(404).json({
 			status: false,
-			message: `Error while fetching BOQ list`,
+			message: `Error while fetching BOQ and pre tender list`,
 			error: result?.message,
 		})
 	}

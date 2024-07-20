@@ -502,6 +502,13 @@ export const getBoqOutboxDal = async (req: Request) => {
 export const returnToLevel1Dal = async (req: Request) => {
 	const { reference_no, remark }: { reference_no: string; remark: string } = req.body
 	try {
+		if (!reference_no) {
+			throw {
+				error: true,
+				message: `Reference no is required as 'reference_no'`,
+			}
+		}
+
 		const boqData = await prisma.boq.findFirst({
 			where: {
 				reference_no: reference_no,
@@ -587,6 +594,13 @@ export const returnToLevel1Dal = async (req: Request) => {
 export const approvalByLevel2Dal = async (req: Request) => {
 	const { reference_no }: { reference_no: string } = req.body
 	try {
+		if (!reference_no) {
+			throw {
+				error: true,
+				message: `Reference no is required as 'reference_no'`,
+			}
+		}
+
 		const boqData = await prisma.boq.findFirst({
 			where: {
 				reference_no: reference_no,
@@ -682,6 +696,13 @@ export const approvalByLevel2Dal = async (req: Request) => {
 export const rejectionByLevel2Dal = async (req: Request) => {
 	const { reference_no }: { reference_no: string } = req.body
 	try {
+		if (!reference_no) {
+			throw {
+				error: true,
+				message: `Reference no is required as 'reference_no'`,
+			}
+		}
+
 		const boqData = await prisma.boq.findFirst({
 			where: {
 				reference_no: reference_no,
