@@ -134,10 +134,10 @@ export const getBoqInboxDal = async (req: Request) => {
 	// ]
 
 	try {
-		count = await prisma.level1_inbox.count({
+		count = await prisma.level2_inbox.count({
 			where: whereClause,
 		})
-		const result = await prisma.level1_inbox.findMany({
+		const result = await prisma.level2_inbox.findMany({
 			orderBy: {
 				updatedAt: 'desc',
 			},
@@ -379,10 +379,10 @@ export const getBoqOutboxDal = async (req: Request) => {
 	// ]
 
 	try {
-		count = await prisma.level1_outbox.count({
+		count = await prisma.level2_outbox.count({
 			where: whereClause,
 		})
-		const result = await prisma.level1_outbox.findMany({
+		const result = await prisma.level2_outbox.findMany({
 			orderBy: {
 				updatedAt: 'desc',
 			},
@@ -499,111 +499,7 @@ export const getBoqOutboxDal = async (req: Request) => {
 	}
 }
 
-export const forwardToLevel2Dal = async (req: Request) => {
-	const { reference_no }: { reference_no: string } = req.body
-	try {
-		if (!reference_no) {
-			throw {
-				error: true,
-				message: `Reference no is required as 'reference_no'`,
-			}
-		}
-
-		const boq = await prisma.boq.findFirst({
-			where: {
-				reference_no: reference_no,
-			},
-			select: {
-				status: true,
-			},
-		})
-
-		if (boq?.status !== 1) {
-			throw {
-				error: true,
-				message: `Reference no. : ${reference_no} is not valid BOQ to be forwarded.`,
-			}
-		}
-
-		const preTender = await prisma.tendering_form.findFirst({
-			where: {
-				reference_no: reference_no,
-			},
-			select: {
-				status: true,
-				isPartial: true,
-			},
-		})
-
-		if (preTender?.status !== 1 && preTender?.isPartial === false) {
-			throw {
-				error: true,
-				message: `Reference no. : ${reference_no} is not valid Pre tender form to be forwarded.`,
-			}
-		}
-
-		//start transaction
-		await prisma.$transaction(async tx => {
-			await tx.level1_inbox.delete({
-				where: {
-					reference_no: reference_no,
-				},
-			})
-
-			await tx.level1_outbox.create({
-				data: {
-					reference_no: reference_no,
-				},
-			})
-
-			await tx.level2_inbox.create({
-				data: {
-					reference_no: reference_no,
-				},
-			})
-
-			// await tx.da_boq_outbox.delete({
-			// 	where: {
-			// 		reference_no: reference_no,
-			// 	},
-			// })
-
-			await tx.boq.update({
-				where: {
-					reference_no: reference_no,
-				},
-				data: {
-					status: 2,
-				},
-			})
-
-			await tx.tendering_form.update({
-				where: {
-					reference_no: reference_no,
-				},
-				data: {
-					status: 2,
-				},
-			})
-
-			await tx.notification.create({
-				data: {
-					role_id: Number(process.env.ROLE_LEVEL2),
-					title: 'BOQ and Pre tender form to be reviewed',
-					destination: 60,
-					description: `There is a BOQ and Pre tender form to be approved. Reference Number : ${reference_no}`,
-				},
-			})
-		})
-
-		return 'Forwarded to level 2'
-	} catch (err: any) {
-		console.log(err)
-		return { error: true, message: getErrorMessage(err) }
-	}
-}
-
-export const returnToDaDal = async (req: Request) => {
+export const returnToLevel1Dal = async (req: Request) => {
 	const { reference_no, remark }: { reference_no: string; remark: string } = req.body
 	try {
 		if (!reference_no) {
@@ -622,7 +518,7 @@ export const returnToDaDal = async (req: Request) => {
 			},
 		})
 
-		if (boqData?.status !== 1) {
+		if (boqData?.status !== 2) {
 			throw {
 				error: true,
 				message: 'Invalid status of BOQ to return',
@@ -633,44 +529,27 @@ export const returnToDaDal = async (req: Request) => {
 			throw { error: true, message: 'Remark is mandatory' }
 		}
 
-		const preTender = await prisma.tendering_form.findFirst({
-			where: {
-				reference_no: reference_no,
-			},
-			select: {
-				status: true,
-				isPartial: true,
-			},
-		})
-
-		if (preTender?.status !== 1 && preTender?.status !== 12 && preTender?.isPartial === false) {
-			throw {
-				error: true,
-				message: `Reference no. : ${reference_no} is not valid Pre tender form to be returned.`,
-			}
-		}
-
 		//start transaction
 		await prisma.$transaction(async tx => {
-			await tx.level1_inbox.delete({
+			await tx.level2_inbox.delete({
 				where: {
 					reference_no: reference_no,
 				},
 			})
 
-			await tx.da_boq_inbox.create({
+			await tx.level1_inbox.create({
 				data: {
 					reference_no: reference_no,
 				},
 			})
 
-			await tx.level1_outbox.create({
+			await tx.level2_outbox.create({
 				data: {
 					reference_no: reference_no,
 				},
 			})
 
-			await tx.da_boq_outbox.delete({
+			await tx.level1_outbox.delete({
 				where: {
 					reference_no: reference_no,
 				},
@@ -681,7 +560,7 @@ export const returnToDaDal = async (req: Request) => {
 					reference_no: reference_no,
 				},
 				data: {
-					status: -1,
+					status: 12,
 					remark: remark,
 				},
 			})
@@ -691,7 +570,7 @@ export const returnToDaDal = async (req: Request) => {
 					reference_no: reference_no,
 				},
 				data: {
-					status: -1,
+					status: 12,
 				},
 			})
 
@@ -699,20 +578,20 @@ export const returnToDaDal = async (req: Request) => {
 				data: {
 					role_id: Number(process.env.ROLE_DA),
 					title: 'BOQ returned',
-					destination: 21,
-					description: `There is a BOQ returned from level 1. Reference Number : ${reference_no}`,
+					destination: 50,
+					description: `There is a BOQ returned from level 2. Reference Number : ${reference_no}`,
 				},
 			})
 		})
 
-		return 'Returned to DA'
+		return 'Returned to level 1'
 	} catch (err: any) {
 		console.log(err)
 		return { error: true, message: getErrorMessage(err) }
 	}
 }
 
-export const approvalByLevel1Dal = async (req: Request) => {
+export const approvalByLevel2Dal = async (req: Request) => {
 	const { reference_no }: { reference_no: string } = req.body
 	try {
 		if (!reference_no) {
@@ -731,7 +610,7 @@ export const approvalByLevel1Dal = async (req: Request) => {
 			},
 		})
 
-		if (boqData?.status !== 1) {
+		if (boqData?.status !== 2) {
 			throw { error: true, message: 'Invalid status of BOQ to be approved' }
 		}
 
@@ -745,7 +624,7 @@ export const approvalByLevel1Dal = async (req: Request) => {
 			},
 		})
 
-		if (preTender?.status !== 1 && preTender?.isPartial === false) {
+		if (preTender?.status !== 2 && preTender?.isPartial === false) {
 			throw {
 				error: true,
 				message: `Reference no. : ${reference_no} is not valid Pre tender form to be approved.`,
@@ -754,13 +633,13 @@ export const approvalByLevel1Dal = async (req: Request) => {
 
 		//start transaction
 		await prisma.$transaction(async tx => {
-			await tx.level1_inbox.delete({
+			await tx.level2_inbox.delete({
 				where: {
 					reference_no: reference_no,
 				},
 			})
 
-			await tx.level1_outbox.create({
+			await tx.level2_outbox.create({
 				data: {
 					reference_no: reference_no,
 				},
@@ -783,7 +662,7 @@ export const approvalByLevel1Dal = async (req: Request) => {
 					reference_no: reference_no,
 				},
 				data: {
-					status: 11,
+					status: 21,
 					remark: '' as string,
 				},
 			})
@@ -793,28 +672,28 @@ export const approvalByLevel1Dal = async (req: Request) => {
 					reference_no: reference_no,
 				},
 				data: {
-					status: 11,
+					status: 21,
 				},
 			})
 
 			await tx.notification.create({
 				data: {
 					role_id: Number(process.env.ROLE_DA),
-					title: 'BOQ and pre tender approved by level 1',
+					title: 'BOQ and pre tender approved by level 2',
 					destination: 21,
-					description: `There are BOQ and pre tender approved by level 1. Reference Number : ${reference_no}`,
+					description: `There are BOQ and pre tender approved by level 2. Reference Number : ${reference_no}`,
 				},
 			})
 		})
 
-		return 'Approved by level 1'
+		return 'Approved by level 2'
 	} catch (err: any) {
 		console.log(err)
 		return { error: true, message: getErrorMessage(err) }
 	}
 }
 
-export const rejectionByLevel1Dal = async (req: Request) => {
+export const rejectionByLevel2Dal = async (req: Request) => {
 	const { reference_no }: { reference_no: string } = req.body
 	try {
 		if (!reference_no) {
@@ -856,13 +735,13 @@ export const rejectionByLevel1Dal = async (req: Request) => {
 
 		//start transaction
 		await prisma.$transaction(async tx => {
-			await tx.level1_inbox.delete({
+			await tx.level2_inbox.delete({
 				where: {
 					reference_no: reference_no,
 				},
 			})
 
-			await tx.level1_outbox.create({
+			await tx.level2_outbox.create({
 				data: {
 					reference_no: reference_no,
 				},
@@ -885,7 +764,7 @@ export const rejectionByLevel1Dal = async (req: Request) => {
 					reference_no: reference_no,
 				},
 				data: {
-					status: -2,
+					status: 21,
 					remark: '' as string,
 				},
 			})
@@ -895,16 +774,16 @@ export const rejectionByLevel1Dal = async (req: Request) => {
 					reference_no: reference_no,
 				},
 				data: {
-					status: -2,
+					status: 21,
 				},
 			})
 
 			await tx.notification.create({
 				data: {
 					role_id: Number(process.env.ROLE_DA),
-					title: 'BOQ and pre tender rejected by level 1',
+					title: 'BOQ and pre tender approved by level 2',
 					destination: 21,
-					description: `There are BOQ and pre tender rejected by level 1. Reference Number : ${reference_no}`,
+					description: `There are BOQ and pre tender approved by level 2. Reference Number : ${reference_no}`,
 				},
 			})
 		})

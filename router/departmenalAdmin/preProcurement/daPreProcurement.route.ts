@@ -52,4 +52,11 @@ router.post('/pre-procurement/pre-tender/approve', upload.array('img'), daAuth, 
 router.post('/pre-procurement/pre-tender/reject', rejectPreTender)
 router.post('/pre-procurement/pre-tender/to-acc', returnToAccPt)
 
+//new flow with level 1 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+
+router.post('/pre-procurement/boq/to-level1', returnToAccPt)
+
+//new flow with level 1 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+
+
 export default router
