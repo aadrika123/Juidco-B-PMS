@@ -425,28 +425,30 @@ model note_sheet {
 //BOQ============================================================================================================================================================================================================================================================================================================
 
 model boq {
-    id             String            @id @default(uuid())
-    reference_no   String            @unique
-    gst            Float?
-    estimated_cost Float?
-    remark         String?
-    createdAt      DateTime          @default(now())
-    updatedAt      DateTime          @updatedAt
-    revised        Boolean           @default(false)
-    status         Int               @default(0) //-3=rejected by level2, -2=rejected by level1, -1=returned, 0=pending, 1=level1, 11=level1 approved, 12=returned to level1, 2=level2, 21=level2 approved
-    isEdited       Boolean           @default(false)
-    hsn_code       String?
-    procurements   boq_procurement[]
-    boq_doc        boq_doc[]
-    acc_boq_inbox  acc_boq_inbox?
-    acc_boq_outbox acc_boq_outbox?
-    da_boq_inbox   da_boq_inbox?
-    da_boq_outbox  da_boq_outbox?
-    tendering_form tendering_form?
-    lvel1_inbox    level1_inbox?
-    lvel1_outbox   level1_outbox?
-    lvel2_inbox    level2_inbox?
-    lvel2_outbox   level2_outbox?
+    id                 String              @id @default(uuid())
+    reference_no       String              @unique
+    gst                Float?
+    estimated_cost     Float?
+    remark             String?
+    createdAt          DateTime            @default(now())
+    updatedAt          DateTime            @updatedAt
+    revised            Boolean             @default(false)
+    status             Int                 @default(0) //-3=rejected by level2, -2=rejected by level1, -1=returned, 0=pending, 1=level1, 11=level1 approved, 12=returned to level1, 2=level2, 21=level2 approved, 40=finance pending, 41=finance returned, 42=finance approved, -43=finance rejected 
+    isEdited           Boolean             @default(false)
+    hsn_code           String?
+    procurements       boq_procurement[]
+    boq_doc            boq_doc[]
+    acc_boq_inbox      acc_boq_inbox?
+    acc_boq_outbox     acc_boq_outbox?
+    da_boq_inbox       da_boq_inbox?
+    da_boq_outbox      da_boq_outbox?
+    tendering_form     tendering_form?
+    lvel1_inbox        level1_inbox?
+    lvel1_outbox       level1_outbox?
+    lvel2_inbox        level2_inbox?
+    lvel2_outbox       level2_outbox?
+    finance_boq_inbox  finance_boq_inbox?
+    finance_boq_outbox finance_boq_outbox?
 }
 
 model boq_procurement {
@@ -501,6 +503,22 @@ model da_boq_inbox {
 }
 
 model da_boq_outbox {
+    id           String   @id @default(uuid())
+    reference_no String   @unique
+    boq          boq      @relation(fields: [reference_no], references: [reference_no])
+    createdAt    DateTime @default(now())
+    updatedAt    DateTime @updatedAt
+}
+
+model finance_boq_inbox {
+    id           String   @id @default(uuid())
+    reference_no String   @unique
+    boq          boq      @relation(fields: [reference_no], references: [reference_no])
+    createdAt    DateTime @default(now())
+    updatedAt    DateTime @updatedAt
+}
+
+model finance_boq_outbox {
     id           String   @id @default(uuid())
     reference_no String   @unique
     boq          boq      @relation(fields: [reference_no], references: [reference_no])
@@ -727,7 +745,7 @@ model notification {
     title       String
     description String?
     isSeen      Boolean  @default(false)
-    destination Int? //10=sr pre-proc inbox,14=sr pre-proc rejected,15=sr pre-proc released, 20=da pre-proc inbox, 21=da boq inbox, 22=da pre-tender inbox, 30=acc pre-proc inbox, 31=acc boq inbox, 32=acc pre-tender inbox, 11=sr post-proc inbox, 12=sr rec-inv inbox, 23=da post proc inbox, 24=da rec-inv inbox, 13=sr stock req inbox, 40=dist stock-req inbox, 50=level1 inbox, 60=level1 inbox,
+    destination Int? //10=sr pre-proc inbox,14=sr pre-proc rejected,15=sr pre-proc released, 20=da pre-proc inbox, 21=da boq inbox, 22=da pre-tender inbox, 30=acc pre-proc inbox, 31=acc boq inbox, 32=acc pre-tender inbox, 11=sr post-proc inbox, 12=sr rec-inv inbox, 23=da post proc inbox, 24=da rec-inv inbox, 13=sr stock req inbox, 40=dist stock-req inbox, 50=level1 inbox, 60=level1 inbox,70=finance
     createdAt   DateTime @default(now())
     updatedAt   DateTime @updatedAt
 }

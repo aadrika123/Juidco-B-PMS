@@ -37,22 +37,20 @@ export const getItemDal = async (req: Request) => {
 	let pagination: pagination = {}
 	const whereClause: any = {}
 
-	const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined
+	// const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined
+	const search: any[] = Array.isArray(req?.query?.search) ? req?.query?.search : [req?.query?.search]
 
 	const category: any[] = Array.isArray(req?.query?.category) ? req?.query?.category : [req?.query?.category]
 	const subcategory: any[] = Array.isArray(req?.query?.scategory) ? req?.query?.scategory : [req?.query?.scategory]
 	const brand: any[] = Array.isArray(req?.query?.brand) ? req?.query?.brand : [req?.query?.brand]
 
-	//creating search options for the query
-	if (search) {
-		whereClause.OR = [
-			{
-				description: {
-					contains: search,
-					mode: 'insensitive',
-				},
+	if (search.length > 0) {
+		whereClause.AND = search.map(term => ({
+			description: {
+				contains: term,
+				mode: 'insensitive',
 			},
-		]
+		}))
 	}
 
 	//creating filter options for the query
