@@ -130,7 +130,6 @@ export const getHandoverDataDal = async (req: Request) => {
 					},
 				},
 				is_alloted: true,
-				serial_no: true,
 				status: true,
 				allotted_quantity: true,
 				allotment_date: true,
