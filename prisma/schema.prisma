@@ -794,14 +794,16 @@ model stock_request {
 }
 
 model stock_req_product {
-    id                String        @id @default(uuid())
-    stock_handover_no String
-    serial_no         String        @unique
-    inventory         inventory     @relation(fields: [inventoryId], references: [id])
-    inventoryId       String
-    stock_request     stock_request @relation(fields: [stock_handover_no], references: [stock_handover_no])
-    createdAt         DateTime      @default(now())
-    updatedAt         DateTime      @updatedAt
+    id                    String                  @id @default(uuid())
+    stock_handover_no     String
+    serial_no             String                  @unique
+    inventory             inventory               @relation(fields: [inventoryId], references: [id])
+    inventoryId           String
+    stock_request         stock_request           @relation(fields: [stock_handover_no], references: [stock_handover_no])
+    createdAt             DateTime                @default(now())
+    updatedAt             DateTime                @updatedAt
+    sr_service_req_inbox  sr_service_req_inbox[]
+    sr_service_req_outbox sr_service_req_outbox[]
 }
 
 model inventory_buffer {
@@ -898,6 +900,26 @@ model ia_stock_req_outbox {
     stock_request     stock_request @relation(fields: [stock_handover_no], references: [stock_handover_no])
     createdAt         DateTime      @default(now())
     updatedAt         DateTime      @updatedAt
+}
+
+model sr_service_req_inbox {
+    id                  String            @id @default(uuid())
+    stock_handover_no   String
+    serial_no           String            @unique
+    stock_req_product   stock_req_product @relation(fields: [serial_no], references: [serial_no])
+    createdAt           DateTime          @default(now())
+    updatedAt           DateTime          @updatedAt
+    stock_req_productId String
+}
+
+model sr_service_req_outbox {
+    id                  String            @id @default(uuid())
+    stock_handover_no   String
+    serial_no           String            @unique
+    stock_req_product   stock_req_product @relation(fields: [serial_no], references: [serial_no])
+    createdAt           DateTime          @default(now())
+    updatedAt           DateTime          @updatedAt
+    stock_req_productId String
 }
 
 // stock request================================================================================================================================================================
