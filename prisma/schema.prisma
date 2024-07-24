@@ -253,6 +253,7 @@ model inventory {
     supplier_master        supplier_master?         @relation(fields: [supplier_masterId], references: [id])
     supplier_masterId      String?
     inventory_dead_stock   inventory_dead_stock[]
+    stock_req_product      stock_req_product[]
 }
 
 model inventory_dead_stock {
@@ -745,7 +746,7 @@ model notification {
     title       String
     description String?
     isSeen      Boolean  @default(false)
-    destination Int? //10=sr pre-proc inbox,14=sr pre-proc rejected,15=sr pre-proc released, 20=da pre-proc inbox, 21=da boq inbox, 22=da pre-tender inbox, 30=acc pre-proc inbox, 31=acc boq inbox, 32=acc pre-tender inbox, 11=sr post-proc inbox, 12=sr rec-inv inbox, 23=da post proc inbox, 24=da rec-inv inbox, 13=sr stock req inbox, 40=dist stock-req inbox, 50=level1 inbox, 60=level1 inbox,70=finance
+    destination Int? //10=sr pre-proc inbox,14=sr pre-proc rejected,15=sr pre-proc released, 20=da pre-proc inbox, 21=da boq inbox, 22=da pre-tender inbox, 30=acc pre-proc inbox, 31=acc boq inbox, 32=acc pre-tender inbox, 11=sr post-proc inbox, 12=sr rec-inv inbox, 23=da post proc inbox, 24=da rec-inv inbox, 25=da stock req inbox, 13=sr stock req inbox, 40=dist stock-req inbox, 50=level1 inbox, 60=level1 inbox,70=finance, 80=IA stock req inbox
     createdAt   DateTime @default(now())
     updatedAt   DateTime @updatedAt
 }
@@ -766,7 +767,7 @@ model stock_request {
     brand                 brand_master?          @relation(fields: [brand_masterId], references: [id])
     brand_masterId        String
     allotted_quantity     Float                  @default(1)
-    status                Int //-2=rejected, -1=returned, 0=pending, 1=revised, 2= forwarded to SR, 3=approved, 4=handover pending, 41=allotted, 5=return pending, 51= returned to inventory, 52=returned to DD, -5= rejected, 6=dead stock pending, 61=added to dead stock, 62=returned to DD, -6= rejected, 7=warranty claim pending, 71=warranty claimed, 72=returned to DD, -7= rejected, 
+    status                Int //-2=rejected, -1=returned, 0=pending, 1=revised, 2= forwarded to DA, 80=forwarded to IA, 81=IA returned, 82= IA rejected, 3=approved, 4=handover pending, 41=allotted, 5=return pending, 51= returned to inventory, 52=returned to DD, -5= rejected, 6=dead stock pending, 61=added to dead stock, 62=returned to DD, -6= rejected, 7=warranty claim pending, 71=warranty claimed, 72=returned to DD, -7= rejected, 
     ulb_id                Int?
     inventory             inventory?             @relation(fields: [inventoryId], references: [id])
     inventoryId           String?
@@ -784,8 +785,23 @@ model stock_request {
     allotment_date        DateTime?
     release_date          DateTime?
     is_alloted            Boolean                @default(false)
-    serial_no             String?                @unique
     remark                String?
+    da_stock_req_inbox    da_stock_req_inbox?
+    da_stock_req_outbox   da_stock_req_outbox?
+    ia_stock_req_inbox    ia_stock_req_inbox?
+    ia_stock_req_outbox   ia_stock_req_outbox?
+    stock_req_product     stock_req_product[]
+}
+
+model stock_req_product {
+    id                String        @id @default(uuid())
+    stock_handover_no String
+    serial_no         String        @unique
+    inventory         inventory     @relation(fields: [inventoryId], references: [id])
+    inventoryId       String
+    stock_request     stock_request @relation(fields: [stock_handover_no], references: [stock_handover_no])
+    createdAt         DateTime      @default(now())
+    updatedAt         DateTime      @updatedAt
 }
 
 model inventory_buffer {
@@ -845,6 +861,38 @@ model sr_stock_req_inbox {
 }
 
 model sr_stock_req_outbox {
+    id                String        @id @default(uuid())
+    stock_handover_no String        @unique
+    stock_request     stock_request @relation(fields: [stock_handover_no], references: [stock_handover_no])
+    createdAt         DateTime      @default(now())
+    updatedAt         DateTime      @updatedAt
+}
+
+model da_stock_req_inbox {
+    id                String        @id @default(uuid())
+    stock_handover_no String        @unique
+    stock_request     stock_request @relation(fields: [stock_handover_no], references: [stock_handover_no])
+    createdAt         DateTime      @default(now())
+    updatedAt         DateTime      @updatedAt
+}
+
+model da_stock_req_outbox {
+    id                String        @id @default(uuid())
+    stock_handover_no String        @unique
+    stock_request     stock_request @relation(fields: [stock_handover_no], references: [stock_handover_no])
+    createdAt         DateTime      @default(now())
+    updatedAt         DateTime      @updatedAt
+}
+
+model ia_stock_req_inbox {
+    id                String        @id @default(uuid())
+    stock_handover_no String        @unique
+    stock_request     stock_request @relation(fields: [stock_handover_no], references: [stock_handover_no])
+    createdAt         DateTime      @default(now())
+    updatedAt         DateTime      @updatedAt
+}
+
+model ia_stock_req_outbox {
     id                String        @id @default(uuid())
     stock_handover_no String        @unique
     stock_request     stock_request @relation(fields: [stock_handover_no], references: [stock_handover_no])
