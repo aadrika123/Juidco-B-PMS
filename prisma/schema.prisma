@@ -20,7 +20,6 @@ model category_master {
     procurement            procurement[]
     procurement_history    procurement_history[]
     procurement_before_boq procurement_before_boq[]
-    stock_request          stock_request[]
     stock_request_history  stock_request_history[]
 }
 
@@ -37,7 +36,6 @@ model subcategory_master {
     procurement            procurement[]
     procurement_history    procurement_history[]
     procurement_before_boq procurement_before_boq[]
-    stock_request          stock_request[]
     stock_request_history  stock_request_history[]
 }
 
@@ -53,7 +51,6 @@ model brand_master {
     procurement            procurement[]
     procurement_history    procurement_history[]
     procurement_before_boq procurement_before_boq[]
-    stock_request          stock_request[]
     stock_request_history  stock_request_history[]
 }
 
@@ -67,7 +64,6 @@ model unit_master {
     procurement            procurement[]
     procurement_history    procurement_history[]
     procurement_before_boq procurement_before_boq[]
-    stock_request          stock_request[]
     stock_request_history  stock_request_history[]
 }
 
@@ -82,7 +78,6 @@ model supplier_master {
     procurement            procurement[]
     procurement_history    procurement_history[]
     procurement_before_boq procurement_before_boq[]
-    stock_request          stock_request[]
     stock_request_history  stock_request_history[]
 }
 
@@ -760,12 +755,6 @@ model stock_request {
     stock_handover_no     String                 @unique
     emp_id                String
     emp_name              String?
-    category              category_master?       @relation(fields: [category_masterId], references: [id])
-    category_masterId     String?
-    subcategory           subcategory_master?    @relation(fields: [subcategory_masterId], references: [id])
-    subcategory_masterId  String?
-    brand                 brand_master?          @relation(fields: [brand_masterId], references: [id])
-    brand_masterId        String
     allotted_quantity     Float                  @default(1)
     status                Int //-2=rejected, -1=returned, 0=pending, 1=revised, 2= forwarded to DA, 80=forwarded to IA, 81=IA returned, 82= IA rejected, 3=approved, 4=handover pending, 41=allotted, 5=return pending, 51= returned to inventory, 52=returned to DD, -5= rejected, 6=dead stock pending, 61=added to dead stock, 62=returned to DD, -6= rejected, 7=warranty claim pending, 71=warranty claimed, 72=returned to DD, -7= rejected, 
     ulb_id                Int?
@@ -778,10 +767,6 @@ model stock_request {
     dist_stock_req_outbox dist_stock_req_outbox?
     sr_stock_req_inbox    sr_stock_req_inbox?
     sr_stock_req_outbox   sr_stock_req_outbox?
-    unit                  unit_master?           @relation(fields: [unit_masterId], references: [id])
-    unit_masterId         String?
-    supplier_master       supplier_master?       @relation(fields: [supplier_masterId], references: [id])
-    supplier_masterId     String?
     allotment_date        DateTime?
     release_date          DateTime?
     is_alloted            Boolean                @default(false)
