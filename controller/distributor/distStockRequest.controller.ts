@@ -1,5 +1,5 @@
 import { Request, Response } from 'express'
-import { createStockRequestDal, getStockReqInboxDal, getStockReqOutboxDal, forwardToSrDal, handoverDal, stockReturnDal, AddDeadStockDal, warrantyClaimReqDal } from '../../dal/distributor/distStockReq.dal'
+import { createStockRequestDal, getStockReqInboxDal, getStockReqOutboxDal, handoverDal, stockReturnDal, AddDeadStockDal, warrantyClaimReqDal } from '../../dal/distributor/distStockReq.dal'
 
 export const createStockRequest = async (req: Request, res: Response) => {
 	const result: any = await createStockRequestDal(req)
@@ -54,22 +54,22 @@ export const getStockReqOutbox = async (req: Request, res: Response) => {
 	}
 }
 
-export const forwardToSr = async (req: Request, res: Response) => {
-	const result: any = await forwardToSrDal(req)
-	if (!result?.error) {
-		res.status(200).json({
-			status: true,
-			message: `Forwarded to SR successfully`,
-			data: result,
-		})
-	} else {
-		res.status(404).json({
-			status: false,
-			message: `Error while forwarding to SR`,
-			error: result?.message,
-		})
-	}
-}
+// export const forwardToSr = async (req: Request, res: Response) => {
+// 	const result: any = await forwardToSrDal(req)
+// 	if (!result?.error) {
+// 		res.status(200).json({
+// 			status: true,
+// 			message: `Forwarded to SR successfully`,
+// 			data: result,
+// 		})
+// 	} else {
+// 		res.status(404).json({
+// 			status: false,
+// 			message: `Error while forwarding to SR`,
+// 			error: result?.message,
+// 		})
+// 	}
+// }
 
 export const handover = async (req: Request, res: Response) => {
 	const result: any = await handoverDal(req)

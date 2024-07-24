@@ -14,24 +14,6 @@ export const getStockReqByStockHandoverNoDal = async (req: Request) => {
 			select: {
 				id: true,
 				stock_handover_no: true,
-				category: {
-					select: {
-						id: true,
-						name: true,
-					},
-				},
-				subcategory: {
-					select: {
-						id: true,
-						name: true,
-					},
-				},
-				brand: {
-					select: {
-						id: true,
-						name: true,
-					},
-				},
 				ulb_id: true,
 				emp_id: true,
 				emp_name: true,
@@ -43,6 +25,24 @@ export const getStockReqByStockHandoverNoDal = async (req: Request) => {
 					select: {
 						id: true,
 						description: true,
+						category: {
+							select: {
+								id: true,
+								name: true,
+							},
+						},
+						subcategory: {
+							select: {
+								id: true,
+								name: true,
+							},
+						},
+						brand: {
+							select: {
+								id: true,
+								name: true,
+							},
+						},
 					},
 				},
 			},
@@ -61,36 +61,32 @@ export const getStockReqByStockHandoverNoDal = async (req: Request) => {
 }
 
 export const editStockRequestDal = async (req: Request) => {
-	const { stock_handover_no, category, subcategory, brand, inventory, emp_id, emp_name, allotted_quantity, unit } = req.body
+	const { stock_handover_no, inventory, emp_id, emp_name, allotted_quantity } = req.body
 
 	try {
-		const invData = await prisma.inventory.findFirst({
-			where: {
-				id: inventory,
-			},
-			select: {
-				quantity: true,
-			},
-		})
+		// const invData = await prisma.inventory.findFirst({
+		// 	where: {
+		// 		id: inventory,
+		// 	},
+		// 	select: {
+		// 		quantity: true,
+		// 	},
+		// })
 
-		const invBuffer: any = await prisma.inventory_buffer.aggregate({
-			where: {
-				inventoryId: inventory,
-			},
-			_sum: {
-				reserved_quantity: true,
-			},
-		})
+		// const invBuffer: any = await prisma.inventory_buffer.aggregate({
+		// 	where: {
+		// 		inventoryId: inventory,
+		// 	},
+		// 	_sum: {
+		// 		reserved_quantity: true,
+		// 	},
+		// })
 
-		if (Number(allotted_quantity) > (Number(invData?.quantity) - invBuffer?._sum?.reserved_quantity || 0)) {
-			throw { error: true, message: `Allotted quantity cannot be more than the available stock. Available stock : ${Number(invData?.quantity) - invBuffer?._sum?.reserved_quantity || 0} ` }
-		}
+		// if (Number(allotted_quantity) > (Number(invData?.quantity) - invBuffer?._sum?.reserved_quantity || 0)) {
+		// 	throw { error: true, message: `Allotted quantity cannot be more than the available stock. Available stock : ${Number(invData?.quantity) - invBuffer?._sum?.reserved_quantity || 0} ` }
+		// }
 
 		const data: any = {
-			...(category && { category: { connect: { id: category } } }),
-			subcategory: { connect: { id: subcategory } },
-			brand: { connect: { id: brand } },
-			...(unit && { unit: { connect: { id: unit } } }),
 			inventory: { connect: { id: inventory } },
 			emp_id: emp_id,
 			emp_name: emp_name,
@@ -124,11 +120,9 @@ export const editStockRequestDal = async (req: Request) => {
 						stock_handover_no: oldStockReq?.stock_handover_no,
 						emp_id: oldStockReq?.emp_id,
 						emp_name: oldStockReq?.emp_name,
-						category_masterId: oldStockReq?.category_masterId,
-						subcategory_masterId: oldStockReq?.subcategory_masterId,
-						brand_masterId: oldStockReq?.brand_masterId,
 						allotted_quantity: oldStockReq?.allotted_quantity,
 						status: oldStockReq?.status,
+						inventoryId: oldStockReq?.inventoryId,
 					},
 				})
 			}
@@ -138,13 +132,13 @@ export const editStockRequestDal = async (req: Request) => {
 				data: data,
 			})
 
-			await tx.inventory_buffer.update({
-				where: { stock_handover_no: stock_handover_no },
-				data: {
-					reserved_quantity: allotted_quantity,
-					inventory: { connect: { id: inventory } },
-				},
-			})
+			// await tx.inventory_buffer.update({
+			// 	where: { stock_handover_no: stock_handover_no },
+			// 	data: {
+			// 		reserved_quantity: allotted_quantity,
+			// 		inventory: { connect: { id: inventory } },
+			// 	},
+			// })
 		})
 
 		return stockReq

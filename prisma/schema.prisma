@@ -20,7 +20,6 @@ model category_master {
     procurement            procurement[]
     procurement_history    procurement_history[]
     procurement_before_boq procurement_before_boq[]
-    stock_request_history  stock_request_history[]
 }
 
 model subcategory_master {
@@ -36,7 +35,6 @@ model subcategory_master {
     procurement            procurement[]
     procurement_history    procurement_history[]
     procurement_before_boq procurement_before_boq[]
-    stock_request_history  stock_request_history[]
 }
 
 model brand_master {
@@ -51,7 +49,6 @@ model brand_master {
     procurement            procurement[]
     procurement_history    procurement_history[]
     procurement_before_boq procurement_before_boq[]
-    stock_request_history  stock_request_history[]
 }
 
 model unit_master {
@@ -64,7 +61,6 @@ model unit_master {
     procurement            procurement[]
     procurement_history    procurement_history[]
     procurement_before_boq procurement_before_boq[]
-    stock_request_history  stock_request_history[]
 }
 
 model supplier_master {
@@ -78,7 +74,6 @@ model supplier_master {
     procurement            procurement[]
     procurement_history    procurement_history[]
     procurement_before_boq procurement_before_boq[]
-    stock_request_history  stock_request_history[]
 }
 
 // pre-procurement============================================================================================================================================================================================================================================================================================================
@@ -249,6 +244,7 @@ model inventory {
     supplier_masterId      String?
     inventory_dead_stock   inventory_dead_stock[]
     stock_req_product      stock_req_product[]
+    stock_request_history  stock_request_history[]
 }
 
 model inventory_dead_stock {
@@ -802,25 +798,17 @@ model inventory_buffer {
 }
 
 model stock_request_history {
-    id                   String              @id @default(uuid())
-    stock_handover_no    String              @unique
-    emp_id               String
-    emp_name             String?
-    category             category_master?    @relation(fields: [category_masterId], references: [id])
-    category_masterId    String?
-    subCategory          subcategory_master? @relation(fields: [subcategory_masterId], references: [id])
-    subcategory_masterId String?
-    brand                brand_master?       @relation(fields: [brand_masterId], references: [id])
-    brand_masterId       String
-    allotted_quantity    Float
-    status               Int
-    isEdited             Boolean             @default(true)
-    createdAt            DateTime            @default(now())
-    updatedAt            DateTime            @updatedAt
-    unit                 unit_master?        @relation(fields: [unit_masterId], references: [id])
-    unit_masterId        String?
-    supplier_master      supplier_master?    @relation(fields: [supplier_masterId], references: [id])
-    supplier_masterId    String?
+    id                String     @id @default(uuid())
+    stock_handover_no String     @unique
+    emp_id            String
+    emp_name          String?
+    allotted_quantity Float
+    status            Int
+    isEdited          Boolean    @default(true)
+    createdAt         DateTime   @default(now())
+    updatedAt         DateTime   @updatedAt
+    inventory         inventory? @relation(fields: [inventoryId], references: [id])
+    inventoryId       String?
 }
 
 model dist_stock_req_inbox {

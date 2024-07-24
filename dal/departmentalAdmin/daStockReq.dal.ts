@@ -108,24 +108,28 @@ export const getStockReqInboxDal = async (req: Request) => {
 				stock_request: {
 					select: {
 						stock_handover_no: true,
-						category: {
+						inventory: {
 							select: {
-								name: true,
-							},
-						},
-						subcategory: {
-							select: {
-								name: true,
-							},
-						},
-						brand: {
-							select: {
-								name: true,
-							},
-						},
-						unit: {
-							select: {
-								name: true,
+								category: {
+									select: {
+										name: true,
+									},
+								},
+								subcategory: {
+									select: {
+										name: true,
+									},
+								},
+								brand: {
+									select: {
+										name: true,
+									},
+								},
+								unit: {
+									select: {
+										name: true,
+									},
+								},
 							},
 						},
 						ulb_id: true,
@@ -277,24 +281,28 @@ export const getStockReqOutboxDal = async (req: Request) => {
 				stock_request: {
 					select: {
 						stock_handover_no: true,
-						category: {
+						inventory: {
 							select: {
-								name: true,
-							},
-						},
-						subcategory: {
-							select: {
-								name: true,
-							},
-						},
-						brand: {
-							select: {
-								name: true,
-							},
-						},
-						unit: {
-							select: {
-								name: true,
+								category: {
+									select: {
+										name: true,
+									},
+								},
+								subcategory: {
+									select: {
+										name: true,
+									},
+								},
+								brand: {
+									select: {
+										name: true,
+									},
+								},
+								unit: {
+									select: {
+										name: true,
+									},
+								},
 							},
 						},
 						ulb_id: true,
@@ -781,7 +789,7 @@ export const forwardToIaDal = async (req: Request) => {
 // 	const product = await prisma
 // 		.$queryRawUnsafe(
 // 			`
-// 				SELECT * 
+// 				SELECT *
 // 				FROM product.product_${subcategory_name.toLowerCase().replace(/\s/g, '')}
 // 				WHERE serial_no = '${serial_no as string}'
 // 			`

@@ -108,24 +108,28 @@ export const getStockReqInboxDal = async (req: Request) => {
 				stock_request: {
 					select: {
 						stock_handover_no: true,
-						category: {
+						inventory: {
 							select: {
-								name: true,
-							},
-						},
-						subcategory: {
-							select: {
-								name: true,
-							},
-						},
-						brand: {
-							select: {
-								name: true,
-							},
-						},
-						unit: {
-							select: {
-								name: true,
+								category: {
+									select: {
+										name: true,
+									},
+								},
+								subcategory: {
+									select: {
+										name: true,
+									},
+								},
+								brand: {
+									select: {
+										name: true,
+									},
+								},
+								unit: {
+									select: {
+										name: true,
+									},
+								},
 							},
 						},
 						ulb_id: true,
@@ -277,24 +281,28 @@ export const getStockReqOutboxDal = async (req: Request) => {
 				stock_request: {
 					select: {
 						stock_handover_no: true,
-						category: {
+						inventory: {
 							select: {
-								name: true,
-							},
-						},
-						subcategory: {
-							select: {
-								name: true,
-							},
-						},
-						brand: {
-							select: {
-								name: true,
-							},
-						},
-						unit: {
-							select: {
-								name: true,
+								category: {
+									select: {
+										name: true,
+									},
+								},
+								subcategory: {
+									select: {
+										name: true,
+									},
+								},
+								brand: {
+									select: {
+										name: true,
+									},
+								},
+								unit: {
+									select: {
+										name: true,
+									},
+								},
 							},
 						},
 						ulb_id: true,
@@ -355,9 +363,13 @@ export const approveStockReqDal = async (req: Request) => {
 						allotted_quantity: true,
 						inventoryId: true,
 						status: true,
-						subcategory: {
+						inventory: {
 							select: {
-								name: true,
+								subcategory: {
+									select: {
+										name: true,
+									},
+								},
 							},
 						},
 						stock_req_product: true,
@@ -375,7 +387,7 @@ export const approveStockReqDal = async (req: Request) => {
 				const products: any[] = await prisma.$queryRawUnsafe(
 					`
 						SELECT *
-						FROM product.product_${stockReq?.subcategory?.name.toLowerCase().replace(/\s/g, '')}
+						FROM product.product_${stockReq?.inventory?.subcategory?.name.toLowerCase().replace(/\s/g, '')}
 						WHERE is_available = true AND inventory_id = '${stockReq?.inventoryId as string}'
 						LIMIT ${stockReq?.allotted_quantity as Number}
 						`
@@ -393,7 +405,7 @@ export const approveStockReqDal = async (req: Request) => {
 					await Promise.all(
 						products.map(async product => {
 							await tx.$queryRawUnsafe(`
-							UPDATE product.product_${stockReq?.subcategory?.name.toLowerCase().replace(/\s/g, '')}
+							UPDATE product.product_${stockReq?.inventory?.subcategory?.name.toLowerCase().replace(/\s/g, '')}
 							SET is_available = false
 							WHERE serial_no = '${product?.serial_no as string}'
 						`)
@@ -836,7 +848,7 @@ export const rejectStockReqDal = async (req: Request) => {
 // 	const product = await prisma
 // 		.$queryRawUnsafe(
 // 			`
-// 				SELECT * 
+// 				SELECT *
 // 				FROM product.product_${subcategory_name.toLowerCase().replace(/\s/g, '')}
 // 				WHERE serial_no = '${serial_no as string}'
 // 			`
