@@ -1,22 +1,5 @@
 import { Request, Response } from 'express'
-import { createStockRequestDal, getStockReqInboxDal, getStockReqOutboxDal, handoverDal, forwardToDaDal } from '../../dal/distributor/distStockReq.dal'
-
-export const createStockRequest = async (req: Request, res: Response) => {
-	const result: any = await createStockRequestDal(req)
-	if (!result?.error) {
-		res.status(201).json({
-			status: true,
-			message: `Stock request created having stock handover number : ${result?.stock_handover_no}`,
-			stock_handover_no: result?.stock_handover_no,
-		})
-	} else {
-		res.status(400).json({
-			status: false,
-			message: `Stock request creation failed`,
-			error: result?.message,
-		})
-	}
-}
+import { getStockReqInboxDal, getStockReqOutboxDal, forwardToIaDal, rejectStockReqDal, returnStockReqDal } from '../../dal/departmentalAdmin/daStockReq.dal'
 
 export const getStockReqInbox = async (req: Request, res: Response) => {
 	const result: any = await getStockReqInboxDal(req)
@@ -54,35 +37,52 @@ export const getStockReqOutbox = async (req: Request, res: Response) => {
 	}
 }
 
-export const forwardToDa = async (req: Request, res: Response) => {
-	const result: any = await forwardToDaDal(req)
+export const forwardToIa = async (req: Request, res: Response) => {
+	const result: any = await forwardToIaDal(req)
 	if (!result?.error) {
 		res.status(200).json({
 			status: true,
-			message: `Forwarded to DA successfully`,
+			message: `Forwarded to IA successfully`,
 			data: result,
 		})
 	} else {
 		res.status(404).json({
 			status: false,
-			message: `Error while forwarding to DA`,
+			message: `Error while forwarding to IA`,
 			error: result?.message,
 		})
 	}
 }
 
-export const handover = async (req: Request, res: Response) => {
-	const result: any = await handoverDal(req)
+export const rejectStockReq = async (req: Request, res: Response) => {
+	const result: any = await rejectStockReqDal(req)
 	if (!result?.error) {
 		res.status(200).json({
 			status: true,
-			message: `Handed over successfully`,
+			message: `Rejected successfully`,
 			data: result,
 		})
 	} else {
-		res.status(500).json({
+		res.status(404).json({
 			status: false,
-			message: `Error while handing over`,
+			message: `Error while rejecting`,
+			error: result?.message,
+		})
+	}
+}
+
+export const returnStockReq = async (req: Request, res: Response) => {
+	const result: any = await returnStockReqDal(req)
+	if (!result?.error) {
+		res.status(200).json({
+			status: true,
+			message: `Returned successfully`,
+			data: result,
+		})
+	} else {
+		res.status(404).json({
+			status: false,
+			message: `Error while returning`,
 			error: result?.message,
 		})
 	}

@@ -253,6 +253,8 @@ model inventory {
     inventory_dead_stock   inventory_dead_stock[]
     stock_req_product      stock_req_product[]
     stock_request_history  stock_request_history[]
+    service_request        service_request[]
+    service_req_product    service_req_product[]
 }
 
 model inventory_dead_stock {
@@ -744,7 +746,7 @@ model notification {
     title       String
     description String?
     isSeen      Boolean  @default(false)
-    destination Int? //10=sr pre-proc inbox,14=sr pre-proc rejected,15=sr pre-proc released, 20=da pre-proc inbox, 21=da boq inbox, 22=da pre-tender inbox, 30=acc pre-proc inbox, 31=acc boq inbox, 32=acc pre-tender inbox, 11=sr post-proc inbox, 12=sr rec-inv inbox, 23=da post proc inbox, 24=da rec-inv inbox, 25=da stock req inbox, 13=sr stock req inbox, 40=dist stock-req inbox, 50=level1 inbox, 60=level1 inbox,70=finance, 80=IA stock req inbox
+    destination Int? //10=sr pre-proc inbox,14=sr pre-proc rejected,15=sr pre-proc released, 20=da pre-proc inbox, 21=da boq inbox, 22=da pre-tender inbox, 30=acc pre-proc inbox, 31=acc boq inbox, 32=acc pre-tender inbox, 11=sr post-proc inbox, 12=sr rec-inv inbox, 23=da post proc inbox, 24=da rec-inv inbox, 25=da stock req inbox, 26=da service req inbox, 13=sr stock req inbox, 40=dist stock-req inbox, 41=dist service req inbox, 50=level1 inbox, 60=level1 inbox,70=finance, 80=IA stock req inbox, 81=IA service req inbox
     createdAt   DateTime @default(now())
     updatedAt   DateTime @updatedAt
 }
@@ -780,19 +782,18 @@ model stock_request {
     ia_stock_req_outbox   ia_stock_req_outbox?
     stock_req_product     stock_req_product[]
     procurement_stocks    procurement_stocks[]
+    service_request       service_request[]
 }
 
 model stock_req_product {
-    id                    String                  @id @default(uuid())
-    stock_handover_no     String
-    serial_no             String                  @unique
-    inventory             inventory               @relation(fields: [inventoryId], references: [id])
-    inventoryId           String
-    stock_request         stock_request           @relation(fields: [stock_handover_no], references: [stock_handover_no])
-    createdAt             DateTime                @default(now())
-    updatedAt             DateTime                @updatedAt
-    sr_service_req_inbox  sr_service_req_inbox[]
-    sr_service_req_outbox sr_service_req_outbox[]
+    id                String        @id @default(uuid())
+    stock_handover_no String
+    serial_no         String        @unique
+    inventory         inventory     @relation(fields: [inventoryId], references: [id])
+    inventoryId       String
+    stock_request     stock_request @relation(fields: [stock_handover_no], references: [stock_handover_no])
+    createdAt         DateTime      @default(now())
+    updatedAt         DateTime      @updatedAt
 }
 
 model inventory_buffer {
@@ -817,6 +818,45 @@ model stock_request_history {
     updatedAt         DateTime   @updatedAt
     inventory         inventory? @relation(fields: [inventoryId], references: [id])
     inventoryId       String?
+}
+
+enum service_enum {
+    warranty
+    return
+    dead
+}
+
+model service_request {
+    id                      String                   @id @default(uuid())
+    stock_handover_no       String
+    service_no              String                   @unique
+    status                  Int // 0=pending, 10=da, 11=da returned, 12= da rejected, 20=IA, 21=IA returned, 22= IA rejected, 23= approved  
+    service                 service_enum
+    inventory               inventory?               @relation(fields: [inventoryId], references: [id])
+    inventoryId             String?
+    remark                  String?
+    createdAt               DateTime                 @default(now())
+    updatedAt               DateTime                 @updatedAt
+    service_req_product     service_req_product[]
+    stock_request           stock_request            @relation(fields: [stock_handover_no], references: [stock_handover_no])
+    dist_service_req_inbox  dist_service_req_inbox?
+    dist_service_req_outbox dist_service_req_outbox?
+    ia_service_req_inbox    ia_service_req_inbox?
+    ia_service_req_outbox   ia_service_req_outbox?
+    da_service_req_inbox    da_service_req_inbox?
+    da_service_req_outbox   da_service_req_outbox?
+}
+
+model service_req_product {
+    id              String          @id @default(uuid())
+    service_no      String
+    serial_no       String          @unique
+    status          Int             @default(0) // -1=failed, 0=pending, 1=successful
+    inventory       inventory       @relation(fields: [inventoryId], references: [id])
+    inventoryId     String
+    service_request service_request @relation(fields: [service_no], references: [service_no])
+    createdAt       DateTime        @default(now())
+    updatedAt       DateTime        @updatedAt
 }
 
 model dist_stock_req_inbox {
@@ -883,24 +923,52 @@ model ia_stock_req_outbox {
     updatedAt         DateTime      @updatedAt
 }
 
-model sr_service_req_inbox {
-    id                  String            @id @default(uuid())
-    stock_handover_no   String
-    serial_no           String            @unique
-    stock_req_product   stock_req_product @relation(fields: [serial_no], references: [serial_no])
-    createdAt           DateTime          @default(now())
-    updatedAt           DateTime          @updatedAt
-    stock_req_productId String
+model dist_service_req_inbox {
+    id          String          @id @default(uuid())
+    service_no  String          @unique
+    service_req service_request @relation(fields: [service_no], references: [service_no])
+    createdAt   DateTime        @default(now())
+    updatedAt   DateTime        @updatedAt
 }
 
-model sr_service_req_outbox {
-    id                  String            @id @default(uuid())
-    stock_handover_no   String
-    serial_no           String            @unique
-    stock_req_product   stock_req_product @relation(fields: [serial_no], references: [serial_no])
-    createdAt           DateTime          @default(now())
-    updatedAt           DateTime          @updatedAt
-    stock_req_productId String
+model dist_service_req_outbox {
+    id          String          @id @default(uuid())
+    service_no  String          @unique
+    service_req service_request @relation(fields: [service_no], references: [service_no])
+    createdAt   DateTime        @default(now())
+    updatedAt   DateTime        @updatedAt
+}
+
+model da_service_req_inbox {
+    id          String          @id @default(uuid())
+    service_no  String          @unique
+    service_req service_request @relation(fields: [service_no], references: [service_no])
+    createdAt   DateTime        @default(now())
+    updatedAt   DateTime        @updatedAt
+}
+
+model da_service_req_outbox {
+    id          String          @id @default(uuid())
+    service_no  String          @unique
+    service_req service_request @relation(fields: [service_no], references: [service_no])
+    createdAt   DateTime        @default(now())
+    updatedAt   DateTime        @updatedAt
+}
+
+model ia_service_req_inbox {
+    id          String          @id @default(uuid())
+    service_no  String          @unique
+    service_req service_request @relation(fields: [service_no], references: [service_no])
+    createdAt   DateTime        @default(now())
+    updatedAt   DateTime        @updatedAt
+}
+
+model ia_service_req_outbox {
+    id          String          @id @default(uuid())
+    service_no  String          @unique
+    service_req service_request @relation(fields: [service_no], references: [service_no])
+    createdAt   DateTime        @default(now())
+    updatedAt   DateTime        @updatedAt
 }
 
 // stock request================================================================================================================================================================

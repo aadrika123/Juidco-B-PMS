@@ -1,90 +1,124 @@
+/*
+Author - Anil Tigga
+Status - Closed
+*/
+
 import { Request } from 'express'
-import { PrismaClient } from '@prisma/client'
-import generateStockHandoverNumber from '../../lib/stockHandoverNumberGenerator'
+import { PrismaClient, service_request, service_enum } from '@prisma/client'
+import generateServiceNumber from '../../lib/serviceNumberGenerator'
 import getErrorMessage from '../../lib/getErrorMessage'
 import { pagination } from '../../type/common.type'
 
 const prisma = new PrismaClient()
 
-export const createStockRequestDal = async (req: Request) => {
-	const { category, subcategory, brand, inventory, emp_id, emp_name, allotted_quantity, auth, unit } = req.body
+type reqType = {
+	products: productType[]
+	service: service_enum
+	stock_handover_no: string
+	inventoryId: string
+	auth: any
+}
+
+type productType = {
+	serial_no: string
+}
+
+export const serviceTranslator = (service: service_enum): string => {
+	let result: string
+	switch (service) {
+		case 'return':
+			result = 'Return Request'
+			break
+		case 'warranty':
+			result = 'Warranty Claim Request'
+			break
+		case 'dead':
+			result = 'Dead Stock Request'
+			break
+	}
+	return result
+}
+
+export const createServiceRequestDal = async (req: Request) => {
+	const { products, service, stock_handover_no, inventoryId, auth }: reqType = req.body
 
 	const ulb_id = auth?.ulb_id
 
 	try {
-		if (!ulb_id) {
-			throw { error: true, message: 'ULB id is not valid' }
-		}
+		const service_no = generateServiceNumber(ulb_id)
 
-		// const invData = await prisma.inventory.findFirst({
-		// 	where: {
-		// 		id: inventory,
-		// 	},
-		// 	select: {
-		// 		quantity: true,
-		// 	},
-		// })
-
-		// const invBuffer: any = await prisma.inventory_buffer.aggregate({
-		// 	where: {
-		// 		inventoryId: inventory,
-		// 	},
-		// 	_sum: {
-		// 		reserved_quantity: true,
-		// 	},
-		// })
-
-		// if (Number(allotted_quantity) > (Number(invData?.quantity) - invBuffer?._sum?.reserved_quantity || 0)) {
-		// 	throw { error: true, message: `Allotted quantity cannot be more than the available stock. Available stock : ${Number(invData?.quantity) - invBuffer?._sum?.reserved_quantity || 0} ` }
-		// }
-
-		const stock_handover_no = generateStockHandoverNumber(ulb_id)
-
-		const data: any = {
-			...(category && { category: { connect: { id: category } } }),
-			subcategory: { connect: { id: subcategory } },
-			brand: { connect: { id: brand } },
-			...(unit && { unit: { connect: { id: unit } } }),
-			inventory: { connect: { id: inventory } },
-			emp_id: emp_id,
-			emp_name: emp_name,
+		const data: Omit<service_request, 'createdAt' | 'updatedAt' | 'remark' | 'id'> = {
+			service_no: service_no,
 			stock_handover_no: stock_handover_no,
-			allotted_quantity: Number(allotted_quantity),
-			ulb_id: ulb_id,
-			status: 0,
+			service: service,
+			inventoryId: inventoryId,
+			status: service === 'return' ? 20 : 10,
 		}
 
-		let stockReq: any
+		let serviceReq: any
 
 		//start transaction
 		await prisma.$transaction(async tx => {
-			stockReq = await tx.stock_request.create({
+			serviceReq = await tx.service_request.create({
 				data: data,
 			})
 
-			await tx.dist_stock_req_inbox.create({
+			await Promise.all(
+				products.map(async product => {
+					await tx.service_req_product.create({
+						data: {
+							service_no: service_no,
+							serial_no: product?.serial_no,
+							inventoryId: inventoryId,
+						},
+					})
+				})
+			)
+
+			await tx.dist_service_req_outbox.create({
 				data: {
-					stock_handover_no: stock_handover_no,
+					service_no: service_no,
 				},
 			})
 
-			// await tx.inventory_buffer.create({
-			// 	data: {
-			// 		stock_handover_no: stock_handover_no,
-			// 		reserved_quantity: allotted_quantity,
-			// 		inventory: { connect: { id: inventory } },
-			// 	},
-			// })
+			await tx.da_service_req_inbox.create({
+				data: {
+					service_no: service_no,
+				},
+			})
+			if (service === 'return') {
+				await tx.ia_service_req_inbox.create({
+					data: {
+						service_no: service_no,
+					},
+				})
+				await tx.notification.create({
+					data: {
+						role_id: Number(process.env.ROLE_IA),
+						title: 'New Service request',
+						destination: 81,
+						description: `There is a ${serviceTranslator(service)}. Service Number : ${service_no}`,
+					},
+				})
+			}
+			await tx.notification.create({
+				data: {
+					role_id: Number(process.env.ROLE_DA),
+					title: 'New Service request',
+					destination: 26,
+					description: `There is a ${serviceTranslator(service)}. Service Number : ${service_no}`,
+				},
+			})
 		})
 
-		return stockReq
+		return serviceReq
 	} catch (err: any) {
 		console.log(err)
 		return { error: true, message: err?.message }
 	}
 }
 
-export const getStockReqInboxDal = async (req: Request) => {
+export const getServiceReqInboxDal = async (req: Request) => {
 	const page: number | undefined = Number(req?.query?.page)
 	const take: number | undefined = Number(req?.query?.take)
 	const startIndex: number | undefined = (page - 1) * take
@@ -100,19 +134,20 @@ export const getStockReqInboxDal = async (req: Request) => {
 	const subcategory: any[] = Array.isArray(req?.query?.scategory) ? req?.query?.scategory : [req?.query?.scategory]
 	const brand: any[] = Array.isArray(req?.query?.brand) ? req?.query?.brand : [req?.query?.brand]
 	const status: any[] = Array.isArray(req?.query?.status) ? req?.query?.status : [req?.query?.status]
+	const service: any[] = Array.isArray(req?.query?.service) ? req?.query?.service : [req?.query?.service]
 
 	//creating search options for the query
 	if (search) {
 		whereClause.OR = [
 			{
-				stock_handover_no: {
+				service_no: {
 					contains: search,
 					mode: 'insensitive',
 				},
 			},
 			{
-				emp_id: {
-					description: {
+				service_req: {
+					stock_handover_no: {
 						contains: search,
 						mode: 'insensitive',
 					},
@@ -121,14 +156,27 @@ export const getStockReqInboxDal = async (req: Request) => {
 		]
 	}
 
-	if (category[0] || subcategory[0] || brand[0]) {
+	if (category[0] || subcategory[0] || brand[0] || status[0] || service[0]) {
 		whereClause.AND = [
+			...(service[0]
+				? [
+						{
+							service_req: {
+								service: {
+									in: service,
+								},
+							},
+						},
+					]
+				: []),
 			...(category[0]
 				? [
 						{
-							stock_request: {
-								category_masterId: {
-									in: category,
+							service_req: {
+								inventory: {
+									category_masterId: {
+										in: category,
+									},
 								},
 							},
 						},
@@ -137,9 +185,11 @@ export const getStockReqInboxDal = async (req: Request) => {
 			...(subcategory[0]
 				? [
 						{
-							stock_request: {
-								subcategory_masterId: {
-									in: subcategory,
+							service_req: {
+								inventory: {
+									subcategory_masterId: {
+										in: subcategory,
+									},
 								},
 							},
 						},
@@ -148,9 +198,11 @@ export const getStockReqInboxDal = async (req: Request) => {
 			...(brand[0]
 				? [
 						{
-							stock_request: {
-								brand_masterId: {
-									in: brand,
+							service_req: {
+								inventory: {
+									brand_masterId: {
+										in: brand,
+									},
 								},
 							},
 						},
@@ -159,7 +211,7 @@ export const getStockReqInboxDal = async (req: Request) => {
 			...(status[0]
 				? [
 						{
-							stock_request: {
+							service_req: {
 								status: {
 									in: status.map(Number),
 								},
@@ -171,10 +223,10 @@ export const getStockReqInboxDal = async (req: Request) => {
 	}
 
 	try {
-		count = await prisma.dist_stock_req_inbox.count({
+		count = await prisma.dist_service_req_inbox.count({
 			where: whereClause,
 		})
-		const result = await prisma.dist_stock_req_inbox.findMany({
+		const result = await prisma.dist_service_req_inbox.findMany({
 			orderBy: {
 				updatedAt: 'desc',
 			},
@@ -183,10 +235,12 @@ export const getStockReqInboxDal = async (req: Request) => {
 			...(take && { take: take }),
 			select: {
 				id: true,
-				stock_handover_no: true,
-				stock_request: {
+				service_no: true,
+				service_req: {
 					select: {
 						stock_handover_no: true,
+						service: true,
+						remark: true,
 						inventory: {
 							select: {
 								category: {
@@ -211,11 +265,6 @@ export const getStockReqInboxDal = async (req: Request) => {
 								},
 							},
 						},
-						ulb_id: true,
-						emp_id: true,
-						emp_name: true,
-						allotted_quantity: true,
-						isEdited: true,
 						status: true,
 					},
 				},
@@ -225,8 +274,8 @@ export const getStockReqInboxDal = async (req: Request) => {
 		let resultToSend: any[] = []
 
 		result.map(async (item: any) => {
-			const temp = { ...item?.stock_request }
-			delete item.stock_request
+			const temp = { ...item?.service_req }
+			delete item.service_req
 			resultToSend.push({ ...item, ...temp })
 		})
 
@@ -257,7 +306,7 @@ export const getStockReqInboxDal = async (req: Request) => {
 	}
 }
 
-export const getStockReqOutboxDal = async (req: Request) => {
+export const getServiceReqOutboxDal = async (req: Request) => {
 	const page: number | undefined = Number(req?.query?.page)
 	const take: number | undefined = Number(req?.query?.take)
 	const startIndex: number | undefined = (page - 1) * take
@@ -273,19 +322,20 @@ export const getStockReqOutboxDal = async (req: Request) => {
 	const subcategory: any[] = Array.isArray(req?.query?.scategory) ? req?.query?.scategory : [req?.query?.scategory]
 	const brand: any[] = Array.isArray(req?.query?.brand) ? req?.query?.brand : [req?.query?.brand]
 	const status: any[] = Array.isArray(req?.query?.status) ? req?.query?.status : [req?.query?.status]
+	const service: any[] = Array.isArray(req?.query?.service) ? req?.query?.service : [req?.query?.service]
 
 	//creating search options for the query
 	if (search) {
 		whereClause.OR = [
 			{
-				stock_handover_no: {
+				service_no: {
 					contains: search,
 					mode: 'insensitive',
 				},
 			},
 			{
-				emp_id: {
-					description: {
+				service_req: {
+					stock_handover_no: {
 						contains: search,
 						mode: 'insensitive',
 					},
@@ -294,14 +344,27 @@ export const getStockReqOutboxDal = async (req: Request) => {
 		]
 	}
 
-	if (category[0] || subcategory[0] || brand[0]) {
+	if (category[0] || subcategory[0] || brand[0] || status[0] || service[0]) {
 		whereClause.AND = [
+			...(service[0]
+				? [
+						{
+							service_req: {
+								service: {
+									in: service,
+								},
+							},
+						},
+					]
+				: []),
 			...(category[0]
 				? [
 						{
-							stock_request: {
-								category_masterId: {
-									in: category,
+							service_req: {
+								inventory: {
+									category_masterId: {
+										in: category,
+									},
 								},
 							},
 						},
@@ -310,9 +373,11 @@ export const getStockReqOutboxDal = async (req: Request) => {
 			...(subcategory[0]
 				? [
 						{
-							stock_request: {
-								subcategory_masterId: {
-									in: subcategory,
+							service_req: {
+								inventory: {
+									subcategory_masterId: {
+										in: subcategory,
+									},
 								},
 							},
 						},
@@ -321,9 +386,11 @@ export const getStockReqOutboxDal = async (req: Request) => {
 			...(brand[0]
 				? [
 						{
-							stock_request: {
-								brand_masterId: {
-									in: brand,
+							service_req: {
+								inventory: {
+									brand_masterId: {
+										in: brand,
+									},
 								},
 							},
 						},
@@ -332,7 +399,7 @@ export const getStockReqOutboxDal = async (req: Request) => {
 			...(status[0]
 				? [
 						{
-							stock_request: {
+							service_req: {
 								status: {
 									in: status.map(Number),
 								},
@@ -344,10 +411,10 @@ export const getStockReqOutboxDal = async (req: Request) => {
 	}
 
 	try {
-		count = await prisma.dist_stock_req_outbox.count({
+		count = await prisma.dist_service_req_outbox.count({
 			where: whereClause,
 		})
-		const result = await prisma.dist_stock_req_outbox.findMany({
+		const result = await prisma.dist_service_req_outbox.findMany({
 			orderBy: {
 				updatedAt: 'desc',
 			},
@@ -356,10 +423,12 @@ export const getStockReqOutboxDal = async (req: Request) => {
 			...(take && { take: take }),
 			select: {
 				id: true,
-				stock_handover_no: true,
-				stock_request: {
+				service_no: true,
+				service_req: {
 					select: {
 						stock_handover_no: true,
+						service: true,
+						remark: true,
 						inventory: {
 							select: {
 								category: {
@@ -384,11 +453,6 @@ export const getStockReqOutboxDal = async (req: Request) => {
 								},
 							},
 						},
-						ulb_id: true,
-						emp_id: true,
-						emp_name: true,
-						allotted_quantity: true,
-						isEdited: true,
 						status: true,
 					},
 				},
@@ -398,8 +462,8 @@ export const getStockReqOutboxDal = async (req: Request) => {
 		let resultToSend: any[] = []
 
 		result.map(async (item: any) => {
-			const temp = { ...item?.stock_request }
-			delete item.stock_request
+			const temp = { ...item?.service_req }
+			delete item.service_req
 			resultToSend.push({ ...item, ...temp })
 		})
 
@@ -424,119 +488,6 @@ export const getStockReqOutboxDal = async (req: Request) => {
 			data: resultToSend,
 			pagination: pagination,
 		}
-	} catch (err: any) {
-		console.log(err)
-		return { error: true, message: getErrorMessage(err) }
-	}
-}
-
-export const forwardToDaDal = async (req: Request) => {
-	const { stock_handover_no }: { stock_handover_no: string[] } = req.body
-
-	try {
-		await Promise.all(
-			stock_handover_no.map(async (item: string) => {
-				const status: any = await prisma.stock_request.findFirst({
-					where: {
-						stock_handover_no: item,
-					},
-					select: {
-						status: true,
-					},
-				})
-				if (status?.status < -1 || status?.status > 0) {
-					throw { error: true, message: 'Stock request is not valid to be forwarded' }
-				}
-				const statusChecker = (status: number) => {
-					if (status === 0) {
-						return 2
-					} else {
-						return 1
-					}
-				}
-				const daOutboxCount: number = await prisma.da_stock_req_outbox.count({
-					where: {
-						stock_handover_no: item,
-					},
-				})
-
-				const statusToUpdate = statusChecker(Number(status?.status))
-				await prisma.$transaction([
-					prisma.dist_stock_req_outbox.create({
-						data: { stock_handover_no: item },
-					}),
-					prisma.da_stock_req_inbox.create({
-						data: { stock_handover_no: item },
-					}),
-					prisma.stock_request.update({
-						where: {
-							stock_handover_no: item,
-						},
-						data: {
-							status: statusToUpdate,
-							remark: '',
-						},
-					}),
-					prisma.dist_stock_req_inbox.delete({
-						where: {
-							stock_handover_no: item,
-						},
-					}),
-					...(daOutboxCount !== 0
-						? [
-								prisma.da_stock_req_outbox.delete({
-									where: {
-										stock_handover_no: item,
-									},
-								}),
-							]
-						: []),
-					prisma.notification.create({
-						data: {
-							role_id: Number(process.env.ROLE_DA),
-							title: 'New stock request',
-							destination: 25,
-							description: `There is a new stock request to be reviewed  : ${item}`,
-						},
-					}),
-				])
-			})
-		)
-		return 'Forwarded'
-	} catch (err: any) {
-		console.log(err)
-		return { error: true, message: getErrorMessage(err) }
-	}
-}
-
-export const handoverDal = async (req: Request) => {
-	const { stock_handover_no }: { stock_handover_no: string } = req.body
-
-	try {
-		const status: any = await prisma.stock_request.findFirst({
-			where: {
-				stock_handover_no: stock_handover_no,
-			},
-			select: {
-				status: true,
-			},
-		})
-		if (status?.status < 3) {
-			throw { error: true, message: 'Stock request is not valid to be handed over' }
-		}
-
-		await prisma.$transaction(async tx => {
-			await tx.stock_request.update({
-				where: {
-					stock_handover_no: stock_handover_no,
-				},
-				data: {
-					status: 4,
-				},
-			})
-		})
-
-		return 'Handed over'
 	} catch (err: any) {
 		console.log(err)
 		return { error: true, message: getErrorMessage(err) }
