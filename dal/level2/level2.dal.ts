@@ -160,21 +160,21 @@ export const getBoqInboxDal = async (req: Request) => {
 							select: {
 								procurement: {
 									select: {
-										category: {
-											select: {
-												name: true,
-											},
-										},
-										subcategory: {
-											select: {
-												name: true,
-											},
-										},
-										brand: {
-											select: {
-												name: true,
-											},
-										},
+										// category: {
+										// 	select: {
+										// 		name: true,
+										// 	},
+										// },
+										// subcategory: {
+										// 	select: {
+										// 		name: true,
+										// 	},
+										// },
+										// brand: {
+										// 	select: {
+										// 		name: true,
+										// 	},
+										// },
 									},
 								},
 							},
@@ -405,21 +405,21 @@ export const getBoqOutboxDal = async (req: Request) => {
 							select: {
 								procurement: {
 									select: {
-										category: {
-											select: {
-												name: true,
-											},
-										},
-										subcategory: {
-											select: {
-												name: true,
-											},
-										},
-										brand: {
-											select: {
-												name: true,
-											},
-										},
+										// category: {
+										// 	select: {
+										// 		name: true,
+										// 	},
+										// },
+										// subcategory: {
+										// 	select: {
+										// 		name: true,
+										// 	},
+										// },
+										// brand: {
+										// 	select: {
+										// 		name: true,
+										// 	},
+										// },
 									},
 								},
 							},

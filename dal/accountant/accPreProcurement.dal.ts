@@ -138,37 +138,37 @@ export const getPreProcurementForBoqDal = async (req: Request) => {
 				procurement: {
 					select: {
 						procurement_no: true,
-						category: {
-							select: {
-								name: true,
-							},
-						},
-						subcategory: {
-							select: {
-								name: true,
-							},
-						},
-						brand: {
-							select: {
-								name: true,
-							},
-						},
-						unit: {
-							select: {
-								name: true,
-							},
-						},
-						description: true,
-						remark: true,
-						quantity: true,
-						rate: true,
+						// category: {
+						// 	select: {
+						// 		name: true,
+						// 	},
+						// },
+						// subcategory: {
+						// 	select: {
+						// 		name: true,
+						// 	},
+						// },
+						// brand: {
+						// 	select: {
+						// 		name: true,
+						// 	},
+						// },
+						// unit: {
+						// 	select: {
+						// 		name: true,
+						// 	},
+						// },
+						// description: true,
+						// remark: true,
+						// quantity: true,
+						// rate: true,
 						total_rate: true,
 						isEdited: true,
-						status: {
-							select: {
-								status: true,
-							},
-						},
+						// status: {
+						// 	select: {
+						// 		status: true,
+						// 	},
+						// },
 					},
 				},
 			},
@@ -311,37 +311,37 @@ export const getPreProcurementDal = async (req: Request) => {
 				procurement: {
 					select: {
 						procurement_no: true,
-						category: {
-							select: {
-								name: true,
-							},
-						},
-						subcategory: {
-							select: {
-								name: true,
-							},
-						},
-						brand: {
-							select: {
-								name: true,
-							},
-						},
-						unit: {
-							select: {
-								name: true,
-							},
-						},
-						description: true,
-						quantity: true,
-						rate: true,
+						// category: {
+						// 	select: {
+						// 		name: true,
+						// 	},
+						// },
+						// subcategory: {
+						// 	select: {
+						// 		name: true,
+						// 	},
+						// },
+						// brand: {
+						// 	select: {
+						// 		name: true,
+						// 	},
+						// },
+						// unit: {
+						// 	select: {
+						// 		name: true,
+						// 	},
+						// },
+						// description: true,
+						// quantity: true,
+						// rate: true,
 						total_rate: true,
 						isEdited: true,
 						remark: true,
-						status: {
-							select: {
-								status: true,
-							},
-						},
+						// status: {
+						// 	select: {
+						// 		status: true,
+						// 	},
+						// },
 					},
 				},
 			},
@@ -395,35 +395,35 @@ export const getPreProcurementBulkByOrderNoDal = async (req: Request) => {
 					select: {
 						id: true,
 						procurement_no: true,
-						category: {
-							select: {
-								id: true,
-								name: true,
-							},
-						},
-						subcategory: {
-							select: {
-								id: true,
-								name: true,
-							},
-						},
-						brand: {
-							select: {
-								id: true,
-								name: true,
-							},
-						},
-						description: true,
-						quantity: true,
-						rate: true,
+						// category: {
+						// 	select: {
+						// 		id: true,
+						// 		name: true,
+						// 	},
+						// },
+						// subcategory: {
+						// 	select: {
+						// 		id: true,
+						// 		name: true,
+						// 	},
+						// },
+						// brand: {
+						// 	select: {
+						// 		id: true,
+						// 		name: true,
+						// 	},
+						// },
+						// description: true,
+						// quantity: true,
+						// rate: true,
 						total_rate: true,
 						isEdited: true,
 						remark: true,
-						status: {
-							select: {
-								status: true,
-							},
-						},
+						// status: {
+						// 	select: {
+						// 		status: true,
+						// 	},
+						// },
 					},
 				})
 
@@ -682,37 +682,37 @@ export const getPreProcurementOutboxDal = async (req: Request) => {
 				procurement: {
 					select: {
 						procurement_no: true,
-						category: {
-							select: {
-								name: true,
-							},
-						},
-						subcategory: {
-							select: {
-								name: true,
-							},
-						},
-						brand: {
-							select: {
-								name: true,
-							},
-						},
-						unit: {
-							select: {
-								name: true,
-							},
-						},
-						description: true,
-						quantity: true,
-						rate: true,
+						// category: {
+						// 	select: {
+						// 		name: true,
+						// 	},
+						// },
+						// subcategory: {
+						// 	select: {
+						// 		name: true,
+						// 	},
+						// },
+						// brand: {
+						// 	select: {
+						// 		name: true,
+						// 	},
+						// },
+						// unit: {
+						// 	select: {
+						// 		name: true,
+						// 	},
+						// },
+						// description: true,
+						// quantity: true,
+						// rate: true,
 						total_rate: true,
 						isEdited: true,
 						remark: true,
-						status: {
-							select: {
-								status: true,
-							},
-						},
+						// status: {
+						// 	select: {
+						// 		status: true,
+						// 	},
+						// },
 					},
 				},
 			},
@@ -904,21 +904,21 @@ export const getBoqInboxDal = async (req: Request) => {
 							select: {
 								procurement: {
 									select: {
-										category: {
-											select: {
-												name: true,
-											},
-										},
-										subcategory: {
-											select: {
-												name: true,
-											},
-										},
-										brand: {
-											select: {
-												name: true,
-											},
-										},
+										// category: {
+										// 	select: {
+										// 		name: true,
+										// 	},
+										// },
+										// subcategory: {
+										// 	select: {
+										// 		name: true,
+										// 	},
+										// },
+										// brand: {
+										// 	select: {
+										// 		name: true,
+										// 	},
+										// },
 									},
 								},
 							},
@@ -1156,22 +1156,22 @@ export const getBoqOutboxDal = async (req: Request) => {
 								remark: true,
 								procurement: {
 									select: {
-										category: {
-											select: {
-												name: true,
-											},
-										},
-										subcategory: {
-											select: {
-												name: true,
-											},
-										},
-										brand: {
-											select: {
-												name: true,
-											},
-										},
-										description: true,
+										// category: {
+										// 	select: {
+										// 		name: true,
+										// 	},
+										// },
+										// subcategory: {
+										// 	select: {
+										// 		name: true,
+										// 	},
+										// },
+										// brand: {
+										// 	select: {
+										// 		name: true,
+										// 	},
+										// },
+										// description: true,
 									},
 								},
 							},
@@ -1544,21 +1544,21 @@ export const getPreTenderingInboxDal = async (req: Request) => {
 									select: {
 										procurement: {
 											select: {
-												category: {
-													select: {
-														name: true,
-													},
-												},
-												subcategory: {
-													select: {
-														name: true,
-													},
-												},
-												brand: {
-													select: {
-														name: true,
-													},
-												},
+												// category: {
+												// 	select: {
+												// 		name: true,
+												// 	},
+												// },
+												// subcategory: {
+												// 	select: {
+												// 		name: true,
+												// 	},
+												// },
+												// brand: {
+												// 	select: {
+												// 		name: true,
+												// 	},
+												// },
 											},
 										},
 									},
@@ -1743,21 +1743,21 @@ export const getPreTenderingOutboxDal = async (req: Request) => {
 									select: {
 										procurement: {
 											select: {
-												category: {
-													select: {
-														name: true,
-													},
-												},
-												subcategory: {
-													select: {
-														name: true,
-													},
-												},
-												brand: {
-													select: {
-														name: true,
-													},
-												},
+												// category: {
+												// 	select: {
+												// 		name: true,
+												// 	},
+												// },
+												// subcategory: {
+												// 	select: {
+												// 		name: true,
+												// 	},
+												// },
+												// brand: {
+												// 	select: {
+												// 		name: true,
+												// 	},
+												// },
 											},
 										},
 									},
