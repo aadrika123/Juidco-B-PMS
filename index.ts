@@ -20,6 +20,8 @@ import otherRoute from './router/other/imageUploader.route'
 import preTenderRoute from './router/preTender/preTender.route'
 import notificationRoute from './router/notification/notofication.route'
 import distStockRequestRoute from './router/distributor/distStockRequest.route'
+import daStockRequestRoute from './router/departmenalAdmin/daStockReq.route'
+import iaStockRequestRoute from './router/inventoryAdmin/iaStockReq.route'
 import srStockRequestRoute from './router/stockReciever/stockRequest/srStockReq.route'
 import stockRequestRoute from './router/stockRequest/stockReq.route'
 import hrmsRoute from './router/hrms/hrms.route'
@@ -59,6 +61,8 @@ app.use('/api/pms/level2', level2Routes)
 
 //stock request routes
 app.use('/api/pms/dist/stock-request', distStockRequestRoute)
+app.use('/api/pms/da/stock-request', daStockRequestRoute)
+app.use('/api/pms/ia/stock-request', iaStockRequestRoute)
 app.use('/api/pms/sr/stock-request', srStockRequestRoute)
 
 //unprotected stock request routes

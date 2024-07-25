@@ -1,85 +1,88 @@
 import { Request, Response } from 'express'
-import { createItemDal, getItemDal, getItemByFilterDal, getItemBySubcategoryBrandDal, getQuantityByItemIdDal } from '../../dal/inventory/inventory.dal'
+import { getStockReqInboxDal, getStockReqOutboxDal, approveStockReqDal, rejectStockReqDal, returnStockReqDal } from '../../dal/inventoryAdmin/iaStockReq.dal'
 
-export const createItem = async (req: Request, res: Response) => {
-	const result: any = await createItemDal(req)
+export const getStockReqInbox = async (req: Request, res: Response) => {
+	const result: any = await getStockReqInboxDal(req)
 	if (!result?.error) {
-		res.status(201).json({
+		res.status(200).json({
 			status: true,
-			message: `Item created having id : ${result.id}`,
+			message: `Stock request list fetched successfully`,
+			data: result?.data,
+			pagination: result?.pagination,
 		})
 	} else {
-		res.status(400).json({
+		res.status(404).json({
 			status: false,
-			message: `Item creation failed`,
+			message: `Error while fetching Stock request list`,
 			error: result?.message,
 		})
 	}
 }
 
-export const getItem = async (req: Request, res: Response) => {
-	const result: any = await getItemDal(req)
+export const getStockReqOutbox = async (req: Request, res: Response) => {
+	const result: any = await getStockReqOutboxDal(req)
 	if (!result?.error) {
 		res.status(200).json({
 			status: true,
-			message: `Item list fetched successfully`,
-			data: result,
+			message: `Stock request fetched successfully`,
+			data: result?.data,
+			pagination: result?.pagination,
 		})
 	} else {
 		res.status(404).json({
 			status: false,
-			message: `Error while fetching item list`,
+			message: `Error while fetching Stock request`,
 			error: result?.message,
 		})
 	}
 }
 
-export const getItemByFilter = async (req: Request, res: Response) => {
-	const result: any = await getItemByFilterDal(req)
+export const approveStockReq = async (req: Request, res: Response) => {
+	const result: any = await approveStockReqDal(req)
 	if (!result?.error) {
 		res.status(200).json({
 			status: true,
-			message: `Item list fetched successfully`,
+			message: `Approved successfully`,
 			data: result,
 		})
 	} else {
 		res.status(404).json({
 			status: false,
-			message: `Error while fetching item list`,
+			message: `Error while approving`,
 			error: result?.message,
 		})
 	}
 }
 
-export const getItemBySubcategoryBrand = async (req: Request, res: Response) => {
-	const result: any = await getItemBySubcategoryBrandDal(req)
+export const rejectStockReq = async (req: Request, res: Response) => {
+	const result: any = await rejectStockReqDal(req)
 	if (!result?.error) {
 		res.status(200).json({
 			status: true,
-			message: `Item list fetched successfully`,
+			message: `Rejected successfully`,
 			data: result,
 		})
 	} else {
 		res.status(404).json({
 			status: false,
-			message: `Error while fetching item list`,
+			message: `Error while rejecting`,
 			error: result?.message,
 		})
 	}
 }
 
-export const getQuantityByItemId = async (req: Request, res: Response) => {
-	const result: any = await getQuantityByItemIdDal(req)
+export const returnStockReq = async (req: Request, res: Response) => {
+	const result: any = await returnStockReqDal(req)
 	if (!result?.error) {
 		res.status(200).json({
 			status: true,
-			message: `Item quantity fetched successfully`,
+			message: `Returned successfully`,
 			data: result,
 		})
 	} else {
 		res.status(404).json({
 			status: false,
-			message: `Error while fetching item quantity`,
+			message: `Error while returning`,
 			error: result?.message,
 		})
 	}
