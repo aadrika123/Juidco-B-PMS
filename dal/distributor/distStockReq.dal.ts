@@ -41,10 +41,10 @@ export const createStockRequestDal = async (req: Request) => {
 		const stock_handover_no = generateStockHandoverNumber(ulb_id)
 
 		const data: any = {
-			...(category && { category: { connect: { id: category } } }),
-			subcategory: { connect: { id: subcategory } },
-			brand: { connect: { id: brand } },
-			...(unit && { unit: { connect: { id: unit } } }),
+			// ...(category && { category: { connect: { id: category } } }),
+			// subcategory: { connect: { id: subcategory } },
+			// brand: { connect: { id: brand } },
+			// ...(unit && { unit: { connect: { id: unit } } }),
 			inventory: { connect: { id: inventory } },
 			emp_id: emp_id,
 			emp_name: emp_name,
@@ -111,10 +111,12 @@ export const getStockReqInboxDal = async (req: Request) => {
 				},
 			},
 			{
-				emp_id: {
-					description: {
-						contains: search,
-						mode: 'insensitive',
+				stock_request: {
+					inventory: {
+						description: {
+							contains: search,
+							mode: 'insensitive',
+						},
 					},
 				},
 			},
@@ -127,8 +129,10 @@ export const getStockReqInboxDal = async (req: Request) => {
 				? [
 						{
 							stock_request: {
-								category_masterId: {
-									in: category,
+								inventory: {
+									category_masterId: {
+										in: category,
+									},
 								},
 							},
 						},
@@ -138,8 +142,10 @@ export const getStockReqInboxDal = async (req: Request) => {
 				? [
 						{
 							stock_request: {
-								subcategory_masterId: {
-									in: subcategory,
+								inventory: {
+									subcategory_masterId: {
+										in: subcategory,
+									},
 								},
 							},
 						},
@@ -149,8 +155,10 @@ export const getStockReqInboxDal = async (req: Request) => {
 				? [
 						{
 							stock_request: {
-								brand_masterId: {
-									in: brand,
+								inventory: {
+									brand_masterId: {
+										in: brand,
+									},
 								},
 							},
 						},
@@ -209,6 +217,7 @@ export const getStockReqInboxDal = async (req: Request) => {
 										name: true,
 									},
 								},
+								description: true,
 							},
 						},
 						ulb_id: true,
