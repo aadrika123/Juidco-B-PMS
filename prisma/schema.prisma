@@ -255,6 +255,7 @@ model inventory {
     stock_request_history  stock_request_history[]
     service_request        service_request[]
     service_req_product    service_req_product[]
+    inventory_warranty     inventory_warranty[]
 }
 
 model inventory_dead_stock {
@@ -262,10 +263,17 @@ model inventory_dead_stock {
     inventoryId                String
     serial_no                  String
     quantity                   Float
+    remark1                    String?
+    remark2                    String?
     createdAt                  DateTime                     @default(now())
     updatedAt                  DateTime                     @updatedAt
     inventory_dead_stock_image inventory_dead_stock_image[]
     inventory                  inventory                    @relation(fields: [inventoryId], references: [id])
+}
+
+enum dead_stock_role {
+    DD
+    IA
 }
 
 model inventory_dead_stock_image {
@@ -273,8 +281,21 @@ model inventory_dead_stock_image {
     doc_path               String
     inventory_dead_stock   inventory_dead_stock @relation(fields: [inventory_dead_stockId], references: [id])
     inventory_dead_stockId String
+    uploader               dead_stock_role?
     createdAt              DateTime             @default(now())
     updatedAt              DateTime             @updatedAt
+}
+
+model inventory_warranty {
+    id          String    @id @default(uuid())
+    inventoryId String
+    serial_no   String
+    quantity    Float
+    remark1     String?
+    remark2     String?
+    createdAt   DateTime  @default(now())
+    updatedAt   DateTime  @updatedAt
+    inventory   inventory @relation(fields: [inventoryId], references: [id])
 }
 
 model dead_stock {
@@ -789,6 +810,7 @@ model stock_req_product {
     id                String        @id @default(uuid())
     stock_handover_no String
     serial_no         String        @unique
+    quantity          Float         @default(1)
     inventory         inventory     @relation(fields: [inventoryId], references: [id])
     inventoryId       String
     stock_request     stock_request @relation(fields: [stock_handover_no], references: [stock_handover_no])
@@ -851,6 +873,7 @@ model service_req_product {
     id              String          @id @default(uuid())
     service_no      String
     serial_no       String          @unique
+    quantity        Float           @default(1)
     status          Int             @default(0) // -1=failed, 0=pending, 1=successful
     inventory       inventory       @relation(fields: [inventoryId], references: [id])
     inventoryId     String

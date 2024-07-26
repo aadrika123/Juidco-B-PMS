@@ -1,44 +1,44 @@
 import { Request, Response } from 'express'
-import { getStockReqInboxDal, getStockReqOutboxDal, approveStockReqDal, rejectStockReqDal, returnStockReqDal } from '../../dal/inventoryAdmin/iaStockReq.dal'
+import { getServiceReqInboxDal, getServiceReqOutboxDal, approveServiceRequestDal, rejectServiceRequestDal, returnServiceRequestDal } from '../../dal/departmentalAdmin/daServiceReq.dal'
 
-export const getStockReqInbox = async (req: Request, res: Response) => {
-	const result: any = await getStockReqInboxDal(req)
+export const getServiceReqInbox = async (req: Request, res: Response) => {
+	const result: any = await getServiceReqInboxDal(req)
 	if (!result?.error) {
 		res.status(200).json({
 			status: true,
-			message: `Stock request list fetched successfully`,
+			message: `Service request list fetched successfully`,
 			data: result?.data,
 			pagination: result?.pagination,
 		})
 	} else {
 		res.status(404).json({
 			status: false,
-			message: `Error while fetching Stock request list`,
+			message: `Error while fetching service request list`,
 			error: result?.message,
 		})
 	}
 }
 
-export const getStockReqOutbox = async (req: Request, res: Response) => {
-	const result: any = await getStockReqOutboxDal(req)
+export const getServiceReqOutbox = async (req: Request, res: Response) => {
+	const result: any = await getServiceReqOutboxDal(req)
 	if (!result?.error) {
 		res.status(200).json({
 			status: true,
-			message: `Stock request fetched successfully`,
+			message: `Service request fetched successfully`,
 			data: result?.data,
 			pagination: result?.pagination,
 		})
 	} else {
 		res.status(404).json({
 			status: false,
-			message: `Error while fetching Stock request`,
+			message: `Error while fetching service request`,
 			error: result?.message,
 		})
 	}
 }
 
-export const approveStockReq = async (req: Request, res: Response) => {
-	const result: any = await approveStockReqDal(req)
+export const approveServiceRequest = async (req: Request, res: Response) => {
+	const result: any = await approveServiceRequestDal(req)
 	if (!result?.error) {
 		res.status(200).json({
 			status: true,
@@ -54,8 +54,8 @@ export const approveStockReq = async (req: Request, res: Response) => {
 	}
 }
 
-export const rejectStockReq = async (req: Request, res: Response) => {
-	const result: any = await rejectStockReqDal(req)
+export const rejectServiceRequest = async (req: Request, res: Response) => {
+	const result: any = await rejectServiceRequestDal(req)
 	if (!result?.error) {
 		res.status(200).json({
 			status: true,
@@ -71,8 +71,8 @@ export const rejectStockReq = async (req: Request, res: Response) => {
 	}
 }
 
-export const returnStockReq = async (req: Request, res: Response) => {
-	const result: any = await returnStockReqDal(req)
+export const returnServiceRequest = async (req: Request, res: Response) => {
+	const result: any = await returnServiceRequestDal(req)
 	if (!result?.error) {
 		res.status(200).json({
 			status: true,
