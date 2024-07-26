@@ -92,10 +92,10 @@ export const getStockReqInboxDal = async (req: Request) => {
 	}
 
 	try {
-		count = await prisma.sr_stock_req_inbox.count({
+		count = await prisma.da_stock_req_inbox.count({
 			where: whereClause,
 		})
-		const result = await prisma.sr_stock_req_inbox.findMany({
+		const result = await prisma.da_stock_req_inbox.findMany({
 			orderBy: {
 				updatedAt: 'desc',
 			},
@@ -265,10 +265,10 @@ export const getStockReqOutboxDal = async (req: Request) => {
 	}
 
 	try {
-		count = await prisma.sr_stock_req_outbox.count({
+		count = await prisma.da_stock_req_outbox.count({
 			where: whereClause,
 		})
-		const result = await prisma.sr_stock_req_outbox.findMany({
+		const result = await prisma.da_stock_req_outbox.findMany({
 			orderBy: {
 				updatedAt: 'desc',
 			},
