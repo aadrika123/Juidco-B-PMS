@@ -22,7 +22,7 @@ export const createPreProcurementDal = async (req: Request) => {
 	const { auth, stocks }: { auth: any; stocks: IStock[] } = req.body
 	const ulb_id = auth?.ulb_id
 	try {
-		stocks.map((stock: IStock, index: number) => {
+		stocks.map((stock: IStock) => {
 			if (!stock.stockNo) {
 				throw { error: true, message: 'Minimum one stock data is required' }
 			}
@@ -38,7 +38,7 @@ export const createPreProcurementDal = async (req: Request) => {
 			stocks.map(async (stock: IStock) => {
 				const stockItem = await prisma.stock_request.findFirst({
 					where: {
-						id: String(stock?.stockNo),
+						stock_handover_no: String(stock?.stockNo),
 					},
 					select: {
 						inventory: {
@@ -56,6 +56,8 @@ export const createPreProcurementDal = async (req: Request) => {
 				return stockItem?.inventory?.category
 			})
 		)
+
+		console.log(categories, 'categories')
 
 		if (!categories) {
 			throw { error: true, message: 'No categories found for the stock request' }

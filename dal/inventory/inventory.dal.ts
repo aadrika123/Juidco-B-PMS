@@ -6,12 +6,13 @@ import { pagination } from '../../type/common.type'
 const prisma = new PrismaClient()
 
 export const createItemDal = async (req: Request) => {
-	const { category, subcategory, brand, quantity, description } = req.body
+	const { category, subcategory, brand, quantity, description, unit } = req.body
 
 	const data: inventory = {
 		category_masterId: category,
 		subcategory_masterId: subcategory,
-		brand_masterId: brand,
+		unit: unit,
+		...(brand && { brand_masterId: brand }),
 		...(quantity && { quantity: quantity }),
 		...(description && { description: description }),
 	}
