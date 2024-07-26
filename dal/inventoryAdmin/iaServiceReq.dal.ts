@@ -401,7 +401,8 @@ export const getServiceReqOutboxDal = async (req: Request) => {
 }
 
 export const approveServiceRequestDal = async (req: Request) => {
-	const { service_no }: { service_no: string } = req.body
+	const { service_no, remark }: { service_no: string; remark: string } = req.body
+	const doc = req.files
 
 	try {
 		const serviceReq = await prisma.service_request.findFirst({
@@ -413,7 +414,11 @@ export const approveServiceRequestDal = async (req: Request) => {
 				service: true,
 				inventory: {
 					select: {
-						warranty: true,
+						subcategory: {
+							select: {
+								name: true,
+							},
+						},
 					},
 				},
 				service_req_product: true,
@@ -423,6 +428,12 @@ export const approveServiceRequestDal = async (req: Request) => {
 		if (serviceReq?.status !== 20) {
 			throw { error: true, message: 'Invalid status of service request to be approved' }
 		}
+
+		const serviceReqProd = await prisma.service_req_product.findMany({
+			where: {
+				service_no: service_no,
+			},
+		})
 
 		const distOutbox = await prisma.dist_service_req_outbox.count({
 			where: {
@@ -438,6 +449,30 @@ export const approveServiceRequestDal = async (req: Request) => {
 
 		//start transaction
 		await prisma.$transaction(async tx => {
+			if (serviceReq?.service === 'dead') {
+				await Promise.all(
+					serviceReqProd.map(async prod => {
+						await addToDeadStock(prod?.serial_no, prod.quantity, remark, doc, String(serviceReq?.inventory?.subcategory?.name), tx)
+					})
+				)
+			}
+
+			if (serviceReq?.service === 'warranty') {
+				await Promise.all(
+					serviceReqProd.map(async prod => {
+						await warrantyClaim(prod?.serial_no, remark, String(serviceReq?.inventory?.subcategory?.name), tx)
+					})
+				)
+			}
+
+			if (serviceReq?.service === 'return') {
+				await Promise.all(
+					serviceReqProd.map(async prod => {
+						await returnToInventory(prod?.serial_no, prod.quantity, String(serviceReq?.inventory?.subcategory?.name), tx)
+					})
+				)
+			}
+
 			await tx.ia_service_req_inbox.delete({
 				where: {
 					service_no: service_no,
@@ -621,8 +656,7 @@ export const rejectServiceRequestDal = async (req: Request) => {
 }
 
 export const returnServiceRequestDal = async (req: Request) => {
-	const { service_no, remark }: { service_no: string; remark: string } = req.body
-	const doc = req.files
+	const { service_no }: { service_no: string } = req.body
 
 	try {
 		const serviceReq = await prisma.service_request.findFirst({
@@ -632,30 +666,12 @@ export const returnServiceRequestDal = async (req: Request) => {
 			select: {
 				status: true,
 				service: true,
-				inventory: {
-					select: {
-						subcategory: {
-							select: {
-								name: true,
-							},
-						},
-					},
-				},
 			},
 		})
 
 		if (!serviceReq) {
 			throw { error: true, message: 'Invalid service number' }
 		}
-
-		const serviceReqProd = await prisma.service_req_product.findMany({
-			where: {
-				service_no: service_no,
-			},
-			// select: {
-			// 	serial_no: true,
-			// },
-		})
 
 		if (serviceReq?.status !== 20) {
 			throw { error: true, message: 'Invalid status of service request to be returned' }
@@ -675,22 +691,6 @@ export const returnServiceRequestDal = async (req: Request) => {
 
 		//start transaction
 		await prisma.$transaction(async tx => {
-			if (serviceReq?.service === 'dead') {
-				await Promise.all(
-					serviceReqProd.map(async prod => {
-						await addToDeadStock(prod?.serial_no, prod.quantity, remark, doc, String(serviceReq?.inventory?.subcategory?.name), tx)
-					})
-				)
-			}
-
-			if (serviceReq?.service === 'warranty') {
-				await Promise.all(
-					serviceReqProd.map(async prod => {
-						await warrantyClaim(prod?.serial_no, remark, String(serviceReq?.inventory?.subcategory?.name), tx)
-					})
-				)
-			}
-
 			await tx.ia_service_req_inbox.delete({
 				where: {
 					service_no: service_no,
@@ -854,7 +854,7 @@ const warrantyClaim = async (serial_no: string, remark: string, subcategory_name
 	})
 }
 
-const returnToInventory = async (serial_no: string, quantity: number, remark: string, subcategory_name: string, tx: Prisma.TransactionClient) => {
+const returnToInventory = async (serial_no: string, quantity: number, subcategory_name: string, tx: Prisma.TransactionClient) => {
 	const product = await prisma
 		.$queryRawUnsafe(
 			`
@@ -867,7 +867,7 @@ const returnToInventory = async (serial_no: string, quantity: number, remark: st
 
 	await tx.$queryRawUnsafe(`
 			UPDATE product.product_${subcategory_name.toLowerCase().replace(/\s/g, '')}
-			SET is_available = true, quantity=${Number(product?.quantity) - quantity}
+			SET is_available = true,
 			WHERE serial_no = '${serial_no as string}'
 		`)
 
@@ -877,17 +877,8 @@ const returnToInventory = async (serial_no: string, quantity: number, remark: st
 		},
 		data: {
 			quantity: {
-				decrement: quantity,
+				increment: quantity,
 			},
-		},
-	})
-
-	const invDeadStock = await tx.inventory_dead_stock.create({
-		data: {
-			inventoryId: product?.inventory_id,
-			serial_no: product?.serial_no,
-			quantity: quantity,
-			remark2: remark,
 		},
 	})
 }
