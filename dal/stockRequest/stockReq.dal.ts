@@ -7,7 +7,7 @@ const prisma = new PrismaClient()
 export const getStockReqByStockHandoverNoDal = async (req: Request) => {
 	const { stock_handover_no } = req.params
 	try {
-		const result: any = await prisma.stock_request.findFirst({
+		const result = await prisma.stock_request.findFirst({
 			where: {
 				stock_handover_no: stock_handover_no,
 			},
@@ -47,13 +47,13 @@ export const getStockReqByStockHandoverNoDal = async (req: Request) => {
 				},
 			},
 		})
-		let resultToSend: any = {}
+		// let resultToSend: any = {}
 
-		const temp = { ...result?.procurement }
-		delete result.procurement
-		resultToSend = { ...result, ...temp }
+		// const temp = { ...result?.procurement }
+		// delete result.procurement
+		// resultToSend = { ...result, ...temp }
 
-		return resultToSend
+		return result
 	} catch (err: any) {
 		console.log(err)
 		return { error: true, message: getErrorMessage(err) }
