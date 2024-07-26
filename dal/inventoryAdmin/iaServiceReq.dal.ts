@@ -4,10 +4,11 @@ Status - Open
 */
 
 import { Request } from 'express'
-import { PrismaClient, service_request, service_enum } from '@prisma/client'
+import { PrismaClient, Prisma, service_request, service_enum } from '@prisma/client'
 import { serviceTranslator } from '../distributor/distServiceReq.dal'
 import getErrorMessage from '../../lib/getErrorMessage'
 import { pagination } from '../../type/common.type'
+import { imageUploaderV2 } from '../../lib/imageUploaderV2'
 
 const prisma = new PrismaClient()
 
@@ -399,91 +400,118 @@ export const getServiceReqOutboxDal = async (req: Request) => {
 	}
 }
 
-// export const approveServiceRequestDal = async (req: Request) => {
-// 	const { service_no }: { service_no: string } = req.body
+export const approveServiceRequestDal = async (req: Request) => {
+	const { service_no }: { service_no: string } = req.body
 
-// 	try {
-// 		const serviceReq = await prisma.service_request.findFirst({
-// 			where: {
-// 				service_no: service_no,
-// 			},
-// 			select: {
-// 				status: true,
-// 				service: true,
-// 			},
-// 		})
+	try {
+		const serviceReq = await prisma.service_request.findFirst({
+			where: {
+				service_no: service_no,
+			},
+			select: {
+				status: true,
+				service: true,
+				inventory: {
+					select: {
+						warranty: true,
+					},
+				},
+				service_req_product: true,
+			},
+		})
 
-// 		if (serviceReq?.status !== 10) {
-// 			throw { error: true, message: 'Invalid status of service request to be approved' }
-// 		}
+		if (serviceReq?.status !== 20) {
+			throw { error: true, message: 'Invalid status of service request to be approved' }
+		}
 
-// 		const iaOutbox = await prisma.ia_service_req_outbox.count({
-// 			where: {
-// 				service_no: service_no,
-// 			},
-// 		})
+		const distOutbox = await prisma.dist_service_req_outbox.count({
+			where: {
+				service_no: service_no,
+			},
+		})
 
-// 		//start transaction
-// 		await prisma.$transaction(async tx => {
-// 			await tx.da_service_req_inbox.delete({
-// 				where: {
-// 					service_no: service_no,
-// 				},
-// 			})
+		const daOutbox = await prisma.da_service_req_outbox.count({
+			where: {
+				service_no: service_no,
+			},
+		})
 
-// 			await tx.da_service_req_outbox.create({
-// 				data: {
-// 					service_no: service_no,
-// 				},
-// 			})
+		//start transaction
+		await prisma.$transaction(async tx => {
+			await tx.ia_service_req_inbox.delete({
+				where: {
+					service_no: service_no,
+				},
+			})
 
-// 			await tx.ia_service_req_inbox.create({
-// 				data: {
-// 					service_no: service_no,
-// 				},
-// 			})
+			await tx.ia_service_req_outbox.create({
+				data: {
+					service_no: service_no,
+				},
+			})
 
-// 			if (iaOutbox > 0) {
-// 				await tx.ia_service_req_outbox.delete({
-// 					where: {
-// 						service_no: service_no,
-// 					},
-// 				})
-// 			}
+			await tx.dist_service_req_inbox.create({
+				data: {
+					service_no: service_no,
+				},
+			})
 
-// 			await tx.service_request.update({
-// 				where: {
-// 					service_no: service_no,
-// 				},
-// 				data: {
-// 					status: 20,
-// 				},
-// 			})
+			if (distOutbox > 0) {
+				await tx.dist_service_req_outbox.delete({
+					where: {
+						service_no: service_no,
+					},
+				})
+			}
 
-// 			await tx.notification.create({
-// 				data: {
-// 					role_id: Number(process.env.ROLE_IA),
-// 					title: 'New Service request',
-// 					destination: 81,
-// 					description: `There is a ${serviceTranslator(serviceReq?.service)}. Service Number : ${service_no}`,
-// 				},
-// 			})
-// 			await tx.notification.create({
-// 				data: {
-// 					role_id: Number(process.env.ROLE_DIST),
-// 					title: 'Service request forwarded',
-// 					destination: 41,
-// 					description: `${serviceTranslator(serviceReq?.service)} forwarded to Inventory Admin. Service Number : ${service_no}`,
-// 				},
-// 			})
-// 		})
+			await tx.da_service_req_inbox.create({
+				data: {
+					service_no: service_no,
+				},
+			})
 
-// 		return 'Approved by DA'
-// 	} catch (err: any) {
-// 		console.log(err)
-// 		return { error: true, message: err?.message }
-// 	}
-// }
+			if (daOutbox > 0) {
+				await tx.da_service_req_outbox.delete({
+					where: {
+						service_no: service_no,
+					},
+				})
+			}
+
+			await tx.service_request.update({
+				where: {
+					service_no: service_no,
+				},
+				data: {
+					status: 23,
+				},
+			})
+
+			await tx.notification.create({
+				data: {
+					role_id: Number(process.env.ROLE_DIST),
+					title: 'Service request approved',
+					destination: 41,
+					description: `${serviceTranslator(serviceReq?.service)} approved. Service Number : ${service_no}`,
+				},
+			})
+
+			await tx.notification.create({
+				data: {
+					role_id: Number(process.env.ROLE_DA),
+					title: 'Service request approved',
+					destination: 26,
+					description: `${serviceTranslator(serviceReq?.service)} approved. Service Number : ${service_no}`,
+				},
+			})
+		})
+
+		return 'Approved by DA'
+	} catch (err: any) {
+		console.log(err)
+		return { error: true, message: err?.message }
+	}
+}
 
 export const rejectServiceRequestDal = async (req: Request) => {
 	const { service_no }: { service_no: string } = req.body
@@ -593,7 +621,8 @@ export const rejectServiceRequestDal = async (req: Request) => {
 }
 
 export const returnServiceRequestDal = async (req: Request) => {
-	const { service_no }: { service_no: string } = req.body
+	const { service_no, remark }: { service_no: string; remark: string } = req.body
+	const doc = req.files
 
 	try {
 		const serviceReq = await prisma.service_request.findFirst({
@@ -603,7 +632,29 @@ export const returnServiceRequestDal = async (req: Request) => {
 			select: {
 				status: true,
 				service: true,
+				inventory: {
+					select: {
+						subcategory: {
+							select: {
+								name: true,
+							},
+						},
+					},
+				},
 			},
+		})
+
+		if (!serviceReq) {
+			throw { error: true, message: 'Invalid service number' }
+		}
+
+		const serviceReqProd = await prisma.service_req_product.findMany({
+			where: {
+				service_no: service_no,
+			},
+			// select: {
+			// 	serial_no: true,
+			// },
 		})
 
 		if (serviceReq?.status !== 20) {
@@ -624,6 +675,22 @@ export const returnServiceRequestDal = async (req: Request) => {
 
 		//start transaction
 		await prisma.$transaction(async tx => {
+			if (serviceReq?.service === 'dead') {
+				await Promise.all(
+					serviceReqProd.map(async prod => {
+						await addToDeadStock(prod?.serial_no, prod.quantity, remark, doc, String(serviceReq?.inventory?.subcategory?.name), tx)
+					})
+				)
+			}
+
+			if (serviceReq?.service === 'warranty') {
+				await Promise.all(
+					serviceReqProd.map(async prod => {
+						await warrantyClaim(prod?.serial_no, remark, String(serviceReq?.inventory?.subcategory?.name), tx)
+					})
+				)
+			}
+
 			await tx.ia_service_req_inbox.delete({
 				where: {
 					service_no: service_no,
@@ -697,4 +764,130 @@ export const returnServiceRequestDal = async (req: Request) => {
 		console.log(err)
 		return { error: true, message: err?.message }
 	}
+}
+
+const addToDeadStock = async (serial_no: string, quantity: number, remark: string, doc: any, subcategory_name: string, tx: Prisma.TransactionClient) => {
+	const product = await prisma
+		.$queryRawUnsafe(
+			`
+					SELECT *
+					FROM product.product_${subcategory_name.toLowerCase().replace(/\s/g, '')}
+					WHERE serial_no = '${serial_no as string}'
+				`
+		)
+		.then((result: any) => result[0])
+
+	if (Number(product?.quantity) - quantity < 0) {
+		throw { error: true, message: 'Provided quantity is more than available quantity' }
+	}
+
+	await tx.$queryRawUnsafe(`
+			UPDATE product.product_${subcategory_name.toLowerCase().replace(/\s/g, '')}
+			SET is_available = false, is_dead = true, quantity=${Number(product?.quantity) - quantity}
+			WHERE serial_no = '${serial_no as string}'
+		`)
+
+	await tx.inventory.update({
+		where: {
+			id: product?.inventory_id,
+		},
+		data: {
+			quantity: {
+				decrement: quantity,
+			},
+		},
+	})
+
+	const invDeadStock = await tx.inventory_dead_stock.create({
+		data: {
+			inventoryId: product?.inventory_id,
+			serial_no: product?.serial_no,
+			quantity: quantity,
+			remark2: remark,
+		},
+	})
+
+	const uploaded = await imageUploaderV2(doc)
+
+	uploaded.map(async item => {
+		await tx.inventory_dead_stock_image.create({
+			data: {
+				doc_path: item,
+				uploader: 'IA',
+				inventory_dead_stockId: invDeadStock?.id,
+			},
+		})
+	})
+}
+
+const warrantyClaim = async (serial_no: string, remark: string, subcategory_name: string, tx: Prisma.TransactionClient) => {
+	const product = await prisma
+		.$queryRawUnsafe(
+			`
+					SELECT *
+					FROM product.product_${subcategory_name.toLowerCase().replace(/\s/g, '')}
+					WHERE serial_no = '${serial_no as string}'
+				`
+		)
+		.then((result: any) => result[0])
+
+	const inv = await prisma.inventory.findFirst({
+		where: {
+			id: product?.inventory_id,
+		},
+		select: {
+			warranty: true,
+		},
+	})
+
+	if (Number(!inv?.warranty)) {
+		throw { error: true, message: 'No warranty for the selected item' }
+	}
+
+	await tx.inventory_warranty.create({
+		data: {
+			inventoryId: product?.inventory_id,
+			serial_no: product?.serial_no,
+			quantity: product?.quantity,
+			remark2: remark,
+		},
+	})
+}
+
+const returnToInventory = async (serial_no: string, quantity: number, remark: string, subcategory_name: string, tx: Prisma.TransactionClient) => {
+	const product = await prisma
+		.$queryRawUnsafe(
+			`
+					SELECT *
+					FROM product.product_${subcategory_name.toLowerCase().replace(/\s/g, '')}
+					WHERE serial_no = '${serial_no as string}'
+				`
+		)
+		.then((result: any) => result[0])
+
+	await tx.$queryRawUnsafe(`
+			UPDATE product.product_${subcategory_name.toLowerCase().replace(/\s/g, '')}
+			SET is_available = true, quantity=${Number(product?.quantity) - quantity}
+			WHERE serial_no = '${serial_no as string}'
+		`)
+
+	await tx.inventory.update({
+		where: {
+			id: product?.inventory_id,
+		},
+		data: {
+			quantity: {
+				decrement: quantity,
+			},
+		},
+	})
+
+	const invDeadStock = await tx.inventory_dead_stock.create({
+		data: {
+			inventoryId: product?.inventory_id,
+			serial_no: product?.serial_no,
+			quantity: quantity,
+			remark2: remark,
+		},
+	})
 }
