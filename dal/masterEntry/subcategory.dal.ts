@@ -24,6 +24,7 @@ export const createSubcategoryDal = async (req: Request) => {
 					subcategory_masterId varchar(255) DEFAULT '${result?.id}',
 					inventory_id varchar(255),
 					procurement_no varchar(255),
+                    brand varchar(255),
 					serial_no varchar(255) UNIQUE,
 					quantity FLOAT DEFAULT 1,
 					is_added BOOLEAN DEFAULT FALSE, 
