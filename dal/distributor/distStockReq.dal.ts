@@ -7,7 +7,7 @@ import { pagination } from '../../type/common.type'
 const prisma = new PrismaClient()
 
 export const createStockRequestDal = async (req: Request) => {
-	const { category, subcategory, brand, inventory, emp_id, emp_name, allotted_quantity, auth, unit } = req.body
+	const { inventory, emp_id, emp_name, allotted_quantity, auth } = req.body
 
 	const ulb_id = auth?.ulb_id
 

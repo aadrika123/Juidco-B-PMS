@@ -1,5 +1,5 @@
 import { Request } from 'express'
-import { PrismaClient, Prisma } from '@prisma/client'
+import { PrismaClient, Prisma, stock_request } from '@prisma/client'
 import getErrorMessage from '../../lib/getErrorMessage'
 import { pagination } from '../../type/common.type'
 
@@ -351,7 +351,7 @@ export const getStockReqOutboxDal = async (req: Request) => {
 	}
 }
 
-export const approveStockReqDal = async (req: Request) => {
+export const approveStockReqDal_legacy = async (req: Request) => {
 	const { stock_handover_no }: { stock_handover_no: string[] } = req.body
 
 	try {
@@ -482,6 +482,176 @@ export const approveStockReqDal = async (req: Request) => {
 		console.log(err)
 		return { error: true, message: getErrorMessage(err) }
 	}
+}
+
+export const approveStockReqDal = async (req: Request) => {
+	const { stock_handover_no }: { stock_handover_no: string[] } = req.body
+
+	try {
+		await Promise.all(
+			stock_handover_no.map(async (item: string) => {
+				const stockReq = await prisma.stock_request.findFirst({
+					where: { stock_handover_no: item },
+					select: {
+						allotted_quantity: true,
+						status: true,
+						inventory: {
+							select: {
+								id: true,
+								subcategory: {
+									select: {
+										name: true,
+									},
+								},
+							},
+						},
+						stock_req_product: true,
+					},
+				})
+
+				if (!stockReq) {
+					throw { error: true, message: 'Invalid stock handover number' }
+				}
+
+				if (stockReq?.status !== 1 && stockReq?.status !== 80) {
+					throw { error: true, message: 'Stock request is not valid to be approved' }
+				}
+
+				const customStockReq = {
+					allotted_quantity: 32,
+					inventory: {
+						id: '145b20bb-998b-4ffa-9e78-f9001e5f1d15',
+						subcategory: {
+							name: 'Aggregate',
+						},
+					},
+				}
+
+				const requiredProducts = await fetchRequiredProducts(customStockReq)
+				console.log(requiredProducts.length)
+
+				let assignedQuantityBuffer: number = 0
+
+				await prisma.$transaction(async tx => {
+					await Promise.all(
+						requiredProducts.map(async product => {
+							console.log('calc', Number(customStockReq?.allotted_quantity) - Number(assignedQuantityBuffer))
+							console.log('product qty', product?.quantity)
+							if (Number(product?.quantity) - (Number(customStockReq?.allotted_quantity) - assignedQuantityBuffer) < 0) {
+								await tx.$queryRawUnsafe(`
+									UPDATE product.product_${stockReq?.inventory?.subcategory?.name.toLowerCase().replace(/\s/g, '')}
+									SET is_available = false, quantity=0
+									WHERE serial_no = '${product?.serial_no as string}'
+								`)
+								assignedQuantityBuffer = assignedQuantityBuffer + Number(product?.quantity)
+								console.log('if', assignedQuantityBuffer)
+							} else {
+								await tx.$queryRawUnsafe(`
+									UPDATE product.product_${stockReq?.inventory?.subcategory?.name.toLowerCase().replace(/\s/g, '')}
+									SET quantity=${Number(product?.quantity) - (Number(customStockReq?.allotted_quantity) - assignedQuantityBuffer)}
+									WHERE serial_no = '${product?.serial_no as string}'
+								`)
+								console.log('else', assignedQuantityBuffer)
+							}
+
+							// tx.stock_req_product.create({
+							// 	data: {
+							// 		stock_handover_no: item,
+							// 		serial_no: product?.serial_no as string,
+							// 		inventoryId: stockReq?.inventory?.id as string,
+							// 	},
+							// })
+						})
+					)
+					// await tx.stock_request.update({
+					// 	where: {
+					// 		stock_handover_no: item,
+					// 	},
+					// 	data: {
+					// 		status: 3,
+					// 	},
+					// })
+					// await tx.ia_stock_req_outbox.create({
+					// 	data: { stock_handover_no: item },
+					// })
+					// await tx.dist_stock_req_inbox.create({
+					// 	data: { stock_handover_no: item },
+					// })
+					// await tx.da_stock_req_inbox.create({
+					// 	data: { stock_handover_no: item },
+					// })
+					// await tx.inventory.update({
+					// 	where: { id: stockReq?.inventory?.id as string },
+					// 	data: {
+					// 		quantity: {
+					// 			decrement: Number(stockReq?.allotted_quantity),
+					// 		},
+					// 	},
+					// })
+					// await tx.ia_stock_req_inbox.delete({
+					// 	where: {
+					// 		stock_handover_no: item,
+					// 	},
+					// })
+					// await tx.dist_stock_req_outbox.delete({
+					// 	where: {
+					// 		stock_handover_no: item,
+					// 	},
+					// })
+					// await tx.da_stock_req_outbox.delete({
+					// 	where: {
+					// 		stock_handover_no: item,
+					// 	},
+					// })
+					// await tx.notification.create({
+					// 	data: {
+					// 		role_id: Number(process.env.ROLE_DIST),
+					// 		title: 'Stock approved',
+					// 		destination: 40,
+					// 		description: `stock request : ${item} has approved`,
+					// 	},
+					// })
+					// await tx.notification.create({
+					// 	data: {
+					// 		role_id: Number(process.env.ROLE_DA),
+					// 		title: 'Stock approved',
+					// 		destination: 25,
+					// 		description: `stock request : ${item} has approved`,
+					// 	},
+					// })
+				})
+			})
+		)
+		return 'Approved'
+	} catch (err: any) {
+		console.log(err)
+		return { error: true, message: getErrorMessage(err) }
+	}
+}
+
+const fetchRequiredProducts = async (stockReq: any, limit: number = 1): Promise<any[]> => {
+	let toReturn: any[]
+
+	const products: any[] = await prisma.$queryRawUnsafe(
+		`
+			SELECT *
+			FROM product.product_${stockReq?.inventory?.subcategory?.name.toLowerCase().replace(/\s/g, '')}
+			WHERE is_available = true AND inventory_id = '${stockReq?.inventory?.id as string}'
+			LIMIT ${limit}
+			`
+	)
+
+	if (products.length < limit) {
+		throw { error: true, message: 'Insufficient quantity' }
+	}
+	const totalAvailableQuantity = products.reduce((total, product) => total + product?.quantity, 0)
+
+	if (stockReq?.allotted_quantity > totalAvailableQuantity) {
+		toReturn = await fetchRequiredProducts(stockReq, limit + 1)
+	} else {
+		toReturn = products
+	}
+	return toReturn
 }
 
 export const returnStockReqDal = async (req: Request) => {

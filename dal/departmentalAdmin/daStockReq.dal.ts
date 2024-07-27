@@ -394,6 +394,15 @@ export const forwardToIaDal = async (req: Request) => {
 							stock_handover_no: item,
 						},
 					}),
+					prisma.stock_request.update({
+						where: {
+							stock_handover_no: item,
+						},
+						data: {
+							status: 80,
+							remark: '',
+						},
+					}),
 					...(iaOutboxCount !== 0
 						? [
 								prisma.ia_stock_req_outbox.delete({
@@ -405,7 +414,7 @@ export const forwardToIaDal = async (req: Request) => {
 						: []),
 					prisma.notification.create({
 						data: {
-							role_id: Number(process.env.IA),
+							role_id: Number(process.env.ROLE_IA),
 							title: 'New stock request',
 							destination: 80,
 							description: `There is a new stock request to be reviewed  : ${item}`,

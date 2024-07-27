@@ -1154,9 +1154,10 @@ export const addProductDal = async (req: Request) => {
 					INSERT INTO product.product_${subcategory?.name.toLowerCase().replace(/\s/g, '')} (
 					serial_no,
 					quantity,
+					opening_quantity,
 					procurement_no,
 					brand
-					) VALUES ('${item?.serial_no}',${item?.quantity ? item?.quantity : 1},'${procurement_no}','${brand}' )
+					) VALUES ('${item?.serial_no}',${item?.quantity ? item?.quantity : 1},${item?.quantity ? item?.quantity : 1},'${procurement_no}','${brand}' )
 					`)
 				})
 			)
