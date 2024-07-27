@@ -9,9 +9,9 @@ export const createItemDal = async (req: Request) => {
 	const { category, subcategory, brand, quantity, description, unit } = req.body
 
 	const data: inventory = {
-		category_masterId: category,
-		subcategory_masterId: subcategory,
-		unit: unit,
+		category: { connect: { id: category } },
+		subcategory: { connect: { id: subcategory } },
+		unit: { connect: { id: unit } },
 		...(brand && { brand_masterId: brand }),
 		...(quantity && { quantity: quantity }),
 		...(description && { description: description }),

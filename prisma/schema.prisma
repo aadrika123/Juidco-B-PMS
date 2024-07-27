@@ -54,6 +54,7 @@ model brand_master {
 model unit_master {
     id                     String                   @id @default(uuid())
     name                   String
+    abbreviation           String?
     status                 Boolean                  @default(true)
     createdAt              DateTime                 @default(now())
     updatedAt              DateTime                 @updatedAt

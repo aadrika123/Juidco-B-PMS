@@ -1079,7 +1079,7 @@ export const addProductDal = async (req: Request) => {
 		quantity: number
 		serial_no: string
 	}
-	const { product, procurement_no }: { product: productType[]; procurement_no: string } = req.body
+	const { product, procurement_no, brand }: { product: productType[]; procurement_no: string; brand: string } = req.body
 	try {
 		if (!procurement_no) {
 			throw { error: true, meta: { message: "Procurement number is required as 'procurement_no'" } }
@@ -1111,12 +1111,26 @@ export const addProductDal = async (req: Request) => {
 
 		const procData = await prisma.procurement.findFirst({
 			where: { procurement_no: procurement_no },
-			// select: { subcategory_masterId: true },
+			select: {
+				procurement_stocks: {
+					select: {
+						Stock_request: {
+							select: {
+								inventory: {
+									select: {
+										subcategory_masterId: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 		})
 
 		const subcategory = await prisma.subcategory_master.findFirst({
 			where: {
-				// id: procData?.subcategory_masterId as string,
+				id: procData?.procurement_stocks[0]?.Stock_request?.inventory?.subcategory_masterId as string,
 			},
 		})
 
@@ -1140,8 +1154,9 @@ export const addProductDal = async (req: Request) => {
 					INSERT INTO product.product_${subcategory?.name.toLowerCase().replace(/\s/g, '')} (
 					serial_no,
 					quantity,
-					procurement_no
-					) VALUES ('${item?.serial_no}',${item?.quantity ? item?.quantity : 1},'${procurement_no}')
+					procurement_no,
+					brand
+					) VALUES ('${item?.serial_no}',${item?.quantity ? item?.quantity : 1},'${procurement_no}','${brand}' )
 					`)
 				})
 			)
