@@ -529,108 +529,108 @@ export const approveStockReqDal = async (req: Request) => {
 					throw { error: true, message: 'Stock request is not valid to be approved' }
 				}
 
-				const customStockReq = {
-					allotted_quantity: 32,
-					inventory: {
-						id: '145b20bb-998b-4ffa-9e78-f9001e5f1d15',
-						subcategory: {
-							name: 'Aggregate',
-						},
-					},
-				}
+				// const customStockReq = {
+				// 	allotted_quantity: 15,
+				// 	inventory: {
+				// 		id: '145b20bb-998b-4ffa-9e78-f9001e5f1d15',
+				// 		subcategory: {
+				// 			name: 'Aggregate',
+				// 		},
+				// 	},
+				// }
 
-				const requiredProducts = await fetchRequiredProducts(customStockReq)
-				console.log(requiredProducts.length)
+				const requiredProducts = await fetchRequiredProducts(stockReq)
+				// console.log(requiredProducts.length)
 
 				let assignedQuantityBuffer: number = 0
-
 				await prisma.$transaction(async tx => {
 					await Promise.all(
-						requiredProducts.map(async product => {
-							console.log('calc', Number(customStockReq?.allotted_quantity) - Number(assignedQuantityBuffer))
-							console.log('product qty', product?.quantity)
-							if (Number(product?.quantity) - (Number(customStockReq?.allotted_quantity) - assignedQuantityBuffer) < 0) {
+						requiredProducts.map(async (product, index) => {
+							// console.log('bufferWithoutIf', `${assignedQuantityBuffer} ${index}`)
+							// console.log('product qty', product?.quantity)
+							// console.log('calc', Number(product?.quantity) - (Number(stockReq?.allotted_quantity) - assignedQuantityBuffer))
+							if (Number(product?.quantity) - (Number(stockReq?.allotted_quantity) - assignedQuantityBuffer) < 0) {
+								assignedQuantityBuffer = assignedQuantityBuffer + Number(product?.quantity)
+								// console.log('if', `${assignedQuantityBuffer} ${index}`)
 								await tx.$queryRawUnsafe(`
 									UPDATE product.product_${stockReq?.inventory?.subcategory?.name.toLowerCase().replace(/\s/g, '')}
-									SET is_available = false, quantity=0
+									SET is_available = false, quantity=0, updatedAt = CURRENT_TIMESTAMP
 									WHERE serial_no = '${product?.serial_no as string}'
 								`)
-								assignedQuantityBuffer = assignedQuantityBuffer + Number(product?.quantity)
-								console.log('if', assignedQuantityBuffer)
 							} else {
 								await tx.$queryRawUnsafe(`
 									UPDATE product.product_${stockReq?.inventory?.subcategory?.name.toLowerCase().replace(/\s/g, '')}
-									SET quantity=${Number(product?.quantity) - (Number(customStockReq?.allotted_quantity) - assignedQuantityBuffer)}
+									SET quantity=${Number(product?.quantity) - (Number(stockReq?.allotted_quantity) - assignedQuantityBuffer)}, updatedAt = CURRENT_TIMESTAMP
 									WHERE serial_no = '${product?.serial_no as string}'
 								`)
-								console.log('else', assignedQuantityBuffer)
+								// console.log('else', `${assignedQuantityBuffer} ${index}`)
 							}
 
-							// tx.stock_req_product.create({
-							// 	data: {
-							// 		stock_handover_no: item,
-							// 		serial_no: product?.serial_no as string,
-							// 		inventoryId: stockReq?.inventory?.id as string,
-							// 	},
-							// })
+							tx.stock_req_product.create({
+								data: {
+									stock_handover_no: item,
+									serial_no: product?.serial_no as string,
+									inventoryId: stockReq?.inventory?.id as string,
+								},
+							})
 						})
 					)
-					// await tx.stock_request.update({
-					// 	where: {
-					// 		stock_handover_no: item,
-					// 	},
-					// 	data: {
-					// 		status: 3,
-					// 	},
-					// })
-					// await tx.ia_stock_req_outbox.create({
-					// 	data: { stock_handover_no: item },
-					// })
-					// await tx.dist_stock_req_inbox.create({
-					// 	data: { stock_handover_no: item },
-					// })
-					// await tx.da_stock_req_inbox.create({
-					// 	data: { stock_handover_no: item },
-					// })
-					// await tx.inventory.update({
-					// 	where: { id: stockReq?.inventory?.id as string },
-					// 	data: {
-					// 		quantity: {
-					// 			decrement: Number(stockReq?.allotted_quantity),
-					// 		},
-					// 	},
-					// })
-					// await tx.ia_stock_req_inbox.delete({
-					// 	where: {
-					// 		stock_handover_no: item,
-					// 	},
-					// })
-					// await tx.dist_stock_req_outbox.delete({
-					// 	where: {
-					// 		stock_handover_no: item,
-					// 	},
-					// })
-					// await tx.da_stock_req_outbox.delete({
-					// 	where: {
-					// 		stock_handover_no: item,
-					// 	},
-					// })
-					// await tx.notification.create({
-					// 	data: {
-					// 		role_id: Number(process.env.ROLE_DIST),
-					// 		title: 'Stock approved',
-					// 		destination: 40,
-					// 		description: `stock request : ${item} has approved`,
-					// 	},
-					// })
-					// await tx.notification.create({
-					// 	data: {
-					// 		role_id: Number(process.env.ROLE_DA),
-					// 		title: 'Stock approved',
-					// 		destination: 25,
-					// 		description: `stock request : ${item} has approved`,
-					// 	},
-					// })
+					await tx.stock_request.update({
+						where: {
+							stock_handover_no: item,
+						},
+						data: {
+							status: 3,
+						},
+					})
+					await tx.ia_stock_req_outbox.create({
+						data: { stock_handover_no: item },
+					})
+					await tx.dist_stock_req_inbox.create({
+						data: { stock_handover_no: item },
+					})
+					await tx.da_stock_req_inbox.create({
+						data: { stock_handover_no: item },
+					})
+					await tx.inventory.update({
+						where: { id: stockReq?.inventory?.id as string },
+						data: {
+							quantity: {
+								decrement: Number(stockReq?.allotted_quantity),
+							},
+						},
+					})
+					await tx.ia_stock_req_inbox.delete({
+						where: {
+							stock_handover_no: item,
+						},
+					})
+					await tx.dist_stock_req_outbox.delete({
+						where: {
+							stock_handover_no: item,
+						},
+					})
+					await tx.da_stock_req_outbox.delete({
+						where: {
+							stock_handover_no: item,
+						},
+					})
+					await tx.notification.create({
+						data: {
+							role_id: Number(process.env.ROLE_DIST),
+							title: 'Stock approved',
+							destination: 40,
+							description: `stock request : ${item} has approved`,
+						},
+					})
+					await tx.notification.create({
+						data: {
+							role_id: Number(process.env.ROLE_DA),
+							title: 'Stock approved',
+							destination: 25,
+							description: `stock request : ${item} has approved`,
+						},
+					})
 				})
 			})
 		)
@@ -649,6 +649,7 @@ const fetchRequiredProducts = async (stockReq: any, limit: number = 1): Promise<
 			SELECT *
 			FROM product.product_${stockReq?.inventory?.subcategory?.name.toLowerCase().replace(/\s/g, '')}
 			WHERE is_available = true AND inventory_id = '${stockReq?.inventory?.id as string}'
+			ORDER BY updatedat DESC
 			LIMIT ${limit}
 			`
 	)

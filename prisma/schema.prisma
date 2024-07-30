@@ -257,6 +257,7 @@ model inventory {
     service_request        service_request[]
     service_req_product    service_req_product[]
     inventory_warranty     inventory_warranty[]
+    service_history        service_history[]
 }
 
 model inventory_dead_stock {
@@ -878,6 +879,7 @@ model service_request {
     ia_service_req_outbox   ia_service_req_outbox?
     da_service_req_inbox    da_service_req_inbox?
     da_service_req_outbox   da_service_req_outbox?
+    service_history         service_history?
 }
 
 model service_req_product {
@@ -891,6 +893,20 @@ model service_req_product {
     service_request service_request @relation(fields: [service_no], references: [service_no])
     createdAt       DateTime        @default(now())
     updatedAt       DateTime        @updatedAt
+}
+
+model service_history {
+    id                String          @id @default(uuid())
+    stock_handover_no String
+    service_no        String          @unique
+    serial_no         String
+    quantity          Float           @default(1)
+    service           service_enum
+    inventory         inventory       @relation(fields: [inventoryId], references: [id])
+    inventoryId       String
+    service_request   service_request @relation(fields: [service_no], references: [service_no])
+    createdAt         DateTime        @default(now())
+    updatedAt         DateTime        @updatedAt
 }
 
 model dist_stock_req_inbox {

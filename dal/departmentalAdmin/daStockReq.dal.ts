@@ -403,11 +403,11 @@ export const forwardToIaDal = async (req: Request) => {
 							stock_handover_no: item,
 						},
 					}),
-					prisma.dist_stock_req_outbox.delete({
-						where: {
-							stock_handover_no: item,
-						},
-					}),
+					// prisma.dist_stock_req_outbox.delete({
+					// 	where: {
+					// 		stock_handover_no: item,
+					// 	},
+					// }),
 					prisma.stock_request.update({
 						where: {
 							stock_handover_no: item,
