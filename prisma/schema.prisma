@@ -17,7 +17,7 @@ model category_master {
     createdAt              DateTime                 @default(now())
     updatedAt              DateTime                 @updatedAt
     inventory              inventory[]
-    // procurement            procurement[]
+    procurement            procurement[]
     procurement_history    procurement_history[]
     procurement_before_boq procurement_before_boq[]
 }
@@ -32,7 +32,7 @@ model subcategory_master {
     updatedAt              DateTime                 @updatedAt
     inventory              inventory[]
     brand_master           brand_master[]
-    // procurement            procurement[]
+    procurement            procurement[]
     procurement_history    procurement_history[]
     procurement_before_boq procurement_before_boq[]
 }
@@ -46,7 +46,7 @@ model brand_master {
     createdAt              DateTime                 @default(now())
     updatedAt              DateTime                 @updatedAt
     inventory              inventory[]
-    // procurement            procurement[]
+    procurement            procurement[]
     procurement_history    procurement_history[]
     procurement_before_boq procurement_before_boq[]
 }
@@ -59,7 +59,7 @@ model unit_master {
     createdAt              DateTime                 @default(now())
     updatedAt              DateTime                 @updatedAt
     inventory              inventory[]
-    // procurement            procurement[]
+    procurement            procurement[]
     procurement_history    procurement_history[]
     procurement_before_boq procurement_before_boq[]
 }
@@ -323,7 +323,17 @@ model dead_stock_image {
 model procurement {
     id                           String                        @id @default(uuid())
     procurement_no               String                        @unique
-    // description                  String?
+    category_masterId            String?
+    category                     category_master?              @relation(fields: [category_masterId], references: [id])
+    subCategory_masterId         String?
+    subCategory                  subcategory_master?           @relation(fields: [subCategory_masterId], references: [id])
+    brand_masterId               String?
+    brand                        brand_master?                 @relation(fields: [brand_masterId], references: [id])
+    unit_masterId                String?
+    unit                         unit_master?                  @relation(fields: [unit_masterId], references: [id])
+    rate                         Int?
+    quantity                     Int?
+    description                  String?
     total_rate                   Float?
     isEdited                     Boolean                       @default(false)
     is_partial                   Boolean                       @default(true)

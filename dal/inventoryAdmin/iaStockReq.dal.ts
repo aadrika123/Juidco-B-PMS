@@ -48,8 +48,10 @@ export const getStockReqInboxDal = async (req: Request) => {
 				? [
 						{
 							stock_request: {
-								category_masterId: {
-									in: category,
+								inventory: {
+									category_masterId: {
+										in: category,
+									},
 								},
 							},
 						},
@@ -59,8 +61,10 @@ export const getStockReqInboxDal = async (req: Request) => {
 				? [
 						{
 							stock_request: {
-								subcategory_masterId: {
-									in: subcategory,
+								inventory: {
+									subcategory_masterId: {
+										in: subcategory,
+									},
 								},
 							},
 						},
@@ -70,8 +74,10 @@ export const getStockReqInboxDal = async (req: Request) => {
 				? [
 						{
 							stock_request: {
-								brand_masterId: {
-									in: brand,
+								inventory: {
+									brand_masterId: {
+										in: brand,
+									},
 								},
 							},
 						},
@@ -221,8 +227,10 @@ export const getStockReqOutboxDal = async (req: Request) => {
 				? [
 						{
 							stock_request: {
-								category_masterId: {
-									in: category,
+								inventory: {
+									category_masterId: {
+										in: category,
+									},
 								},
 							},
 						},
@@ -232,8 +240,10 @@ export const getStockReqOutboxDal = async (req: Request) => {
 				? [
 						{
 							stock_request: {
-								subcategory_masterId: {
-									in: subcategory,
+								inventory: {
+									subcategory_masterId: {
+										in: subcategory,
+									},
 								},
 							},
 						},
@@ -243,8 +253,10 @@ export const getStockReqOutboxDal = async (req: Request) => {
 				? [
 						{
 							stock_request: {
-								brand_masterId: {
-									in: brand,
+								inventory: {
+									brand_masterId: {
+										in: brand,
+									},
 								},
 							},
 						},
