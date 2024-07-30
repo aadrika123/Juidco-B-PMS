@@ -1,15 +1,14 @@
 import { Request } from 'express'
-import { PrismaClient, basic_details, bid_openers, cover_details, cover_details_docs, critical_dates, fee_details, work_details } from '@prisma/client'
+import { PrismaClient } from '@prisma/client'
 import getErrorMessage from '../../lib/getErrorMessage'
-import { imageUploader } from '../../lib/imageUploader'
-import { pagination, uploadedDoc } from '../../type/common.type'
-import { boqData } from '../../type/accountant.type'
-import generateReferenceNumber from '../../lib/referenceNumberGenerator'
-import axios from 'axios'
+// import { imageUploader } from '../../lib/imageUploader'
+import { pagination } from '../../type/common.type'
+// import generateReferenceNumber from '../../lib/referenceNumberGenerator'
+// import axios from 'axios'
 
 const prisma = new PrismaClient()
 
-export const getBoqInboxDal = async (req: Request) => {
+export const getInboxDal = async (req: Request) => {
 	const page: number | undefined = Number(req?.query?.page)
 	const take: number | undefined = Number(req?.query?.take)
 	const startIndex: number | undefined = (page - 1) * take
@@ -30,13 +29,13 @@ export const getBoqInboxDal = async (req: Request) => {
 	if (search) {
 		whereClause.OR = [
 			{
-				reference_no: {
+				procurement_no: {
 					contains: search,
 					mode: 'insensitive',
 				},
 			},
 			{
-				procurement: {
+				procurement_stocks: {
 					description: {
 						contains: search,
 						mode: 'insensitive',
@@ -46,92 +45,50 @@ export const getBoqInboxDal = async (req: Request) => {
 		]
 	}
 
-	//creating filter options for the query
 	if (category[0] || subcategory[0] || brand[0]) {
 		whereClause.AND = [
 			...(category[0]
 				? [
 						{
-							boq: {
-								procurements: {
-									some: {
-										procurement: {
-											category_masterId: {
-												in: category,
-											},
-										},
-									},
-								},
+							category_masterId: {
+								in: category,
 							},
 						},
 					]
 				: []),
-
 			...(subcategory[0]
 				? [
 						{
-							boq: {
-								procurements: {
-									some: {
-										procurement: {
-											subcategory_masterId: {
-												in: subcategory,
-											},
-										},
-									},
+							procurement_stocks: {
+								subcategory_masterId: {
+									in: subcategory,
 								},
 							},
 						},
 					]
 				: []),
-
 			...(brand[0]
 				? [
 						{
-							boq: {
-								status: {
-									in: status.map(Number),
+							procurement_stocks: {
+								brand_masterId: {
+									in: brand,
 								},
 							},
 						},
 					]
 				: []),
-
-			...(brand[0]
+			...(status[0]
 				? [
 						{
-							boq: {
-								procurements: {
-									some: {
-										procurement: {
-											brand_masterId: {
-												in: brand,
-											},
-										},
-									},
-								},
+							status: {
+								in: status.map(Number),
 							},
 						},
 					]
 				: []),
 		]
 	}
-	// whereClause.NOT = [
-	//     {
-	//         procurement: {
-	//             status: {
-	//                 status: -2
-	//             }
-	//         }
-	//     },
-	//     {
-	//         procurement: {
-	//             status: {
-	//                 status: 2
-	//             }
-	//         }
-	//     },
-	// ]
 
 	try {
 		count = await prisma.level1_inbox.count({
@@ -146,85 +103,31 @@ export const getBoqInboxDal = async (req: Request) => {
 			...(take && { take: take }),
 			select: {
 				id: true,
-				reference_no: true,
-				boq: {
+				procurement_no: true,
+				procurement: {
 					select: {
-						reference_no: true,
-						gst: true,
-						estimated_cost: true,
+						procurement_no: true,
+						category: {
+							select: {
+								name: true,
+							},
+						},
+						total_rate: true,
+						isEdited: true,
 						remark: true,
 						status: true,
-						isEdited: true,
-						hsn_code: true,
-						procurements: {
-							select: {
-								procurement: {
-									select: {
-										// category: {
-										// 	select: {
-										// 		name: true,
-										// 	},
-										// },
-										// subcategory: {
-										// 	select: {
-										// 		name: true,
-										// 	},
-										// },
-										// brand: {
-										// 	select: {
-										// 		name: true,
-										// 	},
-										// },
-									},
-								},
-							},
-						},
-						boq_doc: {
-							select: {
-								ReferenceNo: true,
-							},
-						},
+						procurement_stocks: true,
 					},
 				},
 			},
 		})
 
-		// await Promise.all(
-		// 	result.map(async item => {
-		// 		await Promise.all(
-		// 			item?.boq?.boq_doc.map(async (doc: any) => {
-		// 				const headers = {
-		// 					token: '8Ufn6Jio6Obv9V7VXeP7gbzHSyRJcKluQOGorAD58qA1IQKYE0',
-		// 				}
-		// 				await axios
-		// 					.post(process.env.DMS_GET || '', { referenceNo: doc?.ReferenceNo }, { headers })
-		// 					.then(response => {
-		// 						// console.log(response?.data?.data, 'res')
-		// 						doc.imageUrl = response?.data?.data?.fullPath
-		// 					})
-		// 					.catch(err => {
-		// 						// console.log(err?.data?.data, 'err')
-		// 						// toReturn.push(err?.data?.data)
-		// 						throw err
-		// 					})
-		// 			})
-		// 		)
-		// 	})
-		// )
+		let resultToSend: any[] = []
 
-		let dataToSend: any[] = []
-		result.forEach((item: any) => {
-			const updatedProcurements = item?.boq?.procurements.map((proc: any) => {
-				const { procurement, ...rest } = proc
-				return { ...rest, ...procurement }
-			})
-
-			// Assign the updated array back to item.boq.procurements
-			item.boq.procurements = updatedProcurements
-
-			//flatten the boq object
-			const { boq, ...rest } = item
-			dataToSend.push({ ...rest, ...boq })
+		result.map(async (item: any) => {
+			const temp = { ...item?.procurement }
+			delete item.procurement
+			resultToSend.push({ ...item, ...temp })
 		})
 
 		totalPage = Math.ceil(count / take)
@@ -245,7 +148,7 @@ export const getBoqInboxDal = async (req: Request) => {
 		pagination.totalPage = totalPage
 		pagination.totalResult = count
 		return {
-			data: dataToSend,
+			data: resultToSend,
 			pagination: pagination,
 		}
 	} catch (err: any) {
@@ -254,7 +157,7 @@ export const getBoqInboxDal = async (req: Request) => {
 	}
 }
 
-export const getBoqOutboxDal = async (req: Request) => {
+export const getOutboxDal = async (req: Request) => {
 	const page: number | undefined = Number(req?.query?.page)
 	const take: number | undefined = Number(req?.query?.take)
 	const startIndex: number | undefined = (page - 1) * take
@@ -275,13 +178,13 @@ export const getBoqOutboxDal = async (req: Request) => {
 	if (search) {
 		whereClause.OR = [
 			{
-				reference_no: {
+				procurement_no: {
 					contains: search,
 					mode: 'insensitive',
 				},
 			},
 			{
-				procurement: {
+				procurement_stocks: {
 					description: {
 						contains: search,
 						mode: 'insensitive',
@@ -291,92 +194,50 @@ export const getBoqOutboxDal = async (req: Request) => {
 		]
 	}
 
-	//creating filter options for the query
 	if (category[0] || subcategory[0] || brand[0]) {
 		whereClause.AND = [
 			...(category[0]
 				? [
 						{
-							boq: {
-								procurements: {
-									some: {
-										procurement: {
-											category_masterId: {
-												in: category,
-											},
-										},
-									},
-								},
+							category_masterId: {
+								in: category,
 							},
 						},
 					]
 				: []),
-
 			...(subcategory[0]
 				? [
 						{
-							boq: {
-								procurements: {
-									some: {
-										procurement: {
-											subcategory_masterId: {
-												in: subcategory,
-											},
-										},
-									},
+							procurement_stocks: {
+								subcategory_masterId: {
+									in: subcategory,
 								},
 							},
 						},
 					]
 				: []),
-
 			...(brand[0]
 				? [
 						{
-							boq: {
-								status: {
-									in: status.map(Number),
+							procurement_stocks: {
+								brand_masterId: {
+									in: brand,
 								},
 							},
 						},
 					]
 				: []),
-
-			...(brand[0]
+			...(status[0]
 				? [
 						{
-							boq: {
-								procurements: {
-									some: {
-										procurement: {
-											brand_masterId: {
-												in: brand,
-											},
-										},
-									},
-								},
+							status: {
+								in: status.map(Number),
 							},
 						},
 					]
 				: []),
 		]
 	}
-	// whereClause.NOT = [
-	//     {
-	//         procurement: {
-	//             status: {
-	//                 status: -2
-	//             }
-	//         }
-	//     },
-	//     {
-	//         procurement: {
-	//             status: {
-	//                 status: 2
-	//             }
-	//         }
-	//     },
-	// ]
 
 	try {
 		count = await prisma.level1_outbox.count({
@@ -391,85 +252,31 @@ export const getBoqOutboxDal = async (req: Request) => {
 			...(take && { take: take }),
 			select: {
 				id: true,
-				reference_no: true,
-				boq: {
+				procurement_no: true,
+				procurement: {
 					select: {
-						reference_no: true,
-						gst: true,
-						estimated_cost: true,
+						procurement_no: true,
+						category: {
+							select: {
+								name: true,
+							},
+						},
+						total_rate: true,
+						isEdited: true,
 						remark: true,
 						status: true,
-						isEdited: true,
-						hsn_code: true,
-						procurements: {
-							select: {
-								procurement: {
-									select: {
-										// category: {
-										// 	select: {
-										// 		name: true,
-										// 	},
-										// },
-										// subcategory: {
-										// 	select: {
-										// 		name: true,
-										// 	},
-										// },
-										// brand: {
-										// 	select: {
-										// 		name: true,
-										// 	},
-										// },
-									},
-								},
-							},
-						},
-						boq_doc: {
-							select: {
-								ReferenceNo: true,
-							},
-						},
+						procurement_stocks: true,
 					},
 				},
 			},
 		})
 
-		// await Promise.all(
-		// 	result.map(async item => {
-		// 		await Promise.all(
-		// 			item?.boq?.boq_doc.map(async (doc: any) => {
-		// 				const headers = {
-		// 					token: '8Ufn6Jio6Obv9V7VXeP7gbzHSyRJcKluQOGorAD58qA1IQKYE0',
-		// 				}
-		// 				await axios
-		// 					.post(process.env.DMS_GET || '', { referenceNo: doc?.ReferenceNo }, { headers })
-		// 					.then(response => {
-		// 						// console.log(response?.data?.data, 'res')
-		// 						doc.imageUrl = response?.data?.data?.fullPath
-		// 					})
-		// 					.catch(err => {
-		// 						// console.log(err?.data?.data, 'err')
-		// 						// toReturn.push(err?.data?.data)
-		// 						throw err
-		// 					})
-		// 			})
-		// 		)
-		// 	})
-		// )
+		let resultToSend: any[] = []
 
-		let dataToSend: any[] = []
-		result.forEach((item: any) => {
-			const updatedProcurements = item?.boq?.procurements.map((proc: any) => {
-				const { procurement, ...rest } = proc
-				return { ...rest, ...procurement }
-			})
-
-			// Assign the updated array back to item.boq.procurements
-			item.boq.procurements = updatedProcurements
-
-			//flatten the boq object
-			const { boq, ...rest } = item
-			dataToSend.push({ ...rest, ...boq })
+		result.map(async (item: any) => {
+			const temp = { ...item?.procurement }
+			delete item.procurement
+			resultToSend.push({ ...item, ...temp })
 		})
 
 		totalPage = Math.ceil(count / take)
@@ -490,7 +297,7 @@ export const getBoqOutboxDal = async (req: Request) => {
 		pagination.totalPage = totalPage
 		pagination.totalResult = count
 		return {
-			data: dataToSend,
+			data: resultToSend,
 			pagination: pagination,
 		}
 	} catch (err: any) {
@@ -500,45 +307,28 @@ export const getBoqOutboxDal = async (req: Request) => {
 }
 
 export const forwardToLevel2Dal = async (req: Request) => {
-	const { reference_no }: { reference_no: string } = req.body
+	const { procurement_no }: { procurement_no: string } = req.body
 	try {
-		if (!reference_no) {
+		if (!procurement_no) {
 			throw {
 				error: true,
-				message: `Reference no is required as 'reference_no'`,
+				message: `Procurement no is required as 'procurement_no'`,
 			}
 		}
 
-		const boq = await prisma.boq.findFirst({
+		const procurement = await prisma.procurement.findFirst({
 			where: {
-				reference_no: reference_no,
+				procurement_no: procurement_no,
 			},
 			select: {
 				status: true,
 			},
 		})
 
-		if (boq?.status !== 1) {
+		if (procurement?.status !== 10 && procurement?.status !== 13) {
 			throw {
 				error: true,
-				message: `Reference no. : ${reference_no} is not valid BOQ to be forwarded.`,
-			}
-		}
-
-		const preTender = await prisma.tendering_form.findFirst({
-			where: {
-				reference_no: reference_no,
-			},
-			select: {
-				status: true,
-				isPartial: true,
-			},
-		})
-
-		if (preTender?.status !== 1 && preTender?.isPartial === false) {
-			throw {
-				error: true,
-				message: `Reference no. : ${reference_no} is not valid Pre tender form to be forwarded.`,
+				message: `Procurement no. : ${procurement_no} is not valid procurement to be forwarded.`,
 			}
 		}
 
@@ -546,52 +336,37 @@ export const forwardToLevel2Dal = async (req: Request) => {
 		await prisma.$transaction(async tx => {
 			await tx.level1_inbox.delete({
 				where: {
-					reference_no: reference_no,
+					procurement_no: procurement_no,
 				},
 			})
 
 			await tx.level1_outbox.create({
 				data: {
-					reference_no: reference_no,
+					procurement_no: procurement_no,
 				},
 			})
 
 			await tx.level2_inbox.create({
 				data: {
-					reference_no: reference_no,
+					procurement_no: procurement_no,
 				},
 			})
 
-			// await tx.da_boq_outbox.delete({
-			// 	where: {
-			// 		reference_no: reference_no,
-			// 	},
-			// })
-
-			await tx.boq.update({
+			await tx.procurement.update({
 				where: {
-					reference_no: reference_no,
+					procurement_no: procurement_no,
 				},
 				data: {
-					status: 2,
-				},
-			})
-
-			await tx.tendering_form.update({
-				where: {
-					reference_no: reference_no,
-				},
-				data: {
-					status: 2,
+					status: 20,
 				},
 			})
 
 			await tx.notification.create({
 				data: {
 					role_id: Number(process.env.ROLE_LEVEL2),
-					title: 'BOQ and Pre tender form to be reviewed',
+					title: 'procurement and Pre tender form to be reviewed',
 					destination: 60,
-					description: `There is a BOQ and Pre tender form to be approved. Reference Number : ${reference_no}`,
+					description: `There is a procurement and Pre tender form to be approved. Procurement Number : ${procurement_no}`,
 				},
 			})
 		})
@@ -604,28 +379,28 @@ export const forwardToLevel2Dal = async (req: Request) => {
 }
 
 export const returnToDaDal = async (req: Request) => {
-	const { reference_no, remark }: { reference_no: string; remark: string } = req.body
+	const { procurement_no, remark }: { procurement_no: string; remark: string } = req.body
 	try {
-		if (!reference_no) {
+		if (!procurement_no) {
 			throw {
 				error: true,
-				message: `Reference no is required as 'reference_no'`,
+				message: `Procurement no is required as 'procurement_no'`,
 			}
 		}
 
-		const boqData = await prisma.boq.findFirst({
+		const procurement = await prisma.procurement.findFirst({
 			where: {
-				reference_no: reference_no,
+				procurement_no: procurement_no,
 			},
 			select: {
 				status: true,
 			},
 		})
 
-		if (boqData?.status !== 1) {
+		if (procurement?.status !== 10 && procurement?.status !== 13) {
 			throw {
 				error: true,
-				message: 'Invalid status of BOQ to return',
+				message: 'Invalid status of procurement to return',
 			}
 		}
 
@@ -633,52 +408,35 @@ export const returnToDaDal = async (req: Request) => {
 			throw { error: true, message: 'Remark is mandatory' }
 		}
 
-		const preTender = await prisma.tendering_form.findFirst({
-			where: {
-				reference_no: reference_no,
-			},
-			select: {
-				status: true,
-				isPartial: true,
-			},
-		})
-
-		if (preTender?.status !== 1 && preTender?.status !== 12 && preTender?.isPartial === false) {
-			throw {
-				error: true,
-				message: `Reference no. : ${reference_no} is not valid Pre tender form to be returned.`,
-			}
-		}
-
 		//start transaction
 		await prisma.$transaction(async tx => {
 			await tx.level1_inbox.delete({
 				where: {
-					reference_no: reference_no,
+					procurement_no: procurement_no,
 				},
 			})
 
-			await tx.da_boq_inbox.create({
+			await tx.ia_pre_procurement_inbox.create({
 				data: {
-					reference_no: reference_no,
+					procurement_no: procurement_no,
 				},
 			})
 
 			await tx.level1_outbox.create({
 				data: {
-					reference_no: reference_no,
+					procurement_no: procurement_no,
 				},
 			})
 
-			await tx.da_boq_outbox.delete({
+			await tx.ia_pre_procurement_outbox.delete({
 				where: {
-					reference_no: reference_no,
+					procurement_no: procurement_no,
 				},
 			})
 
-			await tx.boq.update({
+			await tx.procurement.update({
 				where: {
-					reference_no: reference_no,
+					procurement_no: procurement_no,
 				},
 				data: {
 					status: -1,
@@ -686,26 +444,17 @@ export const returnToDaDal = async (req: Request) => {
 				},
 			})
 
-			await tx.tendering_form.update({
-				where: {
-					reference_no: reference_no,
-				},
-				data: {
-					status: -1,
-				},
-			})
-
 			await tx.notification.create({
 				data: {
-					role_id: Number(process.env.ROLE_DA),
-					title: 'BOQ returned',
-					destination: 21,
-					description: `There is a BOQ returned from level 1. Reference Number : ${reference_no}`,
+					role_id: Number(process.env.ROLE_IA),
+					title: 'Procurement returned',
+					destination: 82,
+					description: `There is a procurement returned from level 1. Procurement Number : ${procurement_no}`,
 				},
 			})
 		})
 
-		return 'Returned to DA'
+		return 'Returned to IA'
 	} catch (err: any) {
 		console.log(err)
 		return { error: true, message: getErrorMessage(err) }
@@ -713,96 +462,70 @@ export const returnToDaDal = async (req: Request) => {
 }
 
 export const approvalByLevel1Dal = async (req: Request) => {
-	const { reference_no }: { reference_no: string } = req.body
+	const { procurement_no }: { procurement_no: string } = req.body
 	try {
-		if (!reference_no) {
+		if (!procurement_no) {
 			throw {
 				error: true,
-				message: `Reference no is required as 'reference_no'`,
+				message: `Procurement no is required as 'procurement_no'`,
 			}
 		}
 
-		const boqData = await prisma.boq.findFirst({
+		const procurement = await prisma.procurement.findFirst({
 			where: {
-				reference_no: reference_no,
+				procurement_no: procurement_no,
 			},
 			select: {
 				status: true,
 			},
 		})
 
-		if (boqData?.status !== 1) {
-			throw { error: true, message: 'Invalid status of BOQ to be approved' }
-		}
-
-		const preTender = await prisma.tendering_form.findFirst({
-			where: {
-				reference_no: reference_no,
-			},
-			select: {
-				status: true,
-				isPartial: true,
-			},
-		})
-
-		if (preTender?.status !== 1 && preTender?.isPartial === false) {
-			throw {
-				error: true,
-				message: `Reference no. : ${reference_no} is not valid Pre tender form to be approved.`,
-			}
+		if (procurement?.status !== 10 && procurement?.status !== 13) {
+			throw { error: true, message: 'Invalid status of procurement to be approved' }
 		}
 
 		//start transaction
 		await prisma.$transaction(async tx => {
 			await tx.level1_inbox.delete({
 				where: {
-					reference_no: reference_no,
+					procurement_no: procurement_no,
 				},
 			})
 
 			await tx.level1_outbox.create({
 				data: {
-					reference_no: reference_no,
+					procurement_no: procurement_no,
 				},
 			})
 
-			await tx.da_boq_inbox.create({
+			await tx.ia_pre_procurement_inbox.create({
 				data: {
-					reference_no: reference_no,
+					procurement_no: procurement_no,
 				},
 			})
 
-			await tx.da_boq_outbox.delete({
+			await tx.ia_pre_procurement_outbox.delete({
 				where: {
-					reference_no: reference_no,
+					procurement_no: procurement_no,
 				},
 			})
 
-			await tx.boq.update({
+			await tx.procurement.update({
 				where: {
-					reference_no: reference_no,
+					procurement_no: procurement_no,
 				},
 				data: {
-					status: 11,
+					status: 14,
 					remark: '' as string,
-				},
-			})
-
-			await tx.tendering_form.update({
-				where: {
-					reference_no: reference_no,
-				},
-				data: {
-					status: 11,
 				},
 			})
 
 			await tx.notification.create({
 				data: {
-					role_id: Number(process.env.ROLE_DA),
-					title: 'BOQ and pre tender approved by level 1',
-					destination: 21,
-					description: `There are BOQ and pre tender approved by level 1. Reference Number : ${reference_no}`,
+					role_id: Number(process.env.ROLE_IA),
+					title: 'procurement  approved by level 1',
+					destination: 82,
+					description: `There is a procurement approved by level 1. Procurement Number : ${procurement_no}`,
 				},
 			})
 		})
@@ -815,74 +538,57 @@ export const approvalByLevel1Dal = async (req: Request) => {
 }
 
 export const rejectionByLevel1Dal = async (req: Request) => {
-	const { reference_no }: { reference_no: string } = req.body
+	const { procurement_no }: { procurement_no: string } = req.body
 	try {
-		if (!reference_no) {
+		if (!procurement_no) {
 			throw {
 				error: true,
-				message: `Reference no is required as 'reference_no'`,
+				message: `Procurement no is required as 'procurement_no'`,
 			}
 		}
 
-		const boqData = await prisma.boq.findFirst({
+		const procurement = await prisma.procurement.findFirst({
 			where: {
-				reference_no: reference_no,
+				procurement_no: procurement_no,
 			},
 			select: {
 				status: true,
 			},
 		})
 
-		if (boqData?.status !== 1) {
-			throw { error: true, message: 'Invalid status of BOQ to be rejected' }
-		}
-
-		const preTender = await prisma.tendering_form.findFirst({
-			where: {
-				reference_no: reference_no,
-			},
-			select: {
-				status: true,
-				isPartial: true,
-			},
-		})
-
-		if (preTender?.status !== 1 && preTender?.isPartial === false) {
-			throw {
-				error: true,
-				message: `Reference no. : ${reference_no} is not valid Pre tender form to be rejected.`,
-			}
+		if (procurement?.status !== 10 && procurement?.status !== 13) {
+			throw { error: true, message: 'Invalid status of procurement to be rejected' }
 		}
 
 		//start transaction
 		await prisma.$transaction(async tx => {
 			await tx.level1_inbox.delete({
 				where: {
-					reference_no: reference_no,
+					procurement_no: procurement_no,
 				},
 			})
 
 			await tx.level1_outbox.create({
 				data: {
-					reference_no: reference_no,
+					procurement_no: procurement_no,
 				},
 			})
 
-			await tx.da_boq_inbox.create({
+			await tx.ia_pre_procurement_inbox.create({
 				data: {
-					reference_no: reference_no,
+					procurement_no: procurement_no,
 				},
 			})
 
-			await tx.da_boq_outbox.delete({
+			await tx.ia_pre_procurement_outbox.delete({
 				where: {
-					reference_no: reference_no,
+					procurement_no: procurement_no,
 				},
 			})
 
-			await tx.boq.update({
+			await tx.procurement.update({
 				where: {
-					reference_no: reference_no,
+					procurement_no: procurement_no,
 				},
 				data: {
 					status: -2,
@@ -890,26 +596,17 @@ export const rejectionByLevel1Dal = async (req: Request) => {
 				},
 			})
 
-			await tx.tendering_form.update({
-				where: {
-					reference_no: reference_no,
-				},
-				data: {
-					status: -2,
-				},
-			})
-
 			await tx.notification.create({
 				data: {
-					role_id: Number(process.env.ROLE_DA),
-					title: 'BOQ and pre tender rejected by level 1',
-					destination: 21,
-					description: `There are BOQ and pre tender rejected by level 1. Reference Number : ${reference_no}`,
+					role_id: Number(process.env.ROLE_IA),
+					title: 'procurement and pre tender rejected by level 1',
+					destination: 82,
+					description: `There is a procurement rejected by level 1. Procurement Number : ${procurement_no}`,
 				},
 			})
 		})
 
-		return 'Approved by level 1'
+		return 'Rejected by level 1'
 	} catch (err: any) {
 		console.log(err)
 		return { error: true, message: getErrorMessage(err) }

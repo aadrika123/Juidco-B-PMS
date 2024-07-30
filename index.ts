@@ -32,6 +32,7 @@ import hrmsRoute from './router/hrms/hrms.route'
 import level1Routes from './router/level1/level1.route'
 import level2Routes from './router/level2/level2.route'
 import financeRoutes from './router/finance/finance.route'
+import procurementRoute from './router/procurement/procurement.route'
 
 config()
 
@@ -59,6 +60,8 @@ app.use('/api/pms/da/post-procurement', daPostProcurementRoute)
 app.use('/api/pms/da/rec-inv', daReceivedInventoryRoute)
 app.use('/api/pms/sr/post-procurement', srPostProcurementRoute)
 app.use('/api/pms/sr/rec-inv', srReceivedInventoryRoute)
+app.use('/api/pms/procurement', procurementRoute)
+
 //level 1 & 2
 app.use('/api/pms/level1', level1Routes)
 app.use('/api/pms/level2', level2Routes)

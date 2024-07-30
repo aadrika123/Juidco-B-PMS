@@ -2436,52 +2436,52 @@ export const forwardToLevel1Dal = async (req: Request) => {
 		}
 
 		//start transaction
-		await prisma.$transaction(async tx => {
-			await tx.da_boq_inbox.delete({
-				where: {
-					reference_no: reference_no,
-				},
-			})
+		// await prisma.$transaction(async tx => {
+		// 	await tx.da_boq_inbox.delete({
+		// 		where: {
+		// 			reference_no: reference_no,
+		// 		},
+		// 	})
 
-			await tx.da_boq_outbox.create({
-				data: {
-					reference_no: reference_no,
-				},
-			})
+		// 	await tx.da_boq_outbox.create({
+		// 		data: {
+		// 			reference_no: reference_no,
+		// 		},
+		// 	})
 
-			await tx.level1_inbox.create({
-				data: {
-					reference_no: reference_no,
-				},
-			})
+		// 	await tx.level1_inbox.create({
+		// 		data: {
+		// 			reference_no: reference_no,
+		// 		},
+		// 	})
 
-			await tx.boq.update({
-				where: {
-					reference_no: reference_no,
-				},
-				data: {
-					status: 1,
-				},
-			})
+		// 	await tx.boq.update({
+		// 		where: {
+		// 			reference_no: reference_no,
+		// 		},
+		// 		data: {
+		// 			status: 1,
+		// 		},
+		// 	})
 
-			await tx.tendering_form.update({
-				where: {
-					reference_no: reference_no,
-				},
-				data: {
-					status: 1,
-				},
-			})
+		// 	await tx.tendering_form.update({
+		// 		where: {
+		// 			reference_no: reference_no,
+		// 		},
+		// 		data: {
+		// 			status: 1,
+		// 		},
+		// 	})
 
-			await tx.notification.create({
-				data: {
-					role_id: Number(process.env.ROLE_LEVEL1),
-					title: 'BOQ and Pre tender form to be reviewed',
-					destination: 21,
-					description: `There is a BOQ and Pre tender form to be reviewed. Reference Number : ${reference_no}`,
-				},
-			})
-		})
+		// 	await tx.notification.create({
+		// 		data: {
+		// 			role_id: Number(process.env.ROLE_LEVEL1),
+		// 			title: 'BOQ and Pre tender form to be reviewed',
+		// 			destination: 21,
+		// 			description: `There is a BOQ and Pre tender form to be reviewed. Reference Number : ${reference_no}`,
+		// 		},
+		// 	})
+		// })
 
 		return 'Forwarded to level 1'
 	} catch (err: any) {

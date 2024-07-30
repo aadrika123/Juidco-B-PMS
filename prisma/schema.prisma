@@ -20,6 +20,7 @@ model category_master {
     procurement            procurement[]
     procurement_history    procurement_history[]
     procurement_before_boq procurement_before_boq[]
+    procurement_stocks     procurement_stocks[]
 }
 
 model subcategory_master {
@@ -32,9 +33,9 @@ model subcategory_master {
     updatedAt              DateTime                 @updatedAt
     inventory              inventory[]
     brand_master           brand_master[]
-    procurement            procurement[]
     procurement_history    procurement_history[]
     procurement_before_boq procurement_before_boq[]
+    procurement_stocks     procurement_stocks[]
 }
 
 model brand_master {
@@ -46,9 +47,9 @@ model brand_master {
     createdAt              DateTime                 @default(now())
     updatedAt              DateTime                 @updatedAt
     inventory              inventory[]
-    procurement            procurement[]
     procurement_history    procurement_history[]
     procurement_before_boq procurement_before_boq[]
+    procurement_stocks     procurement_stocks[]
 }
 
 model unit_master {
@@ -59,9 +60,9 @@ model unit_master {
     createdAt              DateTime                 @default(now())
     updatedAt              DateTime                 @updatedAt
     inventory              inventory[]
-    procurement            procurement[]
     procurement_history    procurement_history[]
     procurement_before_boq procurement_before_boq[]
+    procurement_stocks     procurement_stocks[]
 }
 
 model supplier_master {
@@ -96,6 +97,14 @@ model sr_pre_procurement_inbox {
     updatedAt      DateTime    @updatedAt
 }
 
+model sr_pre_procurement_outbox {
+    id             String      @id @default(uuid())
+    procurement_no String      @unique
+    procurement    procurement @relation(fields: [procurement_no], references: [procurement_no])
+    createdAt      DateTime    @default(now())
+    updatedAt      DateTime    @updatedAt
+}
+
 model ia_pre_procurement_inbox {
     id             String      @id @default(uuid())
     procurement_no String      @unique
@@ -104,7 +113,7 @@ model ia_pre_procurement_inbox {
     updatedAt      DateTime    @updatedAt
 }
 
-model sr_pre_procurement_outbox {
+model ia_pre_procurement_outbox {
     id             String      @id @default(uuid())
     procurement_no String      @unique
     procurement    procurement @relation(fields: [procurement_no], references: [procurement_no])
@@ -326,19 +335,10 @@ model procurement {
     procurement_no               String                        @unique
     category_masterId            String?
     category                     category_master?              @relation(fields: [category_masterId], references: [id])
-    subCategory_masterId         String?
-    subCategory                  subcategory_master?           @relation(fields: [subCategory_masterId], references: [id])
-    brand_masterId               String?
-    brand                        brand_master?                 @relation(fields: [brand_masterId], references: [id])
-    unit_masterId                String?
-    unit                         unit_master?                  @relation(fields: [unit_masterId], references: [id])
-    rate                         Int?
-    quantity                     Int?
-    description                  String?
     total_rate                   Float?
     isEdited                     Boolean                       @default(false)
     is_partial                   Boolean                       @default(true)
-    status                       Int                           @default(1) //    1 - created        
+    status                       Int                           @default(0) //   0=pending, 10=level1, 11=level1 returned, 12=level1 rejected, 13=level1 revised, 14=level1 approved, 20=level2, 21=level2 return, 22=level2 rejected, 23=level2 revised, 24=level2 approved       
     remark                       String?
     createdAt                    DateTime                      @default(now())
     updatedAt                    DateTime                      @updatedAt
@@ -362,14 +362,31 @@ model procurement {
     supplier_master              supplier_master?              @relation(fields: [supplier_masterId], references: [id])
     supplier_masterId            String?
     procurement_stocks           procurement_stocks[]
+    ia_pre_procurement_outbox    ia_pre_procurement_outbox?
+    level1_inbox                 level1_inbox?
+    level1_outbox                level1_outbox?
+    level2_inbox                 level2_inbox?
+    level2_outbox                level2_outbox?
 }
 
 model procurement_stocks {
-    id             String        @id @default(uuid())
-    procurement_no String
-    procurement    procurement   @relation(fields: [procurement_no], references: [procurement_no])
-    handover_no    String        @unique
-    Stock_request  stock_request @relation(fields: [handover_no], references: [stock_handover_no])
+    id                   String              @id @default(uuid())
+    procurement_no       String
+    procurement          procurement         @relation(fields: [procurement_no], references: [procurement_no])
+    category_masterId    String?
+    category             category_master?    @relation(fields: [category_masterId], references: [id])
+    subCategory_masterId String?
+    subCategory          subcategory_master? @relation(fields: [subCategory_masterId], references: [id])
+    brand_masterId       String?
+    brand                brand_master?       @relation(fields: [brand_masterId], references: [id])
+    unit_masterId        String?
+    unit                 unit_master?        @relation(fields: [unit_masterId], references: [id])
+    rate                 Float?
+    quantity             Float?
+    description          String?
+    total_rate           Float?
+    createdAt            DateTime            @default(now())
+    updatedAt            DateTime            @updatedAt
 }
 
 model procurement_before_boq {
@@ -477,10 +494,6 @@ model boq {
     da_boq_inbox       da_boq_inbox?
     da_boq_outbox      da_boq_outbox?
     tendering_form     tendering_form?
-    lvel1_inbox        level1_inbox?
-    lvel1_outbox       level1_outbox?
-    lvel2_inbox        level2_inbox?
-    lvel2_outbox       level2_outbox?
     finance_boq_inbox  finance_boq_inbox?
     finance_boq_outbox finance_boq_outbox?
 }
@@ -779,7 +792,7 @@ model notification {
     title       String
     description String?
     isSeen      Boolean  @default(false)
-    destination Int? //10=sr pre-proc inbox,14=sr pre-proc rejected,15=sr pre-proc released, 20=da pre-proc inbox, 21=da boq inbox, 22=da pre-tender inbox, 30=acc pre-proc inbox, 31=acc boq inbox, 32=acc pre-tender inbox, 11=sr post-proc inbox, 12=sr rec-inv inbox, 23=da post proc inbox, 24=da rec-inv inbox, 25=da stock req inbox, 26=da service req inbox, 13=sr stock req inbox, 40=dist stock-req inbox, 41=dist service req inbox, 50=level1 inbox, 60=level1 inbox,70=finance, 80=IA stock req inbox, 81=IA service req inbox
+    destination Int? //10=sr pre-proc inbox,14=sr pre-proc rejected,15=sr pre-proc released, 20=da pre-proc inbox, 21=da boq inbox, 22=da pre-tender inbox, 30=acc pre-proc inbox, 31=acc boq inbox, 32=acc pre-tender inbox, 11=sr post-proc inbox, 12=sr rec-inv inbox, 23=da post proc inbox, 24=da rec-inv inbox, 25=da stock req inbox, 26=da service req inbox, 13=sr stock req inbox, 40=dist stock-req inbox, 41=dist service req inbox, 50=level1 inbox, 60=level2 inbox,70=finance, 80=IA stock req inbox, 81=IA service req inbox, 82=IA procurement inbox
     createdAt   DateTime @default(now())
     updatedAt   DateTime @updatedAt
 }
@@ -814,7 +827,6 @@ model stock_request {
     ia_stock_req_inbox    ia_stock_req_inbox?
     ia_stock_req_outbox   ia_stock_req_outbox?
     stock_req_product     stock_req_product[]
-    procurement_stocks    procurement_stocks[]
     service_request       service_request[]
 }
 
@@ -1026,35 +1038,35 @@ model ia_service_req_outbox {
 // level 1 & 2================================================================================================================================================================
 
 model level1_inbox {
-    id           String   @id @default(uuid())
-    reference_no String   @unique
-    boq          boq?     @relation(fields: [reference_no], references: [reference_no])
-    createdAt    DateTime @default(now())
-    updatedAt    DateTime @updatedAt
+    id             String      @id @default(uuid())
+    procurement_no String      @unique
+    procurement    procurement @relation(fields: [procurement_no], references: [procurement_no])
+    createdAt      DateTime    @default(now())
+    updatedAt      DateTime    @updatedAt
 }
 
 model level1_outbox {
-    id           String   @id @default(uuid())
-    reference_no String   @unique
-    boq          boq?     @relation(fields: [reference_no], references: [reference_no])
-    createdAt    DateTime @default(now())
-    updatedAt    DateTime @updatedAt
+    id             String      @id @default(uuid())
+    procurement_no String      @unique
+    procurement    procurement @relation(fields: [procurement_no], references: [procurement_no])
+    createdAt      DateTime    @default(now())
+    updatedAt      DateTime    @updatedAt
 }
 
 model level2_inbox {
-    id           String   @id @default(uuid())
-    reference_no String   @unique
-    boq          boq?     @relation(fields: [reference_no], references: [reference_no])
-    createdAt    DateTime @default(now())
-    updatedAt    DateTime @updatedAt
+    id             String      @id @default(uuid())
+    procurement_no String      @unique
+    procurement    procurement @relation(fields: [procurement_no], references: [procurement_no])
+    createdAt      DateTime    @default(now())
+    updatedAt      DateTime    @updatedAt
 }
 
 model level2_outbox {
-    id           String   @id @default(uuid())
-    reference_no String   @unique
-    boq          boq?     @relation(fields: [reference_no], references: [reference_no])
-    createdAt    DateTime @default(now())
-    updatedAt    DateTime @updatedAt
+    id             String      @id @default(uuid())
+    procurement_no String      @unique
+    procurement    procurement @relation(fields: [procurement_no], references: [procurement_no])
+    createdAt      DateTime    @default(now())
+    updatedAt      DateTime    @updatedAt
 }
 
 // level 1 & 2================================================================================================================================================================
