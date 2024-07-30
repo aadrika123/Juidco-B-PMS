@@ -410,6 +410,8 @@ export const approveServiceRequestDal = async (req: Request) => {
 				service_no: service_no,
 			},
 			select: {
+				service_no: true,
+				stock_handover_no: true,
 				status: true,
 				service: true,
 				inventory: {
@@ -424,6 +426,10 @@ export const approveServiceRequestDal = async (req: Request) => {
 				service_req_product: true,
 			},
 		})
+
+		if (serviceReq?.service === 'dead' && !doc) {
+			throw { error: true, message: 'For dead stock request, document is mandatory' }
+		}
 
 		if (serviceReq?.status !== 20) {
 			throw { error: true, message: 'Invalid status of service request to be approved' }
@@ -452,7 +458,7 @@ export const approveServiceRequestDal = async (req: Request) => {
 			if (serviceReq?.service === 'dead') {
 				await Promise.all(
 					serviceReqProd.map(async prod => {
-						await addToDeadStock(prod?.serial_no, prod.quantity, remark, doc, String(serviceReq?.inventory?.subcategory?.name), tx)
+						await addToDeadStock(prod?.serial_no, prod.quantity, remark, doc, String(serviceReq?.inventory?.subcategory?.name), tx, serviceReq?.service_no, serviceReq?.stock_handover_no)
 					})
 				)
 			}
@@ -460,7 +466,7 @@ export const approveServiceRequestDal = async (req: Request) => {
 			if (serviceReq?.service === 'warranty') {
 				await Promise.all(
 					serviceReqProd.map(async prod => {
-						await warrantyClaim(prod?.serial_no, remark, String(serviceReq?.inventory?.subcategory?.name), tx)
+						await warrantyClaim(prod?.serial_no, remark, String(serviceReq?.inventory?.subcategory?.name), tx, serviceReq?.service_no, serviceReq?.stock_handover_no)
 					})
 				)
 			}
@@ -468,7 +474,7 @@ export const approveServiceRequestDal = async (req: Request) => {
 			if (serviceReq?.service === 'return') {
 				await Promise.all(
 					serviceReqProd.map(async prod => {
-						await returnToInventory(prod?.serial_no, prod.quantity, String(serviceReq?.inventory?.subcategory?.name), tx)
+						await returnToInventory(prod?.serial_no, prod.quantity, String(serviceReq?.inventory?.subcategory?.name), tx, serviceReq?.service_no, serviceReq?.stock_handover_no)
 					})
 				)
 			}
@@ -766,7 +772,7 @@ export const returnServiceRequestDal = async (req: Request) => {
 	}
 }
 
-const addToDeadStock = async (serial_no: string, quantity: number, remark: string, doc: any, subcategory_name: string, tx: Prisma.TransactionClient) => {
+const addToDeadStock = async (serial_no: string, quantity: number, remark: string, doc: any, subcategory_name: string, tx: Prisma.TransactionClient, service_no: string, stock_handover_no: string) => {
 	const product = await prisma
 		.$queryRawUnsafe(
 			`
@@ -818,9 +824,21 @@ const addToDeadStock = async (serial_no: string, quantity: number, remark: strin
 			},
 		})
 	})
+
+	await tx.service_history.create({
+		data: {
+			stock_handover_no: stock_handover_no,
+			service_no: service_no,
+			serial_no: serial_no,
+			quantity: quantity,
+			service: 'dead',
+			// inventory: { connect: { id: product?.inventory_id } },
+			inventoryId: product?.inventory_id,
+		},
+	})
 }
 
-const warrantyClaim = async (serial_no: string, remark: string, subcategory_name: string, tx: Prisma.TransactionClient) => {
+const warrantyClaim = async (serial_no: string, remark: string, subcategory_name: string, tx: Prisma.TransactionClient, service_no: string, stock_handover_no: string) => {
 	const product = await prisma
 		.$queryRawUnsafe(
 			`
@@ -852,9 +870,20 @@ const warrantyClaim = async (serial_no: string, remark: string, subcategory_name
 			remark2: remark,
 		},
 	})
+
+	await tx.service_history.create({
+		data: {
+			stock_handover_no: stock_handover_no,
+			service_no: service_no,
+			serial_no: serial_no,
+			service: 'warranty',
+			// inventory: { connect: { id: product?.inventory_id } },
+			inventoryId: product?.inventory_id,
+		},
+	})
 }
 
-const returnToInventory = async (serial_no: string, quantity: number, subcategory_name: string, tx: Prisma.TransactionClient) => {
+const returnToInventory = async (serial_no: string, quantity: number, subcategory_name: string, tx: Prisma.TransactionClient, service_no: string, stock_handover_no: string) => {
 	const product = await prisma
 		.$queryRawUnsafe(
 			`
@@ -867,7 +896,7 @@ const returnToInventory = async (serial_no: string, quantity: number, subcategor
 
 	await tx.$queryRawUnsafe(`
 			UPDATE product.product_${subcategory_name.toLowerCase().replace(/\s/g, '')}
-			SET is_available = true,
+			SET is_available = true, quantity=${product?.quantity + quantity}
 			WHERE serial_no = '${serial_no as string}'
 		`)
 
@@ -881,4 +910,45 @@ const returnToInventory = async (serial_no: string, quantity: number, subcategor
 			},
 		},
 	})
+
+	await tx.service_history.create({
+		data: {
+			stock_handover_no: stock_handover_no,
+			service_no: service_no,
+			serial_no: serial_no,
+			quantity: quantity,
+			service: 'return',
+			// inventory: { connect: { id: product?.inventory_id } },
+			inventoryId: product?.inventory_id,
+		},
+	})
 }
+
+// const returnToInventory = async (serial_no: string, quantity: number, subcategory_name: string, tx: Prisma.TransactionClient) => {
+// 	const product = await prisma
+// 		.$queryRawUnsafe(
+// 			`
+// 					SELECT *
+// 					FROM product.product_${subcategory_name.toLowerCase().replace(/\s/g, '')}
+// 					WHERE serial_no = '${serial_no as string}'
+// 				`
+// 		)
+// 		.then((result: any) => result[0])
+
+// 	await tx.$queryRawUnsafe(`
+// 			UPDATE product.product_${subcategory_name.toLowerCase().replace(/\s/g, '')}
+// 			SET is_available = true,
+// 			WHERE serial_no = '${serial_no as string}'
+// 		`)
+
+// 	await tx.inventory.update({
+// 		where: {
+// 			id: product?.inventory_id,
+// 		},
+// 		data: {
+// 			quantity: {
+// 				increment: quantity,
+// 			},
+// 		},
+// 	})
+// }
