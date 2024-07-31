@@ -375,28 +375,28 @@ model procurement {
 }
 
 model procurement_stocks {
-    id                         String                       @id @default(uuid())
+    id                         String                      @id @default(uuid())
     procurement_no             String
-    procurement                procurement                  @relation(fields: [procurement_no], references: [procurement_no])
+    procurement                procurement                 @relation(fields: [procurement_no], references: [procurement_no])
     category_masterId          String?
-    category                   category_master?             @relation(fields: [category_masterId], references: [id])
+    category                   category_master?            @relation(fields: [category_masterId], references: [id])
     subCategory_masterId       String?
-    subCategory                subcategory_master?          @relation(fields: [subCategory_masterId], references: [id])
+    subCategory                subcategory_master?         @relation(fields: [subCategory_masterId], references: [id])
     brand_masterId             String?
-    brand                      brand_master?                @relation(fields: [brand_masterId], references: [id])
+    brand                      brand_master?               @relation(fields: [brand_masterId], references: [id])
     unit_masterId              String?
-    unit                       unit_master?                 @relation(fields: [unit_masterId], references: [id])
+    unit                       unit_master?                @relation(fields: [unit_masterId], references: [id])
     gst                        Float?
     remark                     String?
     rate                       Float?
     quantity                   Float?
     description                String?
     total_rate                 Float?
-    createdAt                  DateTime                     @default(now())
-    updatedAt                  DateTime                     @updatedAt
+    createdAt                  DateTime                    @default(now())
+    updatedAt                  DateTime                    @updatedAt
     boq_procurement_no         String?
-    boq                        boq?                         @relation(fields: [boq_procurement_no], references: [procurement_no])
-    procurement_stocks_history procurement_stocks_history[]
+    procurement_stocks_history procurement_stocks_history?
+    boq                        boq?                        @relation(fields: [boq_procurement_no], references: [procurement_no])
 }
 
 model procurement_stocks_history {
@@ -420,7 +420,7 @@ model procurement_stocks_history {
     createdAt            DateTime            @default(now())
     updatedAt            DateTime            @updatedAt
     procurement_stocks   procurement_stocks  @relation(fields: [procurement_stocksId], references: [id])
-    procurement_stocksId String
+    procurement_stocksId String              @unique
 }
 
 model procurement_before_boq {
@@ -531,7 +531,7 @@ model boq {
     tendering_form     tendering_form?
     finance_boq_inbox  finance_boq_inbox?
     finance_boq_outbox finance_boq_outbox?
-    procurement_items  procurement_stocks[]
+    procurement_stocks procurement_stocks[]
 }
 
 model boq_procurement {
