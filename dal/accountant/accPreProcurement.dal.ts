@@ -580,6 +580,148 @@ export const createBoqDal = async (req: Request) => {
 	}
 }
 
+// export const createBoqDal = async (req: Request) => {
+// 	const { boqData } = req.body
+// 	try {
+// 		const formattedBoqData: boqData = JSON.parse(boqData)
+// 		const img = req.files as Express.Multer.File[]
+// 		let arrayToSend: any[] = []
+// 		let docToSend: any[] = []
+
+// 		const reference_no: string = generateReferenceNumber(formattedBoqData?.ulb_id)
+
+// 		await Promise.all(
+// 			formattedBoqData?.procurement.map(async item => {
+// 				const preparedData = {
+// 					reference_no: reference_no,
+// 					procurement_no: item?.procurement_no,
+// 					description: item?.description,
+// 					quantity: item?.quantity,
+// 					unit: item?.unit,
+// 					rate: item?.rate,
+// 					amount: item?.amount,
+// 					remark: item?.remark,
+// 				}
+
+// 				const status = await prisma.procurement_status.findFirst({
+// 					where: {
+// 						procurement_no: item?.procurement_no,
+// 					},
+// 					select: {
+// 						status: true,
+// 					},
+// 				})
+
+// 				if (status?.status !== 1) {
+// 					throw {
+// 						error: true,
+// 						message: `Procurement : ${item?.procurement_no} is not valid for BOQ`,
+// 					}
+// 				}
+
+// 				arrayToSend.push(preparedData)
+// 			})
+// 		)
+
+// 		const preparedBoq = {
+// 			reference_no: reference_no,
+// 			gst: formattedBoqData?.gst,
+// 			estimated_cost: formattedBoqData?.estimated_cost,
+// 			remark: formattedBoqData?.remark,
+// 			hsn_code: formattedBoqData?.hsn_code,
+// 		}
+
+// 		if (img) {
+// 			const uploaded: uploadedDoc[] = await imageUploader(img) //It will return reference number and unique id as an object after uploading.
+
+// 			uploaded.map((doc: uploadedDoc) => {
+// 				const preparedBoqDoc = {
+// 					reference_no: reference_no,
+// 					ReferenceNo: doc?.ReferenceNo,
+// 					uniqueId: doc?.uniqueId,
+// 					remark: formattedBoqData?.remark,
+// 				}
+// 				docToSend.push(preparedBoqDoc)
+// 			})
+// 		}
+
+// 		//start transaction
+// 		await prisma.$transaction(async tx => {
+// 			await tx.boq.create({
+// 				data: preparedBoq,
+// 			})
+
+// 			await tx.boq_procurement.createMany({
+// 				data: arrayToSend,
+// 			})
+
+// 			if (img) {
+// 				await tx.boq_doc.createMany({
+// 					data: docToSend,
+// 				})
+// 			}
+
+// 			await Promise.all(
+// 				formattedBoqData?.procurement.map(async item => {
+// 					await tx.procurement_status.update({
+// 						where: {
+// 							procurement_no: item?.procurement_no,
+// 						},
+// 						data: {
+// 							status: 70,
+// 						},
+// 					})
+// 					// await tx.acc_pre_procurement_inbox.delete({
+// 					// 	where: {
+// 					// 		procurement_no: item?.procurement_no,
+// 					// 	},
+// 					// })
+// 					// await tx.acc_pre_procurement_outbox.create({
+// 					// 	data: {
+// 					// 		procurement_no: item?.procurement_no,
+// 					// 	},
+// 					// })
+// 					// await tx.da_pre_procurement_outbox.delete({
+// 					// 	where: {
+// 					// 		procurement_no: item?.procurement_no,
+// 					// 	},
+// 					// })
+// 					// await tx.da_pre_procurement_inbox.create({
+// 					// 	data: {
+// 					// 		procurement_no: item?.procurement_no,
+// 					// 	},
+// 					// })
+// 					await tx.notification.create({
+// 						data: {
+// 							role_id: Number(process.env.ROLE_SR),
+// 							title: 'BOQ created',
+// 							destination: 10,
+// 							description: `BOQ created for procurement Number : ${item?.procurement_no}`,
+// 						},
+// 					})
+// 				})
+// 			)
+
+// 			// await tx.acc_boq_outbox.create({
+// 			// 	data: {
+// 			// 		reference_no: reference_no,
+// 			// 	},
+// 			// })
+
+// 			await tx.da_boq_inbox.create({
+// 				data: {
+// 					reference_no: reference_no,
+// 				},
+// 			})
+// 		})
+
+// 		return reference_no
+// 	} catch (err: any) {
+// 		console.log(err)
+// 		return { error: true, message: getErrorMessage(err) }
+// 	}
+// }
+
 export const getPreProcurementOutboxDal = async (req: Request) => {
 	const page: number | undefined = Number(req?.query?.page)
 	const take: number | undefined = Number(req?.query?.take)

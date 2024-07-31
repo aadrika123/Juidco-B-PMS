@@ -49,6 +49,7 @@ export const createPreProcurementDal = async (req: Request) => {
 					await tx.procurement_stocks.create({
 						data: {
 							procurement_no: procurement_no,
+							boq_procurement_no: procurement_no,
 							category_masterId: category,
 							subCategory_masterId: item?.subcategory,
 							unit_masterId: item?.unit,

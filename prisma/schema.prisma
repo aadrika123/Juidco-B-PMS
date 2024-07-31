@@ -10,59 +10,63 @@ datasource db {
 //Master entry=======================================================================================================================================================
 
 model category_master {
-    id                     String                   @id @default(uuid())
-    name                   String                   @unique
-    status                 Boolean                  @default(true)
-    subcategory_master     subcategory_master[]
-    createdAt              DateTime                 @default(now())
-    updatedAt              DateTime                 @updatedAt
-    inventory              inventory[]
-    procurement            procurement[]
-    procurement_history    procurement_history[]
-    procurement_before_boq procurement_before_boq[]
-    procurement_stocks     procurement_stocks[]
+    id                         String                       @id @default(uuid())
+    name                       String                       @unique
+    status                     Boolean                      @default(true)
+    subcategory_master         subcategory_master[]
+    createdAt                  DateTime                     @default(now())
+    updatedAt                  DateTime                     @updatedAt
+    inventory                  inventory[]
+    procurement                procurement[]
+    procurement_history        procurement_history[]
+    procurement_before_boq     procurement_before_boq[]
+    procurement_stocks         procurement_stocks[]
+    procurement_stocks_history procurement_stocks_history[]
 }
 
 model subcategory_master {
-    id                     String                   @id @default(uuid())
-    name                   String                   @unique
-    status                 Boolean                  @default(true)
-    category               category_master          @relation(fields: [category_masterId], references: [id])
-    category_masterId      String
-    createdAt              DateTime                 @default(now())
-    updatedAt              DateTime                 @updatedAt
-    inventory              inventory[]
-    brand_master           brand_master[]
-    procurement_history    procurement_history[]
-    procurement_before_boq procurement_before_boq[]
-    procurement_stocks     procurement_stocks[]
+    id                         String                       @id @default(uuid())
+    name                       String                       @unique
+    status                     Boolean                      @default(true)
+    category                   category_master              @relation(fields: [category_masterId], references: [id])
+    category_masterId          String
+    createdAt                  DateTime                     @default(now())
+    updatedAt                  DateTime                     @updatedAt
+    inventory                  inventory[]
+    brand_master               brand_master[]
+    procurement_history        procurement_history[]
+    procurement_before_boq     procurement_before_boq[]
+    procurement_stocks         procurement_stocks[]
+    procurement_stocks_history procurement_stocks_history[]
 }
 
 model brand_master {
-    id                     String                   @id @default(uuid())
-    name                   String
-    status                 Boolean                  @default(true)
-    subcategory            subcategory_master       @relation(fields: [subcategory_masterId], references: [id])
-    subcategory_masterId   String
-    createdAt              DateTime                 @default(now())
-    updatedAt              DateTime                 @updatedAt
-    inventory              inventory[]
-    procurement_history    procurement_history[]
-    procurement_before_boq procurement_before_boq[]
-    procurement_stocks     procurement_stocks[]
+    id                         String                       @id @default(uuid())
+    name                       String
+    status                     Boolean                      @default(true)
+    subcategory                subcategory_master           @relation(fields: [subcategory_masterId], references: [id])
+    subcategory_masterId       String
+    createdAt                  DateTime                     @default(now())
+    updatedAt                  DateTime                     @updatedAt
+    inventory                  inventory[]
+    procurement_history        procurement_history[]
+    procurement_before_boq     procurement_before_boq[]
+    procurement_stocks         procurement_stocks[]
+    procurement_stocks_history procurement_stocks_history[]
 }
 
 model unit_master {
-    id                     String                   @id @default(uuid())
-    name                   String
-    abbreviation           String?
-    status                 Boolean                  @default(true)
-    createdAt              DateTime                 @default(now())
-    updatedAt              DateTime                 @updatedAt
-    inventory              inventory[]
-    procurement_history    procurement_history[]
-    procurement_before_boq procurement_before_boq[]
-    procurement_stocks     procurement_stocks[]
+    id                         String                       @id @default(uuid())
+    name                       String
+    abbreviation               String?
+    status                     Boolean                      @default(true)
+    createdAt                  DateTime                     @default(now())
+    updatedAt                  DateTime                     @updatedAt
+    inventory                  inventory[]
+    procurement_history        procurement_history[]
+    procurement_before_boq     procurement_before_boq[]
+    procurement_stocks         procurement_stocks[]
+    procurement_stocks_history procurement_stocks_history[]
 }
 
 model supplier_master {
@@ -367,9 +371,35 @@ model procurement {
     level1_outbox                level1_outbox?
     level2_inbox                 level2_inbox?
     level2_outbox                level2_outbox?
+    procurement_stocks_history   procurement_stocks_history[]
 }
 
 model procurement_stocks {
+    id                         String                       @id @default(uuid())
+    procurement_no             String
+    procurement                procurement                  @relation(fields: [procurement_no], references: [procurement_no])
+    category_masterId          String?
+    category                   category_master?             @relation(fields: [category_masterId], references: [id])
+    subCategory_masterId       String?
+    subCategory                subcategory_master?          @relation(fields: [subCategory_masterId], references: [id])
+    brand_masterId             String?
+    brand                      brand_master?                @relation(fields: [brand_masterId], references: [id])
+    unit_masterId              String?
+    unit                       unit_master?                 @relation(fields: [unit_masterId], references: [id])
+    gst                        Float?
+    remark                     String?
+    rate                       Float?
+    quantity                   Float?
+    description                String?
+    total_rate                 Float?
+    createdAt                  DateTime                     @default(now())
+    updatedAt                  DateTime                     @updatedAt
+    boq_procurement_no         String?
+    boq                        boq?                         @relation(fields: [boq_procurement_no], references: [procurement_no])
+    procurement_stocks_history procurement_stocks_history[]
+}
+
+model procurement_stocks_history {
     id                   String              @id @default(uuid())
     procurement_no       String
     procurement          procurement         @relation(fields: [procurement_no], references: [procurement_no])
@@ -381,12 +411,16 @@ model procurement_stocks {
     brand                brand_master?       @relation(fields: [brand_masterId], references: [id])
     unit_masterId        String?
     unit                 unit_master?        @relation(fields: [unit_masterId], references: [id])
+    gst                  Float?
+    remark               String?
     rate                 Float?
     quantity             Float?
     description          String?
     total_rate           Float?
     createdAt            DateTime            @default(now())
     updatedAt            DateTime            @updatedAt
+    procurement_stocks   procurement_stocks  @relation(fields: [procurement_stocksId], references: [id])
+    procurement_stocksId String
 }
 
 model procurement_before_boq {
@@ -476,16 +510,17 @@ model note_sheet {
 //BOQ============================================================================================================================================================================================================================================================================================================
 
 model boq {
-    id                 String              @id @default(uuid())
-    reference_no       String              @unique
+    id                 String               @id @default(uuid())
+    reference_no       String               @unique
+    procurement_no     String?              @unique
     gst                Float?
     estimated_cost     Float?
     remark             String?
-    createdAt          DateTime            @default(now())
-    updatedAt          DateTime            @updatedAt
-    revised            Boolean             @default(false)
-    status             Int                 @default(0) //-3=rejected by level2, -2=rejected by level1, -1=returned, 0=pending, 1=level1, 11=level1 approved, 12=returned to level1, 2=level2, 21=level2 approved, 40=finance pending, 41=finance returned, 42=finance approved, -43=finance rejected 
-    isEdited           Boolean             @default(false)
+    createdAt          DateTime             @default(now())
+    updatedAt          DateTime             @updatedAt
+    revised            Boolean              @default(false)
+    status             Int                  @default(0) //-3=rejected by level2, -2=rejected by level1, -1=returned, 0=pending, 1=level1, 11=level1 approved, 12=returned to level1, 2=level2, 21=level2 approved, 40=finance pending, 41=finance returned, 42=finance approved, -43=finance rejected 
+    isEdited           Boolean              @default(false)
     hsn_code           String?
     procurements       boq_procurement[]
     boq_doc            boq_doc[]
@@ -496,6 +531,7 @@ model boq {
     tendering_form     tendering_form?
     finance_boq_inbox  finance_boq_inbox?
     finance_boq_outbox finance_boq_outbox?
+    procurement_items  procurement_stocks[]
 }
 
 model boq_procurement {
