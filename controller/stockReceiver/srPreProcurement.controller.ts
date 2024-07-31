@@ -9,7 +9,8 @@ import {
     getPreProcurementOutboxByIdDal,
     getPreProcurementRejectedDal,
     getPreProcurementReleasedDal,
-    editPreProcurementDal
+    editPreProcurementDal,
+    forwardToLevel1Dal
 } from "../../dal/stockReceiver/preProcurement.dal";
 
 
@@ -103,6 +104,24 @@ export const forwardToDa = async (req: Request, res: Response) => {
         res.status(404).json({
             status: false,
             message: `Error while forwarding to DA`,
+            error: result?.message
+        })
+    }
+}
+
+
+export const forwardToLevel1 = async (req: Request, res: Response) => {
+    const result: any = await forwardToLevel1Dal(req)
+    if (!result?.error) {
+        res.status(200).json({
+            status: true,
+            message: `Forwarded to Level 1 successfully`,
+            data: result
+        })
+    } else {
+        res.status(404).json({
+            status: false,
+            message: `Error while forwarding to level 1`,
             error: result?.message
         })
     }

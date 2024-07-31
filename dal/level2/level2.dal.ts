@@ -409,8 +409,8 @@ export const approvalByLevel2Dal = async (req: Request) => {
 			},
 		})
 
-		if (boqData?.status !== 2) {
-			throw { error: true, message: 'Invalid status of BOQ to be approved' }
+		if (boqData?.status !== 20) {
+			throw { error: true, message: 'Invalid status of procurement to be approved' }
 		}
 
 		//start transaction
