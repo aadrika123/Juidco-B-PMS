@@ -5,10 +5,11 @@ import { pagination } from '../../type/common.type'
 const prisma = new PrismaClient()
 
 export const createUnitDal = async (req: Request) => {
-	const { name } = req.body
+	const { name, abbreviation } = req.body
 
 	const data: any = {
 		name: name,
+		abbreviation: abbreviation,
 	}
 
 	try {
@@ -130,7 +131,7 @@ export const getUnitActiveOnlyDal = async (req: Request) => {
 }
 
 export const editUnitDal = async (req: Request) => {
-	const { id, name } = req.body
+	const { id, name, abbreviation } = req.body
 	try {
 		if (!id) {
 			throw { error: true, message: "ID i required as 'id'" }
@@ -141,6 +142,7 @@ export const editUnitDal = async (req: Request) => {
 			},
 			data: {
 				name: name,
+				abbreviation: abbreviation,
 			},
 		})
 		return result

@@ -34,22 +34,22 @@ export const getBoqByRefNoDal = async (req: Request) => {
 						remark: true,
 						procurement: {
 							select: {
-								category: {
-									select: {
-										name: true,
-									},
-								},
-								subcategory: {
-									select: {
-										name: true,
-									},
-								},
-								brand: {
-									select: {
-										name: true,
-									},
-								},
-								description: true,
+								// 	category: {
+								// 		select: {
+								// 			name: true,
+								// 		},
+								// 	},
+								// 	subcategory: {
+								// 		select: {
+								// 			name: true,
+								// 		},
+								// 	},
+								// 	brand: {
+								// 		select: {
+								// 			name: true,
+								// 		},
+								// 	},
+								// 	description: true,
 							},
 						},
 					},

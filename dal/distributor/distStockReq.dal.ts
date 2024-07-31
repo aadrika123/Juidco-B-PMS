@@ -7,44 +7,44 @@ import { pagination } from '../../type/common.type'
 const prisma = new PrismaClient()
 
 export const createStockRequestDal = async (req: Request) => {
-	const { category, subcategory, brand, inventory, emp_id, emp_name, allotted_quantity, auth, unit } = req.body
+	const { inventory, emp_id, emp_name, allotted_quantity, auth } = req.body
 
 	const ulb_id = auth?.ulb_id
 
 	try {
 		if (!ulb_id) {
-			throw { error: true, message: 'Login invalid, Please login again' }
+			throw { error: true, message: 'ULB id is not valid' }
 		}
 
-		const invData = await prisma.inventory.findFirst({
-			where: {
-				id: inventory,
-			},
-			select: {
-				quantity: true,
-			},
-		})
+		// const invData = await prisma.inventory.findFirst({
+		// 	where: {
+		// 		id: inventory,
+		// 	},
+		// 	select: {
+		// 		quantity: true,
+		// 	},
+		// })
 
-		const invBuffer: any = await prisma.inventory_buffer.aggregate({
-			where: {
-				inventoryId: inventory,
-			},
-			_sum: {
-				reserved_quantity: true,
-			},
-		})
+		// const invBuffer: any = await prisma.inventory_buffer.aggregate({
+		// 	where: {
+		// 		inventoryId: inventory,
+		// 	},
+		// 	_sum: {
+		// 		reserved_quantity: true,
+		// 	},
+		// })
 
-		if (Number(allotted_quantity) > (Number(invData?.quantity) - invBuffer?._sum?.reserved_quantity || 0)) {
-			throw { error: true, message: `Allotted quantity cannot be more than the available stock. Available stock : ${Number(invData?.quantity) - invBuffer?._sum?.reserved_quantity || 0} ` }
-		}
+		// if (Number(allotted_quantity) > (Number(invData?.quantity) - invBuffer?._sum?.reserved_quantity || 0)) {
+		// 	throw { error: true, message: `Allotted quantity cannot be more than the available stock. Available stock : ${Number(invData?.quantity) - invBuffer?._sum?.reserved_quantity || 0} ` }
+		// }
 
 		const stock_handover_no = generateStockHandoverNumber(ulb_id)
 
 		const data: any = {
-			...(category && { category: { connect: { id: category } } }),
-			subcategory: { connect: { id: subcategory } },
-			brand: { connect: { id: brand } },
-			...(unit && { unit: { connect: { id: unit } } }),
+			// ...(category && { category: { connect: { id: category } } }),
+			// subcategory: { connect: { id: subcategory } },
+			// brand: { connect: { id: brand } },
+			// ...(unit && { unit: { connect: { id: unit } } }),
 			inventory: { connect: { id: inventory } },
 			emp_id: emp_id,
 			emp_name: emp_name,
@@ -68,13 +68,13 @@ export const createStockRequestDal = async (req: Request) => {
 				},
 			})
 
-			await tx.inventory_buffer.create({
-				data: {
-					stock_handover_no: stock_handover_no,
-					reserved_quantity: allotted_quantity,
-					inventory: { connect: { id: inventory } },
-				},
-			})
+			// await tx.inventory_buffer.create({
+			// 	data: {
+			// 		stock_handover_no: stock_handover_no,
+			// 		reserved_quantity: allotted_quantity,
+			// 		inventory: { connect: { id: inventory } },
+			// 	},
+			// })
 		})
 
 		return stockReq
@@ -111,10 +111,12 @@ export const getStockReqInboxDal = async (req: Request) => {
 				},
 			},
 			{
-				emp_id: {
-					description: {
-						contains: search,
-						mode: 'insensitive',
+				stock_request: {
+					inventory: {
+						description: {
+							contains: search,
+							mode: 'insensitive',
+						},
 					},
 				},
 			},
@@ -127,8 +129,10 @@ export const getStockReqInboxDal = async (req: Request) => {
 				? [
 						{
 							stock_request: {
-								category_masterId: {
-									in: category,
+								inventory: {
+									category_masterId: {
+										in: category,
+									},
 								},
 							},
 						},
@@ -138,8 +142,10 @@ export const getStockReqInboxDal = async (req: Request) => {
 				? [
 						{
 							stock_request: {
-								subcategory_masterId: {
-									in: subcategory,
+								inventory: {
+									subcategory_masterId: {
+										in: subcategory,
+									},
 								},
 							},
 						},
@@ -149,8 +155,10 @@ export const getStockReqInboxDal = async (req: Request) => {
 				? [
 						{
 							stock_request: {
-								brand_masterId: {
-									in: brand,
+								inventory: {
+									brand_masterId: {
+										in: brand,
+									},
 								},
 							},
 						},
@@ -187,24 +195,29 @@ export const getStockReqInboxDal = async (req: Request) => {
 				stock_request: {
 					select: {
 						stock_handover_no: true,
-						category: {
+						inventory: {
 							select: {
-								name: true,
-							},
-						},
-						subcategory: {
-							select: {
-								name: true,
-							},
-						},
-						brand: {
-							select: {
-								name: true,
-							},
-						},
-						unit: {
-							select: {
-								name: true,
+								category: {
+									select: {
+										name: true,
+									},
+								},
+								subcategory: {
+									select: {
+										name: true,
+									},
+								},
+								brand: {
+									select: {
+										name: true,
+									},
+								},
+								unit: {
+									select: {
+										name: true,
+									},
+								},
+								description: true,
 							},
 						},
 						ulb_id: true,
@@ -213,7 +226,6 @@ export const getStockReqInboxDal = async (req: Request) => {
 						allotted_quantity: true,
 						isEdited: true,
 						status: true,
-						serial_no: true,
 					},
 				},
 			},
@@ -357,24 +369,28 @@ export const getStockReqOutboxDal = async (req: Request) => {
 				stock_request: {
 					select: {
 						stock_handover_no: true,
-						category: {
+						inventory: {
 							select: {
-								name: true,
-							},
-						},
-						subcategory: {
-							select: {
-								name: true,
-							},
-						},
-						brand: {
-							select: {
-								name: true,
-							},
-						},
-						unit: {
-							select: {
-								name: true,
+								category: {
+									select: {
+										name: true,
+									},
+								},
+								subcategory: {
+									select: {
+										name: true,
+									},
+								},
+								brand: {
+									select: {
+										name: true,
+									},
+								},
+								unit: {
+									select: {
+										name: true,
+									},
+								},
 							},
 						},
 						ulb_id: true,
@@ -383,7 +399,6 @@ export const getStockReqOutboxDal = async (req: Request) => {
 						allotted_quantity: true,
 						isEdited: true,
 						status: true,
-						serial_no: true,
 					},
 				},
 			},
@@ -424,7 +439,7 @@ export const getStockReqOutboxDal = async (req: Request) => {
 	}
 }
 
-export const forwardToSrDal = async (req: Request) => {
+export const forwardToDaDal = async (req: Request) => {
 	const { stock_handover_no }: { stock_handover_no: string[] } = req.body
 
 	try {
@@ -448,7 +463,7 @@ export const forwardToSrDal = async (req: Request) => {
 						return 1
 					}
 				}
-				const srOutbox: any = await prisma.dist_stock_req_outbox.count({
+				const daOutboxCount: number = await prisma.da_stock_req_outbox.count({
 					where: {
 						stock_handover_no: item,
 					},
@@ -459,7 +474,7 @@ export const forwardToSrDal = async (req: Request) => {
 					prisma.dist_stock_req_outbox.create({
 						data: { stock_handover_no: item },
 					}),
-					prisma.sr_stock_req_inbox.create({
+					prisma.da_stock_req_inbox.create({
 						data: { stock_handover_no: item },
 					}),
 					prisma.stock_request.update({
@@ -468,6 +483,7 @@ export const forwardToSrDal = async (req: Request) => {
 						},
 						data: {
 							status: statusToUpdate,
+							remark: '',
 						},
 					}),
 					prisma.dist_stock_req_inbox.delete({
@@ -475,9 +491,9 @@ export const forwardToSrDal = async (req: Request) => {
 							stock_handover_no: item,
 						},
 					}),
-					...(srOutbox !== 0
+					...(daOutboxCount !== 0
 						? [
-								prisma.sr_stock_req_outbox.delete({
+								prisma.da_stock_req_outbox.delete({
 									where: {
 										stock_handover_no: item,
 									},
@@ -486,10 +502,10 @@ export const forwardToSrDal = async (req: Request) => {
 						: []),
 					prisma.notification.create({
 						data: {
-							role_id: Number(process.env.ROLE_SR),
+							role_id: Number(process.env.ROLE_DA),
 							title: 'New stock request',
-							destination: 13,
-							description: `There is a new stock request to be approved  : ${item}`,
+							destination: 25,
+							description: `There is a new stock request to be reviewed  : ${item}`,
 						},
 					}),
 				])
@@ -530,202 +546,6 @@ export const handoverDal = async (req: Request) => {
 		})
 
 		return 'Handed over'
-	} catch (err: any) {
-		console.log(err)
-		return { error: true, message: getErrorMessage(err) }
-	}
-}
-
-export const stockReturnDal = async (req: Request) => {
-	const { stock_handover_no }: { stock_handover_no: string } = req.body
-
-	try {
-		const status: any = await prisma.stock_request.findFirst({
-			where: {
-				stock_handover_no: stock_handover_no,
-			},
-			select: {
-				status: true,
-			},
-		})
-		if (status?.status < 3) {
-			throw { error: true, message: 'Stock request is not valid to be returned to inventory' }
-		}
-
-		await prisma.$transaction(async tx => {
-			await tx.dist_stock_req_outbox.create({
-				data: { stock_handover_no: stock_handover_no },
-			})
-
-			await tx.sr_stock_req_inbox.create({
-				data: { stock_handover_no: stock_handover_no },
-			})
-
-			await tx.stock_request.update({
-				where: {
-					stock_handover_no: stock_handover_no,
-				},
-				data: {
-					status: 5,
-				},
-			})
-
-			await tx.dist_stock_req_inbox.delete({
-				where: {
-					stock_handover_no: stock_handover_no,
-				},
-			})
-
-			await tx.notification.create({
-				data: {
-					role_id: Number(process.env.ROLE_SR),
-					title: 'A stock to be returned',
-					destination: 13,
-					description: `There is a stock to be returned  : ${stock_handover_no}`,
-				},
-			})
-		})
-
-		return 'Forwarded to SR for approval'
-	} catch (err: any) {
-		console.log(err)
-		return { error: true, message: getErrorMessage(err) }
-	}
-}
-
-export const AddDeadStockDal = async (req: Request) => {
-	const { stock_handover_no }: { stock_handover_no: string } = req.body
-
-	try {
-		const status: any = await prisma.stock_request.findFirst({
-			where: {
-				stock_handover_no: stock_handover_no,
-			},
-			select: {
-				status: true,
-			},
-		})
-		if (status?.status < 3) {
-			throw { error: true, message: 'Stock request is not valid to be added to dead stock' }
-		}
-
-		await prisma.$transaction(async tx => {
-			await tx.dist_stock_req_outbox.create({
-				data: { stock_handover_no: stock_handover_no },
-			})
-
-			await tx.sr_stock_req_inbox.create({
-				data: { stock_handover_no: stock_handover_no },
-			})
-
-			await tx.stock_request.update({
-				where: {
-					stock_handover_no: stock_handover_no,
-				},
-				data: {
-					status: 6,
-				},
-			})
-
-			await tx.dist_stock_req_inbox.delete({
-				where: {
-					stock_handover_no: stock_handover_no,
-				},
-			})
-
-			await tx.notification.create({
-				data: {
-					role_id: Number(process.env.ROLE_SR),
-					title: 'A stock to be added to dead stock',
-					destination: 13,
-					description: `There is a stock to be added to dead stock  : ${stock_handover_no}`,
-				},
-			})
-		})
-
-		return 'Forwarded to SR for approval'
-	} catch (err: any) {
-		console.log(err)
-		return { error: true, message: getErrorMessage(err) }
-	}
-}
-
-export const warrantyClaimReqDal = async (req: Request) => {
-	const { stock_handover_no }: { stock_handover_no: string } = req.body
-
-	try {
-		const stockReq = await prisma.stock_request.findFirst({
-			where: {
-				stock_handover_no: stock_handover_no,
-			},
-			select: {
-				status: true,
-				inventory: {
-					select: {
-						warranty: true,
-					},
-				},
-			},
-		})
-		if (!stockReq) {
-			throw { error: true, message: 'Invalid stock request' }
-		}
-		if (stockReq?.status < 3) {
-			throw { error: true, message: 'Stock request is not valid to be claimed for warranty' }
-		}
-		if (!stockReq?.inventory?.warranty) {
-			throw { error: true, message: 'The item has no option to claim warranty' }
-		}
-
-		const srOutbox = await prisma.sr_stock_req_outbox.count({
-			where: {
-				stock_handover_no: stock_handover_no,
-			},
-		})
-
-		await prisma.$transaction(async tx => {
-			await tx.dist_stock_req_outbox.create({
-				data: { stock_handover_no: stock_handover_no },
-			})
-
-			await tx.sr_stock_req_inbox.create({
-				data: { stock_handover_no: stock_handover_no },
-			})
-
-			await tx.stock_request.update({
-				where: {
-					stock_handover_no: stock_handover_no,
-				},
-				data: {
-					status: 71,
-				},
-			})
-
-			await tx.dist_stock_req_inbox.delete({
-				where: {
-					stock_handover_no: stock_handover_no,
-				},
-			})
-
-			if (srOutbox !== 0) {
-				await tx.sr_stock_req_outbox.delete({
-					where: {
-						stock_handover_no: stock_handover_no,
-					},
-				})
-			}
-
-			await tx.notification.create({
-				data: {
-					role_id: Number(process.env.ROLE_SR),
-					title: 'A warranty claim request',
-					destination: 13,
-					description: `There is a new warranty claim request having stock request number : ${stock_handover_no}`,
-				},
-			})
-		})
-
-		return 'Forwarded to SR for approval'
 	} catch (err: any) {
 		console.log(err)
 		return { error: true, message: getErrorMessage(err) }

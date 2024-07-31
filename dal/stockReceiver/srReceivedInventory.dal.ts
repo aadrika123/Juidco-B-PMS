@@ -92,26 +92,26 @@ export const getReceivedInventoryDal = async (req: Request) => {
 				procurement: {
 					select: {
 						procurement_no: true,
-						category: {
-							select: {
-								name: true,
-							},
-						},
-						subcategory: {
-							select: {
-								name: true,
-							},
-						},
-						brand: {
-							select: {
-								name: true,
-							},
-						},
-						unit: {
-							select: {
-								name: true,
-							},
-						},
+						// category: {
+						// 	select: {
+						// 		name: true,
+						// 	},
+						// },
+						// subcategory: {
+						// 	select: {
+						// 		name: true,
+						// 	},
+						// },
+						// brand: {
+						// 	select: {
+						// 		name: true,
+						// 	},
+						// },
+						// unit: {
+						// 	select: {
+						// 		name: true,
+						// 	},
+						// },
 						post_procurement: {
 							select: {
 								procurement_no: true,
@@ -125,17 +125,17 @@ export const getReceivedInventoryDal = async (req: Request) => {
 								is_gst_added: true,
 							},
 						},
-						description: true,
-						quantity: true,
-						rate: true,
+						// description: true,
+						// quantity: true,
+						// rate: true,
 						total_rate: true,
 						isEdited: true,
 						remark: true,
-						status: {
-							select: {
-								status: true,
-							},
-						},
+						// status: {
+						// 	select: {
+						// 		status: true,
+						// 	},
+						// },
 					},
 				},
 			},
@@ -237,24 +237,24 @@ export const getReceivedInventoryByIdDal = async (req: Request) => {
 				procurement: {
 					select: {
 						procurement_no: true,
-						category: {
-							select: {
-								id: true,
-								name: true,
-							},
-						},
-						subcategory: {
-							select: {
-								id: true,
-								name: true,
-							},
-						},
-						brand: {
-							select: {
-								id: true,
-								name: true,
-							},
-						},
+						// category: {
+						// 	select: {
+						// 		id: true,
+						// 		name: true,
+						// 	},
+						// },
+						// subcategory: {
+						// 	select: {
+						// 		id: true,
+						// 		name: true,
+						// 	},
+						// },
+						// brand: {
+						// 	select: {
+						// 		id: true,
+						// 		name: true,
+						// 	},
+						// },
 						post_procurement: {
 							select: {
 								procurement_no: true,
@@ -268,17 +268,17 @@ export const getReceivedInventoryByIdDal = async (req: Request) => {
 								is_gst_added: true,
 							},
 						},
-						description: true,
-						quantity: true,
-						rate: true,
+						// description: true,
+						// quantity: true,
+						// rate: true,
 						total_rate: true,
 						isEdited: true,
 						remark: true,
-						status: {
-							select: {
-								status: true,
-							},
-						},
+						// status: {
+						// 	select: {
+						// 		status: true,
+						// 	},
+						// },
 					},
 				},
 			},
@@ -374,26 +374,26 @@ export const getReceivedInventoryByOrderNoDal = async (req: Request) => {
 				procurement: {
 					select: {
 						procurement_no: true,
-						category: {
-							select: {
-								name: true,
-							},
-						},
-						subcategory: {
-							select: {
-								name: true,
-							},
-						},
-						brand: {
-							select: {
-								name: true,
-							},
-						},
-						unit: {
-							select: {
-								name: true,
-							},
-						},
+						// category: {
+						// 	select: {
+						// 		name: true,
+						// 	},
+						// },
+						// subcategory: {
+						// 	select: {
+						// 		name: true,
+						// 	},
+						// },
+						// brand: {
+						// 	select: {
+						// 		name: true,
+						// 	},
+						// },
+						// unit: {
+						// 	select: {
+						// 		name: true,
+						// 	},
+						// },
 						post_procurement: {
 							select: {
 								procurement_no: true,
@@ -407,17 +407,17 @@ export const getReceivedInventoryByOrderNoDal = async (req: Request) => {
 								is_gst_added: true,
 							},
 						},
-						description: true,
-						quantity: true,
-						rate: true,
+						// description: true,
+						// quantity: true,
+						// rate: true,
 						total_rate: true,
 						isEdited: true,
 						remark: true,
-						status: {
-							select: {
-								status: true,
-							},
-						},
+						// status: {
+						// 	select: {
+						// 		status: true,
+						// 	},
+						// },
 					},
 				},
 			},
@@ -577,26 +577,26 @@ export const getReceivedInventoryOutboxDal = async (req: Request) => {
 				procurement: {
 					select: {
 						procurement_no: true,
-						category: {
-							select: {
-								name: true,
-							},
-						},
-						subcategory: {
-							select: {
-								name: true,
-							},
-						},
-						brand: {
-							select: {
-								name: true,
-							},
-						},
-						unit: {
-							select: {
-								name: true,
-							},
-						},
+						// category: {
+						// 	select: {
+						// 		name: true,
+						// 	},
+						// },
+						// subcategory: {
+						// 	select: {
+						// 		name: true,
+						// 	},
+						// },
+						// brand: {
+						// 	select: {
+						// 		name: true,
+						// 	},
+						// },
+						// unit: {
+						// 	select: {
+						// 		name: true,
+						// 	},
+						// },
 						post_procurement: {
 							select: {
 								procurement_no: true,
@@ -610,17 +610,17 @@ export const getReceivedInventoryOutboxDal = async (req: Request) => {
 								is_gst_added: true,
 							},
 						},
-						description: true,
-						quantity: true,
-						rate: true,
+						// description: true,
+						// quantity: true,
+						// rate: true,
 						total_rate: true,
 						isEdited: true,
 						remark: true,
-						status: {
-							select: {
-								status: true,
-							},
-						},
+						// status: {
+						// 	select: {
+						// 		status: true,
+						// 	},
+						// },
 					},
 				},
 			},
@@ -722,24 +722,24 @@ export const getReceivedInventoryOutboxByIdDal = async (req: Request) => {
 				procurement: {
 					select: {
 						procurement_no: true,
-						category: {
-							select: {
-								id: true,
-								name: true,
-							},
-						},
-						subcategory: {
-							select: {
-								id: true,
-								name: true,
-							},
-						},
-						brand: {
-							select: {
-								id: true,
-								name: true,
-							},
-						},
+						// category: {
+						// 	select: {
+						// 		id: true,
+						// 		name: true,
+						// 	},
+						// },
+						// subcategory: {
+						// 	select: {
+						// 		id: true,
+						// 		name: true,
+						// 	},
+						// },
+						// brand: {
+						// 	select: {
+						// 		id: true,
+						// 		name: true,
+						// 	},
+						// },
 						post_procurement: {
 							select: {
 								procurement_no: true,
@@ -753,17 +753,17 @@ export const getReceivedInventoryOutboxByIdDal = async (req: Request) => {
 								is_gst_added: true,
 							},
 						},
-						description: true,
-						quantity: true,
-						rate: true,
+						// description: true,
+						// quantity: true,
+						// rate: true,
 						total_rate: true,
 						isEdited: true,
 						remark: true,
-						status: {
-							select: {
-								status: true,
-							},
-						},
+						// status: {
+						// 	select: {
+						// 		status: true,
+						// 	},
+						// },
 					},
 				},
 			},
@@ -881,15 +881,20 @@ export const addToInventoryDal = async (req: Request) => {
 			where: { procurement_no: procurement_no },
 		})
 
-		const subcategory = await prisma.subcategory_master.findFirst({
-			where: {
-				id: procData?.subcategory_masterId as string,
-			},
-		})
+		// const subcategory = await prisma.subcategory_master.findFirst({
+		// 	where: {
+		// 		id: procData?.subcategory_masterId as string,
+		// 	},
+		// })
+
+		// const query = `
+		// 	SELECT SUM(quantity) as total_quantity
+		// 	FROM product.product_${subcategory?.name.toLowerCase().replace(/\s/g, '')}
+		// 	 WHERE procurement_no = '${procurement_no}' AND is_added = false
+		// `
 
 		const query = `
 			SELECT SUM(quantity) as total_quantity
-			FROM product.product_${subcategory?.name.toLowerCase().replace(/\s/g, '')}
 			 WHERE procurement_no = '${procurement_no}' AND is_added = false
 		`
 		const totalQuantity: any[] = await prisma.$queryRawUnsafe(query)
@@ -994,11 +999,11 @@ export const addToInventoryDal = async (req: Request) => {
 			} else {
 				const createdInv = await tx.inventory.create({
 					data: {
-						category: { connect: { id: procData?.category_masterId } },
-						subcategory: { connect: { id: procData?.subcategory_masterId } },
-						brand: { connect: { id: procData?.brand_masterId } },
-						unit: { connect: { id: procData?.unit_masterId } },
-						description: procData?.description,
+						// category: { connect: { id: procData?.category_masterId } },
+						// subcategory: { connect: { id: procData?.subcategory_masterId } },
+						// brand: { connect: { id: procData?.brand_masterId } },
+						// unit: { connect: { id: procData?.unit_masterId } },
+						// description: procData?.description,
 						quantity: dead_stock ? totalNonAddedReceiving?._sum?.received_quantity - Number(dead_stock) : totalNonAddedReceiving?._sum?.received_quantity,
 						...(warranty && { warranty: Boolean(warranty) }),
 					},
@@ -1038,8 +1043,13 @@ export const addToInventoryDal = async (req: Request) => {
 				if (!srRecInvInDel) throw { error: true, message: 'Error while deleting SR inbox' }
 			}
 
+			// await tx.$queryRawUnsafe(`
+			// 	UPDATE product.product_${subcategory?.name.toLowerCase().replace(/\s/g, '')}
+			// 	SET is_added = true, is_available = true, inventory_id = '${currentInventoryId}'
+			// 	WHERE procurement_no = '${procurement_no}' AND is_added = false AND is_available = false
+			// `)
+
 			await tx.$queryRawUnsafe(`
-				UPDATE product.product_${subcategory?.name.toLowerCase().replace(/\s/g, '')}
 				SET is_added = true, is_available = true, inventory_id = '${currentInventoryId}'
 				WHERE procurement_no = '${procurement_no}' AND is_added = false AND is_available = false
 			`)
@@ -1069,73 +1079,89 @@ export const addProductDal = async (req: Request) => {
 		quantity: number
 		serial_no: string
 	}
-	const { product, procurement_no }: { product: productType[]; procurement_no: string } = req.body
+	const { product, procurement_no, brand }: { product: productType[]; procurement_no: string; brand: string } = req.body
 	try {
-		if (!procurement_no) {
-			throw { error: true, meta: { message: "Procurement number is required as 'procurement_no'" } }
-		}
+		// if (!procurement_no) {
+		// 	throw { error: true, meta: { message: "Procurement number is required as 'procurement_no'" } }
+		// }
 
-		const procExist = await prisma.procurement.count({
-			where: {
-				procurement_no: procurement_no,
-			},
-		})
+		// const procExist = await prisma.procurement.count({
+		// 	where: {
+		// 		procurement_no: procurement_no,
+		// 	},
+		// })
 
-		if (procExist === 0) {
-			throw { error: true, meta: { message: 'Procurement number is invalid' } }
-		}
+		// if (procExist === 0) {
+		// 	throw { error: true, meta: { message: 'Procurement number is invalid' } }
+		// }
 
-		const totalNonAddedReceiving: any = await prisma.receivings.aggregate({
-			where: {
-				procurement_no: procurement_no || '',
-				is_added: false,
-			},
-			_sum: {
-				received_quantity: true,
-			},
-		})
+		// const totalNonAddedReceiving: any = await prisma.receivings.aggregate({
+		// 	where: {
+		// 		procurement_no: procurement_no || '',
+		// 		is_added: false,
+		// 	},
+		// 	_sum: {
+		// 		received_quantity: true,
+		// 	},
+		// })
 
-		if (totalNonAddedReceiving?._sum?.received_quantity === null) {
-			throw { error: true, meta: { message: 'No receiving to be added' } }
-		}
+		// if (totalNonAddedReceiving?._sum?.received_quantity === null) {
+		// 	throw { error: true, meta: { message: 'No receiving to be added' } }
+		// }
 
-		const procData = await prisma.procurement.findFirst({
-			where: { procurement_no: procurement_no },
-			select: { subcategory_masterId: true },
-		})
+		// const procData = await prisma.procurement.findFirst({
+		// 	where: { procurement_no: procurement_no },
+		// 	select: {
+		// 		procurement_stocks: {
+		// 			select: {
+		// 				Stock_request: {
+		// 					select: {
+		// 						inventory: {
+		// 							select: {
+		// 								subcategory_masterId: true,
+		// 							},
+		// 						},
+		// 					},
+		// 				},
+		// 			},
+		// 		},
+		// 	},
+		// })
 
-		const subcategory = await prisma.subcategory_master.findFirst({
-			where: {
-				id: procData?.subcategory_masterId as string,
-			},
-		})
+		// const subcategory = await prisma.subcategory_master.findFirst({
+		// 	where: {
+		// 		id: procData?.procurement_stocks[0]?.Stock_request?.inventory?.subcategory_masterId as string,
+		// 	},
+		// })
 
-		const query = `
-			SELECT SUM(quantity) as total_quantity
-			FROM product.product_${subcategory?.name.toLowerCase().replace(/\s/g, '')}
-			 WHERE procurement_no = '${procurement_no}' AND is_added = false
-		`
-		const totalQuantity: any[] = await prisma.$queryRawUnsafe(query)
+		// const query = `
+		// 	SELECT SUM(quantity) as total_quantity
+		// 	FROM product.product_${subcategory?.name.toLowerCase().replace(/\s/g, '')}
+		// 	 WHERE procurement_no = '${procurement_no}' AND is_added = false
+		// `
+		// const totalQuantity: any[] = await prisma.$queryRawUnsafe(query)
 
-		const sumOfQuantity = product.reduce((total, product) => total + (product?.quantity ? product?.quantity : 1), 0)
+		// const sumOfQuantity = product.reduce((total, product) => total + (product?.quantity ? product?.quantity : 1), 0)
 
-		if (totalQuantity[0]?.total_quantity + sumOfQuantity > totalNonAddedReceiving?._sum?.received_quantity) {
-			throw { error: true, meta: { message: 'Number of added products cannot be more than received stocks' } }
-		}
+		// if (totalQuantity[0]?.total_quantity + sumOfQuantity > totalNonAddedReceiving?._sum?.received_quantity) {
+		// 	throw { error: true, meta: { message: 'Number of added products cannot be more than received stocks' } }
+		// }
 
-		await prisma.$transaction(async tx => {
-			await Promise.all(
-				product.map(async item => {
-					await tx.$queryRawUnsafe(`
-					INSERT INTO product.product_${subcategory?.name.toLowerCase().replace(/\s/g, '')} (
-					serial_no,
-					quantity,
-					procurement_no
-					) VALUES ('${item?.serial_no}',${item?.quantity ? item?.quantity : 1},'${procurement_no}')
-					`)
-				})
-			)
-		})
+		// await prisma.$transaction(async tx => {
+		// 	await Promise.all(
+		// 		product.map(async item => {
+		// 			await tx.$queryRawUnsafe(`
+		// 			INSERT INTO product.product_${subcategory?.name.toLowerCase().replace(/\s/g, '')} (
+		// 			serial_no,
+		// 			quantity,
+		// 			opening_quantity,
+		// 			procurement_no,
+		// 			brand
+		// 			) VALUES ('${item?.serial_no}',${item?.quantity ? item?.quantity : 1},${item?.quantity ? item?.quantity : 1},'${procurement_no}','${brand}' )
+		// 			`)
+		// 		})
+		// 	)
+		// })
 
 		return 'Products added'
 	} catch (err: any) {

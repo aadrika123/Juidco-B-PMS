@@ -1,81 +1,236 @@
 import { Request } from 'express'
-import { PrismaClient, brand_master, category_master, subcategory_master } from '@prisma/client'
+import { PrismaClient } from '@prisma/client'
 import generateOrderNumber from '../../lib/orderNumberGenerator'
 import getErrorMessage from '../../lib/getErrorMessage'
 import { imageUploader } from '../../lib/imageUploader'
 import { pagination } from '../../type/common.type'
-import { getCategoryByName } from '../masterEntry/category.dal'
-import { createSubcategoryNoReqDal } from '../masterEntry/subcategory.dal'
-import { createBrandNoReqDal } from '../masterEntry/brand.dal'
+// import { getCategoryByName } from '../masterEntry/category.dal'
+// import { createSubcategoryNoReqDal } from '../masterEntry/subcategory.dal'
+// import { createBrandNoReqDal } from '../masterEntry/brand.dal'
 
 const prisma = new PrismaClient()
 
+export type procurementType = {
+	subcategory: string
+	brand: string
+	unit: string
+	rate: number
+	quantity: number
+	total_rate: number
+	description: string
+}
+
 export const createPreProcurementDal = async (req: Request) => {
-	const { category, subcategory, brand, description, rate, total_rate, quantity, ulb_id, unit } = req.body
+	const { category, procurement, auth }: { category: string; procurement: procurementType[]; auth: any } = req.body
 
-	let procurement_no: string
-	// let isOthers = false
+	const ulb_id = auth?.ulb_id
 
-	let processedCategory = category
-	let processedSubcategory = subcategory
-	let processedBrand = brand
+	const procurement_no: string = generateOrderNumber(ulb_id)
 
-	if (String(category).toLowerCase() === 'others') {
-		// isOthers = true
-		const fetchedCategory = (await getCategoryByName(category)) as category_master
-		processedCategory = fetchedCategory?.id
-		const createdSubcategory = (await createSubcategoryNoReqDal(subcategory, fetchedCategory?.id)) as subcategory_master
-		processedSubcategory = createdSubcategory?.id
-		if (brand) {
-			const createdBrand = (await createBrandNoReqDal(brand, createdSubcategory?.id)) as brand_master
-			processedBrand = createdBrand?.id
-		}
+	let result: any
+
+	if (!procurement || procurement.length === 0) {
+		throw { error: true, message: 'List of procurements are mandatory' }
 	}
 
-	procurement_no = generateOrderNumber(ulb_id)
-
-	const data: any = {
-		category: { connect: { id: processedCategory } },
-		subcategory: { connect: { id: processedSubcategory } },
-		brand: { connect: { id: processedBrand } },
-		...(unit && { unit: { connect: { id: unit } } }),
-		description: description,
-		procurement_no: procurement_no,
-		rate: Number(rate),
-		quantity: Number(quantity),
-		total_rate: Number(total_rate),
-		status: {
-			create: {
-				procurement_no: procurement_no,
-				status: 0,
-			},
-		},
-	}
 	try {
-		if (Number(rate) && Number(quantity)) {
-			if (Number(rate) * Number(quantity) !== Number(total_rate)) {
-				throw { error: true, message: 'The calculation result for total rate is invalid' }
-			}
-		} else {
-			throw { error: true, message: 'Rate and Quantity are mandatory' }
-		}
-		const result = await prisma.procurement.create({
-			data: data,
-		})
-		let srPreIn = {}
-		if (result) {
-			srPreIn = await prisma.sr_pre_procurement_inbox.create({
+		const total_rate = procurement.reduce((total, item) => total + item?.total_rate, 0)
+		console.log(total_rate)
+
+		await prisma.$transaction(async tx => {
+			await tx.procurement.create({
+				data: {
+					procurement_no: procurement_no,
+					category: { connect: { id: category } },
+					total_rate: total_rate,
+				},
+			})
+			await Promise.all(
+				procurement.map(async item => {
+					await tx.procurement_stocks.create({
+						data: {
+							procurement_no: procurement_no,
+							boq_procurement_no: procurement_no,
+							category_masterId: category,
+							subCategory_masterId: item?.subcategory,
+							unit_masterId: item?.unit,
+							rate: Number(item?.rate),
+							quantity: Number(item?.quantity),
+							total_rate: Number(item?.total_rate),
+							description: item?.description,
+						},
+					})
+				})
+			)
+			await tx.ia_pre_procurement_inbox.create({
 				data: {
 					procurement_no: procurement_no,
 				},
 			})
-		}
+		})
 		return result
 	} catch (err: any) {
 		console.log(err?.message)
 		return { error: true, message: err?.message }
 	}
 }
+
+// export const createPreProcurementDal = async (req: Request) => {
+// 	// const { auth, stocks }: { auth: any; stocks: string[] } = req.body
+// 	// const ulb_id = auth?.ulb_id
+// 	// try {
+// 	// 	stocks.map((stock: string) => {
+// 	// 		if (!stock) {
+// 	// 			throw { error: true, message: 'Minimum one stock data is required' }
+// 	// 		}
+// 	// 		// if (!stock.rate) {
+// 	// 		// 	throw { error: true, message: 'Please mention rate for the given stock item' }
+// 	// 		// }
+// 	// 		// if (stock.quantity && stock.rate) {
+// 	// 		// 	stock.totalRate = Number(stock.quantity) * Number(stock.rate)
+// 	// 		// }
+// 	// 	})
+
+// 	// 	const categories = await Promise.all(
+// 	// 		stocks.map(async (stock: string) => {
+// 	// 			const stockItem = await prisma.stock_request.findFirst({
+// 	// 				where: {
+// 	// 					stock_handover_no: String(stock),
+// 	// 				},
+// 	// 				select: {
+// 	// 					allotted_quantity: true,
+// 	// 					inventory: {
+// 	// 						select: {
+// 	// 							category: true,
+// 	// 						},
+// 	// 					},
+// 	// 				},
+// 	// 			})
+
+// 	// 			if (!stockItem) {
+// 	// 				throw { error: true, message: 'Invalid Stock Id' }
+// 	// 			}
+
+// 	// 			return stockItem?.inventory?.category
+// 	// 		})
+// 	// 	)
+
+// 	// 	console.log(categories, 'categories')
+
+// 	// 	if (!categories) {
+// 	// 		throw { error: true, message: 'No categories found for the stock request' }
+// 	// 	}
+
+// 	// 	const firtsCategory = categories[0]
+// 	// 	const categoryValidation = categories.every(category => category === firtsCategory)
+
+// 	// 	if (!categoryValidation) {
+// 	// 		throw { error: true, message: 'Procurement is created for same category stock request' }
+// 	// 	}
+
+// 	// 	let procurement_no = generateOrderNumber(ulb_id)
+
+// 	// 	// let total: number = 0
+// 	// 	// stocks.map(obj => {
+// 	// 	// 	total += Number(obj?.rate) * Number(obj?.quantity)
+// 	// 	// })
+
+// 	// 	// const procurement = await prisma.procurement.create({
+// 	// 	// 	data: {
+// 	// 	// 		procurement_no,
+// 	// 	// 		status: 1,
+// 	// 	// 		total_rate: total,
+// 	// 	// 		procurement_stocks: {
+// 	// 	// 			create: stocks.map(data => ({
+// 	// 	// 				handover_no: data?.stockNo,
+// 	// 	// 				procurement_no,
+// 	// 	// 			})),
+// 	// 	// 		},
+// 	// 	// 	},
+// 	// 	// })
+
+// 	// 	// let iaProcInbox = {}
+// 	// 	// if (procurement) {
+// 	// 	// 	iaProcInbox = await prisma.ia_pre_procurement_inbox.create({
+// 	// 	// 		data: {
+// 	// 	// 			procurement_no,
+// 	// 	// 		},
+// 	// 	// 	})
+// 	// 	// }
+
+// 	// 	// return iaProcInbox
+// 	// } catch (err: any) {
+// 	// 	console.log(err?.message)
+// 	// 	return { error: true, message: err?.message }
+// 	// }
+// 	// const ordersData = await prisma.stock_request
+// 	const { category, subcategory, brand, description, rate, total_rate, quantity, ulb_id, unit } = req.body
+
+// 	let procurement_no: string
+// 	// let isOthers = false
+
+// 	let processedCategory = category
+// 	let processedSubcategory = subcategory
+// 	let processedBrand = brand
+
+// 	if (String(category).toLowerCase() === 'others') {
+// 		// isOthers = true
+// 		const fetchedCategory = (await getCategoryByName(category)) as category_master
+// 		processedCategory = fetchedCategory?.id
+// 		const createdSubcategory = (await createSubcategoryNoReqDal(subcategory, fetchedCategory?.id)) as subcategory_master
+// 		processedSubcategory = createdSubcategory?.id
+// 		if (brand) {
+// 			const createdBrand = (await createBrandNoReqDal(brand, createdSubcategory?.id)) as brand_master
+// 			processedBrand = createdBrand?.id
+// 		}
+// 	}
+
+// 	procurement_no = generateOrderNumber(ulb_id)
+
+// 	const data: any = {
+// 		category: { connect: { id: processedCategory } },
+// 		subCategory: { connect: { id: processedSubcategory } },
+// 		...(brand && { brand: { connect: { id: brand } } }),
+// 		// unit: { connect: { id: processedBrand } },
+// 		...(unit && { unit: { connect: { id: unit } } }),
+// 		description: description,
+// 		procurement_no: procurement_no,
+// 		rate: Number(rate),
+// 		quantity: Number(quantity),
+// 		total_rate: Number(total_rate),
+// 		status: 0,
+// 		// status: {
+// 		// 	create: {
+// 		// 		procurement_no: procurement_no,
+// 		// 		status: 0,
+// 		// 	},
+// 		// },
+// 	}
+// 	try {
+// 		if (Number(rate) && Number(quantity)) {
+// 			if (Number(rate) * Number(quantity) !== Number(total_rate)) {
+// 				throw { error: true, message: 'The calculation result for total rate is invalid' }
+// 			}
+// 		} else {
+// 			throw { error: true, message: 'Rate and Quantity are mandatory' }
+// 		}
+// 		const result = await prisma.procurement.create({
+// 			data: data,
+// 		})
+// 		let srPreIn = {}
+// 		if (result) {
+// 			srPreIn = await prisma.sr_pre_procurement_inbox.create({
+// 				data: {
+// 					procurement_no: procurement_no,
+// 				},
+// 			})
+// 		}
+// 		return result
+// 	} catch (err: any) {
+// 		console.log(err?.message)
+// 		return { error: true, message: err?.message }
+// 	}
+// }
 
 export const getPreProcurementDal = async (req: Request) => {
 	const page: number | undefined = Number(req?.query?.page)
@@ -104,7 +259,7 @@ export const getPreProcurementDal = async (req: Request) => {
 				},
 			},
 			{
-				procurement: {
+				procurement_stocks: {
 					description: {
 						contains: search,
 						mode: 'insensitive',
@@ -114,57 +269,56 @@ export const getPreProcurementDal = async (req: Request) => {
 		]
 	}
 
-	//creating filter options for the query
-	if (category[0]) {
-		whereClause.procurement = {
-			category_masterId: {
-				in: category,
-			},
-		}
+	if (category[0] || subcategory[0] || brand[0]) {
+		whereClause.AND = [
+			...(category[0]
+				? [
+						{
+							category_masterId: {
+								in: category,
+							},
+						},
+					]
+				: []),
+			...(subcategory[0]
+				? [
+						{
+							procurement_stocks: {
+								subcategory_masterId: {
+									in: subcategory,
+								},
+							},
+						},
+					]
+				: []),
+			...(brand[0]
+				? [
+						{
+							procurement_stocks: {
+								brand_masterId: {
+									in: brand,
+								},
+							},
+						},
+					]
+				: []),
+			...(status[0]
+				? [
+						{
+							status: {
+								in: status.map(Number),
+							},
+						},
+					]
+				: []),
+		]
 	}
-	if (subcategory[0]) {
-		whereClause.procurement = {
-			subcategory_masterId: {
-				in: subcategory,
-			},
-		}
-	}
-	if (status[0]) {
-		whereClause.procurement = {
-			status: {
-				in: status.map(Number),
-			},
-		}
-	}
-	if (brand[0]) {
-		whereClause.procurement = {
-			brand_masterId: {
-				in: brand,
-			},
-		}
-	}
-	whereClause.NOT = [
-		{
-			procurement: {
-				status: {
-					status: -2,
-				},
-			},
-		},
-		{
-			procurement: {
-				status: {
-					status: 2,
-				},
-			},
-		},
-	]
 
 	try {
-		count = await prisma.sr_pre_procurement_inbox.count({
+		count = await prisma.ia_pre_procurement_inbox.count({
 			where: whereClause,
 		})
-		const result = await prisma.sr_pre_procurement_inbox.findMany({
+		const result = await prisma.ia_pre_procurement_inbox.findMany({
 			orderBy: {
 				updatedAt: 'desc',
 			},
@@ -182,32 +336,11 @@ export const getPreProcurementDal = async (req: Request) => {
 								name: true,
 							},
 						},
-						subcategory: {
-							select: {
-								name: true,
-							},
-						},
-						brand: {
-							select: {
-								name: true,
-							},
-						},
-						unit: {
-							select: {
-								name: true,
-							},
-						},
-						description: true,
-						quantity: true,
-						rate: true,
 						total_rate: true,
 						isEdited: true,
 						remark: true,
-						status: {
-							select: {
-								status: true,
-							},
-						},
+						status: true,
+						// procurement_stocks: true,
 					},
 				},
 			},
@@ -261,35 +394,35 @@ export const getPreProcurementByIdDal = async (req: Request) => {
 				procurement: {
 					select: {
 						procurement_no: true,
-						category: {
-							select: {
-								id: true,
-								name: true,
-							},
-						},
-						subcategory: {
-							select: {
-								id: true,
-								name: true,
-							},
-						},
-						brand: {
-							select: {
-								id: true,
-								name: true,
-							},
-						},
-						description: true,
-						quantity: true,
-						rate: true,
+						// category: {
+						// 	select: {
+						// 		id: true,
+						// 		name: true,
+						// 	},
+						// },
+						// subcategory: {
+						// 	select: {
+						// 		id: true,
+						// 		name: true,
+						// 	},
+						// },
+						// brand: {
+						// 	select: {
+						// 		id: true,
+						// 		name: true,
+						// 	},
+						// },
+						// description: true,
+						// quantity: true,
+						// rate: true,
 						total_rate: true,
 						isEdited: true,
 						remark: true,
-						status: {
-							select: {
-								status: true,
-							},
-						},
+						// status: {
+						// 	select: {
+						// 		status: true,
+						// 	},
+						// },
 					},
 				},
 			},
@@ -321,37 +454,37 @@ export const getPreProcurementByOrderNoDal = async (req: Request) => {
 				procurement: {
 					select: {
 						procurement_no: true,
-						category: {
-							select: {
-								name: true,
-							},
-						},
-						subcategory: {
-							select: {
-								name: true,
-							},
-						},
-						brand: {
-							select: {
-								name: true,
-							},
-						},
-						unit: {
-							select: {
-								name: true,
-							},
-						},
-						description: true,
-						quantity: true,
-						rate: true,
+						// category: {
+						// 	select: {
+						// 		name: true,
+						// 	},
+						// },
+						// subcategory: {
+						// 	select: {
+						// 		name: true,
+						// 	},
+						// },
+						// brand: {
+						// 	select: {
+						// 		name: true,
+						// 	},
+						// },
+						// unit: {
+						// 	select: {
+						// 		name: true,
+						// 	},
+						// },
+						// description: true,
+						// quantity: true,
+						// rate: true,
 						total_rate: true,
 						isEdited: true,
 						remark: true,
-						status: {
-							select: {
-								status: true,
-							},
-						},
+						// status: {
+						// 	select: {
+						// 		status: true,
+						// 	},
+						// },
 					},
 				},
 			},
@@ -383,9 +516,9 @@ export const forwardToDaDal = async (req: Request) => {
 					select: {
 						procurement: {
 							select: {
-								status: {
-									select: { status: true },
-								},
+								// status: {
+								// 	select: { status: true },
+								// },
 							},
 						},
 					},
@@ -485,6 +618,277 @@ export const forwardToDaDal = async (req: Request) => {
 	}
 }
 
+export const forwardToLevel1Dal = async (req: Request) => {
+	const { procurement_no }: { procurement_no: string } = req.body
+	const img = req?.files
+
+	try {
+		const procData = await prisma.procurement.findFirst({
+			where: {
+				procurement_no: procurement_no,
+			},
+		})
+
+		if (!procData) {
+			throw { error: true, message: 'Invalid procurement' }
+		}
+
+		if (procData?.status !== 0 && procData?.status !== 11) {
+			throw { error: true, message: 'Procurement is not valid to be forwarded' }
+		}
+
+		const statusChecker = (status: number) => {
+			if (status === 0) {
+				return 10
+			} else {
+				return 13
+			}
+		}
+
+		const daOutbox = await prisma.da_pre_procurement_outbox.count({
+			where: {
+				procurement_no: procurement_no,
+			},
+		})
+
+		await prisma.$transaction(async tx => {
+			if (img) {
+				const uploaded = await imageUploader(img) //It will return reference number and unique id as an object after uploading.
+				if (uploaded) {
+					await Promise.all(
+						uploaded.map(async item => {
+							await tx.note_sheet.create({
+								data: {
+									procurement_no: procurement_no,
+									ReferenceNo: item?.ReferenceNo,
+									uniqueId: item?.uniqueId,
+									operation: 1,
+								},
+							})
+						})
+					)
+				}
+			}
+
+			const statusToUpdate = statusChecker(Number(procData?.status))
+
+			await tx.ia_pre_procurement_outbox.create({
+				data: { procurement_no: procurement_no },
+			})
+
+			await tx.level1_inbox.create({
+				data: { procurement_no: procurement_no },
+			})
+
+			await tx.procurement.update({
+				where: {
+					procurement_no: procurement_no,
+				},
+				data: {
+					status: statusToUpdate,
+				},
+			})
+
+			await tx.ia_pre_procurement_inbox.delete({
+				where: {
+					procurement_no: procurement_no,
+				},
+			})
+
+			if (daOutbox) {
+				await tx.level1_outbox.delete({
+					where: {
+						procurement_no: procurement_no,
+					},
+				})
+			}
+
+			await tx.notification.create({
+				data: {
+					role_id: Number(process.env.ROLE_DA),
+					title: 'New procurement',
+					destination: 20,
+					description: `There is a new procurement to be approved. Procurement Number : ${procurement_no}`,
+				},
+			})
+		})
+		return 'Forwarded'
+	} catch (err: any) {
+		console.log(err)
+		return { error: true, message: getErrorMessage(err) }
+	}
+}
+
+// export const getPreProcurementOutboxDal = async (req: Request) => {
+// 	const page: number | undefined = Number(req?.query?.page)
+// 	const take: number | undefined = Number(req?.query?.take)
+// 	const startIndex: number | undefined = (page - 1) * take
+// 	const endIndex: number | undefined = startIndex + take
+// 	let count: number
+// 	let totalPage: number
+// 	let pagination: pagination = {}
+// 	const whereClause: any = {}
+
+// 	const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined
+
+// 	const category: any[] = Array.isArray(req?.query?.category) ? req?.query?.category : [req?.query?.category]
+// 	const subcategory: any[] = Array.isArray(req?.query?.scategory) ? req?.query?.scategory : [req?.query?.scategory]
+// 	const status: any[] = Array.isArray(req?.query?.status) ? req?.query?.status : [req?.query?.status]
+// 	const brand: any[] = Array.isArray(req?.query?.brand) ? req?.query?.brand : [req?.query?.brand]
+
+// 	//creating search options for the query
+// 	if (search) {
+// 		whereClause.OR = [
+// 			{
+// 				procurement_no: {
+// 					contains: search,
+// 					mode: 'insensitive',
+// 				},
+// 			},
+// 			{
+// 				procurement: {
+// 					description: {
+// 						contains: search,
+// 						mode: 'insensitive',
+// 					},
+// 				},
+// 			},
+// 		]
+// 	}
+
+// 	//creating filter options for the query
+// 	if (category[0]) {
+// 		whereClause.procurement = {
+// 			category_masterId: {
+// 				in: category,
+// 			},
+// 		}
+// 	}
+// 	if (subcategory[0]) {
+// 		whereClause.procurement = {
+// 			subcategory_masterId: {
+// 				in: subcategory,
+// 			},
+// 		}
+// 	}
+// 	if (status[0]) {
+// 		whereClause.procurement = {
+// 			status: {
+// 				in: status.map(Number),
+// 			},
+// 		}
+// 	}
+// 	if (brand[0]) {
+// 		whereClause.procurement = {
+// 			brand_masterId: {
+// 				in: brand,
+// 			},
+// 		}
+// 	}
+// 	whereClause.NOT = [
+// 		{
+// 			procurement: {
+// 				status: {
+// 					status: -2,
+// 				},
+// 			},
+// 		},
+// 		{
+// 			procurement: {
+// 				status: {
+// 					status: 2,
+// 				},
+// 			},
+// 		},
+// 	]
+
+// 	try {
+// 		count = await prisma.sr_pre_procurement_outbox.count({
+// 			where: whereClause,
+// 		})
+// 		const result = await prisma.sr_pre_procurement_outbox.findMany({
+// 			orderBy: {
+// 				updatedAt: 'desc',
+// 			},
+// 			where: whereClause,
+// 			...(page && { skip: startIndex }),
+// 			...(take && { take: take }),
+// 			select: {
+// 				id: true,
+// 				procurement_no: true,
+// 				procurement: {
+// 					select: {
+// 						procurement_no: true,
+// 						// category: {
+// 						// 	select: {
+// 						// 		name: true,
+// 						// 	},
+// 						// },
+// 						// subcategory: {
+// 						// 	select: {
+// 						// 		name: true,
+// 						// 	},
+// 						// },
+// 						// brand: {
+// 						// 	select: {
+// 						// 		name: true,
+// 						// 	},
+// 						// },
+// 						// unit: {
+// 						// 	select: {
+// 						// 		name: true,
+// 						// 	},
+// 						// },
+// 						// description: true,
+// 						// quantity: true,
+// 						// rate: true,
+// 						total_rate: true,
+// 						isEdited: true,
+// 						remark: true,
+// 						// status: {
+// 						// 	select: {
+// 						// 		status: true,
+// 						// 	},
+// 						// },
+// 					},
+// 				},
+// 			},
+// 		})
+
+// 		let resultToSend: any[] = []
+
+// 		result.map(async (item: any) => {
+// 			const temp = { ...item?.procurement }
+// 			delete item.procurement
+// 			resultToSend.push({ ...item, ...temp })
+// 		})
+
+// 		totalPage = Math.ceil(count / take)
+// 		if (endIndex < count) {
+// 			pagination.next = {
+// 				page: page + 1,
+// 				take: take,
+// 			}
+// 		}
+// 		if (startIndex > 0) {
+// 			pagination.prev = {
+// 				page: page - 1,
+// 				take: take,
+// 			}
+// 		}
+// 		pagination.currentPage = page
+// 		pagination.currentTake = take
+// 		pagination.totalPage = totalPage
+// 		pagination.totalResult = count
+// 		return {
+// 			data: resultToSend,
+// 			pagination: pagination,
+// 		}
+// 	} catch (err: any) {
+// 		console.log(err)
+// 		return { error: true, message: getErrorMessage(err) }
+// 	}
+// }
 export const getPreProcurementOutboxDal = async (req: Request) => {
 	const page: number | undefined = Number(req?.query?.page)
 	const take: number | undefined = Number(req?.query?.take)
@@ -512,7 +916,7 @@ export const getPreProcurementOutboxDal = async (req: Request) => {
 				},
 			},
 			{
-				procurement: {
+				procurement_stocks: {
 					description: {
 						contains: search,
 						mode: 'insensitive',
@@ -522,57 +926,56 @@ export const getPreProcurementOutboxDal = async (req: Request) => {
 		]
 	}
 
-	//creating filter options for the query
-	if (category[0]) {
-		whereClause.procurement = {
-			category_masterId: {
-				in: category,
-			},
-		}
+	if (category[0] || subcategory[0] || brand[0]) {
+		whereClause.AND = [
+			...(category[0]
+				? [
+						{
+							category_masterId: {
+								in: category,
+							},
+						},
+					]
+				: []),
+			...(subcategory[0]
+				? [
+						{
+							procurement_stocks: {
+								subcategory_masterId: {
+									in: subcategory,
+								},
+							},
+						},
+					]
+				: []),
+			...(brand[0]
+				? [
+						{
+							procurement_stocks: {
+								brand_masterId: {
+									in: brand,
+								},
+							},
+						},
+					]
+				: []),
+			...(status[0]
+				? [
+						{
+							status: {
+								in: status.map(Number),
+							},
+						},
+					]
+				: []),
+		]
 	}
-	if (subcategory[0]) {
-		whereClause.procurement = {
-			subcategory_masterId: {
-				in: subcategory,
-			},
-		}
-	}
-	if (status[0]) {
-		whereClause.procurement = {
-			status: {
-				in: status.map(Number),
-			},
-		}
-	}
-	if (brand[0]) {
-		whereClause.procurement = {
-			brand_masterId: {
-				in: brand,
-			},
-		}
-	}
-	whereClause.NOT = [
-		{
-			procurement: {
-				status: {
-					status: -2,
-				},
-			},
-		},
-		{
-			procurement: {
-				status: {
-					status: 2,
-				},
-			},
-		},
-	]
 
 	try {
-		count = await prisma.sr_pre_procurement_outbox.count({
+		count = await prisma.ia_pre_procurement_outbox.count({
 			where: whereClause,
 		})
-		const result = await prisma.sr_pre_procurement_outbox.findMany({
+		const result = await prisma.ia_pre_procurement_outbox.findMany({
 			orderBy: {
 				updatedAt: 'desc',
 			},
@@ -590,32 +993,11 @@ export const getPreProcurementOutboxDal = async (req: Request) => {
 								name: true,
 							},
 						},
-						subcategory: {
-							select: {
-								name: true,
-							},
-						},
-						brand: {
-							select: {
-								name: true,
-							},
-						},
-						unit: {
-							select: {
-								name: true,
-							},
-						},
-						description: true,
-						quantity: true,
-						rate: true,
 						total_rate: true,
 						isEdited: true,
 						remark: true,
-						status: {
-							select: {
-								status: true,
-							},
-						},
+						status: true,
+						// procurement_stocks: true,
 					},
 				},
 			},
@@ -669,35 +1051,35 @@ export const getPreProcurementOutboxByIdDal = async (req: Request) => {
 				procurement: {
 					select: {
 						procurement_no: true,
-						category: {
-							select: {
-								id: true,
-								name: true,
-							},
-						},
-						subcategory: {
-							select: {
-								id: true,
-								name: true,
-							},
-						},
-						brand: {
-							select: {
-								id: true,
-								name: true,
-							},
-						},
-						description: true,
-						quantity: true,
-						rate: true,
+						// category: {
+						// 	select: {
+						// 		id: true,
+						// 		name: true,
+						// 	},
+						// },
+						// subcategory: {
+						// 	select: {
+						// 		id: true,
+						// 		name: true,
+						// 	},
+						// },
+						// brand: {
+						// 	select: {
+						// 		id: true,
+						// 		name: true,
+						// 	},
+						// },
+						// description: true,
+						// quantity: true,
+						// rate: true,
 						total_rate: true,
 						isEdited: true,
 						remark: true,
-						status: {
-							select: {
-								status: true,
-							},
-						},
+						// status: {
+						// 	select: {
+						// 		status: true,
+						// 	},
+						// },
 					},
 				},
 			},
@@ -805,37 +1187,37 @@ export const getPreProcurementRejectedDal = async (req: Request) => {
 				procurement: {
 					select: {
 						procurement_no: true,
-						category: {
-							select: {
-								name: true,
-							},
-						},
-						subcategory: {
-							select: {
-								name: true,
-							},
-						},
-						brand: {
-							select: {
-								name: true,
-							},
-						},
-						unit: {
-							select: {
-								name: true,
-							},
-						},
-						description: true,
-						quantity: true,
-						rate: true,
+						// category: {
+						// 	select: {
+						// 		name: true,
+						// 	},
+						// },
+						// subcategory: {
+						// 	select: {
+						// 		name: true,
+						// 	},
+						// },
+						// brand: {
+						// 	select: {
+						// 		name: true,
+						// 	},
+						// },
+						// unit: {
+						// 	select: {
+						// 		name: true,
+						// 	},
+						// },
+						// description: true,
+						// quantity: true,
+						// rate: true,
 						total_rate: true,
 						isEdited: true,
 						remark: true,
-						status: {
-							select: {
-								status: true,
-							},
-						},
+						// status: {
+						// 	select: {
+						// 		status: true,
+						// 	},
+						// },
 					},
 				},
 			},
@@ -965,37 +1347,37 @@ export const getPreProcurementReleasedDal = async (req: Request) => {
 				procurement: {
 					select: {
 						procurement_no: true,
-						category: {
-							select: {
-								name: true,
-							},
-						},
-						subcategory: {
-							select: {
-								name: true,
-							},
-						},
-						brand: {
-							select: {
-								name: true,
-							},
-						},
-						unit: {
-							select: {
-								name: true,
-							},
-						},
-						description: true,
-						quantity: true,
-						rate: true,
+						// category: {
+						// 	select: {
+						// 		name: true,
+						// 	},
+						// },
+						// subcategory: {
+						// 	select: {
+						// 		name: true,
+						// 	},
+						// },
+						// brand: {
+						// 	select: {
+						// 		name: true,
+						// 	},
+						// },
+						// unit: {
+						// 	select: {
+						// 		name: true,
+						// 	},
+						// },
+						// description: true,
+						// quantity: true,
+						// rate: true,
 						total_rate: true,
 						isEdited: true,
 						remark: true,
-						status: {
-							select: {
-								status: true,
-							},
-						},
+						// status: {
+						// 	select: {
+						// 		status: true,
+						// 	},
+						// },
 					},
 				},
 			},
@@ -1061,9 +1443,9 @@ export const editPreProcurementDal = async (req: Request) => {
 		where: {
 			procurement_no: procurement_no,
 		},
-		include: {
-			status: true,
-		},
+		// include: {
+		// 	status: true,
+		// },
 	})
 	const tempStatus = Number(procurement?.status?.status)
 

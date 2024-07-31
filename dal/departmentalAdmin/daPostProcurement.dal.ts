@@ -91,21 +91,21 @@ export const getPostProcurementDal = async (req: Request) => {
                 procurement: {
                     select: {
                         procurement_no: true,
-                        category: {
-                            select: {
-                                name: true
-                            }
-                        },
-                        subcategory: {
-                            select: {
-                                name: true
-                            }
-                        },
-                        brand: {
-                            select: {
-                                name: true
-                            }
-                        },
+                        // category: {
+                        //     select: {
+                        //         name: true
+                        //     }
+                        // },
+                        // subcategory: {
+                        //     select: {
+                        //         name: true
+                        //     }
+                        // },
+                        // brand: {
+                        //     select: {
+                        //         name: true
+                        //     }
+                        // },
                         post_procurement: {
                             select: {
                                 procurement_no: true,
@@ -119,17 +119,17 @@ export const getPostProcurementDal = async (req: Request) => {
                                 is_gst_added: true,
                             }
                         },
-                        description: true,
-                        quantity: true,
-                        rate: true,
+                        // description: true,
+                        // quantity: true,
+                        // rate: true,
                         total_rate: true,
                         isEdited: true,
                         remark: true,
-                        status: {
-                            select: {
-                                status: true
-                            }
-                        }
+                        // status: {
+                        //     select: {
+                        //         status: true
+                        //     }
+                        // }
                     }
                 }
             }
@@ -184,24 +184,24 @@ export const getPostProcurementByIdDal = async (req: Request) => {
                 procurement: {
                     select: {
                         procurement_no: true,
-                        category: {
-                            select: {
-                                id: true,
-                                name: true
-                            }
-                        },
-                        subcategory: {
-                            select: {
-                                id: true,
-                                name: true
-                            }
-                        },
-                        brand: {
-                            select: {
-                                id: true,
-                                name: true
-                            }
-                        },
+                        // category: {
+                        //     select: {
+                        //         id: true,
+                        //         name: true
+                        //     }
+                        // },
+                        // subcategory: {
+                        //     select: {
+                        //         id: true,
+                        //         name: true
+                        //     }
+                        // },
+                        // brand: {
+                        //     select: {
+                        //         id: true,
+                        //         name: true
+                        //     }
+                        // },
                         post_procurement: {
                             select: {
                                 procurement_no: true,
@@ -215,17 +215,17 @@ export const getPostProcurementByIdDal = async (req: Request) => {
                                 is_gst_added: true,
                             }
                         },
-                        description: true,
-                        quantity: true,
-                        rate: true,
+                        // description: true,
+                        // quantity: true,
+                        // rate: true,
                         total_rate: true,
                         isEdited: true,
                         remark: true,
-                        status: {
-                            select: {
-                                status: true
-                            }
-                        }
+                        // status: {
+                        //     select: {
+                        //         status: true
+                        //     }
+                        // }
                     }
                 }
             }
@@ -258,24 +258,24 @@ export const getPostProcurementByOrderNoDal = async (req: Request) => {
                 procurement: {
                     select: {
                         procurement_no: true,
-                        category: {
-                            select: {
-                                id: true,
-                                name: true
-                            }
-                        },
-                        subcategory: {
-                            select: {
-                                id: true,
-                                name: true
-                            }
-                        },
-                        brand: {
-                            select: {
-                                id: true,
-                                name: true
-                            }
-                        },
+                        // category: {
+                        //     select: {
+                        //         id: true,
+                        //         name: true
+                        //     }
+                        // },
+                        // subcategory: {
+                        //     select: {
+                        //         id: true,
+                        //         name: true
+                        //     }
+                        // },
+                        // brand: {
+                        //     select: {
+                        //         id: true,
+                        //         name: true
+                        //     }
+                        // },
                         post_procurement: {
                             select: {
                                 procurement_no: true,
@@ -289,17 +289,17 @@ export const getPostProcurementByOrderNoDal = async (req: Request) => {
                                 is_gst_added: true,
                             }
                         },
-                        description: true,
-                        quantity: true,
-                        rate: true,
+                        // description: true,
+                        // quantity: true,
+                        // rate: true,
                         total_rate: true,
                         isEdited: true,
                         remark: true,
-                        status: {
-                            select: {
-                                status: true
-                            }
-                        }
+                        // status: {
+                        //     select: {
+                        //         status: true
+                        //     }
+                        // }
                     }
                 }
             }
@@ -503,21 +503,21 @@ export const getPostProcurementOutboxDal = async (req: Request) => {
                 procurement: {
                     select: {
                         procurement_no: true,
-                        category: {
-                            select: {
-                                name: true
-                            }
-                        },
-                        subcategory: {
-                            select: {
-                                name: true
-                            }
-                        },
-                        brand: {
-                            select: {
-                                name: true
-                            }
-                        },
+                        // category: {
+                        //     select: {
+                        //         name: true
+                        //     }
+                        // },
+                        // subcategory: {
+                        //     select: {
+                        //         name: true
+                        //     }
+                        // },
+                        // brand: {
+                        //     select: {
+                        //         name: true
+                        //     }
+                        // },
                         post_procurement: {
                             select: {
                                 procurement_no: true,
@@ -531,17 +531,17 @@ export const getPostProcurementOutboxDal = async (req: Request) => {
                                 is_gst_added: true,
                             }
                         },
-                        description: true,
-                        quantity: true,
-                        rate: true,
+                        // description: true,
+                        // quantity: true,
+                        // rate: true,
                         total_rate: true,
                         isEdited: true,
                         remark: true,
-                        status: {
-                            select: {
-                                status: true
-                            }
-                        }
+                        // status: {
+                        //     select: {
+                        //         status: true
+                        //     }
+                        // }
                     }
                 }
             }
@@ -596,24 +596,24 @@ export const getPostProcurementOutboxByIdDal = async (req: Request) => {
                 procurement: {
                     select: {
                         procurement_no: true,
-                        category: {
-                            select: {
-                                id: true,
-                                name: true
-                            }
-                        },
-                        subcategory: {
-                            select: {
-                                id: true,
-                                name: true
-                            }
-                        },
-                        brand: {
-                            select: {
-                                id: true,
-                                name: true
-                            }
-                        },
+                        // category: {
+                        //     select: {
+                        //         id: true,
+                        //         name: true
+                        //     }
+                        // },
+                        // subcategory: {
+                        //     select: {
+                        //         id: true,
+                        //         name: true
+                        //     }
+                        // },
+                        // brand: {
+                        //     select: {
+                        //         id: true,
+                        //         name: true
+                        //     }
+                        // },
                         post_procurement: {
                             select: {
                                 procurement_no: true,
@@ -627,17 +627,17 @@ export const getPostProcurementOutboxByIdDal = async (req: Request) => {
                                 is_gst_added: true,
                             }
                         },
-                        description: true,
-                        quantity: true,
-                        rate: true,
+                        // description: true,
+                        // quantity: true,
+                        // rate: true,
                         total_rate: true,
                         isEdited: true,
                         remark: true,
-                        status: {
-                            select: {
-                                status: true
-                            }
-                        }
+                        // status: {
+                        //     select: {
+                        //         status: true
+                        //     }
+                        // }
                     }
                 }
             }

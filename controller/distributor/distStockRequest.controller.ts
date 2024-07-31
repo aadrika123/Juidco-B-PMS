@@ -1,5 +1,5 @@
 import { Request, Response } from 'express'
-import { createStockRequestDal, getStockReqInboxDal, getStockReqOutboxDal, forwardToSrDal, handoverDal, stockReturnDal, AddDeadStockDal, warrantyClaimReqDal } from '../../dal/distributor/distStockReq.dal'
+import { createStockRequestDal, getStockReqInboxDal, getStockReqOutboxDal, handoverDal, forwardToDaDal } from '../../dal/distributor/distStockReq.dal'
 
 export const createStockRequest = async (req: Request, res: Response) => {
 	const result: any = await createStockRequestDal(req)
@@ -54,18 +54,18 @@ export const getStockReqOutbox = async (req: Request, res: Response) => {
 	}
 }
 
-export const forwardToSr = async (req: Request, res: Response) => {
-	const result: any = await forwardToSrDal(req)
+export const forwardToDa = async (req: Request, res: Response) => {
+	const result: any = await forwardToDaDal(req)
 	if (!result?.error) {
 		res.status(200).json({
 			status: true,
-			message: `Forwarded to SR successfully`,
+			message: `Forwarded to DA successfully`,
 			data: result,
 		})
 	} else {
 		res.status(404).json({
 			status: false,
-			message: `Error while forwarding to SR`,
+			message: `Error while forwarding to DA`,
 			error: result?.message,
 		})
 	}
@@ -83,57 +83,6 @@ export const handover = async (req: Request, res: Response) => {
 		res.status(500).json({
 			status: false,
 			message: `Error while handing over`,
-			error: result?.message,
-		})
-	}
-}
-
-export const returnToInventory = async (req: Request, res: Response) => {
-	const result: any = await stockReturnDal(req)
-	if (!result?.error) {
-		res.status(200).json({
-			status: true,
-			message: `Forwarded to SR for approval successfully`,
-			data: result,
-		})
-	} else {
-		res.status(500).json({
-			status: false,
-			message: `Error while forwarding return request`,
-			error: result?.message,
-		})
-	}
-}
-
-export const AddDeadStock = async (req: Request, res: Response) => {
-	const result: any = await AddDeadStockDal(req)
-	if (!result?.error) {
-		res.status(200).json({
-			status: true,
-			message: `Forwarded to SR for approval successfully`,
-			data: result,
-		})
-	} else {
-		res.status(500).json({
-			status: false,
-			message: `Error while forwarding dead stock request`,
-			error: result?.message,
-		})
-	}
-}
-
-export const warrantyClaimReq = async (req: Request, res: Response) => {
-	const result: any = await warrantyClaimReqDal(req)
-	if (!result?.error) {
-		res.status(200).json({
-			status: true,
-			message: `Forwarded to SR for approval successfully`,
-			data: result,
-		})
-	} else {
-		res.status(500).json({
-			status: false,
-			message: `Error while forwarding warranty claim request`,
 			error: result?.message,
 		})
 	}

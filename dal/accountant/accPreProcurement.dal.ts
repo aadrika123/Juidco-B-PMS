@@ -138,37 +138,37 @@ export const getPreProcurementForBoqDal = async (req: Request) => {
 				procurement: {
 					select: {
 						procurement_no: true,
-						category: {
-							select: {
-								name: true,
-							},
-						},
-						subcategory: {
-							select: {
-								name: true,
-							},
-						},
-						brand: {
-							select: {
-								name: true,
-							},
-						},
-						unit: {
-							select: {
-								name: true,
-							},
-						},
-						description: true,
-						remark: true,
-						quantity: true,
-						rate: true,
+						// category: {
+						// 	select: {
+						// 		name: true,
+						// 	},
+						// },
+						// subcategory: {
+						// 	select: {
+						// 		name: true,
+						// 	},
+						// },
+						// brand: {
+						// 	select: {
+						// 		name: true,
+						// 	},
+						// },
+						// unit: {
+						// 	select: {
+						// 		name: true,
+						// 	},
+						// },
+						// description: true,
+						// remark: true,
+						// quantity: true,
+						// rate: true,
 						total_rate: true,
 						isEdited: true,
-						status: {
-							select: {
-								status: true,
-							},
-						},
+						// status: {
+						// 	select: {
+						// 		status: true,
+						// 	},
+						// },
 					},
 				},
 			},
@@ -311,37 +311,37 @@ export const getPreProcurementDal = async (req: Request) => {
 				procurement: {
 					select: {
 						procurement_no: true,
-						category: {
-							select: {
-								name: true,
-							},
-						},
-						subcategory: {
-							select: {
-								name: true,
-							},
-						},
-						brand: {
-							select: {
-								name: true,
-							},
-						},
-						unit: {
-							select: {
-								name: true,
-							},
-						},
-						description: true,
-						quantity: true,
-						rate: true,
+						// category: {
+						// 	select: {
+						// 		name: true,
+						// 	},
+						// },
+						// subcategory: {
+						// 	select: {
+						// 		name: true,
+						// 	},
+						// },
+						// brand: {
+						// 	select: {
+						// 		name: true,
+						// 	},
+						// },
+						// unit: {
+						// 	select: {
+						// 		name: true,
+						// 	},
+						// },
+						// description: true,
+						// quantity: true,
+						// rate: true,
 						total_rate: true,
 						isEdited: true,
 						remark: true,
-						status: {
-							select: {
-								status: true,
-							},
-						},
+						// status: {
+						// 	select: {
+						// 		status: true,
+						// 	},
+						// },
 					},
 				},
 			},
@@ -395,35 +395,35 @@ export const getPreProcurementBulkByOrderNoDal = async (req: Request) => {
 					select: {
 						id: true,
 						procurement_no: true,
-						category: {
-							select: {
-								id: true,
-								name: true,
-							},
-						},
-						subcategory: {
-							select: {
-								id: true,
-								name: true,
-							},
-						},
-						brand: {
-							select: {
-								id: true,
-								name: true,
-							},
-						},
-						description: true,
-						quantity: true,
-						rate: true,
+						// category: {
+						// 	select: {
+						// 		id: true,
+						// 		name: true,
+						// 	},
+						// },
+						// subcategory: {
+						// 	select: {
+						// 		id: true,
+						// 		name: true,
+						// 	},
+						// },
+						// brand: {
+						// 	select: {
+						// 		id: true,
+						// 		name: true,
+						// 	},
+						// },
+						// description: true,
+						// quantity: true,
+						// rate: true,
 						total_rate: true,
 						isEdited: true,
 						remark: true,
-						status: {
-							select: {
-								status: true,
-							},
-						},
+						// status: {
+						// 	select: {
+						// 		status: true,
+						// 	},
+						// },
 					},
 				})
 
@@ -580,6 +580,148 @@ export const createBoqDal = async (req: Request) => {
 	}
 }
 
+// export const createBoqDal = async (req: Request) => {
+// 	const { boqData } = req.body
+// 	try {
+// 		const formattedBoqData: boqData = JSON.parse(boqData)
+// 		const img = req.files as Express.Multer.File[]
+// 		let arrayToSend: any[] = []
+// 		let docToSend: any[] = []
+
+// 		const reference_no: string = generateReferenceNumber(formattedBoqData?.ulb_id)
+
+// 		await Promise.all(
+// 			formattedBoqData?.procurement.map(async item => {
+// 				const preparedData = {
+// 					reference_no: reference_no,
+// 					procurement_no: item?.procurement_no,
+// 					description: item?.description,
+// 					quantity: item?.quantity,
+// 					unit: item?.unit,
+// 					rate: item?.rate,
+// 					amount: item?.amount,
+// 					remark: item?.remark,
+// 				}
+
+// 				const status = await prisma.procurement_status.findFirst({
+// 					where: {
+// 						procurement_no: item?.procurement_no,
+// 					},
+// 					select: {
+// 						status: true,
+// 					},
+// 				})
+
+// 				if (status?.status !== 1) {
+// 					throw {
+// 						error: true,
+// 						message: `Procurement : ${item?.procurement_no} is not valid for BOQ`,
+// 					}
+// 				}
+
+// 				arrayToSend.push(preparedData)
+// 			})
+// 		)
+
+// 		const preparedBoq = {
+// 			reference_no: reference_no,
+// 			gst: formattedBoqData?.gst,
+// 			estimated_cost: formattedBoqData?.estimated_cost,
+// 			remark: formattedBoqData?.remark,
+// 			hsn_code: formattedBoqData?.hsn_code,
+// 		}
+
+// 		if (img) {
+// 			const uploaded: uploadedDoc[] = await imageUploader(img) //It will return reference number and unique id as an object after uploading.
+
+// 			uploaded.map((doc: uploadedDoc) => {
+// 				const preparedBoqDoc = {
+// 					reference_no: reference_no,
+// 					ReferenceNo: doc?.ReferenceNo,
+// 					uniqueId: doc?.uniqueId,
+// 					remark: formattedBoqData?.remark,
+// 				}
+// 				docToSend.push(preparedBoqDoc)
+// 			})
+// 		}
+
+// 		//start transaction
+// 		await prisma.$transaction(async tx => {
+// 			await tx.boq.create({
+// 				data: preparedBoq,
+// 			})
+
+// 			await tx.boq_procurement.createMany({
+// 				data: arrayToSend,
+// 			})
+
+// 			if (img) {
+// 				await tx.boq_doc.createMany({
+// 					data: docToSend,
+// 				})
+// 			}
+
+// 			await Promise.all(
+// 				formattedBoqData?.procurement.map(async item => {
+// 					await tx.procurement_status.update({
+// 						where: {
+// 							procurement_no: item?.procurement_no,
+// 						},
+// 						data: {
+// 							status: 70,
+// 						},
+// 					})
+// 					// await tx.acc_pre_procurement_inbox.delete({
+// 					// 	where: {
+// 					// 		procurement_no: item?.procurement_no,
+// 					// 	},
+// 					// })
+// 					// await tx.acc_pre_procurement_outbox.create({
+// 					// 	data: {
+// 					// 		procurement_no: item?.procurement_no,
+// 					// 	},
+// 					// })
+// 					// await tx.da_pre_procurement_outbox.delete({
+// 					// 	where: {
+// 					// 		procurement_no: item?.procurement_no,
+// 					// 	},
+// 					// })
+// 					// await tx.da_pre_procurement_inbox.create({
+// 					// 	data: {
+// 					// 		procurement_no: item?.procurement_no,
+// 					// 	},
+// 					// })
+// 					await tx.notification.create({
+// 						data: {
+// 							role_id: Number(process.env.ROLE_SR),
+// 							title: 'BOQ created',
+// 							destination: 10,
+// 							description: `BOQ created for procurement Number : ${item?.procurement_no}`,
+// 						},
+// 					})
+// 				})
+// 			)
+
+// 			// await tx.acc_boq_outbox.create({
+// 			// 	data: {
+// 			// 		reference_no: reference_no,
+// 			// 	},
+// 			// })
+
+// 			await tx.da_boq_inbox.create({
+// 				data: {
+// 					reference_no: reference_no,
+// 				},
+// 			})
+// 		})
+
+// 		return reference_no
+// 	} catch (err: any) {
+// 		console.log(err)
+// 		return { error: true, message: getErrorMessage(err) }
+// 	}
+// }
+
 export const getPreProcurementOutboxDal = async (req: Request) => {
 	const page: number | undefined = Number(req?.query?.page)
 	const take: number | undefined = Number(req?.query?.take)
@@ -682,37 +824,37 @@ export const getPreProcurementOutboxDal = async (req: Request) => {
 				procurement: {
 					select: {
 						procurement_no: true,
-						category: {
-							select: {
-								name: true,
-							},
-						},
-						subcategory: {
-							select: {
-								name: true,
-							},
-						},
-						brand: {
-							select: {
-								name: true,
-							},
-						},
-						unit: {
-							select: {
-								name: true,
-							},
-						},
-						description: true,
-						quantity: true,
-						rate: true,
+						// category: {
+						// 	select: {
+						// 		name: true,
+						// 	},
+						// },
+						// subcategory: {
+						// 	select: {
+						// 		name: true,
+						// 	},
+						// },
+						// brand: {
+						// 	select: {
+						// 		name: true,
+						// 	},
+						// },
+						// unit: {
+						// 	select: {
+						// 		name: true,
+						// 	},
+						// },
+						// description: true,
+						// quantity: true,
+						// rate: true,
 						total_rate: true,
 						isEdited: true,
 						remark: true,
-						status: {
-							select: {
-								status: true,
-							},
-						},
+						// status: {
+						// 	select: {
+						// 		status: true,
+						// 	},
+						// },
 					},
 				},
 			},
@@ -904,21 +1046,21 @@ export const getBoqInboxDal = async (req: Request) => {
 							select: {
 								procurement: {
 									select: {
-										category: {
-											select: {
-												name: true,
-											},
-										},
-										subcategory: {
-											select: {
-												name: true,
-											},
-										},
-										brand: {
-											select: {
-												name: true,
-											},
-										},
+										// category: {
+										// 	select: {
+										// 		name: true,
+										// 	},
+										// },
+										// subcategory: {
+										// 	select: {
+										// 		name: true,
+										// 	},
+										// },
+										// brand: {
+										// 	select: {
+										// 		name: true,
+										// 	},
+										// },
 									},
 								},
 							},
@@ -1156,22 +1298,22 @@ export const getBoqOutboxDal = async (req: Request) => {
 								remark: true,
 								procurement: {
 									select: {
-										category: {
-											select: {
-												name: true,
-											},
-										},
-										subcategory: {
-											select: {
-												name: true,
-											},
-										},
-										brand: {
-											select: {
-												name: true,
-											},
-										},
-										description: true,
+										// category: {
+										// 	select: {
+										// 		name: true,
+										// 	},
+										// },
+										// subcategory: {
+										// 	select: {
+										// 		name: true,
+										// 	},
+										// },
+										// brand: {
+										// 	select: {
+										// 		name: true,
+										// 	},
+										// },
+										// description: true,
 									},
 								},
 							},
@@ -1326,86 +1468,86 @@ export const getBoqOutboxDal = async (req: Request) => {
 export const forwardToDaDal = async (req: Request) => {
 	const { reference_no }: { reference_no: string } = req.body
 	try {
-		const boq = await prisma.boq.findFirst({
-			where: {
-				reference_no: reference_no,
-			},
-			select: {
-				status: true,
-			},
-		})
+		// const boq = await prisma.boq.findFirst({
+		// 	where: {
+		// 		reference_no: reference_no,
+		// 	},
+		// 	select: {
+		// 		status: true,
+		// 	},
+		// })
 
-		if (boq?.status !== 0) {
-			throw {
-				error: true,
-				message: `Reference no. : ${reference_no} is not valid BOQ to be forwarded.`,
-			}
-		}
+		// if (boq?.status !== 0) {
+		// 	throw {
+		// 		error: true,
+		// 		message: `Reference no. : ${reference_no} is not valid BOQ to be forwarded.`,
+		// 	}
+		// }
 
-		const preTender = await prisma.tendering_form.findFirst({
-			where: {
-				reference_no: reference_no,
-			},
-			select: {
-				status: true,
-				isPartial: true,
-			},
-		})
+		// const preTender = await prisma.tendering_form.findFirst({
+		// 	where: {
+		// 		reference_no: reference_no,
+		// 	},
+		// 	select: {
+		// 		status: true,
+		// 		isPartial: true,
+		// 	},
+		// })
 
-		if (preTender?.status !== 0 && preTender?.isPartial === false) {
-			throw {
-				error: true,
-				message: `Reference no. : ${reference_no} is not valid Pre tender form to be forwarded.`,
-			}
-		}
+		// if (preTender?.status !== 0 && preTender?.isPartial === false) {
+		// 	throw {
+		// 		error: true,
+		// 		message: `Reference no. : ${reference_no} is not valid Pre tender form to be forwarded.`,
+		// 	}
+		// }
 
-		//start transaction
-		await prisma.$transaction(async tx => {
-			await tx.da_boq_inbox.delete({
-				where: {
-					reference_no: reference_no,
-				},
-			})
+		// //start transaction
+		// await prisma.$transaction(async tx => {
+		// 	await tx.da_boq_inbox.delete({
+		// 		where: {
+		// 			reference_no: reference_no,
+		// 		},
+		// 	})
 
-			await tx.da_boq_outbox.create({
-				data: {
-					reference_no: reference_no,
-				},
-			})
+		// 	await tx.da_boq_outbox.create({
+		// 		data: {
+		// 			reference_no: reference_no,
+		// 		},
+		// 	})
 
-			await tx.level1_inbox.create({
-				data: {
-					reference_no: reference_no,
-				},
-			})
+		// 	await tx.level1_inbox.create({
+		// 		data: {
+		// 			reference_no: reference_no,
+		// 		},
+		// 	})
 
-			await tx.boq.update({
-				where: {
-					reference_no: reference_no,
-				},
-				data: {
-					status: 1,
-				},
-			})
+		// 	await tx.boq.update({
+		// 		where: {
+		// 			reference_no: reference_no,
+		// 		},
+		// 		data: {
+		// 			status: 1,
+		// 		},
+		// 	})
 
-			await tx.tendering_form.update({
-				where: {
-					reference_no: reference_no,
-				},
-				data: {
-					status: 1,
-				},
-			})
+		// 	await tx.tendering_form.update({
+		// 		where: {
+		// 			reference_no: reference_no,
+		// 		},
+		// 		data: {
+		// 			status: 1,
+		// 		},
+		// 	})
 
-			await tx.notification.create({
-				data: {
-					role_id: Number(process.env.ROLE_LEVEL1),
-					title: 'BOQ and Pre tender form to be approved',
-					destination: 21,
-					description: `There is a BOQ and Pre tender form to be approved. Reference Number : ${reference_no}`,
-				},
-			})
-		})
+		// 	await tx.notification.create({
+		// 		data: {
+		// 			role_id: Number(process.env.ROLE_LEVEL1),
+		// 			title: 'BOQ and Pre tender form to be approved',
+		// 			destination: 21,
+		// 			description: `There is a BOQ and Pre tender form to be approved. Reference Number : ${reference_no}`,
+		// 		},
+		// 	})
+		// })
 
 		return 'Forwarded to level 1'
 	} catch (err: any) {
@@ -1544,21 +1686,21 @@ export const getPreTenderingInboxDal = async (req: Request) => {
 									select: {
 										procurement: {
 											select: {
-												category: {
-													select: {
-														name: true,
-													},
-												},
-												subcategory: {
-													select: {
-														name: true,
-													},
-												},
-												brand: {
-													select: {
-														name: true,
-													},
-												},
+												// category: {
+												// 	select: {
+												// 		name: true,
+												// 	},
+												// },
+												// subcategory: {
+												// 	select: {
+												// 		name: true,
+												// 	},
+												// },
+												// brand: {
+												// 	select: {
+												// 		name: true,
+												// 	},
+												// },
 											},
 										},
 									},
@@ -1743,21 +1885,21 @@ export const getPreTenderingOutboxDal = async (req: Request) => {
 									select: {
 										procurement: {
 											select: {
-												category: {
-													select: {
-														name: true,
-													},
-												},
-												subcategory: {
-													select: {
-														name: true,
-													},
-												},
-												brand: {
-													select: {
-														name: true,
-													},
-												},
+												// category: {
+												// 	select: {
+												// 		name: true,
+												// 	},
+												// },
+												// subcategory: {
+												// 	select: {
+												// 		name: true,
+												// 	},
+												// },
+												// brand: {
+												// 	select: {
+												// 		name: true,
+												// 	},
+												// },
 											},
 										},
 									},
