@@ -84,7 +84,6 @@ export const editProcurementDal = async (req: Request) => {
 			await tx.procurement.update({
 				where: { procurement_no: procurement_no },
 				data: {
-					procurement_no: procurement_no,
 					category: { connect: { id: category } },
 					total_rate: total_rate,
 				},
@@ -97,7 +96,6 @@ export const editProcurementDal = async (req: Request) => {
 							id: item?.id,
 						},
 						data: {
-							procurement_no: procurement_no,
 							category_masterId: category,
 							subCategory_masterId: item?.subcategory,
 							unit_masterId: item?.unit,

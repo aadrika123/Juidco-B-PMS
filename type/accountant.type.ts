@@ -1,13 +1,15 @@
 export type boqData = {
 	reference_no: string
+	procurement_no: string
 	procurement: [
 		{
-			procurement_no: string
+			id: string
 			description: string
 			quantity: number
 			unit: string
 			rate: number
-			amount: number
+			gst: number
+			amount?: number
 			remark: string
 		},
 	]

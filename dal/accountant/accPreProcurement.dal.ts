@@ -2,6 +2,7 @@ import { Request } from 'express'
 import { PrismaClient, basic_details, bid_openers, cover_details, cover_details_docs, critical_dates, fee_details, work_details } from '@prisma/client'
 import getErrorMessage from '../../lib/getErrorMessage'
 import { imageUploader } from '../../lib/imageUploader'
+import { imageUploaderV2 } from '../../lib/imageUploaderV2'
 import { pagination, uploadedDoc } from '../../type/common.type'
 import { boqData } from '../../type/accountant.type'
 import generateReferenceNumber from '../../lib/referenceNumberGenerator'
@@ -443,60 +444,33 @@ export const createBoqDal = async (req: Request) => {
 	try {
 		const formattedBoqData: boqData = JSON.parse(boqData)
 		const img = req.files as Express.Multer.File[]
-		let arrayToSend: any[] = []
 		let docToSend: any[] = []
 
 		const reference_no: string = generateReferenceNumber(formattedBoqData?.ulb_id)
 
-		await Promise.all(
-			formattedBoqData?.procurement.map(async item => {
-				const preparedData = {
-					reference_no: reference_no,
-					procurement_no: item?.procurement_no,
-					description: item?.description,
-					quantity: item?.quantity,
-					unit: item?.unit,
-					rate: item?.rate,
-					amount: item?.amount,
-					remark: item?.remark,
-				}
+		const procData = await prisma.procurement.findFirst({
+			where: {
+				procurement_no: formattedBoqData?.procurement_no,
+			},
+			select: {
+				status: true,
+			},
+		})
 
-				const status = await prisma.procurement_status.findFirst({
-					where: {
-						procurement_no: item?.procurement_no,
-					},
-					select: {
-						status: true,
-					},
-				})
-
-				if (status?.status !== 1) {
-					throw {
-						error: true,
-						message: `Procurement : ${item?.procurement_no} is not valid for BOQ`,
-					}
-				}
-
-				arrayToSend.push(preparedData)
-			})
-		)
-
-		const preparedBoq = {
-			reference_no: reference_no,
-			gst: formattedBoqData?.gst,
-			estimated_cost: formattedBoqData?.estimated_cost,
-			remark: formattedBoqData?.remark,
-			hsn_code: formattedBoqData?.hsn_code,
+		if (procData?.status !== 14 && procData?.status !== 24) {
+			throw {
+				error: true,
+				message: `Procurement : ${formattedBoqData?.procurement_no} is not valid for BOQ`,
+			}
 		}
 
 		if (img) {
-			const uploaded: uploadedDoc[] = await imageUploader(img) //It will return reference number and unique id as an object after uploading.
+			const uploaded: string[] = await imageUploaderV2(img) //It will return path for the uploaded document(s).
 
-			uploaded.map((doc: uploadedDoc) => {
+			uploaded.map(doc => {
 				const preparedBoqDoc = {
 					reference_no: reference_no,
-					ReferenceNo: doc?.ReferenceNo,
-					uniqueId: doc?.uniqueId,
+					docPath: doc,
 					remark: formattedBoqData?.remark,
 				}
 				docToSend.push(preparedBoqDoc)
@@ -506,11 +480,13 @@ export const createBoqDal = async (req: Request) => {
 		//start transaction
 		await prisma.$transaction(async tx => {
 			await tx.boq.create({
-				data: preparedBoq,
-			})
-
-			await tx.boq_procurement.createMany({
-				data: arrayToSend,
+				data: {
+					reference_no: reference_no,
+					procurement_no: formattedBoqData?.procurement_no,
+					estimated_cost: formattedBoqData?.estimated_cost,
+					remark: formattedBoqData?.remark,
+					hsn_code: formattedBoqData?.hsn_code,
+				},
 			})
 
 			if (img) {
@@ -521,48 +497,40 @@ export const createBoqDal = async (req: Request) => {
 
 			await Promise.all(
 				formattedBoqData?.procurement.map(async item => {
-					await tx.procurement_status.update({
+					const procStock: any = await prisma.procurement_stocks.findFirst({
 						where: {
-							procurement_no: item?.procurement_no,
-						},
-						data: {
-							status: 70,
+							id: item?.id,
 						},
 					})
-					// await tx.acc_pre_procurement_inbox.delete({
-					// 	where: {
-					// 		procurement_no: item?.procurement_no,
-					// 	},
-					// })
-					// await tx.acc_pre_procurement_outbox.create({
-					// 	data: {
-					// 		procurement_no: item?.procurement_no,
-					// 	},
-					// })
-					// await tx.da_pre_procurement_outbox.delete({
-					// 	where: {
-					// 		procurement_no: item?.procurement_no,
-					// 	},
-					// })
-					// await tx.da_pre_procurement_inbox.create({
-					// 	data: {
-					// 		procurement_no: item?.procurement_no,
-					// 	},
-					// })
-					await tx.notification.create({
+
+					delete procStock.id
+					delete procStock.createdAt
+					delete procStock.updatedAt
+
+					await tx.procurement_stocks_history.create({
+						data: procStock,
+					})
+
+					await tx.procurement_stocks.update({
+						where: {
+							id: item?.id,
+						},
 						data: {
-							role_id: Number(process.env.ROLE_SR),
-							title: 'BOQ created',
-							destination: 10,
-							description: `BOQ created for procurement Number : ${item?.procurement_no}`,
+							boq_procurement_no: formattedBoqData?.procurement_no,
+							rate: Number(item?.rate),
+							gst: Number(item?.gst),
+							remark: item?.remark,
 						},
 					})
 				})
 			)
 
-			// await tx.acc_boq_outbox.create({
+			// await tx.notification.create({
 			// 	data: {
-			// 		reference_no: reference_no,
+			// 		role_id: Number(process.env.ROLE_SR),
+			// 		title: 'BOQ created',
+			// 		destination: 10,
+			// 		description: `BOQ created for procurement Number : ${formattedBoqData?.procurement_no}`,
 			// 	},
 			// })
 
@@ -1020,120 +988,121 @@ export const getBoqInboxDal = async (req: Request) => {
 	// ]
 
 	try {
-		count = await prisma.acc_boq_inbox.count({
-			where: whereClause,
-		})
-		const result = await prisma.acc_boq_inbox.findMany({
-			orderBy: {
-				updatedAt: 'desc',
-			},
-			where: whereClause,
-			...(page && { skip: startIndex }),
-			...(take && { take: take }),
-			select: {
-				id: true,
-				reference_no: true,
-				boq: {
-					select: {
-						reference_no: true,
-						gst: true,
-						estimated_cost: true,
-						remark: true,
-						status: true,
-						isEdited: true,
-						hsn_code: true,
-						procurements: {
-							select: {
-								procurement: {
-									select: {
-										// category: {
-										// 	select: {
-										// 		name: true,
-										// 	},
-										// },
-										// subcategory: {
-										// 	select: {
-										// 		name: true,
-										// 	},
-										// },
-										// brand: {
-										// 	select: {
-										// 		name: true,
-										// 	},
-										// },
-									},
-								},
-							},
-						},
-						boq_doc: {
-							select: {
-								ReferenceNo: true,
-							},
-						},
-					},
-				},
-			},
-		})
+		// count = await prisma.acc_boq_inbox.count({
+		// 	where: whereClause,
+		// })
+		// const result = await prisma.acc_boq_inbox.findMany({
+		// 	orderBy: {
+		// 		updatedAt: 'desc',
+		// 	},
+		// 	where: whereClause,
+		// 	...(page && { skip: startIndex }),
+		// 	...(take && { take: take }),
+		// 	select: {
+		// 		id: true,
+		// 		reference_no: true,
+		// 		boq: {
+		// 			select: {
+		// 				reference_no: true,
+		// 				gst: true,
+		// 				estimated_cost: true,
+		// 				remark: true,
+		// 				status: true,
+		// 				isEdited: true,
+		// 				hsn_code: true,
+		// 				procurements: {
+		// 					select: {
+		// 						procurement: {
+		// 							select: {
+		// 								// category: {
+		// 								// 	select: {
+		// 								// 		name: true,
+		// 								// 	},
+		// 								// },
+		// 								// subcategory: {
+		// 								// 	select: {
+		// 								// 		name: true,
+		// 								// 	},
+		// 								// },
+		// 								// brand: {
+		// 								// 	select: {
+		// 								// 		name: true,
+		// 								// 	},
+		// 								// },
+		// 							},
+		// 						},
+		// 					},
+		// 				},
+		// 				boq_doc: {
+		// 					select: {
+		// 						ReferenceNo: true,
+		// 					},
+		// 				},
+		// 			},
+		// 		},
+		// 	},
+		// })
 
-		await Promise.all(
-			result.map(async item => {
-				await Promise.all(
-					item?.boq?.boq_doc.map(async (doc: any) => {
-						const headers = {
-							token: '8Ufn6Jio6Obv9V7VXeP7gbzHSyRJcKluQOGorAD58qA1IQKYE0',
-						}
-						await axios
-							.post(process.env.DMS_GET || '', { referenceNo: doc?.ReferenceNo }, { headers })
-							.then(response => {
-								// console.log(response?.data?.data, 'res')
-								doc.imageUrl = response?.data?.data?.fullPath
-							})
-							.catch(err => {
-								// console.log(err?.data?.data, 'err')
-								// toReturn.push(err?.data?.data)
-								throw err
-							})
-					})
-				)
-			})
-		)
+		// await Promise.all(
+		// 	result.map(async item => {
+		// 		await Promise.all(
+		// 			item?.boq?.boq_doc.map(async (doc: any) => {
+		// 				const headers = {
+		// 					token: '8Ufn6Jio6Obv9V7VXeP7gbzHSyRJcKluQOGorAD58qA1IQKYE0',
+		// 				}
+		// 				await axios
+		// 					.post(process.env.DMS_GET || '', { referenceNo: doc?.ReferenceNo }, { headers })
+		// 					.then(response => {
+		// 						// console.log(response?.data?.data, 'res')
+		// 						doc.imageUrl = response?.data?.data?.fullPath
+		// 					})
+		// 					.catch(err => {
+		// 						// console.log(err?.data?.data, 'err')
+		// 						// toReturn.push(err?.data?.data)
+		// 						throw err
+		// 					})
+		// 			})
+		// 		)
+		// 	})
+		// )
 
-		let dataToSend: any[] = []
-		result.forEach((item: any) => {
-			const updatedProcurements = item?.boq?.procurements.map((proc: any) => {
-				const { procurement, ...rest } = proc
-				return { ...rest, ...procurement }
-			})
+		// let dataToSend: any[] = []
+		// result.forEach((item: any) => {
+		// 	const updatedProcurements = item?.boq?.procurements.map((proc: any) => {
+		// 		const { procurement, ...rest } = proc
+		// 		return { ...rest, ...procurement }
+		// 	})
 
-			// Assign the updated array back to item.boq.procurements
-			item.boq.procurements = updatedProcurements
+		// 	// Assign the updated array back to item.boq.procurements
+		// 	item.boq.procurements = updatedProcurements
 
-			//flatten the boq object
-			const { boq, ...rest } = item
-			dataToSend.push({ ...rest, ...boq })
-		})
+		// 	//flatten the boq object
+		// 	const { boq, ...rest } = item
+		// 	dataToSend.push({ ...rest, ...boq })
+		// })
 
-		totalPage = Math.ceil(count / take)
-		if (endIndex < count) {
-			pagination.next = {
-				page: page + 1,
-				take: take,
-			}
-		}
-		if (startIndex > 0) {
-			pagination.prev = {
-				page: page - 1,
-				take: take,
-			}
-		}
-		pagination.currentPage = page
-		pagination.currentTake = take
-		pagination.totalPage = totalPage
-		pagination.totalResult = count
-		return {
-			data: dataToSend,
-			pagination: pagination,
-		}
+		// totalPage = Math.ceil(count / take)
+		// if (endIndex < count) {
+		// 	pagination.next = {
+		// 		page: page + 1,
+		// 		take: take,
+		// 	}
+		// }
+		// if (startIndex > 0) {
+		// 	pagination.prev = {
+		// 		page: page - 1,
+		// 		take: take,
+		// 	}
+		// }
+		// pagination.currentPage = page
+		// pagination.currentTake = take
+		// pagination.totalPage = totalPage
+		// pagination.totalResult = count
+		// return {
+		// 	data: dataToSend,
+		// 	pagination: pagination,
+		// }
+		return 'Currently unavailable'
 	} catch (err: any) {
 		console.log(err)
 		return { error: true, message: getErrorMessage(err) }
@@ -1266,127 +1235,128 @@ export const getBoqOutboxDal = async (req: Request) => {
 	// ]
 
 	try {
-		count = await prisma.acc_boq_outbox.count({
-			where: whereClause,
-		})
-		const result = await prisma.acc_boq_outbox.findMany({
-			orderBy: {
-				updatedAt: 'desc',
-			},
-			where: whereClause,
-			...(page && { skip: startIndex }),
-			...(take && { take: take }),
-			select: {
-				id: true,
-				reference_no: true,
-				boq: {
-					select: {
-						reference_no: true,
-						gst: true,
-						estimated_cost: true,
-						remark: true,
-						status: true,
-						isEdited: true,
-						hsn_code: true,
-						procurements: {
-							select: {
-								procurement_no: true,
-								quantity: true,
-								unit: true,
-								rate: true,
-								amount: true,
-								remark: true,
-								procurement: {
-									select: {
-										// category: {
-										// 	select: {
-										// 		name: true,
-										// 	},
-										// },
-										// subcategory: {
-										// 	select: {
-										// 		name: true,
-										// 	},
-										// },
-										// brand: {
-										// 	select: {
-										// 		name: true,
-										// 	},
-										// },
-										// description: true,
-									},
-								},
-							},
-						},
-						boq_doc: {
-							select: {
-								ReferenceNo: true,
-							},
-						},
-					},
-				},
-			},
-		})
+		// count = await prisma.acc_boq_outbox.count({
+		// 	where: whereClause,
+		// })
+		// const result = await prisma.acc_boq_outbox.findMany({
+		// 	orderBy: {
+		// 		updatedAt: 'desc',
+		// 	},
+		// 	where: whereClause,
+		// 	...(page && { skip: startIndex }),
+		// 	...(take && { take: take }),
+		// 	select: {
+		// 		id: true,
+		// 		reference_no: true,
+		// 		boq: {
+		// 			select: {
+		// 				reference_no: true,
+		// 				gst: true,
+		// 				estimated_cost: true,
+		// 				remark: true,
+		// 				status: true,
+		// 				isEdited: true,
+		// 				hsn_code: true,
+		// 				procurements: {
+		// 					select: {
+		// 						procurement_no: true,
+		// 						quantity: true,
+		// 						unit: true,
+		// 						rate: true,
+		// 						amount: true,
+		// 						remark: true,
+		// 						procurement: {
+		// 							select: {
+		// 								// category: {
+		// 								// 	select: {
+		// 								// 		name: true,
+		// 								// 	},
+		// 								// },
+		// 								// subcategory: {
+		// 								// 	select: {
+		// 								// 		name: true,
+		// 								// 	},
+		// 								// },
+		// 								// brand: {
+		// 								// 	select: {
+		// 								// 		name: true,
+		// 								// 	},
+		// 								// },
+		// 								// description: true,
+		// 							},
+		// 						},
+		// 					},
+		// 				},
+		// 				boq_doc: {
+		// 					select: {
+		// 						ReferenceNo: true,
+		// 					},
+		// 				},
+		// 			},
+		// 		},
+		// 	},
+		// })
 
-		await Promise.all(
-			result.map(async item => {
-				await Promise.all(
-					item?.boq?.boq_doc.map(async (doc: any) => {
-						const headers = {
-							token: '8Ufn6Jio6Obv9V7VXeP7gbzHSyRJcKluQOGorAD58qA1IQKYE0',
-						}
-						await axios
-							.post(process.env.DMS_GET || '', { referenceNo: doc?.ReferenceNo }, { headers })
-							.then(response => {
-								// console.log(response?.data?.data, 'res')
-								doc.imageUrl = response?.data?.data?.fullPath
-							})
-							.catch(err => {
-								// console.log(err?.data?.data, 'err')
-								// toReturn.push(err?.data?.data)
-								throw err
-							})
-					})
-				)
-			})
-		)
+		// await Promise.all(
+		// 	result.map(async item => {
+		// 		await Promise.all(
+		// 			item?.boq?.boq_doc.map(async (doc: any) => {
+		// 				const headers = {
+		// 					token: '8Ufn6Jio6Obv9V7VXeP7gbzHSyRJcKluQOGorAD58qA1IQKYE0',
+		// 				}
+		// 				await axios
+		// 					.post(process.env.DMS_GET || '', { referenceNo: doc?.ReferenceNo }, { headers })
+		// 					.then(response => {
+		// 						// console.log(response?.data?.data, 'res')
+		// 						doc.imageUrl = response?.data?.data?.fullPath
+		// 					})
+		// 					.catch(err => {
+		// 						// console.log(err?.data?.data, 'err')
+		// 						// toReturn.push(err?.data?.data)
+		// 						throw err
+		// 					})
+		// 			})
+		// 		)
+		// 	})
+		// )
 
-		let dataToSend: any[] = []
-		result.forEach((item: any) => {
-			const updatedProcurements = item?.boq?.procurements.map((proc: any) => {
-				const { procurement, ...rest } = proc
-				return { ...rest, ...procurement }
-			})
+		// let dataToSend: any[] = []
+		// result.forEach((item: any) => {
+		// 	const updatedProcurements = item?.boq?.procurements.map((proc: any) => {
+		// 		const { procurement, ...rest } = proc
+		// 		return { ...rest, ...procurement }
+		// 	})
 
-			// Assign the updated array back to item.boq.procurements
-			item.boq.procurements = updatedProcurements
+		// 	// Assign the updated array back to item.boq.procurements
+		// 	item.boq.procurements = updatedProcurements
 
-			//flatten the boq object
-			const { boq, ...rest } = item
-			dataToSend.push({ ...rest, ...boq })
-		})
+		// 	//flatten the boq object
+		// 	const { boq, ...rest } = item
+		// 	dataToSend.push({ ...rest, ...boq })
+		// })
 
-		totalPage = Math.ceil(count / take)
-		if (endIndex < count) {
-			pagination.next = {
-				page: page + 1,
-				take: take,
-			}
-		}
-		if (startIndex > 0) {
-			pagination.prev = {
-				page: page - 1,
-				take: take,
-			}
-		}
-		pagination.currentPage = page
-		pagination.currentTake = take
-		pagination.totalPage = totalPage
-		pagination.totalResult = count
-		return {
-			data: dataToSend,
-			pagination: pagination,
-		}
+		// totalPage = Math.ceil(count / take)
+		// if (endIndex < count) {
+		// 	pagination.next = {
+		// 		page: page + 1,
+		// 		take: take,
+		// 	}
+		// }
+		// if (startIndex > 0) {
+		// 	pagination.prev = {
+		// 		page: page - 1,
+		// 		take: take,
+		// 	}
+		// }
+		// pagination.currentPage = page
+		// pagination.currentTake = take
+		// pagination.totalPage = totalPage
+		// pagination.totalResult = count
+		// return {
+		// 	data: dataToSend,
+		// 	pagination: pagination,
+		// }
+		return 'Currently unavailable'
 	} catch (err: any) {
 		console.log(err)
 		return { error: true, message: getErrorMessage(err) }
