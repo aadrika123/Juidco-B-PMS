@@ -21,7 +21,40 @@ export const getProcurementByProcurementNoDal = async (req: Request) => {
 				is_partial: true,
 				status: true,
 				remark: true,
-				procurement_stocks: true,
+				procurement_stocks: {
+					select: {
+						category: {
+							select: {
+								id: true,
+								name: true,
+							},
+						},
+						subCategory: {
+							select: {
+								id: true,
+								name: true,
+							},
+						},
+						unit: {
+							select: {
+								id: true,
+								name: true,
+							},
+						},
+						brand: {
+							select: {
+								id: true,
+								name: true,
+							},
+						},
+						gst: true,
+						remark: true,
+						rate: true,
+						quantity: true,
+						description: true,
+						total_rate: true,
+					},
+				},
 				supplier_master: true,
 				post_procurement: true,
 				receivings: true,
