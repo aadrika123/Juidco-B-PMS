@@ -27,7 +27,9 @@ export const createPreProcurementDal = async (req: Request) => {
 
 	const procurement_no: string = generateOrderNumber(ulb_id)
 
-	let result: any
+	let result: any = {
+		procurement_no: procurement_no,
+	}
 
 	if (!procurement || procurement.length === 0) {
 		throw { error: true, message: 'List of procurements are mandatory' }
@@ -35,7 +37,6 @@ export const createPreProcurementDal = async (req: Request) => {
 
 	try {
 		const total_rate = procurement.reduce((total, item) => total + item?.total_rate, 0)
-		console.log(total_rate)
 
 		await prisma.$transaction(async tx => {
 			await tx.procurement.create({
@@ -50,7 +51,7 @@ export const createPreProcurementDal = async (req: Request) => {
 					await tx.procurement_stocks.create({
 						data: {
 							procurement_no: procurement_no,
-							boq_procurement_no: procurement_no,
+							// boq_procurement_no: procurement_no,
 							category_masterId: category,
 							subCategory_masterId: item?.subcategory,
 							unit_masterId: item?.unit,
