@@ -553,8 +553,7 @@ model boq_procurement {
 model boq_doc {
     id           String   @id @default(uuid())
     reference_no String
-    ReferenceNo  String
-    uniqueId     String?
+    docPath      String?
     remark       String?
     createdAt    DateTime @default(now())
     updatedAt    DateTime @updatedAt

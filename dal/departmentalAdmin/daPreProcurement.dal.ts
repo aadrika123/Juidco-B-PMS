@@ -1037,7 +1037,7 @@ export const getBoqInboxDal = async (req: Request) => {
 	//creating filter options for the query
 	if (category[0]) {
 		whereClause.boq = {
-			procurements: {
+			procurement_stocks: {
 				some: {
 					procurement: {
 						category_masterId: {
@@ -1050,7 +1050,7 @@ export const getBoqInboxDal = async (req: Request) => {
 	}
 	if (subcategory[0]) {
 		whereClause.boq = {
-			procurements: {
+			procurement_stocks: {
 				some: {
 					procurement: {
 						subcategory_masterId: {
@@ -1070,7 +1070,7 @@ export const getBoqInboxDal = async (req: Request) => {
 	}
 	if (brand[0]) {
 		whereClause.boq = {
-			procurements: {
+			procurement_stocks: {
 				some: {
 					procurement: {
 						brand_masterId: {
@@ -1081,22 +1081,6 @@ export const getBoqInboxDal = async (req: Request) => {
 			},
 		}
 	}
-	// whereClause.NOT = [
-	//     {
-	//         procurement: {
-	//             status: {
-	//                 status: -2
-	//             }
-	//         }
-	//     },
-	//     {
-	//         procurement: {
-	//             status: {
-	//                 status: 2
-	//             }
-	//         }
-	//     },
-	// ]
 
 	try {
 		count = await prisma.da_boq_inbox.count({
@@ -1117,42 +1101,36 @@ export const getBoqInboxDal = async (req: Request) => {
 						reference_no: true,
 						gst: true,
 						estimated_cost: true,
+						hsn_code: true,
 						remark: true,
 						status: true,
 						isEdited: true,
-						procurements: {
+						procurement_stocks: {
 							select: {
 								procurement_no: true,
 								quantity: true,
-								unit: true,
 								rate: true,
-								amount: true,
 								remark: true,
-								procurement: {
+								category: {
 									select: {
-										// category: {
-										// 	select: {
-										// 		name: true,
-										// 	},
-										// },
-										// subcategory: {
-										// 	select: {
-										// 		name: true,
-										// 	},
-										// },
-										// brand: {
-										// 	select: {
-										// 		name: true,
-										// 	},
-										// },
-										// description: true,
+										name: true,
+									},
+								},
+								subCategory: {
+									select: {
+										name: true,
+									},
+								},
+								unit: {
+									select: {
+										name: true,
 									},
 								},
 							},
 						},
 						boq_doc: {
 							select: {
-								ReferenceNo: true,
+								docPath: true,
 							},
 						},
 					},
@@ -1160,39 +1138,8 @@ export const getBoqInboxDal = async (req: Request) => {
 			},
 		})
 
-		await Promise.all(
-			result.map(async item => {
-				await Promise.all(
-					item?.boq?.boq_doc.map(async (doc: any) => {
-						const headers = {
-							token: '8Ufn6Jio6Obv9V7VXeP7gbzHSyRJcKluQOGorAD58qA1IQKYE0',
-						}
-						await axios
-							.post(process.env.DMS_GET || '', { referenceNo: doc?.ReferenceNo }, { headers })
-							.then(response => {
-								// console.log(response?.data?.data, 'res')
-								doc.imageUrl = response?.data?.data?.fullPath
-							})
-							.catch(err => {
-								// console.log(err?.data?.data, 'err')
-								// toReturn.push(err?.data?.data)
-								throw err
-							})
-					})
-				)
-			})
-		)
-
 		let dataToSend: any[] = []
 		result.forEach((item: any) => {
-			const updatedProcurements = item?.boq?.procurements.map((proc: any) => {
-				const { procurement, ...rest } = proc
-				return { ...rest, ...procurement }
-			})
-
-			// Assign the updated array back to item.boq.procurements
-			item.boq.procurements = updatedProcurements
-
 			//flatten the boq object
 			const { boq, ...rest } = item
 			dataToSend.push({ ...rest, ...boq })
@@ -1252,10 +1199,16 @@ export const getBoqOutboxDal = async (req: Request) => {
 				},
 			},
 			{
-				procurement: {
-					description: {
-						contains: search,
-						mode: 'insensitive',
+				boq: {
+					procurements: {
+						some: {
+							procurement: {
+								description: {
+									contains: search,
+									mode: 'insensitive',
+								},
+							},
+						},
 					},
 				},
 			},
@@ -1265,7 +1218,7 @@ export const getBoqOutboxDal = async (req: Request) => {
 	//creating filter options for the query
 	if (category[0]) {
 		whereClause.boq = {
-			procurements: {
+			procurement_stocks: {
 				some: {
 					procurement: {
 						category_masterId: {
@@ -1278,7 +1231,7 @@ export const getBoqOutboxDal = async (req: Request) => {
 	}
 	if (subcategory[0]) {
 		whereClause.boq = {
-			procurements: {
+			procurement_stocks: {
 				some: {
 					procurement: {
 						subcategory_masterId: {
@@ -1298,7 +1251,7 @@ export const getBoqOutboxDal = async (req: Request) => {
 	}
 	if (brand[0]) {
 		whereClause.boq = {
-			procurements: {
+			procurement_stocks: {
 				some: {
 					procurement: {
 						brand_masterId: {
@@ -1309,22 +1262,6 @@ export const getBoqOutboxDal = async (req: Request) => {
 			},
 		}
 	}
-	// whereClause.NOT = [
-	//     {
-	//         procurement: {
-	//             status: {
-	//                 status: -2
-	//             }
-	//         }
-	//     },
-	//     {
-	//         procurement: {
-	//             status: {
-	//                 status: 2
-	//             }
-	//         }
-	//     },
-	// ]
 
 	try {
 		count = await prisma.da_boq_outbox.count({
@@ -1345,42 +1282,36 @@ export const getBoqOutboxDal = async (req: Request) => {
 						reference_no: true,
 						gst: true,
 						estimated_cost: true,
+						hsn_code: true,
 						remark: true,
 						status: true,
 						isEdited: true,
-						procurements: {
+						procurement_stocks: {
 							select: {
 								procurement_no: true,
 								quantity: true,
-								unit: true,
 								rate: true,
-								amount: true,
 								remark: true,
-								procurement: {
+								category: {
 									select: {
-										// category: {
-										// 	select: {
-										// 		name: true,
-										// 	},
-										// },
-										// subcategory: {
-										// 	select: {
-										// 		name: true,
-										// 	},
-										// },
-										// brand: {
-										// 	select: {
-										// 		name: true,
-										// 	},
-										// },
-										// description: true,
+										name: true,
+									},
+								},
+								subCategory: {
+									select: {
+										name: true,
+									},
+								},
+								unit: {
+									select: {
+										name: true,
 									},
 								},
 							},
 						},
 						boq_doc: {
 							select: {
-								ReferenceNo: true,
+								docPath: true,
 							},
 						},
 					},
@@ -1388,39 +1319,8 @@ export const getBoqOutboxDal = async (req: Request) => {
 			},
 		})
 
-		await Promise.all(
-			result.map(async item => {
-				await Promise.all(
-					item?.boq?.boq_doc.map(async (doc: any) => {
-						const headers = {
-							token: '8Ufn6Jio6Obv9V7VXeP7gbzHSyRJcKluQOGorAD58qA1IQKYE0',
-						}
-						await axios
-							.post(process.env.DMS_GET || '', { referenceNo: doc?.ReferenceNo }, { headers })
-							.then(response => {
-								// console.log(response?.data?.data, 'res')
-								doc.imageUrl = response?.data?.data?.fullPath
-							})
-							.catch(err => {
-								// console.log(err?.data?.data, 'err')
-								// toReturn.push(err?.data?.data)
-								throw err
-							})
-					})
-				)
-			})
-		)
-
 		let dataToSend: any[] = []
 		result.forEach((item: any) => {
-			const updatedProcurements = item?.boq?.procurements.map((proc: any) => {
-				const { procurement, ...rest } = proc
-				return { ...rest, ...procurement }
-			})
-
-			// Assign the updated array back to item.boq.procurements
-			item.boq.procurements = updatedProcurements
-
 			//flatten the boq object
 			const { boq, ...rest } = item
 			dataToSend.push({ ...rest, ...boq })

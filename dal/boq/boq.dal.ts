@@ -4,6 +4,7 @@ import { PrismaClient } from '@prisma/client'
 import { boqData } from '../../type/accountant.type'
 import { uploadedDoc } from '../../type/common.type'
 import { imageUploader } from '../../lib/imageUploader'
+import { imageUploaderV2 } from '../../lib/imageUploaderV2'
 import axios from 'axios'
 import { getPreTenderV2Dal } from '../accountant/accPreProcurement.dal'
 
@@ -24,76 +25,36 @@ export const getBoqByRefNoDal = async (req: Request) => {
 				remark: true,
 				status: true,
 				isEdited: true,
-				procurements: {
+				procurement_stocks: {
 					select: {
 						procurement_no: true,
 						quantity: true,
-						unit: true,
 						rate: true,
-						amount: true,
 						remark: true,
-						procurement: {
+						category: {
 							select: {
-								// 	category: {
-								// 		select: {
-								// 			name: true,
-								// 		},
-								// 	},
-								// 	subcategory: {
-								// 		select: {
-								// 			name: true,
-								// 		},
-								// 	},
-								// 	brand: {
-								// 		select: {
-								// 			name: true,
-								// 		},
-								// 	},
-								// 	description: true,
+								name: true,
+							},
+						},
+						subCategory: {
+							select: {
+								name: true,
+							},
+						},
+						unit: {
+							select: {
+								name: true,
 							},
 						},
 					},
 				},
 				boq_doc: {
 					select: {
-						ReferenceNo: true,
+						docPath: true,
 					},
 				},
 			},
 		})
-
-		await Promise.all(
-			result?.boq_doc.map(async (doc: any) => {
-				const headers = {
-					token: '8Ufn6Jio6Obv9V7VXeP7gbzHSyRJcKluQOGorAD58qA1IQKYE0',
-				}
-				await axios
-					.post(process.env.DMS_GET || '', { referenceNo: doc?.ReferenceNo }, { headers })
-					.then(response => {
-						// console.log(response?.data?.data, 'res')
-						doc.imageUrl = response?.data?.data?.fullPath
-					})
-					.catch(err => {
-						// console.log(err?.data?.data, 'err')
-						// toReturn.push(err?.data?.data)
-						throw err
-					})
-			})
-		)
-
-		const updatedProcurements = result.procurements.map((proc: any) => {
-			const temp = { ...proc.procurement }
-			// Delete the procurement property from proc
-			const { procurement, ...rest } = proc
-			return { ...rest, ...temp }
-		})
-
-		// Assign the updated array back to item.boq.procurements
-		result.procurements = updatedProcurements
-
-		const preTenderData = await getPreTenderV2Dal(req)
-
-		result.preTender = preTenderData
 
 		return [result]
 	} catch (err: any) {
@@ -102,47 +63,141 @@ export const getBoqByRefNoDal = async (req: Request) => {
 	}
 }
 
+// export const editBoqDal = async (req: Request) => {
+// 	const { boqData } = req.body
+// 	try {
+// 		const formattedBoqData: boqData = JSON.parse(boqData)
+// 		const img = req.files as Express.Multer.File[]
+// 		let arrayToSend: any[] = []
+// 		let docToSend: any[] = []
+
+// 		await Promise.all(
+// 			formattedBoqData?.procurement.map(async item => {
+// 				const preparedData = {
+// 					// reference_no: formattedBoqData?.reference_no,
+// 					procurement_no: item?.procurement_no,
+// 					description: item?.description,
+// 					quantity: item?.quantity,
+// 					unit: item?.unit,
+// 					rate: item?.rate,
+// 					amount: item?.amount,
+// 					remark: item?.remark,
+// 				}
+// 				arrayToSend.push(preparedData)
+// 			})
+// 		)
+
+// 		const preparedBoq = {
+// 			// reference_no: formattedBoqData?.reference_no,
+// 			gst: formattedBoqData?.gst,
+// 			estimated_cost: formattedBoqData?.estimated_cost,
+// 			remark: formattedBoqData?.remark,
+// 			isEdited: true,
+// 			hsn_code: formattedBoqData?.hsn_code,
+// 		}
+
+// 		if (img) {
+// 			const uploaded: uploadedDoc[] = await imageUploader(img) //It will return reference number and unique id as an object after uploading.
+
+// 			uploaded.map((doc: uploadedDoc) => {
+// 				const preparedBoqDoc = {
+// 					reference_no: formattedBoqData?.reference_no,
+// 					ReferenceNo: doc?.ReferenceNo,
+// 					uniqueId: doc?.uniqueId,
+// 					remark: formattedBoqData?.remark,
+// 				}
+// 				docToSend.push(preparedBoqDoc)
+// 			})
+// 		}
+
+// 		//start transaction
+// 		await prisma.$transaction(async tx => {
+// 			await tx.boq.update({
+// 				where: {
+// 					reference_no: formattedBoqData?.reference_no,
+// 				},
+// 				data: preparedBoq,
+// 			})
+
+// 			// await tx.boq_procurement.updateMany({
+// 			//     where: {
+// 			//         reference_no: formattedBoqData?.reference_no
+// 			//     },
+// 			//     data: arrayToSend
+// 			// })
+
+// 			await Promise.all(
+// 				formattedBoqData?.procurement.map(async item => {
+// 					const preparedData = {
+// 						// reference_no: formattedBoqData?.reference_no,
+// 						procurement_no: item?.procurement_no,
+// 						description: item?.description,
+// 						quantity: item?.quantity,
+// 						unit: item?.unit,
+// 						rate: item?.rate,
+// 						amount: item?.amount,
+// 						remark: item?.remark,
+// 					}
+// 					await tx.boq_procurement.update({
+// 						where: {
+// 							procurement_no: item?.procurement_no,
+// 						},
+// 						data: preparedData,
+// 					})
+// 				})
+// 			)
+
+// 			if (img) {
+// 				await tx.boq_doc.deleteMany({
+// 					where: {
+// 						reference_no: formattedBoqData?.reference_no,
+// 					},
+// 				})
+// 				await tx.boq_doc.createMany({
+// 					data: docToSend,
+// 				})
+// 			}
+// 		})
+
+// 		return 'BOQ Edited'
+// 	} catch (err: any) {
+// 		console.log(err)
+// 		return { error: true, message: getErrorMessage(err) }
+// 	}
+// }
+
 export const editBoqDal = async (req: Request) => {
 	const { boqData } = req.body
 	try {
 		const formattedBoqData: boqData = JSON.parse(boqData)
 		const img = req.files as Express.Multer.File[]
-		let arrayToSend: any[] = []
 		let docToSend: any[] = []
 
-		await Promise.all(
-			formattedBoqData?.procurement.map(async item => {
-				const preparedData = {
-					// reference_no: formattedBoqData?.reference_no,
-					procurement_no: item?.procurement_no,
-					description: item?.description,
-					quantity: item?.quantity,
-					unit: item?.unit,
-					rate: item?.rate,
-					amount: item?.amount,
-					remark: item?.remark,
-				}
-				arrayToSend.push(preparedData)
-			})
-		)
+		// const reference_no: string = generateReferenceNumber(formattedBoqData?.ulb_id)
 
-		const preparedBoq = {
-			// reference_no: formattedBoqData?.reference_no,
-			gst: formattedBoqData?.gst,
-			estimated_cost: formattedBoqData?.estimated_cost,
-			remark: formattedBoqData?.remark,
-			isEdited: true,
-			hsn_code: formattedBoqData?.hsn_code,
+		const procData = await prisma.procurement.findFirst({
+			where: {
+				procurement_no: formattedBoqData?.procurement_no,
+			},
+			select: {
+				status: true,
+			},
+		})
+
+		if (procData?.status !== 14 && procData?.status !== 24) {
+			throw {
+				error: true,
+				message: `Procurement : ${formattedBoqData?.procurement_no} is not valid for BOQ`,
+			}
 		}
 
 		if (img) {
-			const uploaded: uploadedDoc[] = await imageUploader(img) //It will return reference number and unique id as an object after uploading.
+			const uploaded: string[] = await imageUploaderV2(img) //It will return path for the uploaded document(s).
 
-			uploaded.map((doc: uploadedDoc) => {
+			uploaded.map(doc => {
 				const preparedBoqDoc = {
 					reference_no: formattedBoqData?.reference_no,
-					ReferenceNo: doc?.ReferenceNo,
-					uniqueId: doc?.uniqueId,
+					docPath: doc,
 					remark: formattedBoqData?.remark,
 				}
 				docToSend.push(preparedBoqDoc)
@@ -155,36 +210,13 @@ export const editBoqDal = async (req: Request) => {
 				where: {
 					reference_no: formattedBoqData?.reference_no,
 				},
-				data: preparedBoq,
+				data: {
+					procurement_no: formattedBoqData?.procurement_no,
+					estimated_cost: formattedBoqData?.estimated_cost,
+					remark: formattedBoqData?.remark,
+					hsn_code: formattedBoqData?.hsn_code,
+				},
 			})
-
-			// await tx.boq_procurement.updateMany({
-			//     where: {
-			//         reference_no: formattedBoqData?.reference_no
-			//     },
-			//     data: arrayToSend
-			// })
-
-			await Promise.all(
-				formattedBoqData?.procurement.map(async item => {
-					const preparedData = {
-						// reference_no: formattedBoqData?.reference_no,
-						procurement_no: item?.procurement_no,
-						description: item?.description,
-						quantity: item?.quantity,
-						unit: item?.unit,
-						rate: item?.rate,
-						amount: item?.amount,
-						remark: item?.remark,
-					}
-					await tx.boq_procurement.update({
-						where: {
-							procurement_no: item?.procurement_no,
-						},
-						data: preparedData,
-					})
-				})
-			)
 
 			if (img) {
 				await tx.boq_doc.deleteMany({
@@ -196,9 +228,48 @@ export const editBoqDal = async (req: Request) => {
 					data: docToSend,
 				})
 			}
+
+			await Promise.all(
+				formattedBoqData?.procurement.map(async item => {
+					const procStock: any = await prisma.procurement_stocks.findFirst({
+						where: {
+							id: item?.id,
+						},
+					})
+
+					delete procStock.id
+					delete procStock.createdAt
+					delete procStock.updatedAt
+
+					// await tx.procurement_stocks_history.create({
+					// 	data: procStock,
+					// })
+
+					await tx.procurement_stocks.update({
+						where: {
+							id: item?.id,
+						},
+						data: {
+							boq_procurement_no: formattedBoqData?.procurement_no,
+							rate: Number(item?.rate),
+							gst: Number(item?.gst),
+							remark: item?.remark,
+						},
+					})
+				})
+			)
+
+			// await tx.notification.create({
+			// 	data: {
+			// 		role_id: Number(process.env.ROLE_SR),
+			// 		title: 'BOQ created',
+			// 		destination: 10,
+			// 		description: `BOQ created for procurement Number : ${formattedBoqData?.procurement_no}`,
+			// 	},
+			// })
 		})
 
-		return 'BOQ Edited'
+		return 'Updated'
 	} catch (err: any) {
 		console.log(err)
 		return { error: true, message: getErrorMessage(err) }
