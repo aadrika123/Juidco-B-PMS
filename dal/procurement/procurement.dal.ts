@@ -13,6 +13,7 @@ export const getProcurementByProcurementNoDal = async (req: Request) => {
 				procurement_no: procurement_no,
 			},
 			select: {
+				id: true,
 				procurement_no: true,
 				category: true,
 				total_rate: true,

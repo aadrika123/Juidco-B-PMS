@@ -35,6 +35,7 @@ export const createPreProcurementDal = async (req: Request) => {
 
 	try {
 		const total_rate = procurement.reduce((total, item) => total + item?.total_rate, 0)
+		console.log(total_rate)
 
 		await prisma.$transaction(async tx => {
 			await tx.procurement.create({
@@ -60,7 +61,7 @@ export const createPreProcurementDal = async (req: Request) => {
 					})
 				})
 			)
-			tx.ia_pre_procurement_inbox.create({
+			await tx.ia_pre_procurement_inbox.create({
 				data: {
 					procurement_no: procurement_no,
 				},
@@ -316,7 +317,7 @@ export const getPreProcurementDal = async (req: Request) => {
 		count = await prisma.ia_pre_procurement_inbox.count({
 			where: whereClause,
 		})
-		const result = await prisma.ia_pre_procurement_outbox.findMany({
+		const result = await prisma.ia_pre_procurement_inbox.findMany({
 			orderBy: {
 				updatedAt: 'desc',
 			},
@@ -338,7 +339,7 @@ export const getPreProcurementDal = async (req: Request) => {
 						isEdited: true,
 						remark: true,
 						status: true,
-						procurement_stocks: true,
+						// procurement_stocks: true,
 					},
 				},
 			},
@@ -995,7 +996,7 @@ export const getPreProcurementOutboxDal = async (req: Request) => {
 						isEdited: true,
 						remark: true,
 						status: true,
-						procurement_stocks: true,
+						// procurement_stocks: true,
 					},
 				},
 			},
