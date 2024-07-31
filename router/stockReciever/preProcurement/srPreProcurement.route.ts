@@ -12,7 +12,8 @@ import {
     getPreProcurementOutboxById,
     getPreProcurementRejected,
     getPreProcurementReleased,
-    editPreProcurement
+    editPreProcurement,
+    forwardToLevel1
 } from "../../../controller/stockReceiver/srPreProcurement.controller";
 
 router.use(srAuth)
@@ -26,6 +27,7 @@ router.get('/pre-procurement/outbox/:id', getPreProcurementOutboxById)
 router.get('/pre-procurement/:id', getPreProcurementById)
 router.get('/pre-procurement/by-order-no/:order_no', getPreProcurementByOrderNo)
 router.post('/pre-procurement/to-da', upload.array('img'), srAuth, forwardToDa)
+router.post('/pre-procurement/to-level1', upload.array('img'), srAuth, forwardToLevel1)
 router.post('/pre-procurement/edit', editPreProcurement)
 
 
