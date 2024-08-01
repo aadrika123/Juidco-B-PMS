@@ -25,6 +25,7 @@ import {
 	rejectPreTender,
 	returnToAccPt,
 	releaseForTenderByProcNo,
+	forwardToFinance,
 } from '../../../controller/departmentalAdmin/daPreProcurement.controller'
 
 router.use(daAuth)
@@ -34,6 +35,7 @@ router.get('/pre-procurement/pre-tender/outbox', getPreTenderingOutbox)
 router.get('/pre-procurement/boq', getBoqInbox)
 router.get('/pre-procurement', getPreProcurement)
 router.get('/pre-procurement/boq/outbox', getBoqOutbox)
+router.post('/pre-procurement/boq/to-finance', forwardToFinance)
 router.get('/pre-procurement/outbox', getPreProcurementOutbox)
 router.get('/pre-procurement/outbox/:id', getPreProcurementOutboxById)
 router.get('/pre-procurement/:id', getPreProcurementById)
@@ -57,6 +59,5 @@ router.post('/pre-procurement/pre-tender/to-acc', returnToAccPt)
 router.post('/pre-procurement/boq/to-level1', returnToAccPt)
 
 //new flow with level 1 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
-
 
 export default router

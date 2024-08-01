@@ -23,6 +23,7 @@ import {
 	rejectPreTenderDal,
 	returnToAccPtDal,
 	forwardToLevel1Dal,
+	forwardToFinanceDal,
 } from '../../dal/departmentalAdmin/daPreProcurement.dal'
 
 export const getPreProcurement = async (req: Request, res: Response) => {
@@ -262,6 +263,23 @@ export const getBoqOutbox = async (req: Request, res: Response) => {
 		res.status(404).json({
 			status: false,
 			message: `Error while fetching BOQ list`,
+			error: result?.message,
+		})
+	}
+}
+
+export const forwardToFinance = async (req: Request, res: Response) => {
+	const result: any = await forwardToFinanceDal(req)
+	if (!result?.error) {
+		res.status(200).json({
+			status: true,
+			message: `Forwarded`,
+			data: result,
+		})
+	} else {
+		res.status(404).json({
+			status: false,
+			message: `Error while forwarding`,
 			error: result?.message,
 		})
 	}
