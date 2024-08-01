@@ -1365,7 +1365,7 @@ export const forwardToFinanceDal = async (req: Request) => {
 			},
 		})
 
-		if (boq?.status !== 0) {
+		if (boq?.status !== 0 && boq?.status !== 43) {
 			throw {
 				error: true,
 				message: `Reference no. : ${reference_no} is not valid BOQ to be forwarded.`,
