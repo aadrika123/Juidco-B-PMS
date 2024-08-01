@@ -326,7 +326,7 @@ export const returnToLevel1Dal = async (req: Request) => {
 			},
 		})
 
-		if (boqData?.status !== 2) {
+		if (boqData?.status !== 20 && boqData?.status !== 23) {
 			throw {
 				error: true,
 				message: 'Invalid status of BOQ to return',
@@ -336,6 +336,7 @@ export const returnToLevel1Dal = async (req: Request) => {
 		if (!remark) {
 			throw { error: true, message: 'Remark is mandatory' }
 		}
+		
 
 		//start transaction
 		await prisma.$transaction(async tx => {
@@ -409,7 +410,7 @@ export const approvalByLevel2Dal = async (req: Request) => {
 			},
 		})
 
-		if (boqData?.status !== 20) {
+		if (boqData?.status !== 20 && boqData?.status !== 23) {
 			throw { error: true, message: 'Invalid status of procurement to be approved' }
 		}
 
@@ -485,7 +486,7 @@ export const rejectionByLevel2Dal = async (req: Request) => {
 			},
 		})
 
-		if (boqData?.status !== 1) {
+		if (boqData?.status !== 20 && boqData?.status !== 23) {
 			throw { error: true, message: 'Invalid status of BOQ to be rejected' }
 		}
 
@@ -520,7 +521,7 @@ export const rejectionByLevel2Dal = async (req: Request) => {
 					procurement_no: procurement_no,
 				},
 				data: {
-					status: 21,
+					status: 22,
 					remark: '' as string,
 				},
 			})

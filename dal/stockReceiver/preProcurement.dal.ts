@@ -646,7 +646,7 @@ export const forwardToLevel1Dal = async (req: Request) => {
 			}
 		}
 
-		const daOutbox = await prisma.da_pre_procurement_outbox.count({
+		const level1Outbox = await prisma.level1_outbox.count({
 			where: {
 				procurement_no: procurement_no,
 			},
@@ -696,7 +696,7 @@ export const forwardToLevel1Dal = async (req: Request) => {
 				},
 			})
 
-			if (daOutbox) {
+			if (level1Outbox) {
 				await tx.level1_outbox.delete({
 					where: {
 						procurement_no: procurement_no,
@@ -706,9 +706,9 @@ export const forwardToLevel1Dal = async (req: Request) => {
 
 			await tx.notification.create({
 				data: {
-					role_id: Number(process.env.ROLE_DA),
+					role_id: Number(process.env.ROLE_LEVEL1),
 					title: 'New procurement',
-					destination: 20,
+					destination: 50,
 					description: `There is a new procurement to be approved. Procurement Number : ${procurement_no}`,
 				},
 			})
