@@ -510,28 +510,29 @@ model note_sheet {
 //BOQ============================================================================================================================================================================================================================================================================================================
 
 model boq {
-    id                 String               @id @default(uuid())
-    reference_no       String               @unique
-    procurement_no     String?              @unique
-    gst                Float?
-    estimated_cost     Float?
-    remark             String?
-    createdAt          DateTime             @default(now())
-    updatedAt          DateTime             @updatedAt
-    revised            Boolean              @default(false)
-    status             Int                  @default(0) //-3=rejected by level2, -2=rejected by level1, -1=returned, 0=pending, 1=level1, 11=level1 approved, 12=returned to level1, 2=level2, 21=level2 approved, 40=finance pending, 41=finance returned, 42=finance approved, -43=finance rejected 
-    isEdited           Boolean              @default(false)
-    hsn_code           String?
-    procurements       boq_procurement[]
-    boq_doc            boq_doc[]
-    acc_boq_inbox      acc_boq_inbox?
-    acc_boq_outbox     acc_boq_outbox?
-    da_boq_inbox       da_boq_inbox?
-    da_boq_outbox      da_boq_outbox?
-    tendering_form     tendering_form?
-    finance_boq_inbox  finance_boq_inbox?
-    finance_boq_outbox finance_boq_outbox?
-    procurement_stocks procurement_stocks[]
+    id                    String                 @id @default(uuid())
+    reference_no          String                 @unique
+    procurement_no        String?                @unique
+    gst                   Float?
+    estimated_cost        Float?
+    remark                String?
+    createdAt             DateTime               @default(now())
+    updatedAt             DateTime               @updatedAt
+    revised               Boolean                @default(false)
+    status                Int                    @default(0) //-3=rejected by level2, -2=rejected by level1, -1=returned, 0=pending, 1=level1, 11=level1 approved, 12=returned to level1, 2=level2, 21=level2 approved, 40=finance pending, 41=finance returned, 42=finance approved, -43=finance rejected 
+    isEdited              Boolean                @default(false)
+    hsn_code              String?
+    procurements          boq_procurement[]
+    boq_doc               boq_doc[]
+    acc_boq_inbox         acc_boq_inbox?
+    acc_boq_outbox        acc_boq_outbox?
+    da_boq_inbox          da_boq_inbox?
+    da_boq_outbox         da_boq_outbox?
+    tendering_form        tendering_form?
+    finance_boq_inbox     finance_boq_inbox?
+    finance_boq_outbox    finance_boq_outbox?
+    procurement_stocks    procurement_stocks[]
+    pre_tendering_details pre_tendering_details?
 }
 
 model boq_procurement {
@@ -609,6 +610,35 @@ model finance_boq_outbox {
 }
 
 //Pre-tendering============================================================================================================================================================================================================================================================================================================
+
+enum pre_tendering_details_enum {
+    percentage
+    fixed
+}
+
+enum tendering_type_enum {
+    least_cost
+    qcbs
+    rate_contract
+}
+
+model pre_tendering_details {
+    id               String                     @id @default(uuid())
+    reference_no     String                     @unique
+    boq              boq                        @relation(fields: [reference_no], references: [reference_no])
+    emd              Boolean
+    estimated_amount Float
+    emd_type         pre_tendering_details_enum
+    emd_value        Float
+    pbg_type         pre_tendering_details_enum
+    pbg_value        Float
+    tendering_type   tendering_type_enum
+    tenure           Float?
+    min_supplier     Int?
+    max_supplier     Int?
+    createdAt        DateTime                   @default(now())
+    updatedAt        DateTime                   @updatedAt
+}
 
 //enums
 enum payment_mode_enum {
