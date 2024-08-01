@@ -497,18 +497,32 @@ export const createBoqDal = async (req: Request) => {
 
 			await Promise.all(
 				formattedBoqData?.procurement.map(async item => {
-					const procStock: any = await prisma.procurement_stocks.findFirst({
+					const procStock = await prisma.procurement_stocks.findFirst({
 						where: {
 							id: item?.id,
 						},
 					})
 
-					delete procStock.id
-					delete procStock.createdAt
-					delete procStock.updatedAt
+					// delete procStock.id
+					// delete procStock.createdAt
+					// delete procStock.updatedAt
+
+					// console.log(procStock)
 
 					await tx.procurement_stocks_history.create({
-						data: procStock,
+						data: {
+							procurement: { connect: { procurement_no: procStock?.procurement_no } },
+							category: { connect: { id: procStock?.category_masterId as string } },
+							subCategory: { connect: { id: procStock?.subCategory_masterId as string } },
+							unit: { connect: { id: procStock?.unit_masterId as string } },
+							gst: procStock?.gst,
+							remark: procStock?.remark,
+							rate: procStock?.rate,
+							quantity: procStock?.quantity,
+							description: procStock?.description,
+							total_rate: procStock?.total_rate,
+							procurement_stocks: { connect: { id: procStock?.id } },
+						},
 					})
 
 					await tx.procurement_stocks.update({
