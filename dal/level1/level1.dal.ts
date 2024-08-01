@@ -49,43 +49,43 @@ export const getInboxDal = async (req: Request) => {
 		whereClause.AND = [
 			...(category[0]
 				? [
-						{
-							category_masterId: {
-								in: category,
-							},
+					{
+						category_masterId: {
+							in: category,
 						},
-					]
+					},
+				]
 				: []),
 			...(subcategory[0]
 				? [
-						{
-							procurement_stocks: {
-								subcategory_masterId: {
-									in: subcategory,
-								},
+					{
+						procurement_stocks: {
+							subcategory_masterId: {
+								in: subcategory,
 							},
 						},
-					]
+					},
+				]
 				: []),
 			...(brand[0]
 				? [
-						{
-							procurement_stocks: {
-								brand_masterId: {
-									in: brand,
-								},
+					{
+						procurement_stocks: {
+							brand_masterId: {
+								in: brand,
 							},
 						},
-					]
+					},
+				]
 				: []),
 			...(status[0]
 				? [
-						{
-							status: {
-								in: status.map(Number),
-							},
+					{
+						status: {
+							in: status.map(Number),
 						},
-					]
+					},
+				]
 				: []),
 		]
 	}
@@ -198,43 +198,43 @@ export const getOutboxDal = async (req: Request) => {
 		whereClause.AND = [
 			...(category[0]
 				? [
-						{
-							category_masterId: {
-								in: category,
-							},
+					{
+						category_masterId: {
+							in: category,
 						},
-					]
+					},
+				]
 				: []),
 			...(subcategory[0]
 				? [
-						{
-							procurement_stocks: {
-								subcategory_masterId: {
-									in: subcategory,
-								},
+					{
+						procurement_stocks: {
+							subcategory_masterId: {
+								in: subcategory,
 							},
 						},
-					]
+					},
+				]
 				: []),
 			...(brand[0]
 				? [
-						{
-							procurement_stocks: {
-								brand_masterId: {
-									in: brand,
-								},
+					{
+						procurement_stocks: {
+							brand_masterId: {
+								in: brand,
 							},
 						},
-					]
+					},
+				]
 				: []),
 			...(status[0]
 				? [
-						{
-							status: {
-								in: status.map(Number),
-							},
+					{
+						status: {
+							in: status.map(Number),
 						},
-					]
+					},
+				]
 				: []),
 		]
 	}
@@ -325,12 +325,18 @@ export const forwardToLevel2Dal = async (req: Request) => {
 			},
 		})
 
-		if (procurement?.status !== 10 && procurement?.status !== 13) {
+		if (procurement?.status !== 10 && procurement?.status !== 13 && procurement?.status !== 21) {
 			throw {
 				error: true,
 				message: `Procurement no. : ${procurement_no} is not valid procurement to be forwarded.`,
 			}
 		}
+
+		const level2OutboxCount = await prisma.level2_outbox.count({
+			where: {
+				procurement_no: procurement_no,
+			},
+		})
 
 		//start transaction
 		await prisma.$transaction(async tx => {
@@ -352,12 +358,20 @@ export const forwardToLevel2Dal = async (req: Request) => {
 				},
 			})
 
+			if (level2OutboxCount > 0) {
+				await prisma.level2_outbox.delete({
+					where: {
+						procurement_no: procurement_no,
+					},
+				})
+			}
+
 			await tx.procurement.update({
 				where: {
 					procurement_no: procurement_no,
 				},
 				data: {
-					status: 20,
+					status: procurement?.status === 21 ? 23 : 20,
 				},
 			})
 
@@ -397,7 +411,7 @@ export const returnToDaDal = async (req: Request) => {
 			},
 		})
 
-		if (procurement?.status !== 10 && procurement?.status !== 13) {
+		if (procurement?.status !== 10 && procurement?.status !== 13 && procurement?.status !== 21) {
 			throw {
 				error: true,
 				message: 'Invalid status of procurement to return',
@@ -439,7 +453,7 @@ export const returnToDaDal = async (req: Request) => {
 					procurement_no: procurement_no,
 				},
 				data: {
-					status: -1,
+					status: 11,
 					remark: remark,
 				},
 			})
@@ -480,7 +494,7 @@ export const approvalByLevel1Dal = async (req: Request) => {
 			},
 		})
 
-		if (procurement?.status !== 10 && procurement?.status !== 13) {
+		if (procurement?.status !== 10 && procurement?.status !== 13 && procurement?.status !== 21) {
 			throw { error: true, message: 'Invalid status of procurement to be approved' }
 		}
 
@@ -556,7 +570,7 @@ export const rejectionByLevel1Dal = async (req: Request) => {
 			},
 		})
 
-		if (procurement?.status !== 10 && procurement?.status !== 13) {
+		if (procurement?.status !== 10 && procurement?.status !== 13 && procurement?.status !== 21) {
 			throw { error: true, message: 'Invalid status of procurement to be rejected' }
 		}
 
@@ -591,7 +605,7 @@ export const rejectionByLevel1Dal = async (req: Request) => {
 					procurement_no: procurement_no,
 				},
 				data: {
-					status: -2,
+					status: 12,
 					remark: '' as string,
 				},
 			})
