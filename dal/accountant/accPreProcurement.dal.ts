@@ -553,6 +553,18 @@ export const createBoqDal = async (req: Request) => {
 					reference_no: reference_no,
 				},
 			})
+
+			await tx.ia_pre_procurement_inbox.delete({
+				where: {
+					procurement_no: formattedBoqData?.procurement_no,
+				},
+			})
+
+			await tx.ia_pre_procurement_outbox.create({
+				data: {
+					procurement_no: formattedBoqData?.procurement_no,
+				},
+			})
 		})
 
 		return reference_no
