@@ -228,28 +228,42 @@ export const createPreTenderDetailsDal = async (req: Request) => {
             throw { error: true, message: "Reference number is required as 'reference_no'" }
         }
 
-        const boqData = await prisma.boq.count({
-            where: { reference_no: reference_no }
+        const boqData = await prisma.boq.findFirst({
+            where: { reference_no: reference_no },
+            select: { status: true }
         })
 
-        if (boqData === 0) {
+        if (!boqData) {
             throw { error: true, message: "No BOQ found with this reference number" }
         }
 
-        const result = await prisma.pre_tendering_details.create({
-            data: {
-                reference_no: reference_no,
-                emd: Boolean(emd),
-                estimated_amount: Number(estimated_amount),
-                emd_type: emd_type,
-                emd_value: Number(emd_value),
-                pbg_type: pbg_type,
-                pbg_value: Number(pbg_value),
-                tendering_type: tendering_type,
-                ...(tendering_type === 'rate_contract' && { tenure: Number(tenure) }),
-                ...(tendering_type === 'rate_contract' && { tenure: Number(min_supplier) }),
-                ...(tendering_type === 'rate_contract' && { tenure: Number(max_supplier) })
-            },
+        if (boqData?.status !== 42) {
+            throw { error: true, message: "BOQ not ready to be proceeded for pre tender details" }
+        }
+
+        let result: any
+
+        await prisma.$transaction(async tx => {
+            result = await tx.pre_tendering_details.create({
+                data: {
+                    reference_no: reference_no,
+                    emd: Boolean(emd),
+                    estimated_amount: Number(estimated_amount),
+                    emd_type: emd_type,
+                    emd_value: Number(emd_value),
+                    pbg_type: pbg_type,
+                    pbg_value: Number(pbg_value),
+                    tendering_type: tendering_type,
+                    ...(tendering_type === 'rate_contract' && { tenure: Number(tenure) }),
+                    ...(tendering_type === 'rate_contract' && { tenure: Number(min_supplier) }),
+                    ...(tendering_type === 'rate_contract' && { tenure: Number(max_supplier) })
+                },
+            })
+
+            await tx.boq.update({
+                where: { reference_no: reference_no },
+                data: { status: 50 }
+            })
         })
 
 

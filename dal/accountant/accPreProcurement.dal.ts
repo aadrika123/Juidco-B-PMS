@@ -51,36 +51,36 @@ export const getPreProcurementForBoqDal = async (req: Request) => {
 		whereClause.AND = [
 			...(category[0]
 				? [
-						{
-							procurement: {
-								category_masterId: {
-									in: category,
-								},
+					{
+						procurement: {
+							category_masterId: {
+								in: category,
 							},
 						},
-					]
+					},
+				]
 				: []),
 			...(subcategory[0]
 				? [
-						{
-							procurement: {
-								subcategory_masterId: {
-									in: subcategory,
-								},
+					{
+						procurement: {
+							subcategory_masterId: {
+								in: subcategory,
 							},
 						},
-					]
+					},
+				]
 				: []),
 			...(brand[0]
 				? [
-						{
-							procurement: {
-								brand_masterId: {
-									in: brand,
-								},
+					{
+						procurement: {
+							brand_masterId: {
+								in: brand,
 							},
 						},
-					]
+					},
+				]
 				: []),
 		]
 	}
@@ -905,68 +905,68 @@ export const getBoqInboxDal = async (req: Request) => {
 		whereClause.AND = [
 			...(category[0]
 				? [
-						{
-							boq: {
-								procurements: {
-									some: {
-										procurement: {
-											category_masterId: {
-												in: category,
-											},
+					{
+						boq: {
+							procurements: {
+								some: {
+									procurement: {
+										category_masterId: {
+											in: category,
 										},
 									},
 								},
 							},
 						},
-					]
+					},
+				]
 				: []),
 
 			...(subcategory[0]
 				? [
-						{
-							boq: {
-								procurements: {
-									some: {
-										procurement: {
-											subcategory_masterId: {
-												in: subcategory,
-											},
+					{
+						boq: {
+							procurements: {
+								some: {
+									procurement: {
+										subcategory_masterId: {
+											in: subcategory,
 										},
 									},
 								},
 							},
 						},
-					]
+					},
+				]
 				: []),
 
 			...(brand[0]
 				? [
-						{
-							boq: {
-								status: {
-									in: status.map(Number),
-								},
+					{
+						boq: {
+							status: {
+								in: status.map(Number),
 							},
 						},
-					]
+					},
+				]
 				: []),
 
 			...(brand[0]
 				? [
-						{
-							boq: {
-								procurements: {
-									some: {
-										procurement: {
-											brand_masterId: {
-												in: brand,
-											},
+					{
+						boq: {
+							procurements: {
+								some: {
+									procurement: {
+										brand_masterId: {
+											in: brand,
 										},
 									},
 								},
 							},
 						},
-					]
+					},
+				]
 				: []),
 		]
 	}
@@ -1152,68 +1152,68 @@ export const getBoqOutboxDal = async (req: Request) => {
 		whereClause.AND = [
 			...(category[0]
 				? [
-						{
-							boq: {
-								procurements: {
-									some: {
-										procurement: {
-											category_masterId: {
-												in: category,
-											},
+					{
+						boq: {
+							procurements: {
+								some: {
+									procurement: {
+										category_masterId: {
+											in: category,
 										},
 									},
 								},
 							},
 						},
-					]
+					},
+				]
 				: []),
 
 			...(subcategory[0]
 				? [
-						{
-							boq: {
-								procurements: {
-									some: {
-										procurement: {
-											subcategory_masterId: {
-												in: subcategory,
-											},
+					{
+						boq: {
+							procurements: {
+								some: {
+									procurement: {
+										subcategory_masterId: {
+											in: subcategory,
 										},
 									},
 								},
 							},
 						},
-					]
+					},
+				]
 				: []),
 
 			...(brand[0]
 				? [
-						{
-							boq: {
-								status: {
-									in: status.map(Number),
-								},
+					{
+						boq: {
+							status: {
+								in: status.map(Number),
 							},
 						},
-					]
+					},
+				]
 				: []),
 
 			...(brand[0]
 				? [
-						{
-							boq: {
-								procurements: {
-									some: {
-										procurement: {
-											brand_masterId: {
-												in: brand,
-											},
+					{
+						boq: {
+							procurements: {
+								some: {
+									procurement: {
+										brand_masterId: {
+											in: brand,
 										},
 									},
 								},
 							},
 						},
-					]
+					},
+				]
 				: []),
 		]
 	}
@@ -1568,68 +1568,68 @@ export const getPreTenderingInboxDal = async (req: Request) => {
 		whereClause.AND = [
 			...(category[0]
 				? [
-						{
-							boq: {
-								procurements: {
-									some: {
-										procurement: {
-											category_masterId: {
-												in: category,
-											},
+					{
+						boq: {
+							procurements: {
+								some: {
+									procurement: {
+										category_masterId: {
+											in: category,
 										},
 									},
 								},
 							},
 						},
-					]
+					},
+				]
 				: []),
 
 			...(subcategory[0]
 				? [
-						{
-							boq: {
-								procurements: {
-									some: {
-										procurement: {
-											subcategory_masterId: {
-												in: subcategory,
-											},
+					{
+						boq: {
+							procurements: {
+								some: {
+									procurement: {
+										subcategory_masterId: {
+											in: subcategory,
 										},
 									},
 								},
 							},
 						},
-					]
+					},
+				]
 				: []),
 
 			...(brand[0]
 				? [
-						{
-							boq: {
-								status: {
-									in: status.map(Number),
-								},
+					{
+						boq: {
+							status: {
+								in: status.map(Number),
 							},
 						},
-					]
+					},
+				]
 				: []),
 
 			...(brand[0]
 				? [
-						{
-							boq: {
-								procurements: {
-									some: {
-										procurement: {
-											brand_masterId: {
-												in: brand,
-											},
+					{
+						boq: {
+							procurements: {
+								some: {
+									procurement: {
+										brand_masterId: {
+											in: brand,
 										},
 									},
 								},
 							},
 						},
-					]
+					},
+				]
 				: []),
 		]
 	}
@@ -1767,68 +1767,68 @@ export const getPreTenderingOutboxDal = async (req: Request) => {
 		whereClause.AND = [
 			...(category[0]
 				? [
-						{
-							boq: {
-								procurements: {
-									some: {
-										procurement: {
-											category_masterId: {
-												in: category,
-											},
+					{
+						boq: {
+							procurements: {
+								some: {
+									procurement: {
+										category_masterId: {
+											in: category,
 										},
 									},
 								},
 							},
 						},
-					]
+					},
+				]
 				: []),
 
 			...(subcategory[0]
 				? [
-						{
-							boq: {
-								procurements: {
-									some: {
-										procurement: {
-											subcategory_masterId: {
-												in: subcategory,
-											},
+					{
+						boq: {
+							procurements: {
+								some: {
+									procurement: {
+										subcategory_masterId: {
+											in: subcategory,
 										},
 									},
 								},
 							},
 						},
-					]
+					},
+				]
 				: []),
 
 			...(brand[0]
 				? [
-						{
-							boq: {
-								status: {
-									in: status.map(Number),
-								},
+					{
+						boq: {
+							status: {
+								in: status.map(Number),
 							},
 						},
-					]
+					},
+				]
 				: []),
 
 			...(brand[0]
 				? [
-						{
-							boq: {
-								procurements: {
-									some: {
-										procurement: {
-											brand_masterId: {
-												in: brand,
-											},
+					{
+						boq: {
+							procurements: {
+								some: {
+									procurement: {
+										brand_masterId: {
+											in: brand,
 										},
 									},
 								},
 							},
 						},
-					]
+					},
+				]
 				: []),
 		]
 	}
@@ -1952,7 +1952,7 @@ const isBoqValid = async (reference_no: string) => {
 			},
 		})
 
-		return boq?.status !== 0 ? false : true
+		return boq?.status !== 42 ? false : true
 	} catch (err: any) {
 		console.log(err)
 		return { error: true, message: getErrorMessage(err) }
@@ -3176,6 +3176,15 @@ export const finalSubmissionPtDal = async (req: Request) => {
 			},
 		})
 
+		await prisma.boq.update({
+			where: {
+				reference_no: reference_no,
+			},
+			data: {
+				status: 60,
+			},
+		})
+
 		return ` ${reference_no} is filled completely and ready to be forwarded`
 	} catch (err: any) {
 		console.log(err)
@@ -3266,6 +3275,120 @@ export const forwardToDaPtDal = async (req: Request) => {
 		})
 
 		return 'Forwarded to DA'
+	} catch (err: any) {
+		console.log(err)
+		return { error: true, message: getErrorMessage(err) }
+	}
+}
+
+export const forwardToTaPtDal = async (req: Request) => {
+	const { reference_no }: { reference_no: string } = req.body
+	try {
+		const preTender = await prisma.tendering_form.findFirst({
+			where: {
+				reference_no: reference_no,
+			},
+			select: {
+				status: true,
+				isPartial: true,
+			},
+		})
+
+		const boqData = await prisma.boq.findFirst({
+			where: {
+				reference_no: reference_no,
+			},
+			select: {
+				status: true,
+			},
+		})
+
+		// if (preTender?.status !== -1 && preTender?.status !== 0) {
+		// 	throw {
+		// 		error: true,
+		// 		message: `Reference no. : ${reference_no} is not valid to be forwarded to DA.`,
+		// 	}
+		// }
+
+		if (preTender?.isPartial) {
+			throw {
+				error: true,
+				message: `Please fill all the forms and submit before forwarding to DA`,
+			}
+		}
+
+		if (boqData?.status !== 60) {
+			throw {
+				error: true,
+				message: `Invalid BOQ status`,
+			}
+		}
+
+		//start transaction
+		await prisma.$transaction(async tx => {
+			await tx.acc_pre_tender_inbox.delete({
+				where: {
+					reference_no: reference_no,
+				},
+			})
+
+			await tx.acc_pre_tender_outbox.create({
+				data: {
+					reference_no: reference_no,
+				},
+			})
+
+			await tx.da_pre_tender_inbox.create({
+				data: {
+					reference_no: reference_no,
+				},
+			})
+
+			// await tx.da_pre_tender_outbox.delete({
+			//     where: {
+			//         reference_no: reference_no
+			//     }
+			// })
+
+			const record = await prisma.da_pre_tender_outbox.findUnique({
+				where: { reference_no: reference_no },
+			})
+
+			if (record) {
+				await tx.da_pre_tender_outbox.delete({
+					where: { reference_no: reference_no },
+				})
+			}
+
+			await tx.tendering_form.update({
+				where: {
+					reference_no: reference_no,
+				},
+				data: {
+					status: 1,
+				},
+			})
+
+			await tx.boq.update({
+				where: {
+					reference_no: reference_no,
+				},
+				data: {
+					status: 70,
+				},
+			})
+
+			await tx.notification.create({
+				data: {
+					role_id: Number(process.env.ROLE_TA),
+					title: 'BOQ and Pre-tendering form to be approved',
+					destination: 90,
+					description: `There are BOQ and pre-tendering form to be approved. Reference Number : ${reference_no}`,
+				},
+			})
+		})
+
+		return 'Forwarded to TA'
 	} catch (err: any) {
 		console.log(err)
 		return { error: true, message: getErrorMessage(err) }
