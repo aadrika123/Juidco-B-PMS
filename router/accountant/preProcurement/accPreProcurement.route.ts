@@ -28,6 +28,7 @@ import {
 	getPreTender,
 	finalSubmissionPt,
 	forwardToDaPt,
+	forwardToTaPt
 } from '../../../controller/accountant/accPreProcurement.controller'
 
 router.use(daAuth)
@@ -44,6 +45,7 @@ router.get('/pre-tender', getPreTenderingInbox)
 router.get('/pre-tender/outbox', getPreTenderingOutbox)
 router.post('/pre-tender/submit', finalSubmissionPt)
 router.post('/pre-tender/to-da', forwardToDaPt)
+router.post('/pre-tender/to-ta', forwardToTaPt)
 
 //pre tender creation and get-------
 router.post('/pre-tender/basic-details', upload.array('img'), daAuth, createBasicDetailsPt)

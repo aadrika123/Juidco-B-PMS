@@ -25,6 +25,7 @@ import {
     getPreTenderDal,
     finalSubmissionPtDal,
     forwardToDaPtDal,
+    forwardToTaPtDal
 } from '../../dal/accountant/accPreProcurement.dal';
 
 export const getPreProcurementForBoq = async (req: Request, res: Response) => {
@@ -447,6 +448,23 @@ export const finalSubmissionPt = async (req: Request, res: Response) => {
 
 export const forwardToDaPt = async (req: Request, res: Response) => {
     const result: any = await forwardToDaPtDal(req);
+    if (!result?.error) {
+        res.status(200).json({
+            status: true,
+            message: `Forwarded`,
+            data: result,
+        });
+    } else {
+        res.status(404).json({
+            status: false,
+            message: `Error while forwarding`,
+            error: result?.message,
+        });
+    }
+};
+
+export const forwardToTaPt = async (req: Request, res: Response) => {
+    const result: any = await forwardToTaPtDal(req);
     if (!result?.error) {
         res.status(200).json({
             status: true,
