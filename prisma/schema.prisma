@@ -538,6 +538,7 @@ model boq {
     finance_boq_outbox    finance_boq_outbox?
     procurement_stocks    procurement_stocks[]
     pre_tendering_details pre_tendering_details?
+    bid_details           bid_details[]
 }
 
 model boq_procurement {
@@ -1140,3 +1141,112 @@ model level2_outbox {
 }
 
 // level 1 & 2================================================================================================================================================================
+
+// bidding================================================================================================================================================================
+
+enum bid_type_enum {
+    technical
+    financial
+    fintech
+    rate_contract
+}
+
+model ta_inbox {
+    id           String      @id @default(uuid())
+    reference_no String      @unique
+    bid_details  bid_details @relation(fields: [reference_no], references: [reference_no])
+    createdAt    DateTime    @default(now())
+    updatedAt    DateTime    @updatedAt
+}
+
+model ta_outbox {
+    id           String      @id @default(uuid())
+    reference_no String      @unique
+    bid_details  bid_details @relation(fields: [reference_no], references: [reference_no])
+    createdAt    DateTime    @default(now())
+    updatedAt    DateTime    @updatedAt
+}
+
+model bid_details {
+    id            String          @id @default(uuid())
+    reference_no  String          @unique
+    bid_type      bid_type_enum
+    no_of_bidders Int?
+    boq           boq             @relation(fields: [reference_no], references: [reference_no])
+    createdAt     DateTime        @default(now())
+    updatedAt     DateTime        @updatedAt
+    ta_inbox      ta_inbox?
+    ta_outbox     ta_outbox?
+    criteria      criteria[]
+    bidder_master bidder_master[]
+    comparison    comparison[]
+}
+
+model criteria {
+    id                  String                @id @default(uuid())
+    reference_no        String
+    heading             String
+    description         String
+    bid_details         bid_details           @relation(fields: [reference_no], references: [reference_no])
+    createdAt           DateTime              @default(now())
+    updatedAt           DateTime              @updatedAt
+    comparison_criteria comparison_criteria[]
+}
+
+enum offline_mode_enum {
+    online
+    offline
+}
+
+model bidder_master {
+    id             String             @id @default(uuid())
+    reference_no   String
+    name           String
+    gst_no         String
+    pan_no         String
+    address        String
+    bank           String
+    account_no     String
+    ifsc           String
+    emd            Boolean
+    emd_doc        String
+    payment_mode   payment_mode_enum?
+    offline_mode   offline_mode_enum?
+    dd_no          String?
+    transaction_no String?
+    bidder_doc     String
+    createdAt      DateTime           @default(now())
+    updatedAt      DateTime           @updatedAt
+    bid_details    bid_details        @relation(fields: [reference_no], references: [reference_no])
+    comparison     comparison[]
+}
+
+enum comparison_type_enum {
+    numeric
+    symbolic
+}
+
+model comparison {
+    id                  String                @id @default(uuid())
+    reference_no        String
+    comparison_type     comparison_type_enum
+    bidder_id           String                @unique
+    bidder_master       bidder_master         @relation(fields: [bidder_id], references: [id])
+    createdAt           DateTime              @default(now())
+    updatedAt           DateTime              @updatedAt
+    bid_details         bid_details           @relation(fields: [reference_no], references: [reference_no])
+    comparison_criteria comparison_criteria[]
+}
+
+model comparison_criteria {
+    id          String     @id @default(uuid())
+    criteria_id String
+    value       String
+    bidder_id   String
+    comparison  comparison @relation(fields: [bidder_id], references: [bidder_id])
+    criteria    criteria   @relation(fields: [criteria_id], references: [id])
+    createdAt   DateTime   @default(now())
+    updatedAt   DateTime   @updatedAt
+}
+
+// bidding================================================================================================================================================================
