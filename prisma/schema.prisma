@@ -73,6 +73,11 @@ model supplier_master {
     id                     String                   @id @default(uuid())
     name                   String
     gst_no                 String
+    pan_no                 String?
+    address                String?
+    bank_name              String?
+    account_no             String?
+    ifsc                   String?
     status                 Boolean                  @default(true)
     createdAt              DateTime                 @default(now())
     updatedAt              DateTime                 @updatedAt

@@ -23,6 +23,7 @@ export const getProcurementByProcurementNoDal = async (req: Request) => {
 				remark: true,
 				procurement_stocks: {
 					select: {
+						id: true,
 						category: {
 							select: {
 								id: true,

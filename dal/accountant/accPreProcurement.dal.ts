@@ -51,36 +51,36 @@ export const getPreProcurementForBoqDal = async (req: Request) => {
 		whereClause.AND = [
 			...(category[0]
 				? [
-					{
-						procurement: {
-							category_masterId: {
-								in: category,
+						{
+							procurement: {
+								category_masterId: {
+									in: category,
+								},
 							},
 						},
-					},
-				]
+					]
 				: []),
 			...(subcategory[0]
 				? [
-					{
-						procurement: {
-							subcategory_masterId: {
-								in: subcategory,
+						{
+							procurement: {
+								subcategory_masterId: {
+									in: subcategory,
+								},
 							},
 						},
-					},
-				]
+					]
 				: []),
 			...(brand[0]
 				? [
-					{
-						procurement: {
-							brand_masterId: {
-								in: brand,
+						{
+							procurement: {
+								brand_masterId: {
+									in: brand,
+								},
 							},
 						},
-					},
-				]
+					]
 				: []),
 		]
 	}
@@ -497,18 +497,32 @@ export const createBoqDal = async (req: Request) => {
 
 			await Promise.all(
 				formattedBoqData?.procurement.map(async item => {
-					const procStock: any = await prisma.procurement_stocks.findFirst({
+					const procStock = await prisma.procurement_stocks.findFirst({
 						where: {
 							id: item?.id,
 						},
 					})
 
-					delete procStock.id
-					delete procStock.createdAt
-					delete procStock.updatedAt
+					// delete procStock.id
+					// delete procStock.createdAt
+					// delete procStock.updatedAt
+
+					// console.log(procStock)
 
 					await tx.procurement_stocks_history.create({
-						data: procStock,
+						data: {
+							procurement: { connect: { procurement_no: procStock?.procurement_no } },
+							category: { connect: { id: procStock?.category_masterId as string } },
+							subCategory: { connect: { id: procStock?.subCategory_masterId as string } },
+							unit: { connect: { id: procStock?.unit_masterId as string } },
+							gst: procStock?.gst,
+							remark: procStock?.remark,
+							rate: procStock?.rate,
+							quantity: procStock?.quantity,
+							description: procStock?.description,
+							total_rate: procStock?.total_rate,
+							procurement_stocks: { connect: { id: procStock?.id } },
+						},
 					})
 
 					await tx.procurement_stocks.update({
@@ -537,6 +551,18 @@ export const createBoqDal = async (req: Request) => {
 			await tx.da_boq_inbox.create({
 				data: {
 					reference_no: reference_no,
+				},
+			})
+
+			await tx.ia_pre_procurement_inbox.delete({
+				where: {
+					procurement_no: formattedBoqData?.procurement_no,
+				},
+			})
+
+			await tx.ia_pre_procurement_outbox.create({
+				data: {
+					procurement_no: formattedBoqData?.procurement_no,
 				},
 			})
 		})
@@ -905,68 +931,68 @@ export const getBoqInboxDal = async (req: Request) => {
 		whereClause.AND = [
 			...(category[0]
 				? [
-					{
-						boq: {
-							procurements: {
-								some: {
-									procurement: {
-										category_masterId: {
-											in: category,
+						{
+							boq: {
+								procurements: {
+									some: {
+										procurement: {
+											category_masterId: {
+												in: category,
+											},
 										},
 									},
 								},
 							},
 						},
-					},
-				]
+					]
 				: []),
 
 			...(subcategory[0]
 				? [
-					{
-						boq: {
-							procurements: {
-								some: {
-									procurement: {
-										subcategory_masterId: {
-											in: subcategory,
+						{
+							boq: {
+								procurements: {
+									some: {
+										procurement: {
+											subcategory_masterId: {
+												in: subcategory,
+											},
 										},
 									},
 								},
 							},
 						},
-					},
-				]
+					]
 				: []),
 
 			...(brand[0]
 				? [
-					{
-						boq: {
-							status: {
-								in: status.map(Number),
+						{
+							boq: {
+								status: {
+									in: status.map(Number),
+								},
 							},
 						},
-					},
-				]
+					]
 				: []),
 
 			...(brand[0]
 				? [
-					{
-						boq: {
-							procurements: {
-								some: {
-									procurement: {
-										brand_masterId: {
-											in: brand,
+						{
+							boq: {
+								procurements: {
+									some: {
+										procurement: {
+											brand_masterId: {
+												in: brand,
+											},
 										},
 									},
 								},
 							},
 						},
-					},
-				]
+					]
 				: []),
 		]
 	}
@@ -1152,68 +1178,68 @@ export const getBoqOutboxDal = async (req: Request) => {
 		whereClause.AND = [
 			...(category[0]
 				? [
-					{
-						boq: {
-							procurements: {
-								some: {
-									procurement: {
-										category_masterId: {
-											in: category,
+						{
+							boq: {
+								procurements: {
+									some: {
+										procurement: {
+											category_masterId: {
+												in: category,
+											},
 										},
 									},
 								},
 							},
 						},
-					},
-				]
+					]
 				: []),
 
 			...(subcategory[0]
 				? [
-					{
-						boq: {
-							procurements: {
-								some: {
-									procurement: {
-										subcategory_masterId: {
-											in: subcategory,
+						{
+							boq: {
+								procurements: {
+									some: {
+										procurement: {
+											subcategory_masterId: {
+												in: subcategory,
+											},
 										},
 									},
 								},
 							},
 						},
-					},
-				]
+					]
 				: []),
 
 			...(brand[0]
 				? [
-					{
-						boq: {
-							status: {
-								in: status.map(Number),
+						{
+							boq: {
+								status: {
+									in: status.map(Number),
+								},
 							},
 						},
-					},
-				]
+					]
 				: []),
 
 			...(brand[0]
 				? [
-					{
-						boq: {
-							procurements: {
-								some: {
-									procurement: {
-										brand_masterId: {
-											in: brand,
+						{
+							boq: {
+								procurements: {
+									some: {
+										procurement: {
+											brand_masterId: {
+												in: brand,
+											},
 										},
 									},
 								},
 							},
 						},
-					},
-				]
+					]
 				: []),
 		]
 	}
@@ -1568,68 +1594,68 @@ export const getPreTenderingInboxDal = async (req: Request) => {
 		whereClause.AND = [
 			...(category[0]
 				? [
-					{
-						boq: {
-							procurements: {
-								some: {
-									procurement: {
-										category_masterId: {
-											in: category,
+						{
+							boq: {
+								procurements: {
+									some: {
+										procurement: {
+											category_masterId: {
+												in: category,
+											},
 										},
 									},
 								},
 							},
 						},
-					},
-				]
+					]
 				: []),
 
 			...(subcategory[0]
 				? [
-					{
-						boq: {
-							procurements: {
-								some: {
-									procurement: {
-										subcategory_masterId: {
-											in: subcategory,
+						{
+							boq: {
+								procurements: {
+									some: {
+										procurement: {
+											subcategory_masterId: {
+												in: subcategory,
+											},
 										},
 									},
 								},
 							},
 						},
-					},
-				]
+					]
 				: []),
 
 			...(brand[0]
 				? [
-					{
-						boq: {
-							status: {
-								in: status.map(Number),
+						{
+							boq: {
+								status: {
+									in: status.map(Number),
+								},
 							},
 						},
-					},
-				]
+					]
 				: []),
 
 			...(brand[0]
 				? [
-					{
-						boq: {
-							procurements: {
-								some: {
-									procurement: {
-										brand_masterId: {
-											in: brand,
+						{
+							boq: {
+								procurements: {
+									some: {
+										procurement: {
+											brand_masterId: {
+												in: brand,
+											},
 										},
 									},
 								},
 							},
 						},
-					},
-				]
+					]
 				: []),
 		]
 	}
@@ -1767,68 +1793,68 @@ export const getPreTenderingOutboxDal = async (req: Request) => {
 		whereClause.AND = [
 			...(category[0]
 				? [
-					{
-						boq: {
-							procurements: {
-								some: {
-									procurement: {
-										category_masterId: {
-											in: category,
+						{
+							boq: {
+								procurements: {
+									some: {
+										procurement: {
+											category_masterId: {
+												in: category,
+											},
 										},
 									},
 								},
 							},
 						},
-					},
-				]
+					]
 				: []),
 
 			...(subcategory[0]
 				? [
-					{
-						boq: {
-							procurements: {
-								some: {
-									procurement: {
-										subcategory_masterId: {
-											in: subcategory,
+						{
+							boq: {
+								procurements: {
+									some: {
+										procurement: {
+											subcategory_masterId: {
+												in: subcategory,
+											},
 										},
 									},
 								},
 							},
 						},
-					},
-				]
+					]
 				: []),
 
 			...(brand[0]
 				? [
-					{
-						boq: {
-							status: {
-								in: status.map(Number),
+						{
+							boq: {
+								status: {
+									in: status.map(Number),
+								},
 							},
 						},
-					},
-				]
+					]
 				: []),
 
 			...(brand[0]
 				? [
-					{
-						boq: {
-							procurements: {
-								some: {
-									procurement: {
-										brand_masterId: {
-											in: brand,
+						{
+							boq: {
+								procurements: {
+									some: {
+										procurement: {
+											brand_masterId: {
+												in: brand,
+											},
 										},
 									},
 								},
 							},
 						},
-					},
-				]
+					]
 				: []),
 		]
 	}
@@ -1952,7 +1978,7 @@ const isBoqValid = async (reference_no: string) => {
 			},
 		})
 
-		return boq?.status !== 42 ? false : true
+		return boq?.status !== 50 ? false : true
 	} catch (err: any) {
 		console.log(err)
 		return { error: true, message: getErrorMessage(err) }

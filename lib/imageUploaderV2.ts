@@ -23,12 +23,21 @@ export const imageUploaderV2 = async (file: any[]): Promise<string[]> => {
 				await axios
 					.post(process.env.DMS_UPLOAD || '', formData, { headers })
 					.then(async response => {
-						await axios
-							.post(process.env.DMS_GET || '', { referenceNo: response?.data?.data?.ReferenceNo }, { headers })
-							.then(response => {
+						// await axios
+						// 	.post(process.env.DMS_GET || '', { referenceNo: response?.data?.data?.ReferenceNo }, { headers })
+						// 	.then(response => {
+						// 		toReturn.push(response?.data?.data?.fullPath)
+						// 	})
+						// 	.catch(err => {
+						// 		throw err
+						// 	})
+						const headers = {
+							"token": "8Ufn6Jio6Obv9V7VXeP7gbzHSyRJcKluQOGorAD58qA1IQKYE0"
+						}
+						await axios.post(process.env.DMS_GET || '', { "referenceNo": response?.data?.data?.ReferenceNo }, { headers })
+							.then((response) => {
 								toReturn.push(response?.data?.data?.fullPath)
-							})
-							.catch(err => {
+							}).catch((err) => {
 								throw err
 							})
 					})
