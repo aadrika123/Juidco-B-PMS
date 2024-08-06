@@ -1,10 +1,15 @@
 import { Request } from "express";
 import getErrorMessage from "../../lib/getErrorMessage";
 import {
+    bid_type_enum,
+    bidder_master,
+    offline_mode_enum,
+    payment_mode_enum,
     PrismaClient,
 } from "@prisma/client";
 
 import { pagination } from "../../type/common.type";
+import { imageUploaderV2 } from "../../lib/imageUploaderV2";
 
 
 const prisma = new PrismaClient()
@@ -311,6 +316,277 @@ export const getTaOutboxDal = async (req: Request) => {
             data: result,
             pagination: pagination
         }
+    } catch (err: any) {
+        console.log(err)
+        return { error: true, message: getErrorMessage(err) }
+    }
+}
+
+export const selectBidTypeDal = async (req: Request) => {
+    const { reference_no, bid_type }: { reference_no: string, bid_type: bid_type_enum } = req.body
+    try {
+
+        if (!reference_no) {
+            throw { error: true, message: "Reference number is required as 'reference_no'" }
+        }
+
+        if (!bid_type) {
+            throw { error: true, message: "Comparison type is required as 'comparison_type'" }
+        }
+
+        const preTenderDetailsCount = await prisma.pre_tendering_details.count({
+            where: { reference_no: reference_no }
+        })
+
+        if (preTenderDetailsCount === 0) {
+            throw { error: true, message: "No pre tender details found with this reference number" }
+        }
+
+        const boqData = await prisma.boq.findFirst({
+            where: { reference_no: reference_no },
+            select: { status: true }
+        })
+
+        if (boqData?.status === 70) {
+            throw { error: true, message: "BOQ is not valid to proceed" }
+        }
+
+        const result = await prisma.bid_details.update({
+            where: { reference_no: reference_no },
+            data: {
+                bid_type: bid_type,
+                creationStatus: 1
+            }
+        })
+
+        return result
+    } catch (err: any) {
+        console.log(err)
+        return { error: true, message: getErrorMessage(err) }
+    }
+}
+
+type criteriaType = {
+    heading: string,
+    description: string
+}
+
+type criteriaPayloadType = {
+    reference_no: string,
+    criteria: criteriaType[],
+    no_of_bidders: number
+}
+
+export const addCriteriaDal = async (req: Request) => {
+    const { reference_no, criteria, no_of_bidders }: criteriaPayloadType = req.body
+    try {
+
+        if (!reference_no) {
+            throw { error: true, message: "Reference number is required as 'reference_no'" }
+        }
+
+        if (criteria.length === 0) {
+            throw { error: true, message: "Atleast one criteria is required as 'criteria[]'" }
+        }
+
+        if (!no_of_bidders) {
+            throw { error: true, message: "Number of bidders is required as 'no_of_bidders'" }
+        }
+
+        const preTenderDetailsCount = await prisma.pre_tendering_details.count({
+            where: { reference_no: reference_no }
+        })
+
+        if (preTenderDetailsCount === 0) {
+            throw { error: true, message: "No pre tender details found with this reference number" }
+        }
+
+        const bidDetailsData = await prisma.bid_details.findFirst({
+            where: { reference_no: reference_no },
+            select: {
+                creationStatus: true
+            }
+        })
+
+        if (bidDetailsData?.creationStatus === 1) {
+            throw { error: true, message: "Current creation status is not valid to be proceed to this step " }
+        }
+
+        await prisma.$transaction(async (tx) => {
+            await Promise.all(
+                criteria.map(async (item) => {
+                    await tx.criteria.create({
+                        data: {
+                            reference_no: reference_no,
+                            heading: item?.heading,
+                            description: item?.description
+                        }
+                    })
+                })
+            )
+            await tx.bid_details.update({
+                where: { reference_no: reference_no },
+                data: {
+                    no_of_bidders: no_of_bidders,
+                    creationStatus: 2
+                }
+            })
+        })
+
+        return 'Criterias added'
+    } catch (err: any) {
+        console.log(err)
+        return { error: true, message: getErrorMessage(err) }
+    }
+}
+
+// type bidderPayloadType = {
+//     bidder: Omit<bidder_master, 'id' | 'emd_doc' | 'bidder_doc' | 'createdAt' | 'updatedAt'>,
+// }
+
+export const addBidderDetailsDal = async (req: Request) => {
+    const { bidder }: { bidder: string } = req.body
+    const { emd_doc, bidder_doc } = (req.files as any) || {}
+    try {
+
+        const formattedBidder: Omit<bidder_master, 'id' | 'emd_doc' | 'bidder_doc' | 'createdAt' | 'updatedAt'> = JSON.parse(bidder)
+
+        if (!formattedBidder) {
+            throw { error: true, message: "Bidder details are mandatory" }
+        }
+
+        if (!formattedBidder?.reference_no) {
+            throw { error: true, message: "Reference number is required as 'reference_no'" }
+        }
+
+        const preTenderDetailsCount = await prisma.pre_tendering_details.count({
+            where: { reference_no: formattedBidder?.reference_no }
+        })
+
+        if (preTenderDetailsCount === 0) {
+            throw { error: true, message: "No pre tender details found with this reference number" }
+        }
+
+        if (!emd_doc) {
+            throw { error: true, message: "EMD document is required as 'emd_doc'" }
+        }
+
+        if (!bidder_doc) {
+            throw { error: true, message: "Bidder document is required as 'bidder_doc'" }
+        }
+
+        const bidDetailsData = await prisma.bid_details.findFirst({
+            where: { reference_no: formattedBidder?.reference_no },
+            select: {
+                creationStatus: true,
+                no_of_bidders: true,
+                _count: {
+                    select: {
+                        bidder_master: true
+                    }
+                }
+            }
+        })
+
+        if (bidDetailsData) {
+            const bidderCount = bidDetailsData?._count?.bidder_master || 0
+            const no_of_bidders = bidDetailsData?.no_of_bidders || 0
+
+            if (bidderCount >= no_of_bidders) {
+                throw { error: true, message: "Requird bidders are already added" }
+            }
+        }
+
+        if (bidDetailsData?.creationStatus === 2) {
+            throw { error: true, message: "Current creation status is not valid to be proceed to this step " }
+        }
+
+        const emd_doc_path = await imageUploaderV2(emd_doc)
+
+        const bidder_doc_path = await imageUploaderV2(bidder_doc)
+
+        await prisma.$transaction(async (tx) => {
+            await tx.bidder_master.create({
+                data: {
+                    reference_no: formattedBidder?.reference_no,
+                    name: formattedBidder?.reference_no,
+                    gst_no: formattedBidder?.gst_no,
+                    pan_no: formattedBidder?.pan_no,
+                    address: formattedBidder?.address,
+                    bank: formattedBidder?.bank,
+                    account_no: formattedBidder?.account_no,
+                    ifsc: formattedBidder?.ifsc,
+                    emd: Boolean(formattedBidder?.emd),
+                    emd_doc: emd_doc_path[0],
+                    payment_mode: formattedBidder?.payment_mode as payment_mode_enum,
+                    offline_mode: formattedBidder?.offline_mode as offline_mode_enum,
+                    dd_no: formattedBidder?.dd_no,
+                    transaction_no: formattedBidder?.transaction_no,
+                    bidder_doc: bidder_doc_path[0],
+                    bidding_amount: Number(formattedBidder?.bidding_amount),
+                }
+            })
+        })
+
+        return 'Bidder details added'
+    } catch (err: any) {
+        console.log(err)
+        return { error: true, message: getErrorMessage(err) }
+    }
+}
+
+export const submitBidderDetailsDal = async (req: Request) => {
+    const { reference_no }: { reference_no: String } = req.body
+    try {
+
+        if (reference_no) {
+            throw { error: true, message: "Reference number is required as 'reference_no'" }
+        }
+
+        const preTenderDetailsCount = await prisma.pre_tendering_details.count({
+            where: { reference_no: reference_no }
+        })
+
+        if (preTenderDetailsCount === 0) {
+            throw { error: true, message: "No pre tender details found with this reference number" }
+        }
+
+        const bidDetailsData = await prisma.bid_details.findFirst({
+            where: { reference_no: reference_no },
+            select: {
+                creationStatus: true,
+                no_of_bidders: true,
+                _count: {
+                    select: {
+                        bidder_master: true
+                    }
+                }
+            }
+        })
+
+        if (bidDetailsData) {
+            const bidderCount = bidDetailsData?._count?.bidder_master || 0
+            const no_of_bidders = bidDetailsData?.no_of_bidders || 0
+
+            if (bidderCount !== no_of_bidders) {
+                throw { error: true, message: "Total number of added bidders doesn't match the total declared number of bidders" }
+            }
+        }
+
+        if (bidDetailsData?.creationStatus === 2) {
+            throw { error: true, message: "Current creation status is not valid to be proceed to this step " }
+        }
+
+        await prisma.$transaction(async (tx) => {
+            await tx.bid_details.update({
+                where: { reference_no: reference_no },
+                data: {
+                    creationStatus: 3
+                }
+            })
+        })
+
+        return 'Bidder details submitted'
     } catch (err: any) {
         console.log(err)
         return { error: true, message: getErrorMessage(err) }

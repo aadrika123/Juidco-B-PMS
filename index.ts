@@ -33,6 +33,8 @@ import level1Routes from './router/level1/level1.route'
 import level2Routes from './router/level2/level2.route'
 import financeRoutes from './router/finance/finance.route'
 import procurementRoute from './router/procurement/procurement.route'
+import tenderingAdminRoute from './router/tenderingAdmin/ta.route'
+import biddingRoute from './router/bidding/bidding.route'
 
 config()
 
@@ -99,6 +101,12 @@ app.use('/api/pms/stock-handover', hrmsRoute)
 
 //finance routes
 app.use('/api/pms/finance', financeRoutes)
+
+//tendering admin routes
+app.use('/api/pms/ta', tenderingAdminRoute)
+
+//unprotected bidding routes
+app.use('/api/pms/bidding', biddingRoute)
 
 //----------------------------routes--------------------------------------------------------------------------------------------------------------------------
 
