@@ -44,16 +44,15 @@ export const getTaInboxDal = async (req: Request) => {
                 }
             },
             {
-                bid_details: {
-                    boq: {
-                        pre_tendering_details: {
-                            tendering_type: {
-                                contains: search,
-                                mode: 'insensitive'
-                            }
+                boq: {
+                    pre_tendering_details: {
+                        tendering_type: {
+                            contains: search,
+                            mode: 'insensitive'
                         }
                     }
                 }
+
             },
         ];
     }
@@ -64,37 +63,40 @@ export const getTaInboxDal = async (req: Request) => {
             ...(category[0]
                 ? [
                     {
-                        bid_details: {
-                            boq: {
-                                procurement: {
-                                    category_masterId: {
-                                        in: category,
-                                    },
-                                }
-                            },
+                        boq: {
+                            procurement: {
+                                category_masterId: {
+                                    in: category,
+                                },
+                            }
                         },
+
                     },
                 ]
                 : []),
             ...(status[0]
                 ? [
                     {
-                        bid_details: {
-                            status: {
-                                in: status.map(Number),
+                        boq: {
+                            bid_details: {
+                                status: {
+                                    in: status.map(Number),
+                                },
                             },
-                        },
+                        }
                     },
                 ]
                 : []),
             ...(creationstatus[0]
                 ? [
                     {
-                        bid_details: {
-                            creationStatus: {
-                                in: creationstatus.map(Number),
+                        boq: {
+                            bid_details: {
+                                creationStatus: {
+                                    in: creationstatus.map(Number),
+                                },
                             },
-                        },
+                        }
                     },
                 ]
                 : []),
@@ -115,33 +117,34 @@ export const getTaInboxDal = async (req: Request) => {
             select: {
                 id: true,
                 reference_no: true,
-                bid_details: {
+                boq: {
                     select: {
-                        boq: {
+                        estimated_cost: true,
+                        procurement: {
                             select: {
-                                estimated_cost: true,
-                                procurement: {
+                                category_masterId: true,
+                                category: {
                                     select: {
-                                        category_masterId: true,
-                                        category: {
-                                            select: {
-                                                id: true,
-                                                name: true
-                                            }
-                                        }
-                                    }
-                                },
-                                pre_tendering_details: {
-                                    select: {
-                                        tendering_type: true
+                                        id: true,
+                                        name: true
                                     }
                                 }
                             }
                         },
-                        status: true,
-                        creationStatus: true
+                        pre_tendering_details: {
+                            select: {
+                                tendering_type: true
+                            }
+                        },
+                        bid_details: {
+                            select: {
+                                status: true,
+                                creationStatus: true
+                            }
+                        }
                     }
-                }
+                },
+
             }
         })
 
@@ -200,16 +203,15 @@ export const getTaOutboxDal = async (req: Request) => {
                 }
             },
             {
-                bid_details: {
-                    boq: {
-                        pre_tendering_details: {
-                            tendering_type: {
-                                contains: search,
-                                mode: 'insensitive'
-                            }
+                boq: {
+                    pre_tendering_details: {
+                        tendering_type: {
+                            contains: search,
+                            mode: 'insensitive'
                         }
                     }
                 }
+
             },
         ];
     }
@@ -220,37 +222,40 @@ export const getTaOutboxDal = async (req: Request) => {
             ...(category[0]
                 ? [
                     {
-                        bid_details: {
-                            boq: {
-                                procurement: {
-                                    category_masterId: {
-                                        in: category,
-                                    },
-                                }
-                            },
+                        boq: {
+                            procurement: {
+                                category_masterId: {
+                                    in: category,
+                                },
+                            }
                         },
+
                     },
                 ]
                 : []),
             ...(status[0]
                 ? [
                     {
-                        bid_details: {
-                            status: {
-                                in: status.map(Number),
+                        boq: {
+                            bid_details: {
+                                status: {
+                                    in: status.map(Number),
+                                },
                             },
-                        },
+                        }
                     },
                 ]
                 : []),
             ...(creationstatus[0]
                 ? [
                     {
-                        bid_details: {
-                            creationStatus: {
-                                in: creationstatus.map(Number),
+                        boq: {
+                            bid_details: {
+                                creationStatus: {
+                                    in: creationstatus.map(Number),
+                                },
                             },
-                        },
+                        }
                     },
                 ]
                 : []),
@@ -271,28 +276,34 @@ export const getTaOutboxDal = async (req: Request) => {
             select: {
                 id: true,
                 reference_no: true,
-                bid_details: {
+                boq: {
                     select: {
-                        boq: {
+                        estimated_cost: true,
+                        procurement: {
                             select: {
-                                estimated_cost: true,
-                                procurement: {
+                                category_masterId: true,
+                                category: {
                                     select: {
-                                        category_masterId: true,
-                                        category: {
-                                            select: {
-                                                id: true,
-                                                name: true
-                                            }
-                                        }
+                                        id: true,
+                                        name: true
                                     }
                                 }
                             }
                         },
-                        status: true,
-                        creationStatus: true
+                        pre_tendering_details: {
+                            select: {
+                                tendering_type: true
+                            }
+                        },
+                        bid_details: {
+                            select: {
+                                status: true,
+                                creationStatus: true
+                            }
+                        }
                     }
-                }
+                },
+
             }
         })
 
@@ -518,7 +529,7 @@ export const submitCriteriaDal = async (req: Request) => {
 
 export const addBidderDetailsDal = async (req: Request) => {
     const { bidder }: { bidder: string } = req.body
-    const { emd_doc, bidder_doc } = (req.files as any) || {}
+    const { emd_doc, tech_doc, fin_doc } = (req.files as any) || {}
     try {
 
         const formattedBidder: Omit<bidder_master, 'id' | 'emd_doc' | 'bidder_doc' | 'createdAt' | 'updatedAt'> = JSON.parse(bidder)
@@ -541,10 +552,6 @@ export const addBidderDetailsDal = async (req: Request) => {
 
         if (!emd_doc) {
             throw { error: true, message: "EMD document is required as 'emd_doc'" }
-        }
-
-        if (!bidder_doc) {
-            throw { error: true, message: "Bidder document is required as 'bidder_doc'" }
         }
 
         const bidDetailsData = await prisma.bid_details.findFirst({
@@ -575,10 +582,11 @@ export const addBidderDetailsDal = async (req: Request) => {
 
         const emd_doc_path = await imageUploaderV2(emd_doc)
 
-        const bidder_doc_path = await imageUploaderV2(bidder_doc)
+        const tech_doc_path = await imageUploaderV2(tech_doc)
+        const fin_doc_path = await imageUploaderV2(fin_doc)
 
         await prisma.$transaction(async (tx) => {
-            await tx.bidder_master.create({
+            const newBidder = await tx.bidder_master.create({
                 data: {
                     reference_no: formattedBidder?.reference_no,
                     name: formattedBidder?.reference_no,
@@ -594,10 +602,30 @@ export const addBidderDetailsDal = async (req: Request) => {
                     offline_mode: formattedBidder?.offline_mode as offline_mode_enum,
                     dd_no: formattedBidder?.dd_no,
                     transaction_no: formattedBidder?.transaction_no,
-                    bidder_doc: bidder_doc_path[0],
                     bidding_amount: Number(formattedBidder?.bidding_amount),
                 }
             })
+
+            if (tech_doc) {
+                await tx.bidder_doc.create({
+                    data: {
+                        bidder_id: newBidder?.id,
+                        criteria_type: 'technical',
+                        doc_path: tech_doc_path[0]
+                    }
+                })
+            }
+
+            if (fin_doc) {
+                await tx.bidder_doc.create({
+                    data: {
+                        bidder_id: newBidder?.id,
+                        criteria_type: 'financial',
+                        doc_path: fin_doc_path[0]
+                    }
+                })
+            }
+
         })
 
         return 'Bidder details added'
