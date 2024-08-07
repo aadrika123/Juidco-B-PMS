@@ -488,7 +488,8 @@ export const submitCriteriaDal = async (req: Request) => {
         const bidDetailsData = await prisma.bid_details.findFirst({
             where: { reference_no: reference_no },
             select: {
-                creationStatus: true
+                creationStatus: true,
+                bid_type: true
             }
         })
 
@@ -502,9 +503,16 @@ export const submitCriteriaDal = async (req: Request) => {
             }
         })
 
-        if (addedCriteria.length < 2) {
-            throw { error: true, message: `All required criterias are not added yet` }
+        if (bidDetailsData?.bid_type === 'fintech') {
+            if (addedCriteria.length < 2) {
+                throw { error: true, message: `All required criterias are not added yet` }
+            }
+        } else {
+            if (addedCriteria.length < 1) {
+                throw { error: true, message: `All required criterias are not added yet` }
+            }
         }
+
 
         await prisma.$transaction(async (tx) => {
             await tx.bid_details.update({
