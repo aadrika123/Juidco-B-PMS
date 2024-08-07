@@ -1154,19 +1154,19 @@ enum bid_type_enum {
 }
 
 model ta_inbox {
-    id           String      @id @default(uuid())
-    reference_no String      @unique
-    bid_details  bid_details @relation(fields: [reference_no], references: [reference_no])
-    createdAt    DateTime    @default(now())
-    updatedAt    DateTime    @updatedAt
+    id           String       @id @default(uuid())
+    reference_no String       @unique
+    bid_details  bid_details? @relation(fields: [reference_no], references: [reference_no])
+    createdAt    DateTime     @default(now())
+    updatedAt    DateTime     @updatedAt
 }
 
 model ta_outbox {
-    id           String      @id @default(uuid())
-    reference_no String      @unique
-    bid_details  bid_details @relation(fields: [reference_no], references: [reference_no])
-    createdAt    DateTime    @default(now())
-    updatedAt    DateTime    @updatedAt
+    id           String       @id @default(uuid())
+    reference_no String       @unique
+    bid_details  bid_details? @relation(fields: [reference_no], references: [reference_no])
+    createdAt    DateTime     @default(now())
+    updatedAt    DateTime     @updatedAt
 }
 
 model bid_details {
