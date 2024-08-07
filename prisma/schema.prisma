@@ -541,6 +541,8 @@ model boq {
     procurement_stocks    procurement_stocks[]
     pre_tendering_details pre_tendering_details?
     bid_details           bid_details?
+    ta_inbox              ta_inbox?
+    ta_outbox             ta_outbox?
 }
 
 model boq_procurement {
@@ -1154,19 +1156,19 @@ enum bid_type_enum {
 }
 
 model ta_inbox {
-    id           String      @id @default(uuid())
-    reference_no String      @unique
-    bid_details  bid_details @relation(fields: [reference_no], references: [reference_no])
-    createdAt    DateTime    @default(now())
-    updatedAt    DateTime    @updatedAt
+    id           String   @id @default(uuid())
+    reference_no String   @unique
+    boq          boq      @relation(fields: [reference_no], references: [reference_no])
+    createdAt    DateTime @default(now())
+    updatedAt    DateTime @updatedAt
 }
 
 model ta_outbox {
-    id           String      @id @default(uuid())
-    reference_no String      @unique
-    bid_details  bid_details @relation(fields: [reference_no], references: [reference_no])
-    createdAt    DateTime    @default(now())
-    updatedAt    DateTime    @updatedAt
+    id           String   @id @default(uuid())
+    reference_no String   @unique
+    boq          boq      @relation(fields: [reference_no], references: [reference_no])
+    createdAt    DateTime @default(now())
+    updatedAt    DateTime @updatedAt
 }
 
 model bid_details {
@@ -1179,8 +1181,6 @@ model bid_details {
     boq            boq             @relation(fields: [reference_no], references: [reference_no])
     createdAt      DateTime        @default(now())
     updatedAt      DateTime        @updatedAt
-    ta_inbox       ta_inbox?
-    ta_outbox      ta_outbox?
     criteria       criteria[]
     bidder_master  bidder_master[]
     comparison     comparison[]
@@ -1224,12 +1224,22 @@ model bidder_master {
     offline_mode   offline_mode_enum?
     dd_no          String?
     transaction_no String?
-    bidder_doc     String
     bidding_amount Float
     createdAt      DateTime           @default(now())
     updatedAt      DateTime           @updatedAt
     bid_details    bid_details        @relation(fields: [reference_no], references: [reference_no])
     comparison     comparison?
+    bidder_doc     bidder_doc[]
+}
+
+model bidder_doc {
+    id            String             @id @default(uuid())
+    criteria_type criteria_type_enum
+    doc_path      String
+    bidder_id     String
+    bidder_master bidder_master      @relation(fields: [bidder_id], references: [id])
+    createdAt     DateTime           @default(now())
+    updatedAt     DateTime           @updatedAt
 }
 
 enum comparison_type_enum {
