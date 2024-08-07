@@ -1224,12 +1224,22 @@ model bidder_master {
     offline_mode   offline_mode_enum?
     dd_no          String?
     transaction_no String?
-    bidder_doc     String
     bidding_amount Float
     createdAt      DateTime           @default(now())
     updatedAt      DateTime           @updatedAt
     bid_details    bid_details        @relation(fields: [reference_no], references: [reference_no])
     comparison     comparison?
+    bidder_doc     bidder_doc[]
+}
+
+model bidder_doc {
+    id            String             @id @default(uuid())
+    criteria_type criteria_type_enum
+    doc_path      String
+    bidder_id     String
+    bidder_master bidder_master      @relation(fields: [bidder_id], references: [id])
+    createdAt     DateTime           @default(now())
+    updatedAt     DateTime           @updatedAt
 }
 
 enum comparison_type_enum {
