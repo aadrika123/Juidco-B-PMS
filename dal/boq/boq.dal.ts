@@ -54,6 +54,11 @@ export const getBoqByRefNoDal = async (req: Request) => {
 						docPath: true,
 					},
 				},
+				tendering_form: {
+					select: {
+						isPartial: true,
+					},
+				},
 			},
 		})
 
