@@ -12,7 +12,7 @@ export const getBidDetailsDal = async (req: Request) => {
     const { reference_no } = req.params
     try {
 
-        if (reference_no) {
+        if (!reference_no) {
             throw { error: true, message: "Reference number is required as 'reference_no'" }
         }
 
