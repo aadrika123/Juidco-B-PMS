@@ -44,16 +44,15 @@ export const getTaInboxDal = async (req: Request) => {
                 }
             },
             {
-                bid_details: {
-                    boq: {
-                        pre_tendering_details: {
-                            tendering_type: {
-                                contains: search,
-                                mode: 'insensitive'
-                            }
+                boq: {
+                    pre_tendering_details: {
+                        tendering_type: {
+                            contains: search,
+                            mode: 'insensitive'
                         }
                     }
                 }
+
             },
         ];
     }
@@ -64,37 +63,40 @@ export const getTaInboxDal = async (req: Request) => {
             ...(category[0]
                 ? [
                     {
-                        bid_details: {
-                            boq: {
-                                procurement: {
-                                    category_masterId: {
-                                        in: category,
-                                    },
-                                }
-                            },
+                        boq: {
+                            procurement: {
+                                category_masterId: {
+                                    in: category,
+                                },
+                            }
                         },
+
                     },
                 ]
                 : []),
             ...(status[0]
                 ? [
                     {
-                        bid_details: {
-                            status: {
-                                in: status.map(Number),
+                        boq: {
+                            bid_details: {
+                                status: {
+                                    in: status.map(Number),
+                                },
                             },
-                        },
+                        }
                     },
                 ]
                 : []),
             ...(creationstatus[0]
                 ? [
                     {
-                        bid_details: {
-                            creationStatus: {
-                                in: creationstatus.map(Number),
+                        boq: {
+                            bid_details: {
+                                creationStatus: {
+                                    in: creationstatus.map(Number),
+                                },
                             },
-                        },
+                        }
                     },
                 ]
                 : []),
@@ -115,33 +117,34 @@ export const getTaInboxDal = async (req: Request) => {
             select: {
                 id: true,
                 reference_no: true,
-                bid_details: {
+                boq: {
                     select: {
-                        boq: {
+                        estimated_cost: true,
+                        procurement: {
                             select: {
-                                estimated_cost: true,
-                                procurement: {
+                                category_masterId: true,
+                                category: {
                                     select: {
-                                        category_masterId: true,
-                                        category: {
-                                            select: {
-                                                id: true,
-                                                name: true
-                                            }
-                                        }
-                                    }
-                                },
-                                pre_tendering_details: {
-                                    select: {
-                                        tendering_type: true
+                                        id: true,
+                                        name: true
                                     }
                                 }
                             }
                         },
-                        status: true,
-                        creationStatus: true
+                        pre_tendering_details: {
+                            select: {
+                                tendering_type: true
+                            }
+                        },
+                        bid_details: {
+                            select: {
+                                status: true,
+                                creationStatus: true
+                            }
+                        }
                     }
-                }
+                },
+
             }
         })
 
@@ -200,16 +203,15 @@ export const getTaOutboxDal = async (req: Request) => {
                 }
             },
             {
-                bid_details: {
-                    boq: {
-                        pre_tendering_details: {
-                            tendering_type: {
-                                contains: search,
-                                mode: 'insensitive'
-                            }
+                boq: {
+                    pre_tendering_details: {
+                        tendering_type: {
+                            contains: search,
+                            mode: 'insensitive'
                         }
                     }
                 }
+
             },
         ];
     }
@@ -220,37 +222,40 @@ export const getTaOutboxDal = async (req: Request) => {
             ...(category[0]
                 ? [
                     {
-                        bid_details: {
-                            boq: {
-                                procurement: {
-                                    category_masterId: {
-                                        in: category,
-                                    },
-                                }
-                            },
+                        boq: {
+                            procurement: {
+                                category_masterId: {
+                                    in: category,
+                                },
+                            }
                         },
+
                     },
                 ]
                 : []),
             ...(status[0]
                 ? [
                     {
-                        bid_details: {
-                            status: {
-                                in: status.map(Number),
+                        boq: {
+                            bid_details: {
+                                status: {
+                                    in: status.map(Number),
+                                },
                             },
-                        },
+                        }
                     },
                 ]
                 : []),
             ...(creationstatus[0]
                 ? [
                     {
-                        bid_details: {
-                            creationStatus: {
-                                in: creationstatus.map(Number),
+                        boq: {
+                            bid_details: {
+                                creationStatus: {
+                                    in: creationstatus.map(Number),
+                                },
                             },
-                        },
+                        }
                     },
                 ]
                 : []),
@@ -271,28 +276,34 @@ export const getTaOutboxDal = async (req: Request) => {
             select: {
                 id: true,
                 reference_no: true,
-                bid_details: {
+                boq: {
                     select: {
-                        boq: {
+                        estimated_cost: true,
+                        procurement: {
                             select: {
-                                estimated_cost: true,
-                                procurement: {
+                                category_masterId: true,
+                                category: {
                                     select: {
-                                        category_masterId: true,
-                                        category: {
-                                            select: {
-                                                id: true,
-                                                name: true
-                                            }
-                                        }
+                                        id: true,
+                                        name: true
                                     }
                                 }
                             }
                         },
-                        status: true,
-                        creationStatus: true
+                        pre_tendering_details: {
+                            select: {
+                                tendering_type: true
+                            }
+                        },
+                        bid_details: {
+                            select: {
+                                status: true,
+                                creationStatus: true
+                            }
+                        }
                     }
-                }
+                },
+
             }
         })
 
