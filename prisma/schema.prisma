@@ -1186,11 +1186,17 @@ model bid_details {
     comparison     comparison[]
 }
 
+enum criteria_type_enum {
+    technical
+    financial
+}
+
 model criteria {
     id                  String                @id @default(uuid())
     reference_no        String
     heading             String
     description         String
+    criteria_type       criteria_type_enum?
     bid_details         bid_details           @relation(fields: [reference_no], references: [reference_no])
     createdAt           DateTime              @default(now())
     updatedAt           DateTime              @updatedAt

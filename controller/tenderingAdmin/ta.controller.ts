@@ -4,6 +4,7 @@ import {
     getTaOutboxDal,
     selectBidTypeDal,
     addCriteriaDal,
+    submitCriteriaDal,
     addBidderDetailsDal,
     submitBidderDetailsDal
 } from "../../dal/tenderingAdmin/ta.dal";
@@ -74,6 +75,23 @@ export const addCriteria = async (req: Request, res: Response) => {
         res.status(400).json({
             status: false,
             message: `Error while adding criteria`,
+            error: result?.message
+        })
+    }
+}
+
+export const submitCriteria = async (req: Request, res: Response) => {
+    const result: any = await submitCriteriaDal(req)
+    if (!result?.error) {
+        res.status(201).json({
+            status: true,
+            message: `Criteria submitted successfully`,
+            data: result
+        })
+    } else {
+        res.status(400).json({
+            status: false,
+            message: `Error while submitting criteria`,
             error: result?.message
         })
     }

@@ -3,6 +3,7 @@ import getErrorMessage from "../../lib/getErrorMessage";
 import {
     bid_type_enum,
     bidder_master,
+    criteria_type_enum,
     offline_mode_enum,
     payment_mode_enum,
     PrismaClient,
@@ -374,11 +375,11 @@ type criteriaType = {
 type criteriaPayloadType = {
     reference_no: string,
     criteria: criteriaType[],
-    no_of_bidders: number
+    criteria_type: criteria_type_enum
 }
 
 export const addCriteriaDal = async (req: Request) => {
-    const { reference_no, criteria, no_of_bidders }: criteriaPayloadType = req.body
+    const { reference_no, criteria, criteria_type }: criteriaPayloadType = req.body
     try {
 
         if (!reference_no) {
@@ -387,6 +388,78 @@ export const addCriteriaDal = async (req: Request) => {
 
         if (criteria.length === 0) {
             throw { error: true, message: "Atleast one criteria is required as 'criteria[]'" }
+        }
+
+        if (!criteria_type) {
+            throw { error: true, message: "Criteria type is required as 'criteria_type'" }
+        }
+
+        const preTenderDetailsCount = await prisma.pre_tendering_details.count({
+            where: { reference_no: reference_no }
+        })
+
+        if (preTenderDetailsCount === 0) {
+            throw { error: true, message: "No pre tender details found with this reference number" }
+        }
+
+        const bidDetailsData = await prisma.bid_details.findFirst({
+            where: { reference_no: reference_no },
+            select: {
+                creationStatus: true
+            }
+        })
+
+        if (bidDetailsData?.creationStatus === 1) {
+            throw { error: true, message: "Current creation status is not valid for this step " }
+        }
+
+        const addedCriteria = await prisma.criteria.findMany({
+            where: {
+                reference_no: reference_no
+            }
+        })
+
+        const isAlreadyThere = addedCriteria.filter(item => item?.criteria_type === criteria_type)
+
+        if (isAlreadyThere.length > 0) {
+            throw { error: true, message: `Criteria type : ${criteria_type} is already added ` }
+        }
+
+        await prisma.$transaction(async (tx) => {
+            await Promise.all(
+                criteria.map(async (item) => {
+                    await tx.criteria.create({
+                        data: {
+                            reference_no: reference_no,
+                            heading: item?.heading,
+                            description: item?.description,
+                            criteria_type: criteria_type
+                        }
+                    })
+                })
+            )
+            // await tx.bid_details.update({
+            //     where: { reference_no: reference_no },
+            //     data: {
+            //         no_of_bidders: no_of_bidders,
+            //         creationStatus: 2
+            //     }
+            // })
+        })
+
+        return `Criterias added for ${criteria_type} type `
+    } catch (err: any) {
+        console.log(err)
+        return { error: true, message: getErrorMessage(err) }
+    }
+}
+
+export const submitCriteriaDal = async (req: Request) => {
+    const { reference_no, no_of_bidders }: { reference_no: string, no_of_bidders: number } = req.body
+    try {
+
+        if (!reference_no) {
+            throw { error: true, message: "Reference number is required as 'reference_no'" }
         }
 
         if (!no_of_bidders) {
@@ -409,21 +482,20 @@ export const addCriteriaDal = async (req: Request) => {
         })
 
         if (bidDetailsData?.creationStatus === 1) {
-            throw { error: true, message: "Current creation status is not valid to be proceed to this step " }
+            throw { error: true, message: "Current creation status is not valid for this step " }
+        }
+
+        const addedCriteria = await prisma.criteria.findMany({
+            where: {
+                reference_no: reference_no
+            }
+        })
+
+        if (addedCriteria.length < 2) {
+            throw { error: true, message: `All required criterias are not added yet` }
         }
 
         await prisma.$transaction(async (tx) => {
-            await Promise.all(
-                criteria.map(async (item) => {
-                    await tx.criteria.create({
-                        data: {
-                            reference_no: reference_no,
-                            heading: item?.heading,
-                            description: item?.description
-                        }
-                    })
-                })
-            )
             await tx.bid_details.update({
                 where: { reference_no: reference_no },
                 data: {
@@ -433,7 +505,7 @@ export const addCriteriaDal = async (req: Request) => {
             })
         })
 
-        return 'Criterias added'
+        return `Criterias and no. of bidders are submitted successfully `
     } catch (err: any) {
         console.log(err)
         return { error: true, message: getErrorMessage(err) }
@@ -498,7 +570,7 @@ export const addBidderDetailsDal = async (req: Request) => {
         }
 
         if (bidDetailsData?.creationStatus === 2) {
-            throw { error: true, message: "Current creation status is not valid to be proceed to this step " }
+            throw { error: true, message: "Current creation status is not valid for this step " }
         }
 
         const emd_doc_path = await imageUploaderV2(emd_doc)
@@ -574,7 +646,7 @@ export const submitBidderDetailsDal = async (req: Request) => {
         }
 
         if (bidDetailsData?.creationStatus === 2) {
-            throw { error: true, message: "Current creation status is not valid to be proceed to this step " }
+            throw { error: true, message: "Current creation status is not valid for this step " }
         }
 
         await prisma.$transaction(async (tx) => {
