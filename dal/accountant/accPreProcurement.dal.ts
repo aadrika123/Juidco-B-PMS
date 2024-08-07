@@ -3352,19 +3352,19 @@ export const forwardToTaPtDal = async (req: Request) => {
 
 		//start transaction
 		await prisma.$transaction(async tx => {
-			await tx.acc_pre_tender_inbox.delete({
+			await tx.da_boq_inbox.delete({
 				where: {
 					reference_no: reference_no,
 				},
 			})
 
-			await tx.acc_pre_tender_outbox.create({
+			await tx.da_boq_outbox.create({
 				data: {
 					reference_no: reference_no,
 				},
 			})
 
-			await tx.da_pre_tender_inbox.create({
+			await tx.ta_inbox.create({
 				data: {
 					reference_no: reference_no,
 				},
@@ -3376,12 +3376,12 @@ export const forwardToTaPtDal = async (req: Request) => {
 			//     }
 			// })
 
-			const record = await prisma.da_pre_tender_outbox.findUnique({
+			const record = await prisma.ta_outbox.findUnique({
 				where: { reference_no: reference_no },
 			})
 
 			if (record) {
-				await tx.da_pre_tender_outbox.delete({
+				await tx.ta_outbox.delete({
 					where: { reference_no: reference_no },
 				})
 			}
