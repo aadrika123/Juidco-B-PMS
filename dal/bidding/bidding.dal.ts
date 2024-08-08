@@ -85,7 +85,7 @@ export const getBidDetailsDal = async (req: Request) => {
         })
 
 
-        const techCriteria = prisma.criteria.findMany({
+        const techCriteria = await prisma.criteria.findMany({
             where: { reference_no: reference_no, criteria_type: 'technical' },
             select: {
                 id: true,
@@ -95,7 +95,7 @@ export const getBidDetailsDal = async (req: Request) => {
             }
         })
 
-        const finCriteria = prisma.criteria.findMany({
+        const finCriteria = await prisma.criteria.findMany({
             where: { reference_no: reference_no, criteria_type: 'financial' },
             select: {
                 id: true,
@@ -105,10 +105,10 @@ export const getBidDetailsDal = async (req: Request) => {
             }
         })
 
-        // result.techCriteria = techCriteria
-        // result.finCriteria = finCriteria
+        result.techCriteria = techCriteria
+        result.finCriteria = finCriteria
 
-        return { ...result, ...techCriteria, ...finCriteria }
+        return result
     } catch (err: any) {
         console.log(err)
         return { error: true, message: getErrorMessage(err) }
