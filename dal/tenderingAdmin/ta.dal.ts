@@ -360,13 +360,13 @@ export const selectBidTypeDal = async (req: Request) => {
             select: { status: true }
         })
 
-        if (boqData?.status === 70) {
+        if (boqData?.status !== 70) {
             throw { error: true, message: "BOQ is not valid to proceed" }
         }
 
-        const result = await prisma.bid_details.update({
-            where: { reference_no: reference_no },
+        const result = await prisma.bid_details.create({
             data: {
+                reference_no: reference_no,
                 bid_type: bid_type,
                 creationStatus: 1
             }
