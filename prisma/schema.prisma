@@ -1225,6 +1225,7 @@ model bidder_master {
     dd_no          String?
     transaction_no String?
     bidding_amount Float
+    has_lost       Boolean            @default(false)
     createdAt      DateTime           @default(now())
     updatedAt      DateTime           @updatedAt
     bid_details    bid_details        @relation(fields: [reference_no], references: [reference_no])
@@ -1261,7 +1262,7 @@ model comparison {
 model comparison_criteria {
     id              String               @id @default(uuid())
     criteria_id     String
-    value           String
+    value           Int
     bidder_id       String
     comparison_type comparison_type_enum
     comparison      comparison           @relation(fields: [bidder_id], references: [bidder_id])
