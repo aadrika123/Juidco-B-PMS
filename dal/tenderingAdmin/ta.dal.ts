@@ -3,6 +3,7 @@ import getErrorMessage from "../../lib/getErrorMessage";
 import {
     bid_type_enum,
     bidder_master,
+    comparison_type_enum,
     criteria_type_enum,
     offline_mode_enum,
     payment_mode_enum,
@@ -644,10 +645,10 @@ export const addBidderDetailsDal = async (req: Request) => {
 }
 
 export const submitBidderDetailsDal = async (req: Request) => {
-    const { reference_no }: { reference_no: String } = req.body
+    const { reference_no }: { reference_no: string } = req.body
     try {
 
-        if (reference_no) {
+        if (!reference_no) {
             throw { error: true, message: "Reference number is required as 'reference_no'" }
         }
 
@@ -700,3 +701,56 @@ export const submitBidderDetailsDal = async (req: Request) => {
         return { error: true, message: getErrorMessage(err) }
     }
 }
+
+type comparisonCriteriaType = {
+    criteria_id: string
+    value: number
+}
+
+type comparisonDataType = {
+    reference_no: string
+    comparison_type: comparison_type_enum
+    bidder_id: string
+    comparison_criteria: comparisonCriteriaType[]
+}
+
+type comparisonPayloadType = {
+    reference_no: string
+    comparison_type: comparison_type_enum
+    comparison_data: comparisonDataType[]
+}
+
+// export const comparisonDal = async (req: Request) => {
+//     const { reference_no, comparison_type, comparison_data }: comparisonPayloadType = req.body
+//     try {
+
+//         if (!reference_no) {
+//             throw { error: true, message: "Reference number is required as 'reference_no'" }
+//         }
+
+//         if (!comparison_type) {
+//             throw { error: true, message: "Comparison type is required as 'comparison_type'" }
+//         }
+
+//         if (comparison_data.length === 0) {
+//             throw { error: true, message: "Comparison data is required as 'comparison_data[]'" }
+//         }
+
+//         await prisma.$transaction(async (tx) => {
+//             await Promise.all(
+//                 comparison_data.map(async (item) => {
+//                     await tx.comparison.create({
+//                         data: {
+//                             reference_no: reference_no,
+//                         }
+//                     })
+//                 })
+//             )
+//         })
+
+//         return 'Comparison details details submitted'
+//     } catch (err: any) {
+//         console.log(err)
+//         return { error: true, message: getErrorMessage(err) }
+//     }
+// }

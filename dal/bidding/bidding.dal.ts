@@ -26,6 +26,7 @@ export const getBidDetailsDal = async (req: Request) => {
                 criteria: {
                     select: {
                         id: true,
+                        criteria_type: true,
                         heading: true,
                         description: true
                     }
@@ -53,7 +54,6 @@ export const getBidDetailsDal = async (req: Request) => {
                 comparison: {
                     select: {
                         id: true,
-                        comparison_type: true,
                         bidder_master: {
                             select: {
                                 id: true,

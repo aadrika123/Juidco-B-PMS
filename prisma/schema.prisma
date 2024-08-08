@@ -1250,7 +1250,6 @@ enum comparison_type_enum {
 model comparison {
     id                  String                @id @default(uuid())
     reference_no        String
-    comparison_type     comparison_type_enum
     bidder_id           String                @unique
     bidder_master       bidder_master         @relation(fields: [bidder_id], references: [id])
     createdAt           DateTime              @default(now())
@@ -1260,14 +1259,15 @@ model comparison {
 }
 
 model comparison_criteria {
-    id          String     @id @default(uuid())
-    criteria_id String
-    value       String
-    bidder_id   String
-    comparison  comparison @relation(fields: [bidder_id], references: [bidder_id])
-    criteria    criteria   @relation(fields: [criteria_id], references: [id])
-    createdAt   DateTime   @default(now())
-    updatedAt   DateTime   @updatedAt
+    id              String               @id @default(uuid())
+    criteria_id     String
+    value           String
+    bidder_id       String
+    comparison_type comparison_type_enum
+    comparison      comparison           @relation(fields: [bidder_id], references: [bidder_id])
+    criteria        criteria             @relation(fields: [criteria_id], references: [id])
+    createdAt       DateTime             @default(now())
+    updatedAt       DateTime             @updatedAt
 }
 
 // bidding================================================================================================================================================================
