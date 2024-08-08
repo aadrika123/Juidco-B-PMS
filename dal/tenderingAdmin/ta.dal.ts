@@ -364,9 +364,9 @@ export const selectBidTypeDal = async (req: Request) => {
             throw { error: true, message: "BOQ is not valid to proceed" }
         }
 
-        const result = await prisma.bid_details.create({
+        const result = await prisma.bid_details.update({
+            where: { reference_no: reference_no },
             data: {
-                reference_no: reference_no,
                 bid_type: bid_type,
                 creationStatus: 1
             }
@@ -421,7 +421,7 @@ export const addCriteriaDal = async (req: Request) => {
             }
         })
 
-        if (bidDetailsData?.creationStatus !== 1) {
+        if (bidDetailsData?.creationStatus === 1) {
             throw { error: true, message: "Current creation status is not valid for this step " }
         }
 
@@ -494,7 +494,7 @@ export const submitCriteriaDal = async (req: Request) => {
             }
         })
 
-        if (bidDetailsData?.creationStatus !== 1) {
+        if (bidDetailsData?.creationStatus === 1) {
             throw { error: true, message: "Current creation status is not valid for this step " }
         }
 
@@ -585,7 +585,7 @@ export const addBidderDetailsDal = async (req: Request) => {
             }
         }
 
-        if (bidDetailsData?.creationStatus !== 2) {
+        if (bidDetailsData?.creationStatus === 2) {
             throw { error: true, message: "Current creation status is not valid for this step " }
         }
 
@@ -682,7 +682,7 @@ export const submitBidderDetailsDal = async (req: Request) => {
             }
         }
 
-        if (bidDetailsData?.creationStatus !== 2) {
+        if (bidDetailsData?.creationStatus === 2) {
             throw { error: true, message: "Current creation status is not valid for this step " }
         }
 
@@ -720,7 +720,76 @@ type comparisonPayloadType = {
     comparison_data: comparisonDataType[]
 }
 
-// export const comparisonDal = async (req: Request) => {
+export const comparisonDal = async (req: Request) => {
+    const { reference_no, comparison_type, comparison_data }: comparisonPayloadType = req.body
+    try {
+
+        if (!reference_no) {
+            throw { error: true, message: "Reference number is required as 'reference_no'" }
+        }
+
+        if (!comparison_type) {
+            throw { error: true, message: "Comparison type is required as 'comparison_type'" }
+        }
+
+        if (comparison_data.length === 0) {
+            throw { error: true, message: "Comparison data is required as 'comparison_data[]'" }
+        }
+
+        const bidDetails = await prisma.bid_details.findFirst({
+            where: { reference_no: reference_no },
+            select: {
+                bid_type: true
+            }
+        })
+
+        const comparedData = await prisma.comparison_criteria.count({
+            where: {
+                bidder_id: comparison_data[0]?.bidder_id,
+                criteria: {
+                    criteria_type: 'technical'
+                }
+            }
+        })
+
+        if (bidDetails?.bid_type === 'fintech' && comparedData === 0) {
+            throw { error: true, message: "Technical comparison is not completed yet" }
+        }
+
+        await prisma.$transaction(async (tx) => {
+            await Promise.all(
+                comparison_data.map(async (item) => {
+                    await tx.comparison.create({
+                        data: {
+                            reference_no: reference_no,
+                            bidder_id: item?.bidder_id
+                        }
+                    })
+                    await Promise.all(
+                        item?.comparison_criteria.map(async (criteriaData) => {
+                            await tx.comparison_criteria.create({
+                                data: {
+                                    bidder_id: item?.bidder_id,
+                                    criteria_id: criteriaData?.criteria_id,
+                                    value: Number(criteriaData?.value),
+                                    comparison_type: item?.comparison_type
+                                }
+                            })
+                        })
+                    )
+                })
+            )
+
+        })
+
+        return 'Comparison details details submitted'
+    } catch (err: any) {
+        console.log(err)
+        return { error: true, message: getErrorMessage(err) }
+    }
+}
+
+// export const comparisonResultDal = async (req: Request) => {
 //     const { reference_no, comparison_type, comparison_data }: comparisonPayloadType = req.body
 //     try {
 
@@ -736,16 +805,50 @@ type comparisonPayloadType = {
 //             throw { error: true, message: "Comparison data is required as 'comparison_data[]'" }
 //         }
 
+//         const bidDetails = await prisma.bid_details.findFirst({
+//             where: { reference_no: reference_no },
+//             select: {
+//                 bid_type: true
+//             }
+//         })
+
+//         const comparedData = await prisma.comparison_criteria.count({
+//             where: {
+//                 bidder_id: comparison_data[0]?.bidder_id,
+//                 criteria: {
+//                     criteria_type: 'technical'
+//                 }
+//             }
+//         })
+
+//         if (bidDetails?.bid_type === 'fintech' && comparedData === 0) {
+//             throw { error: true, message: "Technical comparison is not completed yet" }
+//         }
+
 //         await prisma.$transaction(async (tx) => {
 //             await Promise.all(
 //                 comparison_data.map(async (item) => {
 //                     await tx.comparison.create({
 //                         data: {
 //                             reference_no: reference_no,
+//                             bidder_id: item?.bidder_id
 //                         }
 //                     })
+//                     await Promise.all(
+//                         item?.comparison_criteria.map(async (criteriaData) => {
+//                             await tx.comparison_criteria.create({
+//                                 data: {
+//                                     bidder_id: item?.bidder_id,
+//                                     criteria_id: criteriaData?.criteria_id,
+//                                     value: Number(criteriaData?.value),
+//                                     comparison_type: item?.comparison_type
+//                                 }
+//                             })
+//                         })
+//                     )
 //                 })
 //             )
+
 //         })
 
 //         return 'Comparison details details submitted'
