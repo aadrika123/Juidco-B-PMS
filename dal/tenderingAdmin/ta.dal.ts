@@ -421,7 +421,7 @@ export const addCriteriaDal = async (req: Request) => {
             }
         })
 
-        if (bidDetailsData?.creationStatus === 1) {
+        if (bidDetailsData?.creationStatus !== 1) {
             throw { error: true, message: "Current creation status is not valid for this step " }
         }
 
@@ -494,7 +494,7 @@ export const submitCriteriaDal = async (req: Request) => {
             }
         })
 
-        if (bidDetailsData?.creationStatus === 1) {
+        if (bidDetailsData?.creationStatus !== 1) {
             throw { error: true, message: "Current creation status is not valid for this step " }
         }
 
@@ -585,7 +585,7 @@ export const addBidderDetailsDal = async (req: Request) => {
             }
         }
 
-        if (bidDetailsData?.creationStatus === 2) {
+        if (bidDetailsData?.creationStatus !== 2) {
             throw { error: true, message: "Current creation status is not valid for this step " }
         }
 
@@ -682,7 +682,7 @@ export const submitBidderDetailsDal = async (req: Request) => {
             }
         }
 
-        if (bidDetailsData?.creationStatus === 2) {
+        if (bidDetailsData?.creationStatus !== 2) {
             throw { error: true, message: "Current creation status is not valid for this step " }
         }
 
