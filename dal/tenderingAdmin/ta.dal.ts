@@ -541,7 +541,9 @@ export const addBidderDetailsDal = async (req: Request) => {
     const { emd_doc, tech_doc, fin_doc } = (req.files as any) || {}
     try {
 
-        const formattedBidder: Omit<bidder_master, 'id' | 'emd_doc' | 'bidder_doc' | 'createdAt' | 'updatedAt'> = JSON.parse(bidder)
+        // const formattedBidder: Omit<bidder_master, 'id' | 'emd_doc' | 'bidder_doc' | 'createdAt' | 'updatedAt'> = JSON.parse(bidder)
+        const formattedBidder: any = JSON.parse(bidder)
+
 
         if (!formattedBidder) {
             throw { error: true, message: "Bidder details are mandatory" }
@@ -605,7 +607,7 @@ export const addBidderDetailsDal = async (req: Request) => {
                     bank: formattedBidder?.bank,
                     account_no: formattedBidder?.account_no,
                     ifsc: formattedBidder?.ifsc,
-                    emd: Boolean(formattedBidder?.emd),
+                    emd: formattedBidder?.emd === 'yes' ? true : false,
                     emd_doc: emd_doc_path[0],
                     payment_mode: formattedBidder?.payment_mode as payment_mode_enum,
                     offline_mode: formattedBidder?.offline_mode as offline_mode_enum,
