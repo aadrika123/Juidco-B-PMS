@@ -360,13 +360,13 @@ export const selectBidTypeDal = async (req: Request) => {
             select: { status: true }
         })
 
-        if (boqData?.status === 70) {
+        if (boqData?.status !== 70) {
             throw { error: true, message: "BOQ is not valid to proceed" }
         }
 
-        const result = await prisma.bid_details.update({
-            where: { reference_no: reference_no },
+        const result = await prisma.bid_details.create({
             data: {
+                reference_no: reference_no,
                 bid_type: bid_type,
                 creationStatus: 1
             }
@@ -790,33 +790,33 @@ export const comparisonDal = async (req: Request) => {
 }
 
 // export const comparisonResultDal = async (req: Request) => {
-//     const { reference_no, comparison_type, comparison_data }: comparisonPayloadType = req.body
+//     const { reference_no }: comparisonPayloadType = req.body
 //     try {
 
 //         if (!reference_no) {
 //             throw { error: true, message: "Reference number is required as 'reference_no'" }
 //         }
 
-//         if (!comparison_type) {
-//             throw { error: true, message: "Comparison type is required as 'comparison_type'" }
-//         }
-
-//         if (comparison_data.length === 0) {
-//             throw { error: true, message: "Comparison data is required as 'comparison_data[]'" }
-//         }
-
 //         const bidDetails = await prisma.bid_details.findFirst({
 //             where: { reference_no: reference_no },
 //             select: {
-//                 bid_type: true
-//             }
-//         })
-
-//         const comparedData = await prisma.comparison_criteria.count({
-//             where: {
-//                 bidder_id: comparison_data[0]?.bidder_id,
-//                 criteria: {
-//                     criteria_type: 'technical'
+//                 bid_type: true,
+//                 comparison: {
+//                     select: {
+//                         bidder_id: true,
+//                         comparison_criteria: {
+//                             select: {
+//                                 criteria: {
+//                                     select: {
+//                                         id: true,
+//                                         heading: true,
+//                                         description: true
+//                                     }
+//                                 },
+//                                 value: true
+//                             }
+//                         }
+//                     }
 //                 }
 //             }
 //         })
