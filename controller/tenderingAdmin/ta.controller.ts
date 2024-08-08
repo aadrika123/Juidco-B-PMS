@@ -6,7 +6,9 @@ import {
     addCriteriaDal,
     submitCriteriaDal,
     addBidderDetailsDal,
-    submitBidderDetailsDal
+    submitBidderDetailsDal,
+    comparisonDal,
+    comparisonResultDal
 } from "../../dal/tenderingAdmin/ta.dal";
 
 
@@ -126,6 +128,40 @@ export const submitBidderDetails = async (req: Request, res: Response) => {
         res.status(400).json({
             status: false,
             message: `Error while submitting bidder details`,
+            error: result?.message
+        })
+    }
+}
+
+export const comparison = async (req: Request, res: Response) => {
+    const result: any = await comparisonDal(req)
+    if (!result?.error) {
+        res.status(201).json({
+            status: true,
+            message: `Comparison successfully`,
+            data: result
+        })
+    } else {
+        res.status(400).json({
+            status: false,
+            message: `Error while comparing`,
+            error: result?.message
+        })
+    }
+}
+
+export const comparisonResult = async (req: Request, res: Response) => {
+    const result: any = await comparisonResultDal(req)
+    if (!result?.error) {
+        res.status(201).json({
+            status: true,
+            message: `Comparison result fetched successfully`,
+            data: result
+        })
+    } else {
+        res.status(400).json({
+            status: false,
+            message: `Error while fetching comparison result`,
             error: result?.message
         })
     }
