@@ -105,10 +105,10 @@ export const getBidDetailsDal = async (req: Request) => {
             }
         })
 
-        result.techCriteria = techCriteria
-        result.finCriteria = finCriteria
+        // result.techCriteria = techCriteria
+        // result.finCriteria = finCriteria
 
-        return result
+        return { ...result, ...techCriteria, ...finCriteria }
     } catch (err: any) {
         console.log(err)
         return { error: true, message: getErrorMessage(err) }
