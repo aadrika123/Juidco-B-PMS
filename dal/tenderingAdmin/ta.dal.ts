@@ -743,11 +743,15 @@ export const comparisonDal = async (req: Request) => {
             }
         })
 
-        const comparedData = await prisma.comparison_criteria.count({
+        const comparedData = await prisma.comparison.count({
             where: {
-                bidder_id: comparison_data[0]?.bidder_id,
-                criteria: {
-                    criteria_type: 'technical'
+                reference_no: reference_no,
+                comparison_criteria: {
+                    some: {
+                        criteria: {
+                            criteria_type: 'technical'
+                        }
+                    }
                 }
             }
         })
@@ -789,71 +793,100 @@ export const comparisonDal = async (req: Request) => {
     }
 }
 
-// export const comparisonResultDal = async (req: Request) => {
-//     const { reference_no }: comparisonPayloadType = req.body
-//     try {
+export const comparisonResultDal = async (req: Request) => {
+    const { reference_no } = req.params
+    try {
 
-//         if (!reference_no) {
-//             throw { error: true, message: "Reference number is required as 'reference_no'" }
-//         }
+        if (!reference_no) {
+            throw { error: true, message: "Reference number is required as 'reference_no'" }
+        }
 
-//         const bidDetails = await prisma.bid_details.findFirst({
-//             where: { reference_no: reference_no },
-//             select: {
-//                 bid_type: true,
-//                 comparison: {
-//                     select: {
-//                         bidder_id: true,
-//                         comparison_criteria: {
-//                             select: {
-//                                 criteria: {
-//                                     select: {
-//                                         id: true,
-//                                         heading: true,
-//                                         description: true
-//                                     }
-//                                 },
-//                                 value: true
-//                             }
-//                         }
-//                     }
-//                 }
-//             }
-//         })
+        const bidDetails = await prisma.bid_details.findFirst({
+            where: { reference_no: reference_no },
+            select: {
+                bid_type: true,
+                comparison: {
+                    where: {
+                        bidder_master: {
+                            has_lost: false
+                        }
+                    },
+                    select: {
+                        bidder_id: true,
+                        comparison_criteria: {
+                            select: {
+                                criteria: {
+                                    select: {
+                                        id: true,
+                                        heading: true,
+                                        description: true
+                                    }
+                                },
+                                value: true
+                            }
+                        }
+                    }
+                }
+            }
+        })
 
-//         if (bidDetails?.bid_type === 'fintech' && comparedData === 0) {
-//             throw { error: true, message: "Technical comparison is not completed yet" }
-//         }
+        if (!bidDetails) {
+            throw { error: true, message: "No bid details with provided reference number" }
+        }
 
-//         await prisma.$transaction(async (tx) => {
-//             await Promise.all(
-//                 comparison_data.map(async (item) => {
-//                     await tx.comparison.create({
-//                         data: {
-//                             reference_no: reference_no,
-//                             bidder_id: item?.bidder_id
-//                         }
-//                     })
-//                     await Promise.all(
-//                         item?.comparison_criteria.map(async (criteriaData) => {
-//                             await tx.comparison_criteria.create({
-//                                 data: {
-//                                     bidder_id: item?.bidder_id,
-//                                     criteria_id: criteriaData?.criteria_id,
-//                                     value: Number(criteriaData?.value),
-//                                     comparison_type: item?.comparison_type
-//                                 }
-//                             })
-//                         })
-//                     )
-//                 })
-//             )
+        const scores = bidDetails.comparison.reduce((acc: any, comparison) => {
+            const sum = comparison.comparison_criteria.reduce((sumAcc, criteria) => sumAcc + criteria.value, 0);
+            acc[comparison.bidder_id] = (acc[comparison.bidder_id] || 0) + sum;
+            return acc;
+        }, {});
 
-//         })
 
-//         return 'Comparison details details submitted'
-//     } catch (err: any) {
-//         console.log(err)
-//         return { error: true, message: getErrorMessage(err) }
-//     }
-// }
+        // const comparedData = await prisma.comparison.count({
+        //     where: {
+        //         reference_no: reference_no,
+        //         comparison_criteria: {
+        //             some: {
+        //                 criteria: {
+        //                     criteria_type: 'technical'
+        //                 }
+        //             }
+        //         }
+        //     }
+        // })
+
+        // if (bidDetails?.bid_type === 'fintech' && comparedData === 0) {
+        //     throw { error: true, message: "Technical comparison is not completed yet" }
+        // }
+
+        // await prisma.$transaction(async (tx) => {
+        //     // await Promise.all(
+        //     //     comparison_data.map(async (item) => {
+        //     //         await tx.comparison.create({
+        //     //             data: {
+        //     //                 reference_no: reference_no,
+        //     //                 bidder_id: item?.bidder_id
+        //     //             }
+        //     //         })
+        //     //         await Promise.all(
+        //     //             item?.comparison_criteria.map(async (criteriaData) => {
+        //     //                 await tx.comparison_criteria.create({
+        //     //                     data: {
+        //     //                         bidder_id: item?.bidder_id,
+        //     //                         criteria_id: criteriaData?.criteria_id,
+        //     //                         value: Number(criteriaData?.value),
+        //     //                         comparison_type: item?.comparison_type
+        //     //                     }
+        //     //                 })
+        //     //             })
+        //     //         )
+        //     //     })
+        //     // )
+
+        // })
+
+        return scores
+    } catch (err: any) {
+        console.log(err)
+        return { error: true, message: getErrorMessage(err) }
+    }
+}
