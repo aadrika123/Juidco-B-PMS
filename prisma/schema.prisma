@@ -1204,8 +1204,8 @@ model criteria {
 }
 
 enum offline_mode_enum {
-    online
-    offline
+    dd
+    cash
 }
 
 model bidder_master {

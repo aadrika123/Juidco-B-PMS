@@ -43,6 +43,13 @@ export const getStockReqByStockHandoverNoDal = async (req: Request) => {
 								name: true,
 							},
 						},
+						unit: {
+							select: {
+								id: true,
+								name: true,
+								abbreviation: true
+							}
+						}
 					},
 				},
 			},
