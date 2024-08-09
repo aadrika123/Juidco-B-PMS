@@ -8,7 +8,8 @@ import {
     addBidderDetailsDal,
     submitBidderDetailsDal,
     comparisonDal,
-    comparisonResultDal
+    comparisonResultDal,
+    selectWinnerDal
 } from "../../dal/tenderingAdmin/ta.dal";
 
 
@@ -162,6 +163,23 @@ export const comparisonResult = async (req: Request, res: Response) => {
         res.status(400).json({
             status: false,
             message: `Error while fetching comparison result`,
+            error: result?.message
+        })
+    }
+}
+
+export const selectWinner = async (req: Request, res: Response) => {
+    const result: any = await selectWinnerDal(req)
+    if (!result?.error) {
+        res.status(200).json({
+            status: true,
+            message: `Winner(s) selected successfully`,
+            data: result
+        })
+    } else {
+        res.status(400).json({
+            status: false,
+            message: `Error while selecting winner(s)`,
             error: result?.message
         })
     }

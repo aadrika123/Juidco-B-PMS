@@ -864,3 +864,51 @@ export const comparisonResultDal = async (req: Request) => {
         return { error: true, message: getErrorMessage(err) }
     }
 }
+
+export const selectWinnerDal = async (req: Request) => {
+    const { reference_no, winners }: { reference_no: string, winners: string[] } = req.body
+    try {
+
+        if (!reference_no) {
+            throw { error: true, message: "Reference number is required as 'reference_no'" }
+        }
+
+        if (winners.length === 0) {
+            throw { error: true, message: "Atleast one winner is required" }
+        }
+
+        const participants = await prisma.comparison.count({
+            where: {
+                bidder_id: {
+                    in: winners
+                }
+            }
+        })
+
+        if (participants !== winners.length) {
+            throw { error: true, message: "One or more bidder(s) from the provided winner's list has not participated in the bidding yet" }
+        }
+
+        await prisma.$transaction(async (tx) => {
+            await tx.bidder_master.updateMany({
+                where: {
+                    reference_no: reference_no,
+                    has_lost: false,
+                    id: {
+                        notIn: winners
+                    }
+                },
+                data: {
+                    has_lost: true
+                }
+            })
+        })
+
+
+        return 'Winner(s) selected'
+
+    } catch (err: any) {
+        console.log(err)
+        return { error: true, message: getErrorMessage(err) }
+    }
+}
