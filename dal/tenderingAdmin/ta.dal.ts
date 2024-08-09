@@ -799,7 +799,7 @@ export const comparisonDal = async (req: Request) => {
 }
 
 export const comparisonResultDal = async (req: Request) => {
-    const { reference_no } = req.body
+    const { reference_no } = req.params
     try {
 
         if (!reference_no) {

@@ -22,7 +22,7 @@ router.post('/submit-criteria', submitCriteria)
 router.post('/add-bidder', upload.fields([{ name: 'emd_doc' }, { name: 'tech_doc' }, { name: 'fin_doc' }]), addBidderDetails)
 router.post('/submit-bidder', submitBidderDetails)
 router.post('/compare', comparison)
-router.post('/comparison-result', comparisonResult)
+router.get('/comparison-result/:reference_no', comparisonResult)
 
 
 export default router
