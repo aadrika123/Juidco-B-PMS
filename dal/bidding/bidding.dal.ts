@@ -26,6 +26,7 @@ export const getBidDetailsDal = async (req: Request) => {
                 creationStatus: true,
                 bidder_master: {
                     where: { has_lost: false },
+                    orderBy: { createdAt: 'desc' },
                     select: {
                         id: true,
                         name: true,

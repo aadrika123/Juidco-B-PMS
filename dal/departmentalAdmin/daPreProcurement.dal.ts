@@ -1017,20 +1017,20 @@ export const getBoqInboxDal = async (req: Request) => {
 					mode: 'insensitive',
 				},
 			},
-			{
-				boq: {
-					procurements: {
-						some: {
-							procurement: {
-								description: {
-									contains: search,
-									mode: 'insensitive',
-								},
-							},
-						},
-					},
-				},
-			},
+			// {
+			// 	boq: {
+			// 		procurements: {
+			// 			some: {
+			// 				procurement: {
+			// 					description: {
+			// 						contains: search,
+			// 						mode: 'insensitive',
+			// 					},
+			// 				},
+			// 			},
+			// 		},
+			// 	},
+			// },
 		]
 	}
 
@@ -1198,20 +1198,20 @@ export const getBoqOutboxDal = async (req: Request) => {
 					mode: 'insensitive',
 				},
 			},
-			{
-				boq: {
-					procurements: {
-						some: {
-							procurement: {
-								description: {
-									contains: search,
-									mode: 'insensitive',
-								},
-							},
-						},
-					},
-				},
-			},
+			// {
+			// 	boq: {
+			// 		procurements: {
+			// 			some: {
+			// 				procurement: {
+			// 					description: {
+			// 						contains: search,
+			// 						mode: 'insensitive',
+			// 					},
+			// 				},
+			// 			},
+			// 		},
+			// 	},
+			// },
 		]
 	}
 
