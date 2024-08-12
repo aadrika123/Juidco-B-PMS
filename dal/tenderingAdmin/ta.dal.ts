@@ -604,7 +604,7 @@ export const addBidderDetailsDal = async (req: Request) => {
                     pan_no: formattedBidder?.pan_no,
                     address: formattedBidder?.address,
                     bank: formattedBidder?.bank,
-                    account_no: formattedBidder?.account_no,
+                    account_no: String(formattedBidder?.account_no),
                     ifsc: formattedBidder?.ifsc,
                     emd: formattedBidder?.emd === 'yes' ? true : false,
                     emd_doc: emd_doc_path[0],
