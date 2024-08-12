@@ -10,7 +10,8 @@ import {
     submitBidderDetails,
     comparison,
     comparisonResult,
-    selectWinner
+    selectWinner,
+    finalizeComparison
 } from "../../controller/tenderingAdmin/ta.controller";
 import { upload } from "../../config/multer.config";
 
@@ -24,6 +25,7 @@ router.post('/add-bidder', upload.fields([{ name: 'emd_doc' }, { name: 'tech_doc
 router.post('/submit-bidder', submitBidderDetails)
 router.post('/compare', comparison)
 router.post('/select-winner', selectWinner)
+router.post('/comparison-finalize', finalizeComparison)
 router.get('/comparison-result/:reference_no', comparisonResult)
 
 
