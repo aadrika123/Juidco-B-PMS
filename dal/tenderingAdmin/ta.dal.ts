@@ -881,6 +881,9 @@ export const selectWinnerDal = async (req: Request) => {
             where: {
                 bidder_id: {
                     in: winners
+                },
+                bidder_master: {
+                    has_lost: false
                 }
             }
         })
