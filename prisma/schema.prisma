@@ -1152,7 +1152,6 @@ enum bid_type_enum {
     technical
     financial
     fintech
-    rate_contract
 }
 
 model ta_inbox {

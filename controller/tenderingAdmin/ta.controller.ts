@@ -9,7 +9,8 @@ import {
     submitBidderDetailsDal,
     comparisonDal,
     comparisonResultDal,
-    selectWinnerDal
+    selectWinnerDal,
+    finalizeComparisonDal
 } from "../../dal/tenderingAdmin/ta.dal";
 
 
@@ -180,6 +181,23 @@ export const selectWinner = async (req: Request, res: Response) => {
         res.status(400).json({
             status: false,
             message: `Error while selecting winner(s)`,
+            error: result?.message
+        })
+    }
+}
+
+export const finalizeComparison = async (req: Request, res: Response) => {
+    const result: any = await finalizeComparisonDal(req)
+    if (!result?.error) {
+        res.status(200).json({
+            status: true,
+            message: `Comparison finalized successfully`,
+            data: result
+        })
+    } else {
+        res.status(400).json({
+            status: false,
+            message: `Error while finalizing comparison`,
             error: result?.message
         })
     }
