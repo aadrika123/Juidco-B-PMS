@@ -1176,7 +1176,7 @@ model bid_details {
     bid_type       bid_type_enum
     no_of_bidders  Int?
     status         Int             @default(0) // 0 = pending
-    creationStatus Int             @default(0) // 0=pending, 1=type selected, 2=criteria added, 3=bidder added, 4=compared, 5=analysed
+    creationStatus Int             @default(0) // 0=pending, 1=type selected, 2=criteria added, 3=bidder added, 41=tech winner selected, 42= fin winner selected, 4=compared, 
     boq            boq             @relation(fields: [reference_no], references: [reference_no])
     createdAt      DateTime        @default(now())
     updatedAt      DateTime        @updatedAt

@@ -841,7 +841,12 @@ export const comparisonResultDal = async (req: Request) => {
             item.total_score = scores[item?.bidder_master?.id]
         })
 
-        // return { result: bidDetails, scores: scores }
+        // const techComparison = await prisma.comparison.count({
+        //     where:{
+                
+        //     }
+        // })
+
         return { bidDetails }
     } catch (err: any) {
         console.log(err)
