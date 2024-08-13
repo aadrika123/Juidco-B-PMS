@@ -832,13 +832,13 @@ export const comparisonResultDal = async (req: Request) => {
 
         const scores = bidDetails.comparison.reduce((acc: any, comparison: any) => {
             const sum = comparison.comparison_criteria.reduce((sumAcc: number, criteria: any) => sumAcc + Number(criteria.value), 0)
-            acc[comparison.bidder_id] = (acc[comparison.bidder_id] || 0) + sum
+            acc[comparison?.bidder_master?.id] = (acc[comparison?.bidder_master?.id] || 0) + sum
             return acc
         }, {})
 
         //assign total score to the response
         bidDetails?.comparison.map((item: any) => {
-            item.total_score = scores[item?.bidder_id]
+            item.total_score = scores[item?.bidder_master?.id]
         })
 
         // return { result: bidDetails, scores: scores }
