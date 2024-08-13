@@ -750,12 +750,22 @@ export const comparisonDal = async (req: Request) => {
         await prisma.$transaction(async tx => {
             await Promise.all(
                 comparison_data.map(async item => {
-                    await tx.comparison.create({
-                        data: {
+
+                    const existingComparisonCount = await prisma.comparison.count({
+                        where: {
                             reference_no: reference_no,
-                            bidder_id: item?.bidder_id,
-                        },
+                            bidder_id: item?.bidder_id
+                        }
                     })
+
+                    if (existingComparisonCount === 0) {
+                        await tx.comparison.create({
+                            data: {
+                                reference_no: reference_no,
+                                bidder_id: item?.bidder_id,
+                            },
+                        })
+                    }
                     await Promise.all(
                         item?.comparison_criteria.map(async criteriaData => {
                             await tx.comparison_criteria.create({
