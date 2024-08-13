@@ -797,7 +797,12 @@ export const comparisonResultDal = async (req: Request) => {
                         },
                     },
                     select: {
-                        bidder_id: true,
+                        bidder_master: {
+                            select: {
+                                id: true,
+                                name: true
+                            }
+                        },
                         comparison_criteria: {
                             select: {
                                 criteria: {
