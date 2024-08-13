@@ -841,11 +841,36 @@ export const comparisonResultDal = async (req: Request) => {
             item.total_score = scores[item?.bidder_master?.id]
         })
 
-        // const techComparison = await prisma.comparison.count({
-        //     where:{
-                
-        //     }
-        // })
+        const techComparison = await prisma.comparison.count({
+            where: {
+                reference_no: reference_no,
+                comparison_criteria: {
+                    some: {
+                        criteria: {
+                            criteria_type: 'technical'
+                        }
+                    }
+                }
+            }
+        })
+
+        const finComparison = await prisma.comparison.count({
+            where: {
+                reference_no: reference_no,
+                comparison_criteria: {
+                    some: {
+                        criteria: {
+                            criteria_type: 'financial'
+                        }
+                    }
+                }
+            }
+        })
+
+        if (bidDetails) {
+            bidDetails.techComparison = techComparison === 0 ? false : true
+            bidDetails.finComparison = finComparison === 0 ? false : true
+        }
 
         return { bidDetails }
     } catch (err: any) {
@@ -881,6 +906,41 @@ export const selectWinnerDal = async (req: Request) => {
             throw { error: true, message: "One or more bidder(s) from the provided winner's list has not participated in the bidding yet" }
         }
 
+        const bidDetailsdata = await prisma.bid_details.findFirst({
+            where: { reference_no: reference_no },
+            select: {
+                bid_type: true
+            }
+        })
+
+        const techComparison = await prisma.comparison.count({
+            where: {
+                reference_no: reference_no,
+                comparison_criteria: {
+                    some: {
+                        criteria: {
+                            criteria_type: 'technical'
+                        }
+                    }
+                }
+            }
+        })
+
+        const finComparison = await prisma.comparison.count({
+            where: {
+                reference_no: reference_no,
+                comparison_criteria: {
+                    some: {
+                        criteria: {
+                            criteria_type: 'financial'
+                        }
+                    }
+                }
+            }
+        })
+
+
+
         await prisma.$transaction(async (tx) => {
             await tx.bidder_master.updateMany({
                 where: {
@@ -894,6 +954,42 @@ export const selectWinnerDal = async (req: Request) => {
                     has_lost: true
                 }
             })
+            if ((bidDetailsdata?.bid_type === 'technical' && techComparison > 0) || (bidDetailsdata?.bid_type === 'fintech' && techComparison > 0)) {
+                await tx.bid_details.update({
+                    where: { reference_no: reference_no },
+                    data: {
+                        creationStatus: 41
+                    }
+                })
+            }
+
+            if ((bidDetailsdata?.bid_type === 'financial' && finComparison > 0) || (bidDetailsdata?.bid_type === 'fintech' && finComparison > 0)) {
+                await tx.bid_details.update({
+                    where: { reference_no: reference_no },
+                    data: {
+                        creationStatus: 42
+                    }
+                })
+            }
+
+            if (bidDetailsdata?.bid_type === 'fintech' && techComparison > 0) {
+                await tx.bid_details.update({
+                    where: { reference_no: reference_no },
+                    data: {
+                        creationStatus: 41
+                    }
+                })
+            }
+
+            if (bidDetailsdata?.bid_type === 'fintech' && finComparison > 0) {
+                await tx.bid_details.update({
+                    where: { reference_no: reference_no },
+                    data: {
+                        creationStatus: 42
+                    }
+                })
+            }
+
         })
 
 
