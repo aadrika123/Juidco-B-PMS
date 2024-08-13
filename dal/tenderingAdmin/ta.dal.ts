@@ -972,24 +972,6 @@ export const selectWinnerDal = async (req: Request) => {
                 })
             }
 
-            if (bidDetailsdata?.bid_type === 'fintech' && techComparison > 0) {
-                await tx.bid_details.update({
-                    where: { reference_no: reference_no },
-                    data: {
-                        creationStatus: 41
-                    }
-                })
-            }
-
-            if (bidDetailsdata?.bid_type === 'fintech' && finComparison > 0) {
-                await tx.bid_details.update({
-                    where: { reference_no: reference_no },
-                    data: {
-                        creationStatus: 42
-                    }
-                })
-            }
-
         })
 
 
