@@ -739,7 +739,7 @@ export const comparisonDal = async (req: Request) => {
             },
         })
 
-        if (bidDetails?.creationStatus !== 3) {
+        if (bidDetails?.creationStatus !== 3 && bidDetails?.creationStatus !== 41 && bidDetails?.creationStatus !== 42) {
             throw { error: true, message: 'Current creation status is not valid for this step ' }
         }
 
