@@ -72,6 +72,7 @@ model unit_master {
 model supplier_master {
     id                     String                   @id @default(uuid())
     name                   String
+    reference_no           String?
     gst_no                 String
     pan_no                 String?
     address                String?
@@ -85,6 +86,7 @@ model supplier_master {
     procurement            procurement[]
     procurement_history    procurement_history[]
     procurement_before_boq procurement_before_boq[]
+    bid_details            bid_details?             @relation(fields: [reference_no], references: [reference_no])
 }
 
 // pre-procurement============================================================================================================================================================================================================================================================================================================
@@ -1171,18 +1173,19 @@ model ta_outbox {
 }
 
 model bid_details {
-    id             String          @id @default(uuid())
-    reference_no   String          @unique
-    bid_type       bid_type_enum
-    no_of_bidders  Int?
-    status         Int             @default(0) // 0 = pending
-    creationStatus Int             @default(0) // 0=pending, 1=type selected, 2=criteria added, 3=bidder added, 41=tech winner selected, 42= fin winner selected, 4=compared, 
-    boq            boq             @relation(fields: [reference_no], references: [reference_no])
-    createdAt      DateTime        @default(now())
-    updatedAt      DateTime        @updatedAt
-    criteria       criteria[]
-    bidder_master  bidder_master[]
-    comparison     comparison[]
+    id              String            @id @default(uuid())
+    reference_no    String            @unique
+    bid_type        bid_type_enum
+    no_of_bidders   Int?
+    status          Int               @default(0) // 0 = pending
+    creationStatus  Int               @default(0) // 0=pending, 1=type selected, 2=criteria added, 3=bidder added, 41=tech winner selected, 42= fin winner selected, 4=compared, 
+    boq             boq               @relation(fields: [reference_no], references: [reference_no])
+    createdAt       DateTime          @default(now())
+    updatedAt       DateTime          @updatedAt
+    criteria        criteria[]
+    bidder_master   bidder_master[]
+    comparison      comparison[]
+    supplier_master supplier_master[]
 }
 
 enum criteria_type_enum {

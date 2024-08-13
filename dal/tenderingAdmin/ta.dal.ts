@@ -1074,6 +1074,7 @@ export const finalizeComparisonDal = async (req: Request) => {
                 bidderMasterDetails.map(async bidder => {
                     await tx.supplier_master.create({
                         data: {
+                            reference_no: reference_no,
                             name: bidder?.name,
                             gst_no: bidder?.gst_no,
                             pan_no: bidder?.pan_no,
