@@ -831,7 +831,7 @@ export const comparisonResultDal = async (req: Request) => {
         })
 
         const scores = bidDetails.comparison.reduce((acc: any, comparison: any) => {
-            const sum = comparison.comparison_criteria.reduce((sumAcc: any, criteria: any) => sumAcc + criteria.value, 0)
+            const sum = comparison.comparison_criteria.reduce((sumAcc: number, criteria: any) => sumAcc + Number(criteria.value), 0)
             acc[comparison.bidder_id] = (acc[comparison.bidder_id] || 0) + sum
             return acc
         }, {})
