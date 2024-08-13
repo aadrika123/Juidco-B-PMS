@@ -24,6 +24,15 @@ export const getBidDetailsDal = async (req: Request) => {
                 no_of_bidders: true,
                 status: true,
                 creationStatus: true,
+                boq: {
+                    select: {
+                        pre_tendering_details: {
+                            select: {
+                                tendering_type: true
+                            }
+                        }
+                    }
+                },
                 bidder_master: {
                     where: { has_lost: false },
                     orderBy: { createdAt: 'desc' },
