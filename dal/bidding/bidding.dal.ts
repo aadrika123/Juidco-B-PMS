@@ -115,8 +115,10 @@ export const getBidDetailsDal = async (req: Request) => {
             }
         })
 
-        result.techCriteria = techCriteria
-        result.finCriteria = finCriteria
+        if (result) {
+            result.techCriteria = techCriteria
+            result.finCriteria = finCriteria
+        }
 
         return result
     } catch (err: any) {
