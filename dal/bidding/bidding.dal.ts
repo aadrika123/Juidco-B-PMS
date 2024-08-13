@@ -115,9 +115,37 @@ export const getBidDetailsDal = async (req: Request) => {
             }
         })
 
+        const techComparison = await prisma.comparison.count({
+            where: {
+                reference_no: reference_no,
+                comparison_criteria: {
+                    some: {
+                        criteria: {
+                            criteria_type: 'technical'
+                        }
+                    }
+                }
+            }
+        })
+
+        const finComparison = await prisma.comparison.count({
+            where: {
+                reference_no: reference_no,
+                comparison_criteria: {
+                    some: {
+                        criteria: {
+                            criteria_type: 'financial'
+                        }
+                    }
+                }
+            }
+        })
+
         if (result) {
             result.techCriteria = techCriteria
             result.finCriteria = finCriteria
+            result.techComparison = techComparison === 0 ? false : true
+            result.finComparison = finComparison === 0 ? false : true
         }
 
         return result
