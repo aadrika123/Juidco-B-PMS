@@ -796,6 +796,52 @@ export const comparisonResultDal = async (req: Request) => {
             throw { error: true, message: "Reference number is required as 'reference_no'" }
         }
 
+        const bid_type = await prisma.bid_details.findFirst({
+            where: { reference_no: reference_no },
+            select: {
+                bid_type: true
+            }
+        })
+
+
+        const techComparison = await prisma.comparison.count({
+            where: {
+                reference_no: reference_no,
+                comparison_criteria: {
+                    some: {
+                        criteria: {
+                            criteria_type: 'technical'
+                        }
+                    }
+                }
+            }
+        })
+
+        const finComparison = await prisma.comparison.count({
+            where: {
+                reference_no: reference_no,
+                comparison_criteria: {
+                    some: {
+                        criteria: {
+                            criteria_type: 'financial'
+                        }
+                    }
+                }
+            }
+        })
+
+        const comparisonTypeFilter = () => {
+            if (bid_type?.bid_type === 'financial') {
+                return 'financial'
+            } else if (bid_type?.bid_type === 'technical') {
+                return 'technical'
+            } else if (bid_type?.bid_type === 'fintech' && techComparison === 0) {
+                return 'technical'
+            } else {
+                return "financial"
+            }
+        }
+
         const bidDetails: any = await prisma.bid_details.findFirst({
             where: { reference_no: reference_no },
             select: {
@@ -805,6 +851,13 @@ export const comparisonResultDal = async (req: Request) => {
                         bidder_master: {
                             has_lost: false,
                         },
+                        comparison_criteria: {
+                            some: {
+                                criteria: {
+                                    criteria_type: comparisonTypeFilter()
+                                }
+                            }
+                        }
                     },
                     select: {
                         bidder_master: {
@@ -822,6 +875,7 @@ export const comparisonResultDal = async (req: Request) => {
                                         description: true,
                                     },
                                 },
+                                comparison_type: true,
                                 value: true,
                             },
                         },
@@ -851,31 +905,6 @@ export const comparisonResultDal = async (req: Request) => {
             item.total_score = scores[item?.bidder_master?.id]
         })
 
-        const techComparison = await prisma.comparison.count({
-            where: {
-                reference_no: reference_no,
-                comparison_criteria: {
-                    some: {
-                        criteria: {
-                            criteria_type: 'technical'
-                        }
-                    }
-                }
-            }
-        })
-
-        const finComparison = await prisma.comparison.count({
-            where: {
-                reference_no: reference_no,
-                comparison_criteria: {
-                    some: {
-                        criteria: {
-                            criteria_type: 'financial'
-                        }
-                    }
-                }
-            }
-        })
 
         if (bidDetails) {
             bidDetails.techComparison = techComparison === 0 ? false : true

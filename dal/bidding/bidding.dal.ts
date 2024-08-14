@@ -83,7 +83,8 @@ export const getBidDetailsDal = async (req: Request) => {
                                 criteria: {
                                     select: {
                                         id: true,
-                                        heading: true
+                                        heading: true,
+                                        description: true
                                     }
                                 },
                                 value: true
