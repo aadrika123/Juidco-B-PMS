@@ -850,13 +850,6 @@ export const comparisonResultDal = async (req: Request) => {
                     where: {
                         bidder_master: {
                             has_lost: false,
-                        },
-                        comparison_criteria: {
-                            some: {
-                                criteria: {
-                                    criteria_type: comparisonTypeFilter()
-                                }
-                            }
                         }
                     },
                     select: {
@@ -867,6 +860,11 @@ export const comparisonResultDal = async (req: Request) => {
                             }
                         },
                         comparison_criteria: {
+                            where: {
+                                criteria: {
+                                    criteria_type: comparisonTypeFilter()
+                                }
+                            },
                             select: {
                                 criteria: {
                                     select: {
