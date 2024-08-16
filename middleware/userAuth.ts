@@ -11,69 +11,137 @@ export const extractRoles = async (userId: number) => {
 }
 
 export const srAuth = async (req: Request, res: Response, next: NextFunction) => {
-	// if (req.headers['content-type'] && req.headers['content-type'].includes('multipart/form-data') && Object.keys(req?.body).length === 0) {
-	// 	return next()
-	// }
-	// const authData = typeof req?.body?.auth === 'string' ? JSON.parse(req?.body?.auth) : req?.body?.auth
-	// const roles = await extractRoles(authData?.id)
-	// if (!roles) {
-	// 	res.status(401).send({ error: true, message: 'Role ID is required' })
-	// }
-	// if (!roles.includes(Number(process.env.ROLE_SR))) {
-	// 	res.status(401).send({ error: true, message: 'User not authorized to access this api' })
-	// } else {
-	// 	next()
-	// }
-	next()
+	if (req.headers['content-type'] && req.headers['content-type'].includes('multipart/form-data') && Object.keys(req?.body).length === 0) {
+		return next()
+	}
+	const authData = typeof req?.body?.auth === 'string' ? JSON.parse(req?.body?.auth) : req?.body?.auth
+	const roles = await extractRoles(authData?.id)
+	if (!roles) {
+		res.status(401).send({ error: true, message: 'Role ID is required' })
+	}
+	if (!roles.includes(Number(process.env.ROLE_SR))) {
+		res.status(401).send({ error: true, message: 'User not authorized to access this api' })
+	} else {
+		next()
+	}
+	// next()
 }
 
 export const daAuth = async (req: Request, res: Response, next: NextFunction) => {
-	// if (req.headers['content-type'] && req.headers['content-type'].includes('multipart/form-data') && Object.keys(req?.body).length === 0) {
-	// 	return next()
-	// }
-	// const authData = typeof req?.body?.auth === 'string' ? JSON.parse(req?.body?.auth) : req?.body?.auth
-	// const roles = await extractRoles(authData?.id)
-	// if (!roles) {
-	// 	res.status(401).send({ error: true, message: 'Role ID is required' })
-	// }
-	// if (!roles.includes(Number(process.env.ROLE_DA))) {
-	// 	res.status(401).send({ error: true, message: 'User not authorized to access this api' })
-	// } else {
-	// 	next()
-	// }
-	next()
+	if (req.headers['content-type'] && req.headers['content-type'].includes('multipart/form-data') && Object.keys(req?.body).length === 0) {
+		return next()
+	}
+	const authData = typeof req?.body?.auth === 'string' ? JSON.parse(req?.body?.auth) : req?.body?.auth
+	const roles = await extractRoles(authData?.id)
+	if (!roles) {
+		res.status(401).send({ error: true, message: 'Role ID is required' })
+	}
+	if (!roles.includes(Number(process.env.ROLE_DA))) {
+		res.status(401).send({ error: true, message: 'User not authorized to access this api' })
+	} else {
+		next()
+	}
+	// next()
 }
 
 export const accAuth = async (req: Request, res: Response, next: NextFunction) => {
-	// if (req.headers['content-type'] && req.headers['content-type'].includes('multipart/form-data') && Object.keys(req?.body).length === 0) {
-	// 	return next()
-	// }
-	// const authData = typeof req?.body?.auth === 'string' ? JSON.parse(req?.body?.auth) : req?.body?.auth
-	// const roles = await extractRoles(authData?.id)
-	// if (!roles) {
-	// 	res.status(401).send({ error: true, message: 'Role ID is required' })
-	// }
-	// if (!roles.includes(Number(process.env.ROLE_ACC))) {
-	// 	res.status(401).send({ error: true, message: 'User not authorized to access this api' })
-	// } else {
-	// 	next()
-	// }
-	next()
+	if (req.headers['content-type'] && req.headers['content-type'].includes('multipart/form-data') && Object.keys(req?.body).length === 0) {
+		return next()
+	}
+	const authData = typeof req?.body?.auth === 'string' ? JSON.parse(req?.body?.auth) : req?.body?.auth
+	const roles = await extractRoles(authData?.id)
+	if (!roles) {
+		res.status(401).send({ error: true, message: 'Role ID is required' })
+	}
+	if (!roles.includes(Number(process.env.ROLE_ACC))) {
+		res.status(401).send({ error: true, message: 'User not authorized to access this api' })
+	} else {
+		next()
+	}
+	// next()
 }
 
 export const distAuth = async (req: Request, res: Response, next: NextFunction) => {
-	// if (req.headers['content-type'] && req.headers['content-type'].includes('multipart/form-data') && Object.keys(req?.body).length === 0) {
-	// 	return next()
-	// }
-	// const authData = typeof req?.body?.auth === 'string' ? JSON.parse(req?.body?.auth) : req?.body?.auth
-	// const roles = await extractRoles(authData?.id)
-	// if (!roles) {
-	// 	res.status(401).send({ error: true, message: 'Role ID is required' })
-	// }
-	// if (!roles.includes(Number(process.env.ROLE_DIST))) {
-	// 	res.status(401).send({ error: true, message: 'User not authorized to access this api' })
-	// } else {
-	// 	next()
-	// }
-	next()
+	if (req.headers['content-type'] && req.headers['content-type'].includes('multipart/form-data') && Object.keys(req?.body).length === 0) {
+		return next()
+	}
+	const authData = typeof req?.body?.auth === 'string' ? JSON.parse(req?.body?.auth) : req?.body?.auth
+	const roles = await extractRoles(authData?.id)
+	if (!roles) {
+		res.status(401).send({ error: true, message: 'Role ID is required' })
+	}
+	if (!roles.includes(Number(process.env.ROLE_DIST))) {
+		res.status(401).send({ error: true, message: 'User not authorized to access this api' })
+	} else {
+		next()
+	}
+	// next()
+}
+
+export const iaAuth = async (req: Request, res: Response, next: NextFunction) => {
+	if (req.headers['content-type'] && req.headers['content-type'].includes('multipart/form-data') && Object.keys(req?.body).length === 0) {
+		return next()
+	}
+	const authData = typeof req?.body?.auth === 'string' ? JSON.parse(req?.body?.auth) : req?.body?.auth
+	const roles = await extractRoles(authData?.id)
+	if (!roles) {
+		res.status(401).send({ error: true, message: 'Role ID is required' })
+	}
+	if (!roles.includes(Number(process.env.ROLE_IA))) {
+		res.status(401).send({ error: true, message: 'User not authorized to access this api' })
+	} else {
+		next()
+	}
+	// next()
+}
+
+export const taAuth = async (req: Request, res: Response, next: NextFunction) => {
+	if (req.headers['content-type'] && req.headers['content-type'].includes('multipart/form-data') && Object.keys(req?.body).length === 0) {
+		return next()
+	}
+	const authData = typeof req?.body?.auth === 'string' ? JSON.parse(req?.body?.auth) : req?.body?.auth
+	const roles = await extractRoles(authData?.id)
+	if (!roles) {
+		res.status(401).send({ error: true, message: 'Role ID is required' })
+	}
+	if (!roles.includes(Number(process.env.ROLE_TA))) {
+		res.status(401).send({ error: true, message: 'User not authorized to access this api' })
+	} else {
+		next()
+	}
+	// next()
+}
+
+export const level1Auth = async (req: Request, res: Response, next: NextFunction) => {
+	if (req.headers['content-type'] && req.headers['content-type'].includes('multipart/form-data') && Object.keys(req?.body).length === 0) {
+		return next()
+	}
+	const authData = typeof req?.body?.auth === 'string' ? JSON.parse(req?.body?.auth) : req?.body?.auth
+	const roles = await extractRoles(authData?.id)
+	if (!roles) {
+		res.status(401).send({ error: true, message: 'Role ID is required' })
+	}
+	if (!roles.includes(Number(process.env.ROLE_LEVEL1))) {
+		res.status(401).send({ error: true, message: 'User not authorized to access this api' })
+	} else {
+		next()
+	}
+	// next()
+}
+
+export const level2Auth = async (req: Request, res: Response, next: NextFunction) => {
+	if (req.headers['content-type'] && req.headers['content-type'].includes('multipart/form-data') && Object.keys(req?.body).length === 0) {
+		return next()
+	}
+	const authData = typeof req?.body?.auth === 'string' ? JSON.parse(req?.body?.auth) : req?.body?.auth
+	const roles = await extractRoles(authData?.id)
+	if (!roles) {
+		res.status(401).send({ error: true, message: 'Role ID is required' })
+	}
+	if (!roles.includes(Number(process.env.ROLE_LEVEL2))) {
+		res.status(401).send({ error: true, message: 'User not authorized to access this api' })
+	} else {
+		next()
+	}
+	// next()
 }

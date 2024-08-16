@@ -2,6 +2,10 @@ import express from 'express'
 const router = express.Router()
 import { getInbox, getOutbox, rejectionByLevel2, returnToLevel1, approvalByLevel2 } from '../../controller/level2/level2.controller'
 
+import { level2Auth } from '../../middleware/userAuth'
+
+router.use(level2Auth)
+
 router.get('/', getInbox)
 router.get('/outbox', getOutbox)
 router.post('/reject', rejectionByLevel2)
