@@ -1,6 +1,6 @@
 import express from 'express'
 import { upload } from '../../../config/multer.config'
-import { daAuth } from '../../../middleware/userAuth'
+import { daAuth, iaAuth } from '../../../middleware/userAuth'
 const router = express.Router()
 import {
 	backToSr,
@@ -28,14 +28,14 @@ import {
 	forwardToFinance,
 } from '../../../controller/departmentalAdmin/daPreProcurement.controller'
 
-router.use(daAuth)
+// router.use(daAuth)
 
-router.get('/pre-procurement/pre-tender', getPreTenderingInbox)
-router.get('/pre-procurement/pre-tender/outbox', getPreTenderingOutbox)
-router.get('/pre-procurement/boq', getBoqInbox)
+router.get('/pre-procurement/pre-tender', iaAuth, getPreTenderingInbox)
+router.get('/pre-procurement/pre-tender/outbox', iaAuth, getPreTenderingOutbox)
+router.get('/pre-procurement/boq', iaAuth, getBoqInbox)
 router.get('/pre-procurement', getPreProcurement)
-router.get('/pre-procurement/boq/outbox', getBoqOutbox)
-router.post('/pre-procurement/boq/to-finance', forwardToFinance)
+router.get('/pre-procurement/boq/outbox', iaAuth, getBoqOutbox)
+router.post('/pre-procurement/boq/to-finance', iaAuth, forwardToFinance)
 router.get('/pre-procurement/outbox', getPreProcurementOutbox)
 router.get('/pre-procurement/outbox/:id', getPreProcurementOutboxById)
 router.get('/pre-procurement/:id', getPreProcurementById)
@@ -48,11 +48,11 @@ router.post('/pre-procurement/reject', reject)
 router.post('/pre-procurement/reject-procurement-no', rejectByProcurementNo)
 router.post('/pre-procurement/to-acc-boq', upload.array('img'), daAuth, forwardToAccountant)
 router.post('/pre-procurement/boq/return-boq', returnToAccountant)
-router.post('/pre-procurement/boq/reject', rejectBoq)
-router.post('/pre-procurement/boq/approve', approveBoqForPt)
+router.post('/pre-procurement/boq/reject', iaAuth, rejectBoq)
+router.post('/pre-procurement/boq/approve', iaAuth, approveBoqForPt)
 router.post('/pre-procurement/pre-tender/approve', upload.array('img'), daAuth, approvePreTender)
-router.post('/pre-procurement/pre-tender/reject', rejectPreTender)
-router.post('/pre-procurement/pre-tender/to-acc', returnToAccPt)
+router.post('/pre-procurement/pre-tender/reject', iaAuth, rejectPreTender)
+router.post('/pre-procurement/pre-tender/to-acc', iaAuth, returnToAccPt)
 
 //new flow with level 1 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 
