@@ -3,7 +3,6 @@ import { PrismaClient } from '@prisma/client'
 import getErrorMessage from '../../lib/getErrorMessage'
 import { imageUploader } from '../../lib/imageUploader'
 import { pagination } from '../../type/common.type'
-import axios from 'axios'
 
 const prisma = new PrismaClient()
 
