@@ -539,13 +539,21 @@ export const addBidderDetailsDal = async (req: Request) => {
             throw { error: true, message: 'No pre tender details found with this reference number' }
         }
 
-        if (!emd_doc) {
+        const preTenderDetails = await prisma.pre_tendering_details.findFirst({
+            where: { reference_no: formattedBidder?.reference_no },
+            select: {
+                emd: true
+            }
+        })
+
+        if (preTenderDetails?.emd && !emd_doc) {
             throw { error: true, message: "EMD document is required as 'emd_doc'" }
         }
 
         const bidDetailsData = await prisma.bid_details.findFirst({
             where: { reference_no: formattedBidder?.reference_no },
             select: {
+                bid_type: true,
                 creationStatus: true,
                 no_of_bidders: true,
                 _count: {
@@ -567,6 +575,18 @@ export const addBidderDetailsDal = async (req: Request) => {
 
         if (bidDetailsData?.creationStatus !== 2) {
             throw { error: true, message: 'Current creation status is not valid for this step ' }
+        }
+
+        if (bidDetailsData?.bid_type === 'technical' && !tech_doc) {
+            throw { error: true, message: 'Technical document is required' }
+        }
+
+        if (bidDetailsData?.bid_type === 'financial' && !fin_doc) {
+            throw { error: true, message: 'Financial document is required' }
+        }
+
+        if (bidDetailsData?.bid_type === 'fintech' && !fin_doc && !tech_doc) {
+            throw { error: true, message: 'Both financial and technical documents are required' }
         }
 
         const emd_doc_path = await imageUploaderV2(emd_doc)

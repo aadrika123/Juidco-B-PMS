@@ -31,11 +31,16 @@ export const createPreProcurementDal = async (req: Request) => {
 		procurement_no: procurement_no,
 	}
 
-	if (!procurement || procurement.length === 0) {
-		throw { error: true, message: 'List of procurements are mandatory' }
-	}
-
 	try {
+
+		if (!category) {
+			throw { error: true, message: 'Category is mandatory' }
+		}
+
+		if (!procurement || procurement.length === 0) {
+			throw { error: true, message: 'List of procurements are mandatory' }
+		}
+
 		const total_rate = procurement.reduce((total, item) => total + item?.total_rate, 0)
 
 		await prisma.$transaction(async tx => {
@@ -274,43 +279,43 @@ export const getPreProcurementDal = async (req: Request) => {
 		whereClause.AND = [
 			...(category[0]
 				? [
-						{
-							category_masterId: {
-								in: category,
-							},
+					{
+						category_masterId: {
+							in: category,
 						},
-					]
+					},
+				]
 				: []),
 			...(subcategory[0]
 				? [
-						{
-							procurement_stocks: {
-								subcategory_masterId: {
-									in: subcategory,
-								},
+					{
+						procurement_stocks: {
+							subcategory_masterId: {
+								in: subcategory,
 							},
 						},
-					]
+					},
+				]
 				: []),
 			...(brand[0]
 				? [
-						{
-							procurement_stocks: {
-								brand_masterId: {
-									in: brand,
-								},
+					{
+						procurement_stocks: {
+							brand_masterId: {
+								in: brand,
 							},
 						},
-					]
+					},
+				]
 				: []),
 			...(status[0]
 				? [
-						{
-							status: {
-								in: status.map(Number),
-							},
+					{
+						status: {
+							in: status.map(Number),
 						},
-					]
+					},
+				]
 				: []),
 		]
 	}
@@ -594,12 +599,12 @@ export const forwardToDaDal = async (req: Request) => {
 					}),
 					...(daOutbox !== 0
 						? [
-								prisma.da_pre_procurement_outbox.delete({
-									where: {
-										procurement_no: inbox?.procurement_no,
-									},
-								}),
-							]
+							prisma.da_pre_procurement_outbox.delete({
+								where: {
+									procurement_no: inbox?.procurement_no,
+								},
+							}),
+						]
 						: []),
 					prisma.notification.create({
 						data: {
@@ -931,43 +936,43 @@ export const getPreProcurementOutboxDal = async (req: Request) => {
 		whereClause.AND = [
 			...(category[0]
 				? [
-						{
-							category_masterId: {
-								in: category,
-							},
+					{
+						category_masterId: {
+							in: category,
 						},
-					]
+					},
+				]
 				: []),
 			...(subcategory[0]
 				? [
-						{
-							procurement_stocks: {
-								subcategory_masterId: {
-									in: subcategory,
-								},
+					{
+						procurement_stocks: {
+							subcategory_masterId: {
+								in: subcategory,
 							},
 						},
-					]
+					},
+				]
 				: []),
 			...(brand[0]
 				? [
-						{
-							procurement_stocks: {
-								brand_masterId: {
-									in: brand,
-								},
+					{
+						procurement_stocks: {
+							brand_masterId: {
+								in: brand,
 							},
 						},
-					]
+					},
+				]
 				: []),
 			...(status[0]
 				? [
-						{
-							status: {
-								in: status.map(Number),
-							},
+					{
+						status: {
+							in: status.map(Number),
 						},
-					]
+					},
+				]
 				: []),
 		]
 	}
@@ -1475,10 +1480,10 @@ export const editPreProcurementDal = async (req: Request) => {
 		await prisma.$transaction([
 			...(historyExistence === 0
 				? [
-						prisma.procurement_history.create({
-							data: tempData,
-						}),
-					]
+					prisma.procurement_history.create({
+						data: tempData,
+					}),
+				]
 				: []),
 			prisma.procurement.update({
 				where: {
