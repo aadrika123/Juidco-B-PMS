@@ -7,7 +7,7 @@ import {
     getPostProcurementByOrderNo,
     SaveAdditionalDetailsProcurement,
     getPostProcurementOutbox,
-    getPostProcurementOutboxById
+    getPostProcurementOutboxById,
 } from "../../../controller/departmentalAdmin/daPostProcurement.controller";
 
 router.use(iaAuth)

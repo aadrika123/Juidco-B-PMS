@@ -1,5 +1,5 @@
 import { Request, Response } from 'express'
-import { createSupplierDal, getSupplierByIdDal, getSupplierDal, editSupplierDal, switchStatusDal, getSupplierActiveOnlyDal } from '../../dal/masterEntry/supplier.dal'
+import { createSupplierDal, getSupplierByIdDal, getSupplierDal, editSupplierDal, switchStatusDal, getSupplierActiveOnlyDal, getSupplierByProcurementNoDal } from '../../dal/masterEntry/supplier.dal'
 
 export const createSupplier = async (req: Request, res: Response) => {
 	const result: any = await createSupplierDal(req)
@@ -96,6 +96,23 @@ export const switchStatus = async (req: Request, res: Response) => {
 			status: false,
 			message: `Status switch failed`,
 			error: result?.message,
+		})
+	}
+}
+
+export const getSupplierByProcurementNo = async (req: Request, res: Response) => {
+	const result: any = await getSupplierByProcurementNoDal(req)
+	if (!result?.error) {
+		res.status(200).json({
+			status: true,
+			message: `Supplier details fetched`,
+			data: result
+		})
+	} else {
+		res.status(404).json({
+			status: false,
+			message: `Error while fetching supplier details`,
+			error: result?.message
 		})
 	}
 }
