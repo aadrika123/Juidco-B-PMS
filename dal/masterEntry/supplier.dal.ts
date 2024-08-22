@@ -56,10 +56,10 @@ export const getSupplierDal = async (req: Request) => {
 		whereClause.AND = [
 			...(status !== undefined
 				? [
-						{
-							status: status,
-						},
-					]
+					{
+						status: status,
+					},
+				]
 				: []),
 		]
 	}
@@ -166,6 +166,25 @@ export const switchStatusDal = async (req: Request) => {
 		return result
 	} catch (err: any) {
 		console.log(err)
+		return { error: true, message: err?.message }
+	}
+}
+
+export const getSupplierByProcurementNoDal = async (req: Request) => {
+	const { procurement_no } = req.params
+
+
+	try {
+
+		const data = await prisma.supplier_master.findMany({
+			where: {
+				procurement_no: procurement_no
+			}
+		})
+
+		return data
+	} catch (err: any) {
+		console.log(err?.message)
 		return { error: true, message: err?.message }
 	}
 }

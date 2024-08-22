@@ -5,7 +5,7 @@ import {
     getPostProcurementByOrderNoDal,
     SaveAdditionalDetailsProcurementDal,
     getPostProcurementOutboxDal,
-    getPostProcurementOutboxByIdDal
+    getPostProcurementOutboxByIdDal,
 } from "../../dal/departmentalAdmin/daPostProcurement.dal";
 
 
