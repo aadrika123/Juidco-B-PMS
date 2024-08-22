@@ -73,6 +73,7 @@ model supplier_master {
     id                     String                   @id @default(uuid())
     name                   String
     reference_no           String?
+    procurement_no         String?
     gst_no                 String
     pan_no                 String?
     address                String?
@@ -83,7 +84,7 @@ model supplier_master {
     createdAt              DateTime                 @default(now())
     updatedAt              DateTime                 @updatedAt
     inventory              inventory[]
-    procurement            procurement[]
+    procurement            procurement?             @relation(fields: [procurement_no], references: [procurement_no])
     procurement_history    procurement_history[]
     procurement_before_boq procurement_before_boq[]
     bid_details            bid_details?             @relation(fields: [reference_no], references: [reference_no])
@@ -370,8 +371,6 @@ model procurement {
     acc_pre_procurement_inbox    acc_pre_procurement_inbox?
     acc_pre_procurement_outbox   acc_pre_procurement_outbox?
     ia_pre_procurement_inbox     ia_pre_procurement_inbox?
-    supplier_master              supplier_master?              @relation(fields: [supplier_masterId], references: [id])
-    supplier_masterId            String?
     procurement_stocks           procurement_stocks[]
     ia_pre_procurement_outbox    ia_pre_procurement_outbox?
     level1_inbox                 level1_inbox?
@@ -380,6 +379,7 @@ model procurement {
     level2_outbox                level2_outbox?
     procurement_stocks_history   procurement_stocks_history[]
     boq                          boq?
+    supplier_master              supplier_master[]
 }
 
 model procurement_stocks {

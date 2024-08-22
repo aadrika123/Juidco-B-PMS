@@ -5,10 +5,6 @@ import path from 'path';
 const storage = multer.memoryStorage()
 
 function fileFilter(req: Request, file: Express.Multer.File, cb: FileFilterCallback) {
-    // if (path.extname(file.originalname) !== '.pdf') {
-    //     return cb(new Error('Only pdfs are allowed'))
-    // }
-    // cb(null, true)
     const filetypes = /jpeg|jpg|png|gif|pdf|csv|xlsx/;
     const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
     const mimetype = filetypes.test(file.mimetype);
