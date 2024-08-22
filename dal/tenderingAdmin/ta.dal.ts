@@ -1054,7 +1054,12 @@ export const finalizeComparisonDal = async (req: Request) => {
             },
             select: {
                 reference_no: true,
-                bid_type: true
+                bid_type: true,
+                boq: {
+                    select: {
+                        procurement_no: true
+                    }
+                }
             }
         })
 
@@ -1122,6 +1127,7 @@ export const finalizeComparisonDal = async (req: Request) => {
                     await tx.supplier_master.create({
                         data: {
                             reference_no: reference_no,
+                            procurement_no: bidDetailsData?.boq?.procurement_no as string,
                             name: bidder?.name,
                             gst_no: bidder?.gst_no,
                             pan_no: bidder?.pan_no,
@@ -1142,6 +1148,22 @@ export const finalizeComparisonDal = async (req: Request) => {
                     creationStatus: 4
                 }
             })
+
+            await tx.da_post_procurement_inbox.create({
+                data: {
+                    procurement_no: bidDetailsData?.boq?.procurement_no as string
+                }
+            })
+
+            await tx.notification.create({
+                data: {
+                    role_id: Number(process.env.ROLE_IA),
+                    title: 'Bidding completed',
+                    destination: 23,
+                    description: `Bidding completed for Procurement Number : ${bidDetailsData?.boq?.procurement_no}`,
+                },
+            })
+
         })
 
         return 'Comparison finalized'

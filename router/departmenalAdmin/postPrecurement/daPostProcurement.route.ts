@@ -1,6 +1,6 @@
 import express from "express";
 const router = express.Router()
-import { daAuth } from "../../../middleware/userAuth";
+import { iaAuth } from "../../../middleware/userAuth";
 import {
     getPostProcurement,
     getPostProcurementById,
@@ -10,7 +10,7 @@ import {
     getPostProcurementOutboxById
 } from "../../../controller/departmentalAdmin/daPostProcurement.controller";
 
-router.use(daAuth)
+router.use(iaAuth)
 
 router.get('/', getPostProcurement)
 router.get('/by-order-no/:order_no', getPostProcurementByOrderNo)
