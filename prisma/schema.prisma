@@ -194,18 +194,20 @@ model sr_post_procurement_inbox {
 // received inventory============================================================================================================================================================================================================================================================================================================
 
 model receivings {
-    id                 String            @id @default(uuid())
-    procurement_no     String?
-    receiving_no       String            @unique
-    date               DateTime?         @db.Date
-    received_quantity  Int?
-    remaining_quantity Int?
-    is_added           Boolean           @default(false)
-    remark             String?
-    procurement        procurement?      @relation(fields: [procurement_no], references: [procurement_no])
-    createdAt          DateTime          @default(now())
-    updatedAt          DateTime          @updatedAt
-    receiving_image    receiving_image[]
+    id                   String              @id @default(uuid())
+    procurement_no       String?
+    procurement_stock_id String?
+    receiving_no         String              @unique
+    date                 DateTime?           @db.Date
+    received_quantity    Int?
+    remaining_quantity   Int?
+    is_added             Boolean             @default(false)
+    remark               String?
+    procurement          procurement?        @relation(fields: [procurement_no], references: [procurement_no])
+    procurement_stock    procurement_stocks? @relation(fields: [procurement_stock_id], references: [id])
+    createdAt            DateTime            @default(now())
+    updatedAt            DateTime            @updatedAt
+    receiving_image      receiving_image[]
 }
 
 model receiving_image {
@@ -350,7 +352,7 @@ model procurement {
     total_rate                   Float?
     isEdited                     Boolean                       @default(false)
     is_partial                   Boolean                       @default(true)
-    status                       Int                           @default(0) //   0=pending, 10=level1, 11=level1 returned, 12=level1 rejected, 13=level1 revised, 14=level1 approved, 20=level2, 21=level2 return, 22=level2 rejected, 23=level2 revised, 24=level2 approved       
+    status                       Int                           @default(0) //   0=pending, 10=level1, 11=level1 returned, 12=level1 rejected, 13=level1 revised, 14=level1 approved, 20=level2, 21=level2 return, 22=level2 rejected, 23=level2 revised, 24=level2 approved, 3=supplier assigned, 4=stock partially recieved, 5=stock recieved, 6=partially added, 7=added     
     remark                       String?
     createdAt                    DateTime                      @default(now())
     updatedAt                    DateTime                      @updatedAt
@@ -405,6 +407,7 @@ model procurement_stocks {
     boq_procurement_no         String?
     procurement_stocks_history procurement_stocks_history?
     boq                        boq?                        @relation(fields: [boq_procurement_no], references: [procurement_no])
+    receivings                 receivings[]
 }
 
 model procurement_stocks_history {

@@ -493,6 +493,15 @@ export const SaveAdditionalDetailsProcurementDal = async (req: Request) => {
                 }
             })
 
+            await tx.procurement.update({
+                where: {
+                    procurement_no: procurement_no
+                },
+                data: {
+                    status: 3
+                }
+            })
+
             await tx.notification.create({
                 data: {
                     role_id: Number(process.env.ROLE_IA),
