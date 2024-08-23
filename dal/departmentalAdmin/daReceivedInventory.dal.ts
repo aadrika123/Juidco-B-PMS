@@ -689,7 +689,7 @@ export const createReceivingDal = async (req: Request) => {
 					procurement_stock_id: procurement_stock_id,
 					receiving_no: receiving_no,
 					date: formattedDate,
-					remark: remark,
+					remark: remark || null,
 					received_quantity: Number(received_quantity),
 					remaining_quantity: Number(remaining_quantity),
 				},
@@ -734,15 +734,7 @@ export const createReceivingDal = async (req: Request) => {
 					})
 				}
 
-				await tx.da_received_inventory_inbox.delete({
-					where: {
-						procurement_no: procurement_no,
-					},
-				})
-				// await tx.procurement_status.update({
-				// 	data: {
-				// 		status: 5,
-				// 	},
+				// await tx.da_received_inventory_inbox.delete({
 				// 	where: {
 				// 		procurement_no: procurement_no,
 				// 	},
@@ -755,14 +747,6 @@ export const createReceivingDal = async (req: Request) => {
 						is_partial: false,
 					},
 				})
-				// await tx.notification.create({
-				// 	data: {
-				// 		role_id: Number(process.env.ROLE_SR),
-				// 		title: 'Stock received',
-				// 		destination: 12,
-				// 		description: `Stock having procurement number : ${procurement_no} has been received completely`,
-				// 	},
-				// })
 
 			} else {
 				if (outboxCount === 0) {
@@ -770,42 +754,34 @@ export const createReceivingDal = async (req: Request) => {
 						data: { procurement_no: procurement_no },
 					})
 				}
-				// await tx.procurement_status.update({
-				// 	data: {
-				// 		status: 4,
-				// 	},
-				// 	where: {
-				// 		procurement_no: procurement_no,
-				// 	},
-				// })
-				// await tx.notification.create({
-				// 	data: {
-				// 		role_id: Number(process.env.ROLE_SR),
-				// 		title: 'Stock received',
-				// 		destination: 12,
-				// 		description: `Stock having procurement number : ${procurement_no} has been received partially`,
-				// 	},
-				// })
 			}
 
-			await tx.notification.create({
-				data: {
-					role_id: Number(process.env.ROLE_SR),
-					title: 'Stock received',
-					destination: 12,
-					description: `Stock having procurement number : ${procurement_no} has been received`,
-				},
+			const partialityCheck = await tx.procurement.count({
+				where: {
+					procurement_stocks: {
+						some: {
+							is_partial: true
+						}
+					}
+				}
 			})
 
-			// const partialityCheck = await tx.procurement.count({
-			// 	where: {
-			// 		procurement_stocks: {
-			// 			some: {
-			// 				is_partial: true
-			// 			}
-			// 		}
-			// 	}
-			// })
+			if (partialityCheck === 0) {
+				await tx.procurement.update({
+					where: {
+						procurement_no: procurement_no
+					},
+					data: {
+						is_partial: false,
+						status: 5
+					}
+				})
+				await tx.da_received_inventory_inbox.delete({
+					where: {
+						procurement_no: procurement_no,
+					},
+				})
+			}
 
 		})
 
