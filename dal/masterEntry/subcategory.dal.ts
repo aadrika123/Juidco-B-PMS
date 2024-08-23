@@ -24,6 +24,7 @@ export const createSubcategoryDal = async (req: Request) => {
 					subcategory_masterId varchar(255) DEFAULT '${result?.id}',
 					inventory_id varchar(255),
 					procurement_no varchar(255),
+					procurement_stock_id varchar(255),
                     brand varchar(255),
 					serial_no varchar(255) UNIQUE,
 					quantity FLOAT DEFAULT 1,
@@ -74,19 +75,19 @@ export const getSubcategoryDal = async (req: Request) => {
 		whereClause.AND = [
 			...(category[0]
 				? [
-						{
-							category_masterId: {
-								in: category,
-							},
+					{
+						category_masterId: {
+							in: category,
 						},
-					]
+					},
+				]
 				: []),
 			...(status !== undefined
 				? [
-						{
-							status: status,
-						},
-					]
+					{
+						status: status,
+					},
+				]
 				: []),
 		]
 	}
