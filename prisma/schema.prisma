@@ -405,6 +405,7 @@ model procurement_stocks {
     createdAt                  DateTime                    @default(now())
     updatedAt                  DateTime                    @updatedAt
     boq_procurement_no         String?
+    is_partial                 Boolean                     @default(true)
     procurement_stocks_history procurement_stocks_history?
     boq                        boq?                        @relation(fields: [boq_procurement_no], references: [procurement_no])
     receivings                 receivings[]

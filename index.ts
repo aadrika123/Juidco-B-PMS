@@ -83,7 +83,7 @@ app.use('/api/pms/ia/service-request', iaServiceRequestRoute)
 app.use('/api/pms/stock-request', stockRequestRoute)
 
 //unprotected service request routes
-app.use('/api/pms/stock-request', serviceRequestRoute)
+app.use('/api/pms/service-request', serviceRequestRoute)
 
 //inventory routes
 app.use('/api/pms/inventory', inventoryRoute)
