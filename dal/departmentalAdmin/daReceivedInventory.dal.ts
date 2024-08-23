@@ -747,22 +747,22 @@ export const createReceivingDal = async (req: Request) => {
 				// 		procurement_no: procurement_no,
 				// 	},
 				// })
-				await tx.procurement.update({
+				await tx.procurement_stocks.update({
 					where: {
-						procurement_no: procurement_no,
+						id: procurement_stock_id,
 					},
 					data: {
 						is_partial: false,
 					},
 				})
-				await tx.notification.create({
-					data: {
-						role_id: Number(process.env.ROLE_SR),
-						title: 'Stock received',
-						destination: 12,
-						description: `Stock having procurement number : ${procurement_no} has been received completely`,
-					},
-				})
+				// await tx.notification.create({
+				// 	data: {
+				// 		role_id: Number(process.env.ROLE_SR),
+				// 		title: 'Stock received',
+				// 		destination: 12,
+				// 		description: `Stock having procurement number : ${procurement_no} has been received completely`,
+				// 	},
+				// })
 
 			} else {
 				if (outboxCount === 0) {
@@ -778,23 +778,32 @@ export const createReceivingDal = async (req: Request) => {
 				// 		procurement_no: procurement_no,
 				// 	},
 				// })
-				await tx.notification.create({
-					data: {
-						role_id: Number(process.env.ROLE_SR),
-						title: 'Stock received',
-						destination: 12,
-						description: `Stock having procurement number : ${procurement_no} has been received partially`,
-					},
-				})
+				// await tx.notification.create({
+				// 	data: {
+				// 		role_id: Number(process.env.ROLE_SR),
+				// 		title: 'Stock received',
+				// 		destination: 12,
+				// 		description: `Stock having procurement number : ${procurement_no} has been received partially`,
+				// 	},
+				// })
 			}
 
-			// await prisma.procurement_stocks.aggregate({
-			// 	where: {
-			// 		procurement_no: procurement_no,
-			// 		id: procurement_stock_id
-			// 	},
-			// 	_sum: {
+			await tx.notification.create({
+				data: {
+					role_id: Number(process.env.ROLE_SR),
+					title: 'Stock received',
+					destination: 12,
+					description: `Stock having procurement number : ${procurement_no} has been received`,
+				},
+			})
 
+			// const partialityCheck = await tx.procurement.count({
+			// 	where: {
+			// 		procurement_stocks: {
+			// 			some: {
+			// 				is_partial: true
+			// 			}
+			// 		}
 			// 	}
 			// })
 
