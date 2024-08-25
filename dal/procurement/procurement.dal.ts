@@ -76,7 +76,7 @@ export const getProcurementByProcurementNoDal = async (req: Request) => {
 			result?.receivings.map(async (receiving: any) => {
 				await Promise.all(
 					receiving?.receiving_image.map(async (img: any) => {
-						img.imageUrl = getImage(img?.ReferenceNo)
+						img.imageUrl.push(await getImage(img?.ReferenceNo))
 					})
 				)
 			})

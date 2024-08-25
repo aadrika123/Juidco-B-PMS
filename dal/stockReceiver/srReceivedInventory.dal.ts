@@ -999,7 +999,7 @@ export const addToInventoryDal = async (req: Request) => {
 			} else {
 				const createdInv = await tx.inventory.create({
 					data: {
-						// category: { connect: { id: procData?.category_masterId } },
+						category: { connect: { id: procData?.category_masterId } },
 						// subcategory: { connect: { id: procData?.subcategory_masterId } },
 						// brand: { connect: { id: procData?.brand_masterId } },
 						// unit: { connect: { id: procData?.unit_masterId } },
