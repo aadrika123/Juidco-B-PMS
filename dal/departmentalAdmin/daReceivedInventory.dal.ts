@@ -645,7 +645,7 @@ export const getReceivedInventoryByOrderNoDal = async (req: Request) => {
 export const createReceivingDal = async (req: Request) => {
 	const { procurement_no, procurement_stock_id, date, received_quantity, remaining_quantity, remark, auth } = req.body
 	const formattedDate = new Date(date)
-	const ulb_id = auth?.ulb_id
+	const ulb_id = JSON.parse(auth)?.ulb_id
 	const img = req.files
 	// console.log(img)
 	try {

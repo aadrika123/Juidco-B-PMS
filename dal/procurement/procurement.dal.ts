@@ -1,14 +1,15 @@
 import { Request } from 'express'
 import getErrorMessage from '../../lib/getErrorMessage'
-import { PrismaClient, procurement } from '@prisma/client'
+import { PrismaClient } from '@prisma/client'
 import { procurementType } from '../stockReceiver/preProcurement.dal'
+import { getImage } from '../../lib/getImage'
 
 const prisma = new PrismaClient()
 
 export const getProcurementByProcurementNoDal = async (req: Request) => {
 	const { procurement_no } = req.params
 	try {
-		const result = await prisma.procurement.findFirst({
+		const result: any = await prisma.procurement.findFirst({
 			where: {
 				procurement_no: procurement_no,
 			},
@@ -54,13 +55,32 @@ export const getProcurementByProcurementNoDal = async (req: Request) => {
 						quantity: true,
 						description: true,
 						total_rate: true,
+						is_partial: true
 					},
 				},
 				supplier_master: true,
 				post_procurement: true,
-				receivings: true,
+				receivings: {
+					include: {
+						receiving_image: {
+							select: {
+								ReferenceNo: true
+							}
+						}
+					}
+				},
 			},
 		})
+
+		await Promise.all(
+			result?.receivings.map(async (receiving: any) => {
+				await Promise.all(
+					receiving?.receiving_image.map(async (img: any) => {
+						img.imageUrl = getImage(img?.ReferenceNo)
+					})
+				)
+			})
+		)
 
 		return result
 	} catch (err: any) {
