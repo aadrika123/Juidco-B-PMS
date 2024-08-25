@@ -499,12 +499,13 @@ model procurement_history {
 }
 
 model stock_addition_history {
-    id             String    @id @default(uuid())
-    inventory      inventory @relation(fields: [inventoryId], references: [id])
-    inventoryId    String
-    procurement_no String    @unique
-    createdAt      DateTime  @default(now())
-    updatedAt      DateTime  @updatedAt
+    id                   String    @id @default(uuid())
+    inventory            inventory @relation(fields: [inventoryId], references: [id])
+    inventoryId          String
+    procurement_stock_id String
+    procurement_no       String    @unique
+    createdAt            DateTime  @default(now())
+    updatedAt            DateTime  @updatedAt
 }
 
 //Docs============================================================================================================================================================================================================================================================================================================
