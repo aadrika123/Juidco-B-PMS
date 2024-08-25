@@ -15,7 +15,7 @@ export const getImage = async (ReferenceNo: string) => {
                 throw err
             })
 
-        return dataToReturn || null
+        return dataToReturn
     } catch (err) {
         throw err
     }
