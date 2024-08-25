@@ -1279,7 +1279,10 @@ export const addToInventoryDal = async (req: Request) => {
 				}
 			}
 			const historyExistence = await prisma.stock_addition_history.findFirst({
-				where: { procurement_no: procurement_no },
+				where: {
+					procurement_no: procurement_no,
+					procurement_stock_id: procurement_stock_id
+				},
 			})
 
 			const supplier = await prisma.supplier_master.findFirst({
@@ -1311,6 +1314,7 @@ export const addToInventoryDal = async (req: Request) => {
 						data: {
 							inventory: { connect: { id: inventoryId } },
 							procurement_no: procurement_no,
+							procurement_stock_id: procurement_stock_id
 						},
 					})
 					if (!historyCreation) throw { error: true, message: 'Error while creating history' }
@@ -1337,6 +1341,7 @@ export const addToInventoryDal = async (req: Request) => {
 					data: {
 						inventory: { connect: { id: createdInv?.id } },
 						procurement_no: procurement_no,
+						procurement_stock_id: procurement_stock_id
 					},
 				})
 				if (!historyCreation) throw { error: true, message: 'Error while creating history for new item' }
