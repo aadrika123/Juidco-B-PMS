@@ -1195,7 +1195,10 @@ export const addToInventoryDal = async (req: Request) => {
 						id: true,
 						name: true
 					}
-				}
+				},
+				category_masterId: true,
+				unit_masterId: true,
+				description: true,
 			}
 		})
 
@@ -1279,6 +1282,11 @@ export const addToInventoryDal = async (req: Request) => {
 				where: { procurement_no: procurement_no },
 			})
 
+			const supplier = await prisma.supplier_master.findFirst({
+				where: { procurement_no: procurement_no },
+				select: { id: true }
+			})
+
 			if (historyExistence) {
 				inventoryId = historyExistence?.inventoryId
 				exist = true
@@ -1312,10 +1320,11 @@ export const addToInventoryDal = async (req: Request) => {
 				const createdInv = await tx.inventory.create({
 					data: {
 						category: { connect: { id: procData?.category_masterId } },
-						// subcategory: { connect: { id: procData?.subcategory_masterId } },
+						subcategory: { connect: { id: procStockData?.subCategory?.id } },
 						// brand: { connect: { id: procData?.brand_masterId } },
-						// unit: { connect: { id: procData?.unit_masterId } },
-						// description: procData?.description,
+						supplier_masterId: supplier?.id,
+						unit: { connect: { id: procStockData?.unit_masterId } },
+						description: procStockData?.description,
 						quantity: dead_stock ? totalNonAddedReceiving?._sum?.received_quantity - Number(dead_stock) : totalNonAddedReceiving?._sum?.received_quantity,
 						...(warranty && { warranty: Boolean(warranty) }),
 					},

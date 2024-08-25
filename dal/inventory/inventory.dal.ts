@@ -148,7 +148,6 @@ export const getItemByFilterDal = async (req: Request) => {
 
 	const category: any[] = Array.isArray(req?.query?.category) ? req?.query?.category : [req?.query?.category]
 	const subcategory: any[] = Array.isArray(req?.query?.scategory) ? req?.query?.scategory : [req?.query?.scategory]
-	const brand: any[] = Array.isArray(req?.query?.brand) ? req?.query?.brand : [req?.query?.brand]
 
 	if (!category[0] || !subcategory[0]) {
 		return { error: true, message: 'Category and sub-category are required' }
@@ -167,20 +166,42 @@ export const getItemByFilterDal = async (req: Request) => {
 	}
 
 	//creating filter options for the query
-	if (category[0]) {
-		whereClause.category_masterId = {
-			in: category,
-		}
-	}
-	if (subcategory[0]) {
-		whereClause.subcategory_masterId = {
-			in: subcategory,
-		}
-	}
-	if (brand[0]) {
-		whereClause.brand_masterId = {
-			in: brand,
-		}
+	// if (category[0]) {
+	// 	whereClause.category_masterId = {
+	// 		in: category,
+	// 	}
+	// }
+	// if (subcategory[0]) {
+	// 	whereClause.subcategory_masterId = {
+	// 		in: subcategory,
+	// 	}
+	// }
+	// if (brand[0]) {
+	// 	whereClause.brand_masterId = {
+	// 		in: brand,
+	// 	}
+	// }
+	if (category[0] || subcategory[0]) {
+		whereClause.AND = [
+			...(category[0]
+				? [
+					{
+						category_masterId: {
+							in: category,
+						},
+					},
+				]
+				: []),
+			...(subcategory[0]
+				? [
+					{
+						subcategory_masterId: {
+							in: subcategory,
+						},
+					},
+				]
+				: []),
+		]
 	}
 
 	try {
