@@ -62,9 +62,21 @@ export const getProcurementByProcurementNoDal = async (req: Request) => {
 				post_procurement: true,
 				receivings: {
 					include: {
+						procurement_stock: {
+							select: {
+								id: true,
+								subCategory: {
+									select: {
+										id: true,
+										name: true
+									}
+								},
+								description: true
+							}
+						},
 						receiving_image: {
 							select: {
-								ReferenceNo: true
+								ReferenceNo: true,
 							}
 						}
 					}
