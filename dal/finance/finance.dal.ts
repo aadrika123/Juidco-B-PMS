@@ -42,6 +42,7 @@ export const getBoqByRefNoDal = async (req: Request) => {
 								name: true,
 							},
 						},
+						description: true,
 					},
 				},
 				boq_doc: {

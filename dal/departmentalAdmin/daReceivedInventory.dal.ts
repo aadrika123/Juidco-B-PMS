@@ -263,43 +263,43 @@ export const getReceivedInventoryDal = async (req: Request) => {
 		whereClause.AND = [
 			...(category[0]
 				? [
-					{
-						category_masterId: {
-							in: category,
+						{
+							category_masterId: {
+								in: category,
+							},
 						},
-					},
-				]
+					]
 				: []),
 			...(subcategory[0]
 				? [
-					{
-						procurement_stocks: {
-							subcategory_masterId: {
-								in: subcategory,
+						{
+							procurement_stocks: {
+								subcategory_masterId: {
+									in: subcategory,
+								},
 							},
 						},
-					},
-				]
+					]
 				: []),
 			...(brand[0]
 				? [
-					{
-						procurement_stocks: {
-							brand_masterId: {
-								in: brand,
+						{
+							procurement_stocks: {
+								brand_masterId: {
+									in: brand,
+								},
 							},
 						},
-					},
-				]
+					]
 				: []),
 			...(status[0]
 				? [
-					{
-						status: {
-							in: status.map(Number),
+						{
+							status: {
+								in: status.map(Number),
+							},
 						},
-					},
-				]
+					]
 				: []),
 		]
 	}
@@ -370,7 +370,6 @@ export const getReceivedInventoryDal = async (req: Request) => {
 		return { error: true, message: getErrorMessage(err) }
 	}
 }
-
 
 export const getReceivedInventoryByIdDal = async (req: Request) => {
 	const { id } = req.params
@@ -654,7 +653,7 @@ export const createReceivingDal = async (req: Request) => {
 		const procStock: any = await prisma.procurement_stocks.findFirst({
 			where: {
 				procurement_no: procurement_no,
-				id: procurement_stock_id
+				id: procurement_stock_id,
 			},
 		})
 
@@ -665,7 +664,7 @@ export const createReceivingDal = async (req: Request) => {
 		const totalReceiving: any = await prisma.receivings.aggregate({
 			where: {
 				procurement_no: procurement_no,
-				procurement_stock_id: procurement_stock_id
+				procurement_stock_id: procurement_stock_id,
 			},
 			_sum: {
 				received_quantity: true,
@@ -673,12 +672,12 @@ export const createReceivingDal = async (req: Request) => {
 		})
 
 		//check for received quantity exceeding total allowed quantity
-		if (totalReceiving?._sum?.received_quantity + Number(received_quantity) > procStock?.total_quantity) {
+		if (totalReceiving?._sum?.received_quantity || 0 + Number(received_quantity) > procStock?.quantity) {
 			throw { error: true, message: 'Provided received quantity will make the total received quantity more than the quantity that can be received' }
 		}
 
 		// check for valid remaining quantity
-		if (totalReceiving?._sum?.received_quantity + Number(received_quantity) + Number(remaining_quantity) !== procStock?.total_quantity) {
+		if ((totalReceiving?._sum?.received_quantity || 0) + Number(received_quantity) + Number(remaining_quantity) !== procStock?.quantity) {
 			throw { error: true, message: 'Provided remaining quantity is invalid' }
 		}
 
@@ -727,10 +726,9 @@ export const createReceivingDal = async (req: Request) => {
 			// delete dataTocreate.createdAt
 			// delete dataTocreate.updatedAt
 			if (totalReceiving?._sum?.received_quantity + Number(received_quantity) === procStock?.total_quantity) {
-
 				if (outboxCount === 0) {
 					tx.da_received_inventory_outbox.create({
-						data: { procurement_no: procurement_no }
+						data: { procurement_no: procurement_no },
 					})
 				}
 
@@ -747,7 +745,6 @@ export const createReceivingDal = async (req: Request) => {
 						is_partial: false,
 					},
 				})
-
 			} else {
 				if (outboxCount === 0) {
 					await tx.da_received_inventory_outbox.create({
@@ -760,21 +757,21 @@ export const createReceivingDal = async (req: Request) => {
 				where: {
 					procurement_stocks: {
 						some: {
-							is_partial: true
-						}
-					}
-				}
+							is_partial: true,
+						},
+					},
+				},
 			})
 
 			if (partialityCheck === 0) {
 				await tx.procurement.update({
 					where: {
-						procurement_no: procurement_no
+						procurement_no: procurement_no,
 					},
 					data: {
 						is_partial: false,
-						status: 5
-					}
+						status: 5,
+					},
 				})
 				await tx.da_received_inventory_inbox.delete({
 					where: {
@@ -784,11 +781,11 @@ export const createReceivingDal = async (req: Request) => {
 			} else {
 				await tx.procurement.update({
 					where: {
-						procurement_no: procurement_no
+						procurement_no: procurement_no,
 					},
 					data: {
-						status: 4
-					}
+						status: 4,
+					},
 				})
 			}
 		})
@@ -1210,43 +1207,43 @@ export const getReceivedInventoryOutboxDal = async (req: Request) => {
 		whereClause.AND = [
 			...(category[0]
 				? [
-					{
-						category_masterId: {
-							in: category,
+						{
+							category_masterId: {
+								in: category,
+							},
 						},
-					},
-				]
+					]
 				: []),
 			...(subcategory[0]
 				? [
-					{
-						procurement_stocks: {
-							subcategory_masterId: {
-								in: subcategory,
+						{
+							procurement_stocks: {
+								subcategory_masterId: {
+									in: subcategory,
+								},
 							},
 						},
-					},
-				]
+					]
 				: []),
 			...(brand[0]
 				? [
-					{
-						procurement_stocks: {
-							brand_masterId: {
-								in: brand,
+						{
+							procurement_stocks: {
+								brand_masterId: {
+									in: brand,
+								},
 							},
 						},
-					},
-				]
+					]
 				: []),
 			...(status[0]
 				? [
-					{
-						status: {
-							in: status.map(Number),
+						{
+							status: {
+								in: status.map(Number),
+							},
 						},
-					},
-				]
+					]
 				: []),
 		]
 	}
@@ -1317,8 +1314,6 @@ export const getReceivedInventoryOutboxDal = async (req: Request) => {
 		return { error: true, message: getErrorMessage(err) }
 	}
 }
-
-
 
 export const getReceivedInventoryOutboxByIdDal = async (req: Request) => {
 	const { id } = req.params
