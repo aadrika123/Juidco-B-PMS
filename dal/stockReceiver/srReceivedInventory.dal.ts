@@ -8,6 +8,221 @@ import { pagination } from '../../type/common.type'
 const prisma = new PrismaClient()
 const dmsUrlGet = process.env.DMS_GET || ''
 
+// export const getReceivedInventoryDal = async (req: Request) => {
+// 	const page: number | undefined = Number(req?.query?.page)
+// 	const take: number | undefined = Number(req?.query?.take)
+// 	const startIndex: number | undefined = (page - 1) * take
+// 	const endIndex: number | undefined = startIndex + take
+// 	let count: number
+// 	let totalPage: number
+// 	let pagination: pagination = {}
+// 	const whereClause: any = {}
+
+// 	const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined
+
+// 	const category: any[] = Array.isArray(req?.query?.category) ? req?.query?.category : [req?.query?.category]
+// 	const subcategory: any[] = Array.isArray(req?.query?.scategory) ? req?.query?.scategory : [req?.query?.scategory]
+// 	const status: any[] = Array.isArray(req?.query?.status) ? req?.query?.status : [req?.query?.status]
+// 	const brand: any[] = Array.isArray(req?.query?.brand) ? req?.query?.brand : [req?.query?.brand]
+
+// 	//creating search options for the query
+// 	if (search) {
+// 		whereClause.OR = [
+// 			{
+// 				procurement_no: {
+// 					contains: search,
+// 					mode: 'insensitive',
+// 				},
+// 			},
+// 			{
+// 				procurement: {
+// 					description: {
+// 						contains: search,
+// 						mode: 'insensitive',
+// 					},
+// 				},
+// 			},
+// 		]
+// 	}
+
+// 	//creating filter options for the query
+// 	if (category[0]) {
+// 		whereClause.procurement = {
+// 			category_masterId: {
+// 				in: category,
+// 			},
+// 		}
+// 	}
+// 	if (subcategory[0]) {
+// 		whereClause.procurement = {
+// 			subcategory_masterId: {
+// 				in: subcategory,
+// 			},
+// 		}
+// 	}
+// 	if (status[0]) {
+// 		whereClause.procurement = {
+// 			status: {
+// 				in: status.map(Number),
+// 			},
+// 		}
+// 	}
+// 	if (brand[0]) {
+// 		whereClause.procurement = {
+// 			brand_masterId: {
+// 				in: brand,
+// 			},
+// 		}
+// 	}
+
+// 	try {
+// 		count = await prisma.sr_received_inventory_inbox.count({
+// 			where: whereClause,
+// 		})
+// 		const result = await prisma.sr_received_inventory_inbox.findMany({
+// 			orderBy: {
+// 				updatedAt: 'desc',
+// 			},
+// 			where: whereClause,
+// 			...(page && { skip: startIndex }),
+// 			...(take && { take: take }),
+// 			select: {
+// 				id: true,
+// 				procurement_no: true,
+// 				procurement: {
+// 					select: {
+// 						procurement_no: true,
+// 						// category: {
+// 						// 	select: {
+// 						// 		name: true,
+// 						// 	},
+// 						// },
+// 						// subcategory: {
+// 						// 	select: {
+// 						// 		name: true,
+// 						// 	},
+// 						// },
+// 						// brand: {
+// 						// 	select: {
+// 						// 		name: true,
+// 						// 	},
+// 						// },
+// 						// unit: {
+// 						// 	select: {
+// 						// 		name: true,
+// 						// 	},
+// 						// },
+// 						post_procurement: {
+// 							select: {
+// 								procurement_no: true,
+// 								supplier_name: true,
+// 								gst_no: true,
+// 								final_rate: true,
+// 								gst: true,
+// 								total_quantity: true,
+// 								total_price: true,
+// 								unit_price: true,
+// 								is_gst_added: true,
+// 							},
+// 						},
+// 						// description: true,
+// 						// quantity: true,
+// 						// rate: true,
+// 						total_rate: true,
+// 						isEdited: true,
+// 						remark: true,
+// 						// status: {
+// 						// 	select: {
+// 						// 		status: true,
+// 						// 	},
+// 						// },
+// 					},
+// 				},
+// 			},
+// 		})
+
+// 		let resultToSend: any[] = []
+// 		await Promise.all(
+// 			result.map(async (item: any) => {
+// 				const temp = { ...item?.procurement }
+// 				delete item.procurement
+
+// 				const receivings = await prisma.receivings.findMany({
+// 					where: {
+// 						procurement_no: item?.procurement_no,
+// 					},
+// 					select: {
+// 						procurement_no: true,
+// 						receiving_no: true,
+// 						date: true,
+// 						received_quantity: true,
+// 						remaining_quantity: true,
+// 						is_added: true,
+// 						remark: true,
+// 						receiving_image: {
+// 							select: {
+// 								ReferenceNo: true,
+// 								uniqueId: true,
+// 								receiving_no: true,
+// 							},
+// 						},
+// 					},
+// 				})
+
+// 				await Promise.all(
+// 					receivings.map(async (receiving: any) => {
+// 						await Promise.all(
+// 							receiving?.receiving_image.map(async (img: any) => {
+// 								const headers = {
+// 									token: '8Ufn6Jio6Obv9V7VXeP7gbzHSyRJcKluQOGorAD58qA1IQKYE0',
+// 								}
+// 								await axios
+// 									.post(process.env.DMS_GET || '', { referenceNo: img?.ReferenceNo }, { headers })
+// 									.then(response => {
+// 										// console.log(response?.data?.data, 'res')
+// 										img.imageUrl = response?.data?.data?.fullPath
+// 									})
+// 									.catch(err => {
+// 										// console.log(err?.data?.data, 'err')
+// 										// toReturn.push(err?.data?.data)
+// 										throw err
+// 									})
+// 							})
+// 						)
+// 					})
+// 				)
+
+// 				resultToSend.push({ ...item, ...temp, receivings: receivings })
+// 			})
+// 		)
+
+// 		totalPage = Math.ceil(count / take)
+// 		if (endIndex < count) {
+// 			pagination.next = {
+// 				page: page + 1,
+// 				take: take,
+// 			}
+// 		}
+// 		if (startIndex > 0) {
+// 			pagination.prev = {
+// 				page: page - 1,
+// 				take: take,
+// 			}
+// 		}
+// 		pagination.currentPage = page
+// 		pagination.currentTake = take
+// 		pagination.totalPage = totalPage
+// 		pagination.totalResult = count
+// 		return {
+// 			data: resultToSend,
+// 			pagination: pagination,
+// 		}
+// 	} catch (err: any) {
+// 		console.log(err)
+// 		return { error: true, message: getErrorMessage(err) }
+// 	}
+// }
+
 export const getReceivedInventoryDal = async (req: Request) => {
 	const page: number | undefined = Number(req?.query?.page)
 	const take: number | undefined = Number(req?.query?.take)
@@ -35,7 +250,7 @@ export const getReceivedInventoryDal = async (req: Request) => {
 				},
 			},
 			{
-				procurement: {
+				procurement_stocks: {
 					description: {
 						contains: search,
 						mode: 'insensitive',
@@ -45,34 +260,49 @@ export const getReceivedInventoryDal = async (req: Request) => {
 		]
 	}
 
-	//creating filter options for the query
-	if (category[0]) {
-		whereClause.procurement = {
-			category_masterId: {
-				in: category,
-			},
-		}
-	}
-	if (subcategory[0]) {
-		whereClause.procurement = {
-			subcategory_masterId: {
-				in: subcategory,
-			},
-		}
-	}
-	if (status[0]) {
-		whereClause.procurement = {
-			status: {
-				in: status.map(Number),
-			},
-		}
-	}
-	if (brand[0]) {
-		whereClause.procurement = {
-			brand_masterId: {
-				in: brand,
-			},
-		}
+	if (category[0] || subcategory[0] || brand[0]) {
+		whereClause.AND = [
+			...(category[0]
+				? [
+					{
+						category_masterId: {
+							in: category,
+						},
+					},
+				]
+				: []),
+			...(subcategory[0]
+				? [
+					{
+						procurement_stocks: {
+							subcategory_masterId: {
+								in: subcategory,
+							},
+						},
+					},
+				]
+				: []),
+			...(brand[0]
+				? [
+					{
+						procurement_stocks: {
+							brand_masterId: {
+								in: brand,
+							},
+						},
+					},
+				]
+				: []),
+			...(status[0]
+				? [
+					{
+						status: {
+							in: status.map(Number),
+						},
+					},
+				]
+				: []),
+		]
 	}
 
 	try {
@@ -92,109 +322,28 @@ export const getReceivedInventoryDal = async (req: Request) => {
 				procurement: {
 					select: {
 						procurement_no: true,
-						// category: {
-						// 	select: {
-						// 		name: true,
-						// 	},
-						// },
-						// subcategory: {
-						// 	select: {
-						// 		name: true,
-						// 	},
-						// },
-						// brand: {
-						// 	select: {
-						// 		name: true,
-						// 	},
-						// },
-						// unit: {
-						// 	select: {
-						// 		name: true,
-						// 	},
-						// },
-						post_procurement: {
+						category: {
 							select: {
-								procurement_no: true,
-								supplier_name: true,
-								gst_no: true,
-								final_rate: true,
-								gst: true,
-								total_quantity: true,
-								total_price: true,
-								unit_price: true,
-								is_gst_added: true,
+								name: true,
 							},
 						},
-						// description: true,
-						// quantity: true,
-						// rate: true,
 						total_rate: true,
 						isEdited: true,
 						remark: true,
-						// status: {
-						// 	select: {
-						// 		status: true,
-						// 	},
-						// },
+						status: true,
+						// procurement_stocks: true,
 					},
 				},
 			},
 		})
 
 		let resultToSend: any[] = []
-		await Promise.all(
-			result.map(async (item: any) => {
-				const temp = { ...item?.procurement }
-				delete item.procurement
 
-				const receivings = await prisma.receivings.findMany({
-					where: {
-						procurement_no: item?.procurement_no,
-					},
-					select: {
-						procurement_no: true,
-						receiving_no: true,
-						date: true,
-						received_quantity: true,
-						remaining_quantity: true,
-						is_added: true,
-						remark: true,
-						receiving_image: {
-							select: {
-								ReferenceNo: true,
-								uniqueId: true,
-								receiving_no: true,
-							},
-						},
-					},
-				})
-
-				await Promise.all(
-					receivings.map(async (receiving: any) => {
-						await Promise.all(
-							receiving?.receiving_image.map(async (img: any) => {
-								const headers = {
-									token: '8Ufn6Jio6Obv9V7VXeP7gbzHSyRJcKluQOGorAD58qA1IQKYE0',
-								}
-								await axios
-									.post(process.env.DMS_GET || '', { referenceNo: img?.ReferenceNo }, { headers })
-									.then(response => {
-										// console.log(response?.data?.data, 'res')
-										img.imageUrl = response?.data?.data?.fullPath
-									})
-									.catch(err => {
-										// console.log(err?.data?.data, 'err')
-										// toReturn.push(err?.data?.data)
-										throw err
-									})
-							})
-						)
-					})
-				)
-
-				resultToSend.push({ ...item, ...temp, receivings: receivings })
-			})
-		)
+		result.map(async (item: any) => {
+			const temp = { ...item?.procurement }
+			delete item.procurement
+			resultToSend.push({ ...item, ...temp })
+		})
 
 		totalPage = Math.ceil(count / take)
 		if (endIndex < count) {
@@ -493,6 +642,221 @@ export const getReceivedInventoryByOrderNoDal = async (req: Request) => {
 	}
 }
 
+// export const getReceivedInventoryOutboxDal = async (req: Request) => {
+// 	const page: number | undefined = Number(req?.query?.page)
+// 	const take: number | undefined = Number(req?.query?.take)
+// 	const startIndex: number | undefined = (page - 1) * take
+// 	const endIndex: number | undefined = startIndex + take
+// 	let count: number
+// 	let totalPage: number
+// 	let pagination: pagination = {}
+// 	const whereClause: any = {}
+
+// 	const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined
+
+// 	const category: any[] = Array.isArray(req?.query?.category) ? req?.query?.category : [req?.query?.category]
+// 	const subcategory: any[] = Array.isArray(req?.query?.scategory) ? req?.query?.scategory : [req?.query?.scategory]
+// 	const status: any[] = Array.isArray(req?.query?.status) ? req?.query?.status : [req?.query?.status]
+// 	const brand: any[] = Array.isArray(req?.query?.brand) ? req?.query?.brand : [req?.query?.brand]
+
+// 	//creating search options for the query
+// 	if (search) {
+// 		whereClause.OR = [
+// 			{
+// 				procurement_no: {
+// 					contains: search,
+// 					mode: 'insensitive',
+// 				},
+// 			},
+// 			{
+// 				procurement: {
+// 					description: {
+// 						contains: search,
+// 						mode: 'insensitive',
+// 					},
+// 				},
+// 			},
+// 		]
+// 	}
+
+// 	//creating filter options for the query
+// 	if (category[0]) {
+// 		whereClause.procurement = {
+// 			category_masterId: {
+// 				in: category,
+// 			},
+// 		}
+// 	}
+// 	if (subcategory[0]) {
+// 		whereClause.procurement = {
+// 			subcategory_masterId: {
+// 				in: subcategory,
+// 			},
+// 		}
+// 	}
+// 	if (status[0]) {
+// 		whereClause.procurement = {
+// 			status: {
+// 				in: status.map(Number),
+// 			},
+// 		}
+// 	}
+// 	if (brand[0]) {
+// 		whereClause.procurement = {
+// 			brand_masterId: {
+// 				in: brand,
+// 			},
+// 		}
+// 	}
+
+// 	try {
+// 		count = await prisma.sr_received_inventory_outbox.count({
+// 			where: whereClause,
+// 		})
+// 		const result = await prisma.sr_received_inventory_outbox.findMany({
+// 			orderBy: {
+// 				updatedAt: 'desc',
+// 			},
+// 			where: whereClause,
+// 			...(page && { skip: startIndex }),
+// 			...(take && { take: take }),
+// 			select: {
+// 				id: true,
+// 				procurement_no: true,
+// 				procurement: {
+// 					select: {
+// 						procurement_no: true,
+// 						// category: {
+// 						// 	select: {
+// 						// 		name: true,
+// 						// 	},
+// 						// },
+// 						// subcategory: {
+// 						// 	select: {
+// 						// 		name: true,
+// 						// 	},
+// 						// },
+// 						// brand: {
+// 						// 	select: {
+// 						// 		name: true,
+// 						// 	},
+// 						// },
+// 						// unit: {
+// 						// 	select: {
+// 						// 		name: true,
+// 						// 	},
+// 						// },
+// 						post_procurement: {
+// 							select: {
+// 								procurement_no: true,
+// 								supplier_name: true,
+// 								gst_no: true,
+// 								final_rate: true,
+// 								gst: true,
+// 								total_quantity: true,
+// 								total_price: true,
+// 								unit_price: true,
+// 								is_gst_added: true,
+// 							},
+// 						},
+// 						// description: true,
+// 						// quantity: true,
+// 						// rate: true,
+// 						total_rate: true,
+// 						isEdited: true,
+// 						remark: true,
+// 						// status: {
+// 						// 	select: {
+// 						// 		status: true,
+// 						// 	},
+// 						// },
+// 					},
+// 				},
+// 			},
+// 		})
+
+// 		let resultToSend: any[] = []
+// 		await Promise.all(
+// 			result.map(async (item: any) => {
+// 				const temp = { ...item?.procurement }
+// 				delete item.procurement
+
+// 				const receivings = await prisma.receivings.findMany({
+// 					where: {
+// 						procurement_no: item?.procurement_no,
+// 					},
+// 					select: {
+// 						procurement_no: true,
+// 						receiving_no: true,
+// 						date: true,
+// 						received_quantity: true,
+// 						remaining_quantity: true,
+// 						is_added: true,
+// 						remark: true,
+// 						receiving_image: {
+// 							select: {
+// 								ReferenceNo: true,
+// 								uniqueId: true,
+// 								receiving_no: true,
+// 							},
+// 						},
+// 					},
+// 				})
+
+// 				await Promise.all(
+// 					receivings.map(async (receiving: any) => {
+// 						await Promise.all(
+// 							receiving?.receiving_image.map(async (img: any) => {
+// 								const headers = {
+// 									token: '8Ufn6Jio6Obv9V7VXeP7gbzHSyRJcKluQOGorAD58qA1IQKYE0',
+// 								}
+// 								await axios
+// 									.post(process.env.DMS_GET || '', { referenceNo: img?.ReferenceNo }, { headers })
+// 									.then(response => {
+// 										// console.log(response?.data?.data, 'res')
+// 										img.imageUrl = response?.data?.data?.fullPath
+// 									})
+// 									.catch(err => {
+// 										// console.log(err?.data?.data, 'err')
+// 										// toReturn.push(err?.data?.data)
+// 										throw err
+// 									})
+// 							})
+// 						)
+// 					})
+// 				)
+
+// 				resultToSend.push({ ...item, ...temp, receivings: receivings })
+// 			})
+// 		)
+
+// 		totalPage = Math.ceil(count / take)
+// 		if (endIndex < count) {
+// 			pagination.next = {
+// 				page: page + 1,
+// 				take: take,
+// 			}
+// 		}
+// 		if (startIndex > 0) {
+// 			pagination.prev = {
+// 				page: page - 1,
+// 				take: take,
+// 			}
+// 		}
+// 		pagination.currentPage = page
+// 		pagination.currentTake = take
+// 		pagination.totalPage = totalPage
+// 		pagination.totalResult = count
+// 		return {
+// 			data: resultToSend,
+// 			pagination: pagination,
+// 		}
+// 	} catch (err: any) {
+// 		console.log(err)
+// 		return { error: true, message: getErrorMessage(err) }
+// 	}
+// }
+
 export const getReceivedInventoryOutboxDal = async (req: Request) => {
 	const page: number | undefined = Number(req?.query?.page)
 	const take: number | undefined = Number(req?.query?.take)
@@ -520,7 +884,7 @@ export const getReceivedInventoryOutboxDal = async (req: Request) => {
 				},
 			},
 			{
-				procurement: {
+				procurement_stocks: {
 					description: {
 						contains: search,
 						mode: 'insensitive',
@@ -530,34 +894,49 @@ export const getReceivedInventoryOutboxDal = async (req: Request) => {
 		]
 	}
 
-	//creating filter options for the query
-	if (category[0]) {
-		whereClause.procurement = {
-			category_masterId: {
-				in: category,
-			},
-		}
-	}
-	if (subcategory[0]) {
-		whereClause.procurement = {
-			subcategory_masterId: {
-				in: subcategory,
-			},
-		}
-	}
-	if (status[0]) {
-		whereClause.procurement = {
-			status: {
-				in: status.map(Number),
-			},
-		}
-	}
-	if (brand[0]) {
-		whereClause.procurement = {
-			brand_masterId: {
-				in: brand,
-			},
-		}
+	if (category[0] || subcategory[0] || brand[0]) {
+		whereClause.AND = [
+			...(category[0]
+				? [
+					{
+						category_masterId: {
+							in: category,
+						},
+					},
+				]
+				: []),
+			...(subcategory[0]
+				? [
+					{
+						procurement_stocks: {
+							subcategory_masterId: {
+								in: subcategory,
+							},
+						},
+					},
+				]
+				: []),
+			...(brand[0]
+				? [
+					{
+						procurement_stocks: {
+							brand_masterId: {
+								in: brand,
+							},
+						},
+					},
+				]
+				: []),
+			...(status[0]
+				? [
+					{
+						status: {
+							in: status.map(Number),
+						},
+					},
+				]
+				: []),
+		]
 	}
 
 	try {
@@ -577,109 +956,28 @@ export const getReceivedInventoryOutboxDal = async (req: Request) => {
 				procurement: {
 					select: {
 						procurement_no: true,
-						// category: {
-						// 	select: {
-						// 		name: true,
-						// 	},
-						// },
-						// subcategory: {
-						// 	select: {
-						// 		name: true,
-						// 	},
-						// },
-						// brand: {
-						// 	select: {
-						// 		name: true,
-						// 	},
-						// },
-						// unit: {
-						// 	select: {
-						// 		name: true,
-						// 	},
-						// },
-						post_procurement: {
+						category: {
 							select: {
-								procurement_no: true,
-								supplier_name: true,
-								gst_no: true,
-								final_rate: true,
-								gst: true,
-								total_quantity: true,
-								total_price: true,
-								unit_price: true,
-								is_gst_added: true,
+								name: true,
 							},
 						},
-						// description: true,
-						// quantity: true,
-						// rate: true,
 						total_rate: true,
 						isEdited: true,
 						remark: true,
-						// status: {
-						// 	select: {
-						// 		status: true,
-						// 	},
-						// },
+						status: true,
+						// procurement_stocks: true,
 					},
 				},
 			},
 		})
 
 		let resultToSend: any[] = []
-		await Promise.all(
-			result.map(async (item: any) => {
-				const temp = { ...item?.procurement }
-				delete item.procurement
 
-				const receivings = await prisma.receivings.findMany({
-					where: {
-						procurement_no: item?.procurement_no,
-					},
-					select: {
-						procurement_no: true,
-						receiving_no: true,
-						date: true,
-						received_quantity: true,
-						remaining_quantity: true,
-						is_added: true,
-						remark: true,
-						receiving_image: {
-							select: {
-								ReferenceNo: true,
-								uniqueId: true,
-								receiving_no: true,
-							},
-						},
-					},
-				})
-
-				await Promise.all(
-					receivings.map(async (receiving: any) => {
-						await Promise.all(
-							receiving?.receiving_image.map(async (img: any) => {
-								const headers = {
-									token: '8Ufn6Jio6Obv9V7VXeP7gbzHSyRJcKluQOGorAD58qA1IQKYE0',
-								}
-								await axios
-									.post(process.env.DMS_GET || '', { referenceNo: img?.ReferenceNo }, { headers })
-									.then(response => {
-										// console.log(response?.data?.data, 'res')
-										img.imageUrl = response?.data?.data?.fullPath
-									})
-									.catch(err => {
-										// console.log(err?.data?.data, 'err')
-										// toReturn.push(err?.data?.data)
-										throw err
-									})
-							})
-						)
-					})
-				)
-
-				resultToSend.push({ ...item, ...temp, receivings: receivings })
-			})
-		)
+		result.map(async (item: any) => {
+			const temp = { ...item?.procurement }
+			delete item.procurement
+			resultToSend.push({ ...item, ...temp })
+		})
 
 		totalPage = Math.ceil(count / take)
 		if (endIndex < count) {

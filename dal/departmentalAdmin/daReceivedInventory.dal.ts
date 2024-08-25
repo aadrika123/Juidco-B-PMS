@@ -720,14 +720,14 @@ export const createReceivingDal = async (req: Request) => {
 				},
 			})
 
-			const srInboxCount = await prisma.sr_received_inventory_outbox.count({
+			const srInboxCount = await prisma.sr_received_inventory_inbox.count({
 				where: {
 					procurement_no: procurement_no,
 				},
 			})
 
 			if (srInboxCount === 0) {
-				tx.sr_received_inventory_outbox.create({
+				tx.sr_received_inventory_inbox.create({
 					data: { procurement_no: procurement_no },
 				})
 			}
