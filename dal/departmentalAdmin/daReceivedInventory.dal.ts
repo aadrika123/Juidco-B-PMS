@@ -263,43 +263,43 @@ export const getReceivedInventoryDal = async (req: Request) => {
 		whereClause.AND = [
 			...(category[0]
 				? [
-						{
-							category_masterId: {
-								in: category,
-							},
+					{
+						category_masterId: {
+							in: category,
 						},
-					]
+					},
+				]
 				: []),
 			...(subcategory[0]
 				? [
-						{
-							procurement_stocks: {
-								subcategory_masterId: {
-									in: subcategory,
-								},
+					{
+						procurement_stocks: {
+							subcategory_masterId: {
+								in: subcategory,
 							},
 						},
-					]
+					},
+				]
 				: []),
 			...(brand[0]
 				? [
-						{
-							procurement_stocks: {
-								brand_masterId: {
-									in: brand,
-								},
+					{
+						procurement_stocks: {
+							brand_masterId: {
+								in: brand,
 							},
 						},
-					]
+					},
+				]
 				: []),
 			...(status[0]
 				? [
-						{
-							status: {
-								in: status.map(Number),
-							},
+					{
+						status: {
+							in: status.map(Number),
 						},
-					]
+					},
+				]
 				: []),
 		]
 	}
@@ -672,7 +672,7 @@ export const createReceivingDal = async (req: Request) => {
 		})
 
 		//check for received quantity exceeding total allowed quantity
-		if (totalReceiving?._sum?.received_quantity || 0 + Number(received_quantity) > procStock?.quantity) {
+		if (totalReceiving?._sum?.received_quantity + Number(received_quantity) > procStock?.quantity) {
 			throw { error: true, message: 'Provided received quantity will make the total received quantity more than the quantity that can be received' }
 		}
 
@@ -720,12 +720,24 @@ export const createReceivingDal = async (req: Request) => {
 				},
 			})
 
+			const srInboxCount = await prisma.sr_received_inventory_outbox.count({
+				where: {
+					procurement_no: procurement_no,
+				},
+			})
+
+			if (srInboxCount === 0) {
+				tx.sr_received_inventory_outbox.create({
+					data: { procurement_no: procurement_no },
+				})
+			}
+
 			//check for fully received
 			// const dataTocreate = { ...procStock }
 			// delete dataTocreate.id
 			// delete dataTocreate.createdAt
 			// delete dataTocreate.updatedAt
-			if (totalReceiving?._sum?.received_quantity + Number(received_quantity) === procStock?.total_quantity) {
+			if (totalReceiving?._sum?.received_quantity + Number(received_quantity) === procStock?.quantity) {
 				if (outboxCount === 0) {
 					tx.da_received_inventory_outbox.create({
 						data: { procurement_no: procurement_no },
@@ -1207,43 +1219,43 @@ export const getReceivedInventoryOutboxDal = async (req: Request) => {
 		whereClause.AND = [
 			...(category[0]
 				? [
-						{
-							category_masterId: {
-								in: category,
-							},
+					{
+						category_masterId: {
+							in: category,
 						},
-					]
+					},
+				]
 				: []),
 			...(subcategory[0]
 				? [
-						{
-							procurement_stocks: {
-								subcategory_masterId: {
-									in: subcategory,
-								},
+					{
+						procurement_stocks: {
+							subcategory_masterId: {
+								in: subcategory,
 							},
 						},
-					]
+					},
+				]
 				: []),
 			...(brand[0]
 				? [
-						{
-							procurement_stocks: {
-								brand_masterId: {
-									in: brand,
-								},
+					{
+						procurement_stocks: {
+							brand_masterId: {
+								in: brand,
 							},
 						},
-					]
+					},
+				]
 				: []),
 			...(status[0]
 				? [
-						{
-							status: {
-								in: status.map(Number),
-							},
+					{
+						status: {
+							in: status.map(Number),
 						},
-					]
+					},
+				]
 				: []),
 		]
 	}
