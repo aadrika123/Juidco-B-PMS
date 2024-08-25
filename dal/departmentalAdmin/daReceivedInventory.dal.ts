@@ -781,8 +781,16 @@ export const createReceivingDal = async (req: Request) => {
 						procurement_no: procurement_no,
 					},
 				})
+			} else {
+				await tx.procurement.update({
+					where: {
+						procurement_no: procurement_no
+					},
+					data: {
+						status: 4
+					}
+				})
 			}
-
 		})
 
 		return 'Received'
