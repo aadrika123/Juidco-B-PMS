@@ -1187,16 +1187,28 @@ export const addToInventoryDal = async (req: Request) => {
 		// 	},
 		// })
 
-		// const query = `
-		// 	SELECT SUM(quantity) as total_quantity
-		// 	FROM product.product_${subcategory?.name.toLowerCase().replace(/\s/g, '')}
-		// 	 WHERE procurement_no = '${procurement_no}' AND is_added = false
-		// `
+		const procStockData = await prisma.procurement_stocks.findFirst({
+			where: { id: procurement_stock_id },
+			select: {
+				subCategory: {
+					select: {
+						id: true,
+						name: true
+					}
+				}
+			}
+		})
 
 		const query = `
 			SELECT SUM(quantity) as total_quantity
-			 WHERE procurement_no = '${procurement_no}' AND is_added = false
+			FROM product.product_${procStockData?.subCategory?.name.toLowerCase().replace(/\s/g, '')}
+			 WHERE procurement_no = '${procurement_no}' AND is_added = false AND procurement_stock_id = '${procurement_stock_id}'
 		`
+
+		// const query = `
+		// 	SELECT SUM(quantity) as total_quantity
+		// 	 WHERE procurement_no = '${procurement_no}' AND is_added = false AND procurement_stock_id = '${procurement_stock_id}'
+		// `
 		const totalQuantity: any[] = await prisma.$queryRawUnsafe(query)
 
 		if (totalQuantity[0]?.total_quantity !== totalNonAddedReceiving?._sum?.received_quantity) {
@@ -1343,20 +1355,20 @@ export const addToInventoryDal = async (req: Request) => {
 				if (!srRecInvInDel) throw { error: true, message: 'Error while deleting SR inbox' }
 			}
 
-			// await tx.$queryRawUnsafe(`
-			// 	UPDATE product.product_${subcategory?.name.toLowerCase().replace(/\s/g, '')}
-			// 	SET is_added = true, is_available = true, inventory_id = '${currentInventoryId}'
-			// 	WHERE procurement_no = '${procurement_no}' AND is_added = false AND is_available = false
-			// `)
+			await tx.$queryRawUnsafe(`
+				UPDATE product.product_${procStockData?.subCategory?.name.toLowerCase().replace(/\s/g, '')}
+				SET is_added = true, is_available = true, inventory_id = '${currentInventoryId}'
+				WHERE procurement_no = '${procurement_no}' AND is_added = false AND is_available = false
+			`)
 
-			await tx.notification.create({
-				data: {
-					role_id: Number(process.env.ROLE_DA),
-					title: 'Stock added to inventory',
-					destination: 23,
-					description: `Stock having procurement Number : ${procurement_no} has been added to inventory.`,
-				},
-			})
+			// await tx.notification.create({
+			// 	data: {
+			// 		role_id: Number(process.env.ROLE_DA),
+			// 		title: 'Stock added to inventory',
+			// 		destination: 23,
+			// 		description: `Stock having procurement Number : ${procurement_no} has been added to inventory.`,
+			// 	},
+			// })
 		})
 
 		return {
@@ -1669,7 +1681,7 @@ export const addProductDal = async (req: Request) => {
 
 		const sumOfQuantity = product.reduce((total, product) => total + (product?.quantity ? product?.quantity : 1), 0)
 
-		if (totalQuantity[0]?.total_quantity + sumOfQuantity > totalNonAddedReceiving?._sum?.received_quantity) {
+		if (totalQuantity[0]?.total_quantity + Number(sumOfQuantity) > totalNonAddedReceiving?._sum?.received_quantity) {
 			throw { error: true, meta: { message: 'Number of added products cannot be more than received stocks' } }
 		}
 
