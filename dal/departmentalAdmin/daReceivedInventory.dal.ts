@@ -727,7 +727,7 @@ export const createReceivingDal = async (req: Request) => {
 			})
 
 			if (srInboxCount === 0) {
-				tx.sr_received_inventory_inbox.create({
+				await tx.sr_received_inventory_inbox.create({
 					data: { procurement_no: procurement_no },
 				})
 			}
