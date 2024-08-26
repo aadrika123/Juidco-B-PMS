@@ -1184,7 +1184,7 @@ type setUnitPricePayloadType = {
     reference_no: string,
     procurement_no: string,
     items: {
-        id: string
+        items: string
         suppliers: {
             id: string,
             unit_price: number
@@ -1242,7 +1242,7 @@ export const setUnitPriceDal = async (req: Request) => {
                 items.map(async item => {
                     const procStock = await prisma.procurement_stocks.findFirst({
                         where: {
-                            id: item?.id
+                            id: item?.items
                         },
                         select: {
                             category_masterId: true,
