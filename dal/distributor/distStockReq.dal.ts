@@ -127,53 +127,53 @@ export const getStockReqInboxDal = async (req: Request) => {
 		whereClause.AND = [
 			...(category[0]
 				? [
-						{
-							stock_request: {
-								inventory: {
-									category_masterId: {
-										in: category,
-									},
+					{
+						stock_request: {
+							inventory: {
+								category_masterId: {
+									in: category,
 								},
 							},
 						},
-					]
+					},
+				]
 				: []),
 			...(subcategory[0]
 				? [
-						{
-							stock_request: {
-								inventory: {
-									subcategory_masterId: {
-										in: subcategory,
-									},
+					{
+						stock_request: {
+							inventory: {
+								subcategory_masterId: {
+									in: subcategory,
 								},
 							},
 						},
-					]
+					},
+				]
 				: []),
 			...(brand[0]
 				? [
-						{
-							stock_request: {
-								inventory: {
-									brand_masterId: {
-										in: brand,
-									},
+					{
+						stock_request: {
+							inventory: {
+								brand_masterId: {
+									in: brand,
 								},
 							},
 						},
-					]
+					},
+				]
 				: []),
 			...(status[0]
 				? [
-						{
-							stock_request: {
-								status: {
-									in: status.map(Number),
-								},
+					{
+						stock_request: {
+							status: {
+								in: status.map(Number),
 							},
 						},
-					]
+					},
+				]
 				: []),
 		]
 	}
@@ -307,47 +307,47 @@ export const getStockReqOutboxDal = async (req: Request) => {
 		whereClause.AND = [
 			...(category[0]
 				? [
-						{
-							stock_request: {
-								category_masterId: {
-									in: category,
-								},
+					{
+						stock_request: {
+							category_masterId: {
+								in: category,
 							},
 						},
-					]
+					},
+				]
 				: []),
 			...(subcategory[0]
 				? [
-						{
-							stock_request: {
-								subcategory_masterId: {
-									in: subcategory,
-								},
+					{
+						stock_request: {
+							subcategory_masterId: {
+								in: subcategory,
 							},
 						},
-					]
+					},
+				]
 				: []),
 			...(brand[0]
 				? [
-						{
-							stock_request: {
-								brand_masterId: {
-									in: brand,
-								},
+					{
+						stock_request: {
+							brand_masterId: {
+								in: brand,
 							},
 						},
-					]
+					},
+				]
 				: []),
 			...(status[0]
 				? [
-						{
-							stock_request: {
-								status: {
-									in: status.map(Number),
-								},
+					{
+						stock_request: {
+							status: {
+								in: status.map(Number),
 							},
 						},
-					]
+					},
+				]
 				: []),
 		]
 	}
@@ -493,12 +493,12 @@ export const forwardToDaDal = async (req: Request) => {
 					}),
 					...(daOutboxCount !== 0
 						? [
-								prisma.da_stock_req_outbox.delete({
-									where: {
-										stock_handover_no: item,
-									},
-								}),
-							]
+							prisma.da_stock_req_outbox.delete({
+								where: {
+									stock_handover_no: item,
+								},
+							}),
+						]
 						: []),
 					prisma.notification.create({
 						data: {
@@ -542,6 +542,16 @@ export const handoverDal = async (req: Request) => {
 				data: {
 					status: 4,
 				},
+			})
+			await tx.dist_stock_req_inbox.delete({
+				where: {
+					stock_handover_no: stock_handover_no,
+				}
+			})
+			await tx.dist_stock_req_outbox.create({
+				data: {
+					stock_handover_no: stock_handover_no,
+				}
 			})
 		})
 
