@@ -1266,7 +1266,7 @@ export const setUnitPriceDal = async (req: Request) => {
                             await tx.rate_contract_supplier.create({
                                 data: {
                                     rate_contract: { connect: { id: rateContract?.id as string } },
-                                    unit_price: supplier?.unit_price,
+                                    unit_price: Number(supplier?.unit_price),
                                     supplier_master: { connect: { id: supplier?.id as string } },
                                 }
                             })
