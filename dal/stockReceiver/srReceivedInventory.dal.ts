@@ -1326,7 +1326,7 @@ export const addToInventoryDal = async (req: Request) => {
 						category: { connect: { id: procData?.category_masterId } },
 						subcategory: { connect: { id: procStockData?.subCategory?.id } },
 						// brand: { connect: { id: procData?.brand_masterId } },
-						supplier_master:{ connect: { id: supplier?.id } },
+						supplier_master: { connect: { id: procData?.is_rate_contract ? procData?.rate_contract_supplier : supplier?.id } },
 						// supplier_masterId: supplier?.id,
 						unit: { connect: { id: procStockData?.unit_masterId } },
 						description: procStockData?.description,

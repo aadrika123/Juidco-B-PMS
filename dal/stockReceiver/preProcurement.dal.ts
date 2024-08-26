@@ -21,7 +21,7 @@ export type procurementType = {
 }
 
 export const createPreProcurementDal = async (req: Request) => {
-	const { category, procurement, auth }: { category: string; procurement: procurementType[]; auth: any } = req.body
+	const { category, procurement, auth, supplier, is_rate_contract = false }: { category: string; procurement: procurementType[]; supplier?: string, is_rate_contract?: boolean, auth: any } = req.body
 
 	const ulb_id = auth?.ulb_id
 
@@ -49,6 +49,8 @@ export const createPreProcurementDal = async (req: Request) => {
 					procurement_no: procurement_no,
 					category: { connect: { id: category } },
 					total_rate: total_rate,
+					is_rate_contract: is_rate_contract,
+					...(is_rate_contract && { rate_contract_supplier: supplier })
 				},
 			})
 			await Promise.all(
