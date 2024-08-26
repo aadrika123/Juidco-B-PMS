@@ -21,6 +21,7 @@ export const getStockReqByStockHandoverNoDal = async (req: Request) => {
 				isEdited: true,
 				status: true,
 				createdAt: true,
+				stock_req_product: true,
 				inventory: {
 					select: {
 						id: true,
@@ -47,9 +48,9 @@ export const getStockReqByStockHandoverNoDal = async (req: Request) => {
 							select: {
 								id: true,
 								name: true,
-								abbreviation: true
-							}
-						}
+								abbreviation: true,
+							},
+						},
 					},
 				},
 			},

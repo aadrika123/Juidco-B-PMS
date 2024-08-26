@@ -27,6 +27,7 @@ export const getBoqByRefNoDal = async (req: Request) => {
 						quantity: true,
 						rate: true,
 						remark: true,
+						gst: true,
 						category: {
 							select: {
 								name: true,
