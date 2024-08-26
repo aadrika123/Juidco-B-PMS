@@ -46,53 +46,53 @@ export const getStockReqInboxDal = async (req: Request) => {
 		whereClause.AND = [
 			...(category[0]
 				? [
-						{
-							stock_request: {
-								inventory: {
-									category_masterId: {
-										in: category,
-									},
+					{
+						stock_request: {
+							inventory: {
+								category_masterId: {
+									in: category,
 								},
 							},
 						},
-					]
+					},
+				]
 				: []),
 			...(subcategory[0]
 				? [
-						{
-							stock_request: {
-								inventory: {
-									subcategory_masterId: {
-										in: subcategory,
-									},
+					{
+						stock_request: {
+							inventory: {
+								subcategory_masterId: {
+									in: subcategory,
 								},
 							},
 						},
-					]
+					},
+				]
 				: []),
 			...(brand[0]
 				? [
-						{
-							stock_request: {
-								inventory: {
-									brand_masterId: {
-										in: brand,
-									},
+					{
+						stock_request: {
+							inventory: {
+								brand_masterId: {
+									in: brand,
 								},
 							},
 						},
-					]
+					},
+				]
 				: []),
 			...(status[0]
 				? [
-						{
-							stock_request: {
-								status: {
-									in: status.map(Number),
-								},
+					{
+						stock_request: {
+							status: {
+								in: status.map(Number),
 							},
 						},
-					]
+					},
+				]
 				: []),
 		]
 	}
@@ -225,53 +225,53 @@ export const getStockReqOutboxDal = async (req: Request) => {
 		whereClause.AND = [
 			...(category[0]
 				? [
-						{
-							stock_request: {
-								inventory: {
-									category_masterId: {
-										in: category,
-									},
+					{
+						stock_request: {
+							inventory: {
+								category_masterId: {
+									in: category,
 								},
 							},
 						},
-					]
+					},
+				]
 				: []),
 			...(subcategory[0]
 				? [
-						{
-							stock_request: {
-								inventory: {
-									subcategory_masterId: {
-										in: subcategory,
-									},
+					{
+						stock_request: {
+							inventory: {
+								subcategory_masterId: {
+									in: subcategory,
 								},
 							},
 						},
-					]
+					},
+				]
 				: []),
 			...(brand[0]
 				? [
-						{
-							stock_request: {
-								inventory: {
-									brand_masterId: {
-										in: brand,
-									},
+					{
+						stock_request: {
+							inventory: {
+								brand_masterId: {
+									in: brand,
 								},
 							},
 						},
-					]
+					},
+				]
 				: []),
 			...(status[0]
 				? [
-						{
-							stock_request: {
-								status: {
-									in: status.map(Number),
-								},
+					{
+						stock_request: {
+							status: {
+								in: status.map(Number),
 							},
 						},
-					]
+					},
+				]
 				: []),
 		]
 	}
@@ -566,7 +566,7 @@ export const approveStockReqDal = async (req: Request) => {
 								// console.log('else', `${assignedQuantityBuffer} ${index}`)
 							}
 
-							tx.stock_req_product.create({
+							await tx.stock_req_product.create({
 								data: {
 									stock_handover_no: item,
 									serial_no: product?.serial_no as string,
