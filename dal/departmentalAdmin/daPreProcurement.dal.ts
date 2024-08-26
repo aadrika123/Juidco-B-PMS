@@ -401,10 +401,10 @@ export const editPreProcurementDal = async (req: Request) => {
 		await prisma.$transaction([
 			...(historyExistence === 0
 				? [
-						prisma.procurement_history.create({
-							data: tempData,
-						}),
-					]
+					prisma.procurement_history.create({
+						data: tempData,
+					}),
+				]
 				: []),
 			prisma.procurement.update({
 				where: {
@@ -1364,7 +1364,7 @@ export const forwardToFinanceDal = async (req: Request) => {
 			},
 		})
 
-		if (boq?.status !== 0 && boq?.status !== 43) {
+		if (boq?.status !== 0 && boq?.status !== 41) {
 			throw {
 				error: true,
 				message: `Reference no. : ${reference_no} is not valid BOQ to be forwarded.`,
@@ -1396,7 +1396,7 @@ export const forwardToFinanceDal = async (req: Request) => {
 					reference_no: reference_no,
 				},
 				data: {
-					status: 40,
+					status: 42,
 				},
 			})
 
@@ -1411,6 +1411,77 @@ export const forwardToFinanceDal = async (req: Request) => {
 		})
 
 		return 'Forwarded to finance'
+	} catch (err: any) {
+		console.log(err)
+		return { error: true, message: getErrorMessage(err) }
+	}
+}
+
+export const proceedForPostProcurementDal = async (req: Request) => {
+	const { reference_no }: { reference_no: string } = req.body
+	try {
+
+		if (!reference_no) {
+			throw { error: true, message: 'Reference number is required' }
+		}
+
+		const boq = await prisma.boq.findFirst({
+			where: {
+				reference_no: reference_no,
+			},
+			select: {
+				status: true,
+				procurement: {
+					select: {
+						procurement_no: true,
+						is_rate_contract: true
+					}
+				}
+			},
+		})
+
+		if (boq?.procurement?.is_rate_contract === false) {
+			throw { error: true, message: 'This operation is only valid for rate contract' }
+		}
+
+		if (boq?.status !== 42) {
+			throw {
+				error: true,
+				message: `Reference no. : ${reference_no} is not valid BOQ to be proceed.`,
+			}
+		}
+
+		//start transaction
+		await prisma.$transaction(async tx => {
+			await tx.da_boq_inbox.delete({
+				where: {
+					reference_no: reference_no,
+				},
+			})
+
+			await tx.da_boq_outbox.create({
+				data: {
+					reference_no: reference_no,
+				},
+			})
+
+			await tx.da_post_procurement_inbox.create({
+				data: {
+					procurement_no: boq?.procurement?.procurement_no as string,
+				},
+			})
+
+			await tx.notification.create({
+				data: {
+					role_id: Number(process.env.ROLE_IA),
+					title: 'Procurement ready for post procurement',
+					destination: 23,
+					description: `There is a procurement ready for post procurement. Procurement Number : ${boq?.procurement?.procurement_no as string}`,
+				},
+			})
+		})
+
+		return 'Forwarded for post procurement'
 	} catch (err: any) {
 		console.log(err)
 		return { error: true, message: getErrorMessage(err) }
@@ -1624,68 +1695,68 @@ export const getPreTenderingInboxDal = async (req: Request) => {
 		whereClause.AND = [
 			...(category[0]
 				? [
-						{
-							boq: {
-								procurements: {
-									some: {
-										procurement: {
-											category_masterId: {
-												in: category,
-											},
+					{
+						boq: {
+							procurements: {
+								some: {
+									procurement: {
+										category_masterId: {
+											in: category,
 										},
 									},
 								},
 							},
 						},
-					]
+					},
+				]
 				: []),
 
 			...(subcategory[0]
 				? [
-						{
-							boq: {
-								procurements: {
-									some: {
-										procurement: {
-											subcategory_masterId: {
-												in: subcategory,
-											},
+					{
+						boq: {
+							procurements: {
+								some: {
+									procurement: {
+										subcategory_masterId: {
+											in: subcategory,
 										},
 									},
 								},
 							},
 						},
-					]
+					},
+				]
 				: []),
 
 			...(brand[0]
 				? [
-						{
-							boq: {
-								status: {
-									in: status.map(Number),
-								},
+					{
+						boq: {
+							status: {
+								in: status.map(Number),
 							},
 						},
-					]
+					},
+				]
 				: []),
 
 			...(brand[0]
 				? [
-						{
-							boq: {
-								procurements: {
-									some: {
-										procurement: {
-											brand_masterId: {
-												in: brand,
-											},
+					{
+						boq: {
+							procurements: {
+								some: {
+									procurement: {
+										brand_masterId: {
+											in: brand,
 										},
 									},
 								},
 							},
 						},
-					]
+					},
+				]
 				: []),
 		]
 	}
@@ -1823,68 +1894,68 @@ export const getPreTenderingOutboxDal = async (req: Request) => {
 		whereClause.AND = [
 			...(category[0]
 				? [
-						{
-							boq: {
-								procurements: {
-									some: {
-										procurement: {
-											category_masterId: {
-												in: category,
-											},
+					{
+						boq: {
+							procurements: {
+								some: {
+									procurement: {
+										category_masterId: {
+											in: category,
 										},
 									},
 								},
 							},
 						},
-					]
+					},
+				]
 				: []),
 
 			...(subcategory[0]
 				? [
-						{
-							boq: {
-								procurements: {
-									some: {
-										procurement: {
-											subcategory_masterId: {
-												in: subcategory,
-											},
+					{
+						boq: {
+							procurements: {
+								some: {
+									procurement: {
+										subcategory_masterId: {
+											in: subcategory,
 										},
 									},
 								},
 							},
 						},
-					]
+					},
+				]
 				: []),
 
 			...(brand[0]
 				? [
-						{
-							boq: {
-								status: {
-									in: status.map(Number),
-								},
+					{
+						boq: {
+							status: {
+								in: status.map(Number),
 							},
 						},
-					]
+					},
+				]
 				: []),
 
 			...(brand[0]
 				? [
-						{
-							boq: {
-								procurements: {
-									some: {
-										procurement: {
-											brand_masterId: {
-												in: brand,
-											},
+					{
+						boq: {
+							procurements: {
+								some: {
+									procurement: {
+										brand_masterId: {
+											in: brand,
 										},
 									},
 								},
 							},
 						},
-					]
+					},
+				]
 				: []),
 		]
 	}
