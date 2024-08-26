@@ -9,7 +9,7 @@ const prisma = new PrismaClient()
 export const getProcurementByProcurementNoDal = async (req: Request) => {
 	const { procurement_no } = req.params
 	try {
-		const result: any = await prisma.procurement.findFirst({
+		const result = await prisma.procurement.findFirst({
 			where: {
 				procurement_no: procurement_no,
 			},
@@ -84,15 +84,45 @@ export const getProcurementByProcurementNoDal = async (req: Request) => {
 			},
 		})
 
-		await Promise.all(
-			result?.receivings.map(async (receiving: any) => {
-				await Promise.all(
-					receiving?.receiving_image.map(async (img: any) => {
-						img.imageUrl = await getImage(img?.ReferenceNo)
+		if (result?.procurement_stocks) {
+			await Promise.all(
+				result?.procurement_stocks.map(async (stock: any) => {
+					const total = await prisma.receivings.aggregate({
+						where: {
+							procurement_no: procurement_no,
+							procurement_stock_id: stock?.id,
+						},
+						_sum: {
+							received_quantity: true,
+						},
 					})
-				)
-			})
-		)
+
+					const totalAdded = await prisma.receivings.aggregate({
+						where: {
+							procurement_no: procurement_no,
+							procurement_stock_id: stock?.id,
+							is_added: true
+						},
+						_sum: {
+							received_quantity: true,
+						},
+					})
+					stock.total_received = total?._sum?.received_quantity || 0 
+					stock.total_added = totalAdded?._sum?.received_quantity || 0
+				})
+			)
+		}
+		if (result?.receivings) {
+			await Promise.all(
+				result?.receivings.map(async (receiving: any) => {
+					await Promise.all(
+						receiving?.receiving_image.map(async (img: any) => {
+							img.imageUrl = await getImage(img?.ReferenceNo)
+						})
+					)
+				})
+			)
+		}
 
 		return result
 	} catch (err: any) {
