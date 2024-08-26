@@ -547,7 +547,7 @@ export const approveServiceRequestDal = async (req: Request) => {
 			})
 		})
 
-		return 'Approved by DA'
+		return 'Approved by IA'
 	} catch (err: any) {
 		console.log(err)
 		return { error: true, message: err?.message }

@@ -11,7 +11,8 @@ import {
     comparison,
     comparisonResult,
     selectWinner,
-    finalizeComparison
+    finalizeComparison,
+    setUnitPrice
 } from "../../controller/tenderingAdmin/ta.controller";
 import { upload } from "../../config/multer.config";
 
@@ -31,6 +32,7 @@ router.post('/compare', comparison)
 router.post('/select-winner', selectWinner)
 router.post('/comparison-finalize', finalizeComparison)
 router.get('/comparison-result/:reference_no', comparisonResult)
+router.post('/add-unit-price', setUnitPrice)
 
 
 export default router

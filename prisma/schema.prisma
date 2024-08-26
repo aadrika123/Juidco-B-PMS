@@ -91,7 +91,6 @@ model supplier_master {
     procurement_history    procurement_history[]
     procurement_before_boq procurement_before_boq[]
     bid_details            bid_details?             @relation(fields: [reference_no], references: [reference_no])
-    rate_contract          rate_contract[]
     rate_contract_supplier rate_contract_supplier[]
 }
 
@@ -295,15 +294,12 @@ model rate_contract {
     subcategory            subcategory_master?      @relation(fields: [subcategory_masterId], references: [id])
     subcategory_masterId   String?
     description            String?
-    rate                   Float?
     start_date             DateTime
     end_date               DateTime
     createdAt              DateTime                 @default(now())
     updatedAt              DateTime                 @updatedAt
     unit                   unit_master?             @relation(fields: [unit_masterId], references: [id])
     unit_masterId          String?
-    supplier_master        supplier_master?         @relation(fields: [supplier_masterId], references: [id])
-    supplier_masterId      String?
     rate_contract_supplier rate_contract_supplier[]
 }
 
@@ -311,7 +307,7 @@ model rate_contract_supplier {
     id                String           @id @default(uuid())
     rate_contract_id  String
     rate_contract     rate_contract    @relation(fields: [rate_contract_id], references: [id])
-    rate              Float
+    unit_price        Float
     supplier_master   supplier_master? @relation(fields: [supplier_masterId], references: [id])
     supplier_masterId String?
     createdAt         DateTime         @default(now())
@@ -382,6 +378,7 @@ model dead_stock_image {
 model procurement {
     id                           String                        @id @default(uuid())
     procurement_no               String                        @unique
+    rate_contract_supplier       String?
     category_masterId            String?
     category                     category_master?              @relation(fields: [category_masterId], references: [id])
     total_rate                   Float?
@@ -1219,7 +1216,7 @@ model bid_details {
     bid_type        bid_type_enum
     no_of_bidders   Int?
     status          Int               @default(0) // 0 = pending
-    creationStatus  Int               @default(0) // 0=pending, 1=type selected, 2=criteria added, 3=bidder added, 41=tech winner selected, 42= fin winner selected, 4=compared, 
+    creationStatus  Int               @default(0) // 0=pending, 1=type selected, 2=criteria added, 3=bidder added, 41=tech winner selected, 42= fin winner selected, 4=compared, 5=rate contract done 
     boq             boq               @relation(fields: [reference_no], references: [reference_no])
     createdAt       DateTime          @default(now())
     updatedAt       DateTime          @updatedAt

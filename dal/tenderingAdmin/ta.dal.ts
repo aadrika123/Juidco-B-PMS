@@ -1057,7 +1057,12 @@ export const finalizeComparisonDal = async (req: Request) => {
                 bid_type: true,
                 boq: {
                     select: {
-                        procurement_no: true
+                        procurement_no: true,
+                        pre_tendering_details: {
+                            select: {
+                                tendering_type: true
+                            }
+                        }
                     }
                 }
             }
@@ -1148,12 +1153,13 @@ export const finalizeComparisonDal = async (req: Request) => {
                     creationStatus: 4
                 }
             })
-
-            await tx.da_post_procurement_inbox.create({
-                data: {
-                    procurement_no: bidDetailsData?.boq?.procurement_no as string
-                }
-            })
+            if (bidDetailsData?.boq?.pre_tendering_details?.tendering_type !== 'rate_contract') {
+                await tx.da_post_procurement_inbox.create({
+                    data: {
+                        procurement_no: bidDetailsData?.boq?.procurement_no as string
+                    }
+                })
+            }
 
             await tx.notification.create({
                 data: {
@@ -1167,6 +1173,135 @@ export const finalizeComparisonDal = async (req: Request) => {
         })
 
         return 'Comparison finalized'
+
+    } catch (err: any) {
+        console.log(err)
+        return { error: true, message: getErrorMessage(err) }
+    }
+}
+
+type setUnitPricePayloadType = {
+    reference_no: string,
+    procurement_no: string,
+    items: {
+        id: string
+        suppliers: {
+            id: string,
+            unit_price: number
+        }[]
+    }[]
+}
+
+
+const calculateEndDate = (start_date: Date, tenure: number): Date => {
+
+    // Calculate the total number of months to add
+    const totalMonths = tenure * 12;
+
+    // Calculate the whole number of years and remaining months
+    const yearsToAdd = Math.floor(totalMonths / 12);
+    const monthsToAdd = totalMonths % 12;
+
+    // Create a new date based on the start_date
+    const end_date = new Date(start_date);
+
+    // Add the years and months
+    end_date.setFullYear(end_date.getFullYear() + yearsToAdd);
+    end_date.setMonth(end_date.getMonth() + monthsToAdd);
+
+    // console.log('Start Date:', start_date);
+    // console.log('End Date:', end_date);
+    return end_date
+}
+
+export const setUnitPriceDal = async (req: Request) => {
+    const { reference_no, procurement_no, items }: setUnitPricePayloadType = req.body
+    try {
+
+        if (!procurement_no) {
+            throw { error: true, message: "Procurement number is required as 'reference_no'" }
+        }
+
+        if (items?.length === 0) {
+            throw { error: true, message: "No item has provided" }
+        }
+
+        const currentDate = new Date();
+
+        const preTenderDetails = await prisma.pre_tendering_details.findFirst({
+            where: {
+                reference_no: reference_no
+            },
+            select: {
+                tenure: true
+            }
+        })
+
+        await prisma.$transaction(async (tx) => {
+            await Promise.all(
+                items.map(async item => {
+                    const procStock = await prisma.procurement_stocks.findFirst({
+                        where: {
+                            id: item?.id
+                        },
+                        select: {
+                            category_masterId: true,
+                            subCategory_masterId: true,
+                            unit_masterId: true,
+                            description: true
+                        }
+                    })
+                    const rateContract = await tx.rate_contract.create({
+                        data: {
+                            category: { connect: { id: procStock?.category_masterId as string } },
+                            subcategory: { connect: { id: procStock?.subCategory_masterId as string } },
+                            unit: { connect: { id: procStock?.unit_masterId as string } },
+                            description: procStock?.description as string,
+                            start_date: currentDate,
+                            end_date: calculateEndDate(currentDate, Number(preTenderDetails?.tenure)),
+                        }
+                    })
+                    await Promise.all(
+                        item?.suppliers.map(async supplier => {
+                            await tx.rate_contract_supplier.create({
+                                data: {
+                                    rate_contract: { connect: { id: rateContract?.id as string } },
+                                    unit_price: supplier?.unit_price,
+                                    supplier_master: { connect: { id: supplier?.id as string } },
+                                }
+                            })
+                        })
+                    )
+                })
+            )
+
+            await tx.bid_details.update({
+                where: {
+                    reference_no: reference_no
+                },
+                data: {
+                    creationStatus: 5
+                }
+            })
+
+            await tx.da_post_procurement_inbox.create({
+                data: {
+                    procurement_no: procurement_no as string
+                }
+            })
+
+            await tx.notification.create({
+                data: {
+                    role_id: Number(process.env.ROLE_IA),
+                    title: 'Bidding completed',
+                    destination: 23,
+                    description: `Bidding completed for Procurement Number : ${procurement_no}`,
+                },
+            })
+
+        })
+
+        return 'Unit price added'
 
     } catch (err: any) {
         console.log(err)
