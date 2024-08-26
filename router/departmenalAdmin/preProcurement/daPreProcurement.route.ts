@@ -26,6 +26,7 @@ import {
 	returnToAccPt,
 	releaseForTenderByProcNo,
 	forwardToFinance,
+	proceedForPostProcurement
 } from '../../../controller/departmentalAdmin/daPreProcurement.controller'
 
 // router.use(daAuth)
@@ -36,6 +37,7 @@ router.get('/pre-procurement/boq', iaAuth, getBoqInbox)
 router.get('/pre-procurement', getPreProcurement)
 router.get('/pre-procurement/boq/outbox', iaAuth, getBoqOutbox)
 router.post('/pre-procurement/boq/to-finance', iaAuth, forwardToFinance)
+router.post('/pre-procurement/boq/for-post', iaAuth, proceedForPostProcurement)
 router.get('/pre-procurement/outbox', getPreProcurementOutbox)
 router.get('/pre-procurement/outbox/:id', getPreProcurementOutboxById)
 router.get('/pre-procurement/:id', getPreProcurementById)
