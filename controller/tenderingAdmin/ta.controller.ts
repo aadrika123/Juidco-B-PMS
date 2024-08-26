@@ -10,7 +10,8 @@ import {
     comparisonDal,
     comparisonResultDal,
     selectWinnerDal,
-    finalizeComparisonDal
+    finalizeComparisonDal,
+    setUnitPriceDal
 } from "../../dal/tenderingAdmin/ta.dal";
 
 
@@ -198,6 +199,23 @@ export const finalizeComparison = async (req: Request, res: Response) => {
         res.status(400).json({
             status: false,
             message: `Error while finalizing comparison`,
+            error: result?.message
+        })
+    }
+}
+
+export const setUnitPrice = async (req: Request, res: Response) => {
+    const result: any = await setUnitPriceDal(req)
+    if (!result?.error) {
+        res.status(200).json({
+            status: true,
+            message: `Unit price added successfully`,
+            data: result
+        })
+    } else {
+        res.status(400).json({
+            status: false,
+            message: `Error while adding unit price`,
             error: result?.message
         })
     }

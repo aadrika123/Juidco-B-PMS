@@ -22,6 +22,7 @@ model category_master {
     procurement_before_boq     procurement_before_boq[]
     procurement_stocks         procurement_stocks[]
     procurement_stocks_history procurement_stocks_history[]
+    rate_contract              rate_contract[]
 }
 
 model subcategory_master {
@@ -38,6 +39,7 @@ model subcategory_master {
     procurement_before_boq     procurement_before_boq[]
     procurement_stocks         procurement_stocks[]
     procurement_stocks_history procurement_stocks_history[]
+    rate_contract              rate_contract[]
 }
 
 model brand_master {
@@ -67,6 +69,7 @@ model unit_master {
     procurement_before_boq     procurement_before_boq[]
     procurement_stocks         procurement_stocks[]
     procurement_stocks_history procurement_stocks_history[]
+    rate_contract              rate_contract[]
 }
 
 model supplier_master {
@@ -88,6 +91,7 @@ model supplier_master {
     procurement_history    procurement_history[]
     procurement_before_boq procurement_before_boq[]
     bid_details            bid_details?             @relation(fields: [reference_no], references: [reference_no])
+    rate_contract_supplier rate_contract_supplier[]
 }
 
 // pre-procurement============================================================================================================================================================================================================================================================================================================
@@ -283,6 +287,33 @@ model inventory {
     service_history        service_history[]
 }
 
+model rate_contract {
+    id                     String                   @id @default(uuid())
+    category               category_master?         @relation(fields: [category_masterId], references: [id])
+    category_masterId      String?
+    subcategory            subcategory_master?      @relation(fields: [subcategory_masterId], references: [id])
+    subcategory_masterId   String?
+    description            String?
+    start_date             DateTime
+    end_date               DateTime
+    createdAt              DateTime                 @default(now())
+    updatedAt              DateTime                 @updatedAt
+    unit                   unit_master?             @relation(fields: [unit_masterId], references: [id])
+    unit_masterId          String?
+    rate_contract_supplier rate_contract_supplier[]
+}
+
+model rate_contract_supplier {
+    id                String           @id @default(uuid())
+    rate_contract_id  String
+    rate_contract     rate_contract    @relation(fields: [rate_contract_id], references: [id])
+    unit_price        Float
+    supplier_master   supplier_master? @relation(fields: [supplier_masterId], references: [id])
+    supplier_masterId String?
+    createdAt         DateTime         @default(now())
+    updatedAt         DateTime         @updatedAt
+}
+
 model inventory_dead_stock {
     id                         String                       @id @default(uuid())
     inventoryId                String
@@ -347,6 +378,7 @@ model dead_stock_image {
 model procurement {
     id                           String                        @id @default(uuid())
     procurement_no               String                        @unique
+    rate_contract_supplier       String?
     category_masterId            String?
     category                     category_master?              @relation(fields: [category_masterId], references: [id])
     total_rate                   Float?
@@ -354,6 +386,7 @@ model procurement {
     is_partial                   Boolean                       @default(true)
     status                       Int                           @default(0) //   0=pending, 10=level1, 11=level1 returned, 12=level1 rejected, 13=level1 revised, 14=level1 approved, 20=level2, 21=level2 return, 22=level2 rejected, 23=level2 revised, 24=level2 approved, 3=supplier assigned, 4=stock partially recieved, 5=stock recieved, 6=partially added, 7=added     
     remark                       String?
+    is_rate_contract             Boolean                       @default(false)
     createdAt                    DateTime                      @default(now())
     updatedAt                    DateTime                      @updatedAt
     sr_pre_procurement_inbox     sr_pre_procurement_inbox?
@@ -1183,7 +1216,7 @@ model bid_details {
     bid_type        bid_type_enum
     no_of_bidders   Int?
     status          Int               @default(0) // 0 = pending
-    creationStatus  Int               @default(0) // 0=pending, 1=type selected, 2=criteria added, 3=bidder added, 41=tech winner selected, 42= fin winner selected, 4=compared, 
+    creationStatus  Int               @default(0) // 0=pending, 1=type selected, 2=criteria added, 3=bidder added, 41=tech winner selected, 42= fin winner selected, 4=compared, 5=rate contract done 
     boq             boq               @relation(fields: [reference_no], references: [reference_no])
     createdAt       DateTime          @default(now())
     updatedAt       DateTime          @updatedAt
