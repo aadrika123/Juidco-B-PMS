@@ -179,3 +179,49 @@ export const editProcurementDal = async (req: Request) => {
 		return { error: true, message: err?.message }
 	}
 }
+
+
+export const getInventoryAdditionValidityNoDal = async (req: Request) => {
+	const { procurement_stock_id } = req.params
+	let is_valid_for_addition: boolean = false
+	try {
+		const procStock = await prisma.procurement_stocks.findFirst({
+			where: {
+				id: procurement_stock_id,
+			},
+			select: {
+				subCategory: {
+					select: {
+						id: true,
+						name: true
+					}
+				}
+			},
+		})
+
+		const receiving = await prisma.receivings.aggregate({
+			where: {
+				procurement_stock_id: procurement_stock_id,
+			},
+			_sum: {
+				received_quantity: true
+			}
+		})
+
+		const product: any = await prisma.$queryRawUnsafe(`
+			SELECT SUM(quantity) as total_quantity
+			FROM product.product_${procStock?.subCategory?.name.toLowerCase().replace(/\s/g, '')}
+			 WHERE is_added = false AND procurement_stock_id = '${procurement_stock_id}'
+		`)
+
+		if (Number(receiving?._sum?.received_quantity) === Number(product?.total_quantity)) {
+			is_valid_for_addition = true
+		}
+
+		return is_valid_for_addition
+
+	} catch (err: any) {
+		console.log(err)
+		return { error: true, message: getErrorMessage(err) }
+	}
+}
