@@ -25,6 +25,11 @@ export const getBoqByRefNoDal = async (req: Request) => {
 				remark: true,
 				status: true,
 				isEdited: true,
+				procurement: {
+					select: {
+						is_rate_contract: true,
+					},
+				},
 				procurement_stocks: {
 					select: {
 						procurement_no: true,
