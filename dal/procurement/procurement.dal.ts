@@ -22,6 +22,7 @@ export const getProcurementByProcurementNoDal = async (req: Request) => {
 				is_partial: true,
 				status: true,
 				remark: true,
+				is_rate_contract: true,
 				procurement_stocks: {
 					select: {
 						id: true,
@@ -107,7 +108,7 @@ export const getProcurementByProcurementNoDal = async (req: Request) => {
 							received_quantity: true,
 						},
 					})
-					stock.total_received = total?._sum?.received_quantity || 0 
+					stock.total_received = total?._sum?.received_quantity || 0
 					stock.total_added = totalAdded?._sum?.received_quantity || 0
 				})
 			)
