@@ -56,7 +56,7 @@ export const getProcurementByProcurementNoDal = async (req: Request) => {
 						quantity: true,
 						description: true,
 						total_rate: true,
-						is_partial: true
+						is_partial: true,
 					},
 				},
 				supplier_master: true,
@@ -69,18 +69,18 @@ export const getProcurementByProcurementNoDal = async (req: Request) => {
 								subCategory: {
 									select: {
 										id: true,
-										name: true
-									}
+										name: true,
+									},
 								},
-								description: true
-							}
+								description: true,
+							},
 						},
 						receiving_image: {
 							select: {
 								ReferenceNo: true,
-							}
-						}
-					}
+							},
+						},
+					},
 				},
 			},
 		})
@@ -102,7 +102,7 @@ export const getProcurementByProcurementNoDal = async (req: Request) => {
 						where: {
 							procurement_no: procurement_no,
 							procurement_stock_id: stock?.id,
-							is_added: true
+							is_added: true,
 						},
 						_sum: {
 							received_quantity: true,
@@ -180,7 +180,6 @@ export const editProcurementDal = async (req: Request) => {
 	}
 }
 
-
 export const getInventoryAdditionValidityNoDal = async (req: Request) => {
 	const { procurement_stock_id } = req.params
 	let is_valid_for_addition: boolean = false
@@ -193,9 +192,9 @@ export const getInventoryAdditionValidityNoDal = async (req: Request) => {
 				subCategory: {
 					select: {
 						id: true,
-						name: true
-					}
-				}
+						name: true,
+					},
+				},
 			},
 		})
 
@@ -204,8 +203,8 @@ export const getInventoryAdditionValidityNoDal = async (req: Request) => {
 				procurement_stock_id: procurement_stock_id,
 			},
 			_sum: {
-				received_quantity: true
-			}
+				received_quantity: true,
+			},
 		})
 
 		const product: any = await prisma.$queryRawUnsafe(`
@@ -214,12 +213,15 @@ export const getInventoryAdditionValidityNoDal = async (req: Request) => {
 			 WHERE is_added = false AND procurement_stock_id = '${procurement_stock_id}'
 		`)
 
-		if (Number(receiving?._sum?.received_quantity) === Number(product?.total_quantity)) {
+		if (Number(receiving?._sum?.received_quantity) === Number(product[0]?.total_quantity)) {
 			is_valid_for_addition = true
 		}
 
-		return is_valid_for_addition
-
+		return {
+			receiving: receiving,
+			product: product,
+			is_valid_for_addition: is_valid_for_addition,
+		}
 	} catch (err: any) {
 		console.log(err)
 		return { error: true, message: getErrorMessage(err) }
