@@ -24,9 +24,9 @@ export const handoverAcknowledgeDal = async (req: Request) => {
 		if (stockReq?.status !== 4) {
 			throw { error: true, message: 'Invalid status of stock request' }
 		}
-		if (stockReq?.emp_id !== user?.emp_id) {
-			throw { error: true, message: 'Unauthorized employee' }
-		}
+		// if (stockReq?.emp_id !== user?.emp_id) {
+		// 	throw { error: true, message: 'Unauthorized employee' }
+		// }
 
 		await prisma.$transaction(async tx => {
 			await tx.stock_request.update({
