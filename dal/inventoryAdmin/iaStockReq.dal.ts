@@ -840,27 +840,6 @@ export const getProductsBysubcategoryDal = async (req: Request) => {
 
 	const { subcategory_id } = req.params
 
-
-	//creating search options for the query
-	if (search) {
-		whereClause.OR = [
-			{
-				stock_handover_no: {
-					contains: search,
-					mode: 'insensitive',
-				},
-			},
-			{
-				emp_id: {
-					description: {
-						contains: search,
-						mode: 'insensitive',
-					},
-				},
-			},
-		]
-	}
-
 	try {
 
 		const subcategory = await prisma.subcategory_master.findFirst({
@@ -872,14 +851,17 @@ export const getProductsBysubcategoryDal = async (req: Request) => {
 			}
 		})
 
-		const products: any[] = await prisma.$queryRawUnsafe(
-			`
-				SELECT *
-				FROM product.product_${subcategory?.name.toLowerCase().replace(/\s/g, '')}
-				WHERE is_available = true
-				ORDER BY updatedat DESC
-				`
-		)
+		const query = `
+		SELECT *
+		FROM product.product_${subcategory?.name.toLowerCase().replace(/\s/g, '')}
+		WHERE is_available = true
+		  ${search ? `AND (serial_no ILIKE '%${search}%')` : ''}
+		ORDER BY updatedat DESC
+	  `
+		console.log(query)
+		const products: any[] = await prisma.$queryRawUnsafe(query);
+
+
 		return products
 
 		// totalPage = Math.ceil(count / take)
