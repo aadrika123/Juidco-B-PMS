@@ -1,5 +1,5 @@
 import { Request, Response } from 'express'
-import { getStockReqInboxDal, getStockReqOutboxDal, approveStockReqDal, rejectStockReqDal, returnStockReqDal } from '../../dal/inventoryAdmin/iaStockReq.dal'
+import { getStockReqInboxDal, getStockReqOutboxDal, approveStockReqDal, rejectStockReqDal, returnStockReqDal, getProductsBysubcategoryDal } from '../../dal/inventoryAdmin/iaStockReq.dal'
 
 export const getStockReqInbox = async (req: Request, res: Response) => {
 	const result: any = await getStockReqInboxDal(req)
@@ -83,6 +83,25 @@ export const returnStockReq = async (req: Request, res: Response) => {
 		res.status(404).json({
 			status: false,
 			message: `Error while returning`,
+			error: result?.message,
+		})
+	}
+}
+
+export const getProductsBysubcategory = async (req: Request, res: Response) => {
+	const result: any = await getProductsBysubcategoryDal(req)
+	if (!result?.error) {
+		res.status(200).json({
+			status: true,
+			message: `Product list fetched successfully`,
+			// data: result?.data,
+			// pagination: result?.pagination,
+			data: result
+		})
+	} else {
+		res.status(404).json({
+			status: false,
+			message: `Error while fetching product list`,
 			error: result?.message,
 		})
 	}
