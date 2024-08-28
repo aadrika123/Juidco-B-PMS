@@ -1,6 +1,6 @@
 import express from 'express'
 const router = express.Router()
-import { getStockReqInbox, getStockReqOutbox, approveStockReq, rejectStockReq, returnStockReq } from '../../controller/inventoryAdmin/iaStockReq.controller'
+import { getStockReqInbox, getStockReqOutbox, approveStockReq, rejectStockReq, returnStockReq, getProductsBysubcategory } from '../../controller/inventoryAdmin/iaStockReq.controller'
 
 import { iaAuth } from '../../middleware/userAuth'
 
@@ -11,5 +11,6 @@ router.get('/outbox', getStockReqOutbox)
 router.post('/approve', approveStockReq)
 router.post('/reject', rejectStockReq)
 router.post('/return', returnStockReq)
+router.get('/product/:subcategory_id', getProductsBysubcategory)
 
 export default router

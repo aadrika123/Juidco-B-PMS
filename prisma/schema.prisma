@@ -959,7 +959,7 @@ model stock_request {
 model stock_req_product {
     id                String        @id @default(uuid())
     stock_handover_no String
-    serial_no         String        @unique
+    serial_no         String       
     quantity          Float         @default(1)
     inventory         inventory     @relation(fields: [inventoryId], references: [id])
     inventoryId       String

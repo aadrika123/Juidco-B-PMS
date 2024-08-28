@@ -825,3 +825,86 @@ export const rejectStockReqDal = async (req: Request) => {
 		return { error: true, message: getErrorMessage(err) }
 	}
 }
+
+export const getProductsBysubcategoryDal = async (req: Request) => {
+	const page: number | undefined = Number(req?.query?.page)
+	const take: number | undefined = Number(req?.query?.take)
+	const startIndex: number | undefined = (page - 1) * take
+	const endIndex: number | undefined = startIndex + take
+	let count: number
+	let totalPage: number
+	let pagination: pagination = {}
+	const whereClause: any = {}
+
+	const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined
+
+	const { subcategory_id } = req.params
+
+
+	//creating search options for the query
+	if (search) {
+		whereClause.OR = [
+			{
+				stock_handover_no: {
+					contains: search,
+					mode: 'insensitive',
+				},
+			},
+			{
+				emp_id: {
+					description: {
+						contains: search,
+						mode: 'insensitive',
+					},
+				},
+			},
+		]
+	}
+
+	try {
+
+		const subcategory = await prisma.subcategory_master.findFirst({
+			where: {
+				id: subcategory_id
+			},
+			select: {
+				name: true
+			}
+		})
+
+		const products: any[] = await prisma.$queryRawUnsafe(
+			`
+				SELECT *
+				FROM product.product_${subcategory?.name.toLowerCase().replace(/\s/g, '')}
+				WHERE is_available = true
+				ORDER BY updatedat DESC
+				`
+		)
+		return products
+
+		// totalPage = Math.ceil(count / take)
+		// if (endIndex < count) {
+		// 	pagination.next = {
+		// 		page: page + 1,
+		// 		take: take,
+		// 	}
+		// }
+		// if (startIndex > 0) {
+		// 	pagination.prev = {
+		// 		page: page - 1,
+		// 		take: take,
+		// 	}
+		// }
+		// pagination.currentPage = page
+		// pagination.currentTake = take
+		// pagination.totalPage = totalPage
+		// pagination.totalResult = count
+		// return {
+		// 	data: resultToSend,
+		// 	pagination: pagination,
+		// }
+	} catch (err: any) {
+		console.log(err)
+		return { error: true, message: getErrorMessage(err) }
+	}
+}
