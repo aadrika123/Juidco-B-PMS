@@ -94,6 +94,17 @@ model supplier_master {
     rate_contract_supplier rate_contract_supplier[]
 }
 
+model bank_master {
+    id        String   @id @default(uuid())
+    name      String
+    branch    String
+    address   String
+    ifsc      String
+    status    Boolean  @default(true)
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
 // pre-procurement============================================================================================================================================================================================================================================================================================================
 
 model procurement_status {

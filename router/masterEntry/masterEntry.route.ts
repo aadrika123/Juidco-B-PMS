@@ -5,6 +5,8 @@ import { createCategory, getCategory, getCategoryById, editCategory, switchStatu
 import { createBrand, getBrand, getBrandBySubcategoryId, getBrandActiveOnly, getBrandBySubcategoryIdActiveOnly, editBrand, switchStatus as brandSwitch, getBrandById } from '../../controller/masterEntry/brand.controller'
 import { createUnit, getUnit, getUnitById, editUnit, switchStatus as unitSwitch, getUnitActiveOnly } from '../../controller/masterEntry/unit.controller'
 import { createSupplier, getSupplier, getSupplierById, editSupplier, switchStatus as supplierSwitch, getSupplierActiveOnly, getSupplierByProcurementNo } from '../../controller/masterEntry/supplier.controller'
+import { createBank, getBank, getBankById, editBank, switchStatus as bankSwitch, getBankActiveOnly } from '../../controller/masterEntry/bank.controller'
+
 
 //sub-category
 router.post('/sub-category', createSubCategory)
@@ -51,6 +53,14 @@ router.post('/supplier/update', editSupplier)
 router.post('/supplier/switch', supplierSwitch)
 router.get('/supplier/by-procurement/:procurement_no', getSupplierByProcurementNo)
 router.get('/supplier/:id', getSupplierById)
+
+//bank
+router.post('/bank', createBank)
+router.get('/bank', getBank)
+router.get('/bank/active', getBankActiveOnly)
+router.post('/bank/update', editBank)
+router.post('/bank/switch', bankSwitch)
+router.get('/bank/:id', getBankById)
 
 
 export default router
