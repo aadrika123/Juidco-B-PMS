@@ -219,7 +219,7 @@ export const getInventoryAdditionValidityNoDal = async (req: Request) => {
 
 		return {
 			receiving: receiving,
-			product: product,
+			product: product[0],
 			is_valid_for_addition: is_valid_for_addition,
 		}
 	} catch (err: any) {
