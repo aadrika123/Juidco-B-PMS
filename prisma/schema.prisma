@@ -270,32 +270,35 @@ model sr_received_inventory_outbox {
 //inventory============================================================================================================================================================================================================================================================================================================
 
 model inventory {
-    id                     String                   @id @default(uuid())
-    category               category_master?         @relation(fields: [category_masterId], references: [id])
-    category_masterId      String?
-    subcategory            subcategory_master?      @relation(fields: [subcategory_masterId], references: [id])
-    subcategory_masterId   String?
-    brand                  brand_master?            @relation(fields: [brand_masterId], references: [id])
-    brand_masterId         String?
-    description            String?
-    quantity               Float                    @default(0)
-    warranty               Boolean                  @default(false)
-    createdAt              DateTime                 @default(now())
-    updatedAt              DateTime                 @updatedAt
-    stock_addition_history stock_addition_history[]
-    stock_request          stock_request[]
-    inventory_buffer       inventory_buffer[]
-    unit                   unit_master?             @relation(fields: [unit_masterId], references: [id])
-    unit_masterId          String?
-    supplier_master        supplier_master?         @relation(fields: [supplier_masterId], references: [id])
-    supplier_masterId      String?
-    inventory_dead_stock   inventory_dead_stock[]
-    stock_req_product      stock_req_product[]
-    stock_request_history  stock_request_history[]
-    service_request        service_request[]
-    service_req_product    service_req_product[]
-    inventory_warranty     inventory_warranty[]
-    service_history        service_history[]
+    id                      String                    @id @default(uuid())
+    category                category_master?          @relation(fields: [category_masterId], references: [id])
+    category_masterId       String?
+    subcategory             subcategory_master?       @relation(fields: [subcategory_masterId], references: [id])
+    subcategory_masterId    String?
+    brand                   brand_master?             @relation(fields: [brand_masterId], references: [id])
+    brand_masterId          String?
+    description             String?
+    quantity                Float                     @default(0)
+    warranty                Boolean                   @default(false)
+    createdAt               DateTime                  @default(now())
+    updatedAt               DateTime                  @updatedAt
+    stock_addition_history  stock_addition_history[]
+    stock_request           stock_request[]
+    inventory_buffer        inventory_buffer[]
+    unit                    unit_master?              @relation(fields: [unit_masterId], references: [id])
+    unit_masterId           String?
+    supplier_master         supplier_master?          @relation(fields: [supplier_masterId], references: [id])
+    supplier_masterId       String?
+    inventory_dead_stock    inventory_dead_stock[]
+    stock_req_product       stock_req_product[]
+    stock_request_history   stock_request_history[]
+    service_request         service_request[]
+    service_req_product     service_req_product[]
+    inventory_warranty      inventory_warranty[]
+    service_history         service_history[]
+    emp_service_request     emp_service_request[]
+    emp_service_req_product emp_service_req_product[]
+    emp_service_history     emp_service_history[]
 }
 
 model rate_contract {
@@ -959,7 +962,7 @@ model stock_request {
 model stock_req_product {
     id                String        @id @default(uuid())
     stock_handover_no String
-    serial_no         String       
+    serial_no         String
     quantity          Float         @default(1)
     inventory         inventory     @relation(fields: [inventoryId], references: [id])
     inventoryId       String
@@ -1323,3 +1326,86 @@ model comparison_criteria {
 }
 
 // bidding================================================================================================================================================================
+
+// employee service================================================================================================================================================================
+
+model emp_service_request {
+    id                      String                       @id @default(uuid())
+    user_id                 Int
+    stock_handover_no       String
+    service_no              String                       @unique
+    status                  Int // 0=pending, 10=dd, 11=dd returned, 12= dd rejected, 13= approved  
+    service                 service_enum
+    inventory               inventory?                   @relation(fields: [inventoryId], references: [id])
+    inventoryId             String?
+    remark                  String?
+    createdAt               DateTime                     @default(now())
+    updatedAt               DateTime                     @updatedAt
+    emp_service_req_product emp_service_req_product[]
+    emp_service_history     emp_service_history?
+    dd_service_req_inbox    dist_emp_service_req_inbox?
+    dd_service_req_outbox   dist_emp_service_req_outbox?
+    emp_service_req_inbox   emp_service_req_inbox?
+    emp_service_req_outbox  emp_service_req_outbox?
+}
+
+model emp_service_req_product {
+    id                  String              @id @default(uuid())
+    service_no          String
+    serial_no           String              @unique
+    quantity            Float               @default(1)
+    status              Int                 @default(0) // -1=failed, 0=pending, 1=successful
+    inventory           inventory           @relation(fields: [inventoryId], references: [id])
+    inventoryId         String
+    emp_service_request emp_service_request @relation(fields: [service_no], references: [service_no])
+    createdAt           DateTime            @default(now())
+    updatedAt           DateTime            @updatedAt
+}
+
+model emp_service_history {
+    id                  String              @id @default(uuid())
+    stock_handover_no   String
+    service_no          String              @unique
+    serial_no           String
+    quantity            Float               @default(1)
+    service             service_enum
+    inventory           inventory           @relation(fields: [inventoryId], references: [id])
+    inventoryId         String
+    emp_service_request emp_service_request @relation(fields: [service_no], references: [service_no])
+    createdAt           DateTime            @default(now())
+    updatedAt           DateTime            @updatedAt
+}
+
+model dist_emp_service_req_inbox {
+    id              String              @id @default(uuid())
+    service_no      String              @unique
+    emp_service_req emp_service_request @relation(fields: [service_no], references: [service_no])
+    createdAt       DateTime            @default(now())
+    updatedAt       DateTime            @updatedAt
+}
+
+model dist_emp_service_req_outbox {
+    id              String              @id @default(uuid())
+    service_no      String              @unique
+    emp_service_req emp_service_request @relation(fields: [service_no], references: [service_no])
+    createdAt       DateTime            @default(now())
+    updatedAt       DateTime            @updatedAt
+}
+
+model emp_service_req_inbox {
+    id              String              @id @default(uuid())
+    service_no      String              @unique
+    emp_service_req emp_service_request @relation(fields: [service_no], references: [service_no])
+    createdAt       DateTime            @default(now())
+    updatedAt       DateTime            @updatedAt
+}
+
+model emp_service_req_outbox {
+    id              String              @id @default(uuid())
+    service_no      String              @unique
+    emp_service_req emp_service_request @relation(fields: [service_no], references: [service_no])
+    createdAt       DateTime            @default(now())
+    updatedAt       DateTime            @updatedAt
+}
+
+// employee service================================================================================================================================================================

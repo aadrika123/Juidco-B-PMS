@@ -552,7 +552,7 @@ export const approvalByLevel1Dal = async (req: Request) => {
 }
 
 export const rejectionByLevel1Dal = async (req: Request) => {
-	const { procurement_no }: { procurement_no: string } = req.body
+	const { procurement_no, remark }: { procurement_no: string, remark: string } = req.body
 	try {
 		if (!procurement_no) {
 			throw {
@@ -572,6 +572,10 @@ export const rejectionByLevel1Dal = async (req: Request) => {
 
 		if (procurement?.status !== 10 && procurement?.status !== 13 && procurement?.status !== 21) {
 			throw { error: true, message: 'Invalid status of procurement to be rejected' }
+		}
+
+		if (!remark) {
+			throw { error: true, message: 'Remark is mandatory' }
 		}
 
 		//start transaction
@@ -606,7 +610,7 @@ export const rejectionByLevel1Dal = async (req: Request) => {
 				},
 				data: {
 					status: 12,
-					remark: '' as string,
+					remark: remark,
 				},
 			})
 

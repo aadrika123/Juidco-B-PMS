@@ -50,43 +50,43 @@ export const getInboxDal = async (req: Request) => {
 		whereClause.AND = [
 			...(category[0]
 				? [
-						{
-							category_masterId: {
-								in: category,
-							},
+					{
+						category_masterId: {
+							in: category,
 						},
-					]
+					},
+				]
 				: []),
 			...(subcategory[0]
 				? [
-						{
-							procurement_stocks: {
-								subcategory_masterId: {
-									in: subcategory,
-								},
+					{
+						procurement_stocks: {
+							subcategory_masterId: {
+								in: subcategory,
 							},
 						},
-					]
+					},
+				]
 				: []),
 			...(brand[0]
 				? [
-						{
-							procurement_stocks: {
-								brand_masterId: {
-									in: brand,
-								},
+					{
+						procurement_stocks: {
+							brand_masterId: {
+								in: brand,
 							},
 						},
-					]
+					},
+				]
 				: []),
 			...(status[0]
 				? [
-						{
-							status: {
-								in: status.map(Number),
-							},
+					{
+						status: {
+							in: status.map(Number),
 						},
-					]
+					},
+				]
 				: []),
 		]
 	}
@@ -199,43 +199,43 @@ export const getOutboxDal = async (req: Request) => {
 		whereClause.AND = [
 			...(category[0]
 				? [
-						{
-							category_masterId: {
-								in: category,
-							},
+					{
+						category_masterId: {
+							in: category,
 						},
-					]
+					},
+				]
 				: []),
 			...(subcategory[0]
 				? [
-						{
-							procurement_stocks: {
-								subcategory_masterId: {
-									in: subcategory,
-								},
+					{
+						procurement_stocks: {
+							subcategory_masterId: {
+								in: subcategory,
 							},
 						},
-					]
+					},
+				]
 				: []),
 			...(brand[0]
 				? [
-						{
-							procurement_stocks: {
-								brand_masterId: {
-									in: brand,
-								},
+					{
+						procurement_stocks: {
+							brand_masterId: {
+								in: brand,
 							},
 						},
-					]
+					},
+				]
 				: []),
 			...(status[0]
 				? [
-						{
-							status: {
-								in: status.map(Number),
-							},
+					{
+						status: {
+							in: status.map(Number),
 						},
-					]
+					},
+				]
 				: []),
 		]
 	}
@@ -336,7 +336,7 @@ export const returnToLevel1Dal = async (req: Request) => {
 		if (!remark) {
 			throw { error: true, message: 'Remark is mandatory' }
 		}
-		
+
 
 		//start transaction
 		await prisma.$transaction(async tx => {
@@ -468,7 +468,7 @@ export const approvalByLevel2Dal = async (req: Request) => {
 }
 
 export const rejectionByLevel2Dal = async (req: Request) => {
-	const { procurement_no }: { procurement_no: string } = req.body
+	const { procurement_no, remark }: { procurement_no: string, remark: string } = req.body
 	try {
 		if (!procurement_no) {
 			throw {
@@ -477,7 +477,7 @@ export const rejectionByLevel2Dal = async (req: Request) => {
 			}
 		}
 
-		const boqData = await prisma.procurement.findFirst({
+		const procurement = await prisma.procurement.findFirst({
 			where: {
 				procurement_no: procurement_no,
 			},
@@ -486,8 +486,12 @@ export const rejectionByLevel2Dal = async (req: Request) => {
 			},
 		})
 
-		if (boqData?.status !== 20 && boqData?.status !== 23) {
+		if (procurement?.status !== 20 && procurement?.status !== 23) {
 			throw { error: true, message: 'Invalid status of BOQ to be rejected' }
+		}
+
+		if (!remark) {
+			throw { error: true, message: 'Remark is mandatory' }
 		}
 
 		//start transaction
@@ -522,7 +526,7 @@ export const rejectionByLevel2Dal = async (req: Request) => {
 				},
 				data: {
 					status: 22,
-					remark: '' as string,
+					remark: remark,
 				},
 			})
 
