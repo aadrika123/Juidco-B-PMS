@@ -820,7 +820,7 @@ const fetchRequiredProducts = async (stockReq: any, limit: number = 1): Promise<
 }
 
 export const returnStockReqDal = async (req: Request) => {
-	const { stock_handover_no }: { stock_handover_no: string[] } = req.body
+	const { stock_handover_no, remark }: { stock_handover_no: string[], remark?: string } = req.body
 
 	try {
 		await Promise.all(
@@ -853,6 +853,7 @@ export const returnStockReqDal = async (req: Request) => {
 						},
 						data: {
 							status: -1,
+							remark: remark
 						},
 					}),
 					prisma.ia_stock_req_inbox.delete({
@@ -897,7 +898,7 @@ export const returnStockReqDal = async (req: Request) => {
 }
 
 export const rejectStockReqDal = async (req: Request) => {
-	const { stock_handover_no }: { stock_handover_no: string[] } = req.body
+	const { stock_handover_no, remark }: { stock_handover_no: string[], remark: string } = req.body
 
 	try {
 		await Promise.all(
@@ -930,6 +931,7 @@ export const rejectStockReqDal = async (req: Request) => {
 						},
 						data: {
 							status: -2,
+							remark: remark
 						},
 					}),
 					prisma.ia_stock_req_inbox.delete({

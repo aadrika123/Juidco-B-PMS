@@ -20,6 +20,7 @@ export const getStockReqByStockHandoverNoDal = async (req: Request) => {
 				allotted_quantity: true,
 				isEdited: true,
 				status: true,
+				remark: true,
 				createdAt: true,
 				stock_req_product: true,
 				inventory: {
