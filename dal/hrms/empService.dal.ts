@@ -1,5 +1,5 @@
 import { Request } from 'express'
-import { emp_service_request, PrismaClient, service_enum, service_request } from '@prisma/client'
+import { emp_service_request, PrismaClient, service_enum } from '@prisma/client'
 import getErrorMessage from '../../lib/getErrorMessage'
 import { pagination } from '../../type/common.type'
 import generateEmpServiceNumber from '../../lib/empServiceNumberGenerator'
@@ -36,84 +36,85 @@ export const serviceTranslator = (service: service_enum): string => {
 	return result
 }
 
-// export const createServiceRequestDal = async (req: Request) => {
-// 	const { products, service, stock_handover_no, inventoryId, auth }: reqType = req.body
+export const createEmpServiceRequestDal = async (req: Request) => {
+	const { products, service, stock_handover_no, inventoryId, auth }: reqType = req.body
 
-// 	const ulb_id = auth?.ulb_id
+	const ulb_id = auth?.ulb_id
 
-// 	try {
-// 		const service_no = generateEmpServiceNumber(ulb_id)
+	try {
+		const service_no = generateEmpServiceNumber(ulb_id)
 
-// 		const data: Omit<emp_service_request, 'createdAt' | 'updatedAt' | 'remark' | 'id'> = {
-// 			service_no: service_no,
-// 			stock_handover_no: stock_handover_no,
-// 			service: service,
-// 			inventoryId: inventoryId,
-// 			status: service === 'return' ? 20 : 10,
-// 		}
+		const data: Omit<emp_service_request, 'createdAt' | 'updatedAt' | 'remark' | 'id'> = {
+			service_no: service_no,
+			stock_handover_no: stock_handover_no,
+			service: service,
+			inventoryId: inventoryId,
+			user_id: auth?.id,
+			status: 10,
+		}
 
-// 		let serviceReq: any
+		let serviceReq: any
 
-// 		//start transaction
-// 		await prisma.$transaction(async tx => {
-// 			serviceReq = await tx.service_request.create({
-// 				data: data,
-// 			})
+		//start transaction
+		await prisma.$transaction(async tx => {
+			serviceReq = await tx.emp_service_request.create({
+				data: data,
+			})
 
-// 			await Promise.all(
-// 				products.map(async product => {
-// 					await tx.service_req_product.create({
-// 						data: {
-// 							service_no: service_no,
-// 							serial_no: product?.serial_no,
-// 							inventoryId: inventoryId,
-// 						},
-// 					})
-// 				})
-// 			)
+			await Promise.all(
+				products.map(async product => {
+					await tx.emp_service_req_product.create({
+						data: {
+							service_no: service_no,
+							serial_no: product?.serial_no,
+							inventoryId: inventoryId,
+						},
+					})
+				})
+			)
 
-// 			await tx.dist_service_req_outbox.create({
-// 				data: {
-// 					service_no: service_no,
-// 				},
-// 			})
+			await tx.emp_service_req_outbox.create({
+				data: {
+					service_no: service_no,
+				},
+			})
 
-// 			await tx.da_service_req_inbox.create({
-// 				data: {
-// 					service_no: service_no,
-// 				},
-// 			})
-// 			if (service === 'return') {
-// 				await tx.ia_service_req_inbox.create({
-// 					data: {
-// 						service_no: service_no,
-// 					},
-// 				})
-// 				await tx.notification.create({
-// 					data: {
-// 						role_id: Number(process.env.ROLE_IA),
-// 						title: 'New Service request',
-// 						destination: 81,
-// 						description: `There is a ${serviceTranslator(service)}. Service Number : ${service_no}`,
-// 					},
-// 				})
-// 			}
-// 			await tx.notification.create({
-// 				data: {
-// 					role_id: Number(process.env.ROLE_DA),
-// 					title: 'New Service request',
-// 					destination: 26,
-// 					description: `There is a ${serviceTranslator(service)}. Service Number : ${service_no}`,
-// 				},
-// 			})
-// 		})
+			await tx.dist_emp_service_req_inbox.create({
+				data: {
+					service_no: service_no,
+				},
+			})
+			// if (service === 'return') {
+			// 	await tx.ia_service_req_inbox.create({
+			// 		data: {
+			// 			service_no: service_no,
+			// 		},
+			// 	})
+			// 	await tx.notification.create({
+			// 		data: {
+			// 			role_id: Number(process.env.ROLE_IA),
+			// 			title: 'New Service request',
+			// 			destination: 81,
+			// 			description: `There is a ${serviceTranslator(service)}. Service Number : ${service_no}`,
+			// 		},
+			// 	})
+			// }
+			await tx.notification.create({
+				data: {
+					role_id: Number(process.env.ROLE_DA),
+					title: 'New Service request',
+					destination: 26,
+					description: `There is a ${serviceTranslator(service)}. Service Number : ${service_no}`,
+				},
+			})
+		})
 
-// 		return serviceReq
-// 	} catch (err: any) {
-// 		console.log(err)
-// 		return { error: true, message: err?.message }
-// 	}
-// }
+		return serviceReq
+	} catch (err: any) {
+		console.log(err)
+		return { error: true, message: err?.message }
+	}
+}
 
 
 
