@@ -1,5 +1,5 @@
 import { Request, Response } from 'express'
-import { getStockReqInboxDal, getStockReqOutboxDal, approveStockReqDal, rejectStockReqDal, returnStockReqDal, getProductsBysubcategoryDal } from '../../dal/inventoryAdmin/iaStockReq.dal'
+import { getStockReqInboxDal, getStockReqOutboxDal, approveStockReqDal, rejectStockReqDal, returnStockReqDal, getProductsBystockReqDal } from '../../dal/inventoryAdmin/iaStockReq.dal'
 
 export const getStockReqInbox = async (req: Request, res: Response) => {
 	const result: any = await getStockReqInboxDal(req)
@@ -88,8 +88,8 @@ export const returnStockReq = async (req: Request, res: Response) => {
 	}
 }
 
-export const getProductsBysubcategory = async (req: Request, res: Response) => {
-	const result: any = await getProductsBysubcategoryDal(req)
+export const getProductsBystockReq = async (req: Request, res: Response) => {
+	const result: any = await getProductsBystockReqDal(req)
 	if (!result?.error) {
 		res.status(200).json({
 			status: true,
