@@ -529,6 +529,8 @@ export const approveStockReqDal = async (req: Request) => {
 					throw { error: true, message: 'Stock request is not valid to be approved' }
 				}
 
+				const serialNosForSQL = serial_nos.map(sno => `'${sno}'`).join(', ');
+
 				// const customStockReq = {
 				// 	allotted_quantity: 15,
 				// 	inventory: {
@@ -539,12 +541,12 @@ export const approveStockReqDal = async (req: Request) => {
 				// 	},
 				// }
 
-				const requiredProducts = await fetchRequiredProducts(stockReq)
-				// const requiredProducts = await prisma.$queryRawUnsafe(`
-				// 	SELECT *
-				// 	FROM product.product_${stockReq?.inventory?.subcategory?.name.toLowerCase().replace(/\s/g, '')}
-				// 	WHERE is_available = true AND inventory_id = '${stockReq?.inventory?.id as string}'
-				// 	`)
+				// const requiredProducts = await fetchRequiredProducts(stockReq)
+				const requiredProducts: any[] = await prisma.$queryRawUnsafe(`
+					SELECT *
+					FROM product.product_${stockReq?.inventory?.subcategory?.name.toLowerCase().replace(/\s/g, '')}
+					WHERE is_available = true AND serial_no = (${serialNosForSQL})
+					`)
 				// console.log(requiredProducts.length)
 
 				let assignedQuantityBuffer: number = 0
@@ -976,7 +978,7 @@ export const rejectStockReqDal = async (req: Request) => {
 	}
 }
 
-export const getProductsBysubcategoryDal = async (req: Request) => {
+export const getProductsBystockReqDal = async (req: Request) => {
 	// const page: number | undefined = Number(req?.query?.page)
 	// const take: number | undefined = Number(req?.query?.take)
 	// const startIndex: number | undefined = (page - 1) * take
@@ -1010,7 +1012,7 @@ export const getProductsBysubcategoryDal = async (req: Request) => {
 				stock_req_product: true,
 			},
 		})
-		
+
 		const query = `
 			SELECT *
 			FROM product.product_${stockReq?.inventory?.subcategory?.name.toLowerCase().replace(/\s/g, '')}
