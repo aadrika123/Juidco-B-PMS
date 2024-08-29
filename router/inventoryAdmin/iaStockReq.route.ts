@@ -11,6 +11,6 @@ router.get('/outbox', getStockReqOutbox)
 router.post('/approve', approveStockReq)
 router.post('/reject', rejectStockReq)
 router.post('/return', returnStockReq)
-router.get('/product/:subcategory_id', getProductsBysubcategory)
+router.get('/product/:stock_handover_no', getProductsBysubcategory)
 
 export default router
