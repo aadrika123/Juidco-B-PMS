@@ -1,26 +1,44 @@
 import { Request, Response } from 'express'
-import { getHandoverDataDal, handoverAcknowledgeDal } from '../../dal/hrms/stockHandover.dal'
+import { createEmpServiceRequestDal, getServiceReqInboxDal, getServiceReqOutboxDal } from '../../dal/hrms/empService.dal'
 
-export const getHandoverData = async (req: Request, res: Response) => {
-	const result: any = await getHandoverDataDal(req)
+export const getServiceReqInbox = async (req: Request, res: Response) => {
+	const result: any = await getServiceReqInboxDal(req)
 	if (!result?.error) {
 		res.status(200).json({
 			status: true,
-			message: `Stock handover list fetched successfully`,
+			message: `Employee service request list fetched successfully`,
 			data: result?.data,
 			pagination: result?.pagination,
 		})
 	} else {
 		res.status(404).json({
 			status: false,
-			message: `Error while fetching Stock handover list`,
+			message: `Error while fetching employee service request list`,
 			error: result?.message,
 		})
 	}
 }
 
-export const handoverAcknowledge = async (req: Request, res: Response) => {
-	const result: any = await handoverAcknowledgeDal(req)
+export const getServiceReqOutbox = async (req: Request, res: Response) => {
+	const result: any = await getServiceReqOutboxDal(req)
+	if (!result?.error) {
+		res.status(200).json({
+			status: true,
+			message: `Employee service request list fetched successfully`,
+			data: result?.data,
+			pagination: result?.pagination,
+		})
+	} else {
+		res.status(404).json({
+			status: false,
+			message: `Error while fetching employee service request list`,
+			error: result?.message,
+		})
+	}
+}
+
+export const createEmpServiceRequest = async (req: Request, res: Response) => {
+	const result: any = await createEmpServiceRequestDal(req)
 	if (!result?.error) {
 		res.status(200).json({
 			status: true,
