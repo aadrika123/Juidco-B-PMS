@@ -84,26 +84,11 @@ export const createEmpServiceRequestDal = async (req: Request) => {
 					service_no: service_no,
 				},
 			})
-			// if (service === 'return') {
-			// 	await tx.ia_service_req_inbox.create({
-			// 		data: {
-			// 			service_no: service_no,
-			// 		},
-			// 	})
-			// 	await tx.notification.create({
-			// 		data: {
-			// 			role_id: Number(process.env.ROLE_IA),
-			// 			title: 'New Service request',
-			// 			destination: 81,
-			// 			description: `There is a ${serviceTranslator(service)}. Service Number : ${service_no}`,
-			// 		},
-			// 	})
-			// }
 			await tx.notification.create({
 				data: {
-					role_id: Number(process.env.ROLE_DA),
+					role_id: Number(process.env.ROLE_DIST),
 					title: 'New Service request',
-					destination: 26,
+					destination: 42,
 					description: `There is a ${serviceTranslator(service)}. Service Number : ${service_no}`,
 				},
 			})

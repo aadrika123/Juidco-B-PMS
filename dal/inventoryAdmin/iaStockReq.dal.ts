@@ -549,6 +549,12 @@ export const approveStockReqDal = async (req: Request) => {
 					`)
 				// console.log(requiredProducts.length)
 
+				const requiredProductSum: number = requiredProducts.reduce((sum, product) => sum + product?.quantity, 0)
+
+				if (stockReq?.allotted_quantity > requiredProductSum) {
+					throw { error: true, message: 'Available quantity not sufficient' }
+				}
+
 				let assignedQuantityBuffer: number = 0
 				await prisma.$transaction(async tx => {
 					await Promise.all(
