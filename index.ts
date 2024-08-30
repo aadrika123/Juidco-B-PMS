@@ -25,6 +25,7 @@ import iaStockRequestRoute from './router/inventoryAdmin/iaStockReq.route'
 import srStockRequestRoute from './router/stockReciever/stockRequest/srStockReq.route'
 import stockRequestRoute from './router/stockRequest/stockReq.route'
 import serviceRequestRoute from './router/stockRequest/serviceReq.route'
+import empServiceRoutes from './router/empServiceRequest/empServiceReq.route'
 import iaServiceRequestRoute from './router/inventoryAdmin/iaServiceReq.route'
 import daServiceRequestRoute from './router/departmenalAdmin/daServiceReq.route'
 import ddServiceRequestRoute from './router/distributor/distServiceRequest.route'
@@ -84,6 +85,9 @@ app.use('/api/pms/stock-request', stockRequestRoute)
 
 //unprotected service request routes
 app.use('/api/pms/service-request', serviceRequestRoute)
+
+//unprotected employe  service request routes
+app.use('/api/pms/emp-service', empServiceRoutes)
 
 //inventory routes
 app.use('/api/pms/inventory', inventoryRoute)
