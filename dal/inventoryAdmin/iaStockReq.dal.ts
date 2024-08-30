@@ -545,7 +545,7 @@ export const approveStockReqDal = async (req: Request) => {
 				const requiredProducts: any[] = await prisma.$queryRawUnsafe(`
 					SELECT *
 					FROM product.product_${stockReq?.inventory?.subcategory?.name.toLowerCase().replace(/\s/g, '')}
-					WHERE is_available = true AND serial_no = (${serialNosForSQL})
+					WHERE is_available = true AND serial_no in (${serialNosForSQL})
 					`)
 				// console.log(requiredProducts.length)
 
