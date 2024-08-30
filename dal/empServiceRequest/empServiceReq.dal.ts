@@ -20,6 +20,7 @@ export const getServiceReqByServiceNoDal = async (req: Request) => {
 				createdAt: true,
 				remark: true,
 				service: true,
+				user_id: true,
 				inventory: {
 					select: {
 						id: true,

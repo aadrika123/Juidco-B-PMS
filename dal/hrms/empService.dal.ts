@@ -207,7 +207,9 @@ export const getServiceReqInboxDal = async (req: Request) => {
 		]
 	}
 
-	whereClause.user_id = req?.body?.auth?.id
+	whereClause.emp_service_req = {
+		user_id: req?.body?.auth?.id
+	}
 
 	try {
 		count = await prisma.emp_service_req_inbox.count({
@@ -397,7 +399,9 @@ export const getServiceReqOutboxDal = async (req: Request) => {
 		]
 	}
 
-	whereClause.user_id = req?.body?.auth?.id
+	whereClause.emp_service_req = {
+		user_id: req?.body?.auth?.id
+	}
 
 	try {
 		count = await prisma.emp_service_req_outbox.count({
