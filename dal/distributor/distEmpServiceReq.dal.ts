@@ -505,6 +505,12 @@ export const rejectServiceRequestDal = async (req: Request) => {
 			select: {
 				status: true,
 				service: true,
+				stock_handover_no: true,
+				emp_service_req_product: {
+					select: {
+						serial_no: true
+					}
+				}
 			},
 		})
 
@@ -548,6 +554,22 @@ export const rejectServiceRequestDal = async (req: Request) => {
 					remark: remark
 				},
 			})
+
+			await Promise.all(
+				serviceReq?.emp_service_req_product.map(async product => {
+					await tx.stock_req_product.update({
+						where: {
+							stock_handover_no_serial_no: {
+								stock_handover_no: serviceReq?.stock_handover_no,
+								serial_no: product?.serial_no
+							}
+						},
+						data: {
+							is_available: true
+						},
+					})
+				})
+			)
 
 			await tx.notification.create({
 				data: {
