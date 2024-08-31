@@ -72,6 +72,18 @@ export const createServiceRequestDal = async (req: Request) => {
 							inventoryId: inventoryId,
 						},
 					})
+
+					await tx.stock_req_product.update({
+						where: {
+							stock_handover_no_serial_no: {
+								stock_handover_no: stock_handover_no,
+								serial_no: product
+							}
+						},
+						data: {
+							is_available: false
+						},
+					})
 				})
 			)
 
@@ -160,64 +172,64 @@ export const getServiceReqInboxDal = async (req: Request) => {
 		whereClause.AND = [
 			...(service[0]
 				? [
-						{
-							service_req: {
-								service: {
-									in: service,
-								},
+					{
+						service_req: {
+							service: {
+								in: service,
 							},
 						},
-					]
+					},
+				]
 				: []),
 			...(category[0]
 				? [
-						{
-							service_req: {
-								inventory: {
-									category_masterId: {
-										in: category,
-									},
+					{
+						service_req: {
+							inventory: {
+								category_masterId: {
+									in: category,
 								},
 							},
 						},
-					]
+					},
+				]
 				: []),
 			...(subcategory[0]
 				? [
-						{
-							service_req: {
-								inventory: {
-									subcategory_masterId: {
-										in: subcategory,
-									},
+					{
+						service_req: {
+							inventory: {
+								subcategory_masterId: {
+									in: subcategory,
 								},
 							},
 						},
-					]
+					},
+				]
 				: []),
 			...(brand[0]
 				? [
-						{
-							service_req: {
-								inventory: {
-									brand_masterId: {
-										in: brand,
-									},
+					{
+						service_req: {
+							inventory: {
+								brand_masterId: {
+									in: brand,
 								},
 							},
 						},
-					]
+					},
+				]
 				: []),
 			...(status[0]
 				? [
-						{
-							service_req: {
-								status: {
-									in: status.map(Number),
-								},
+					{
+						service_req: {
+							status: {
+								in: status.map(Number),
 							},
 						},
-					]
+					},
+				]
 				: []),
 		]
 	}
@@ -348,64 +360,64 @@ export const getServiceReqOutboxDal = async (req: Request) => {
 		whereClause.AND = [
 			...(service[0]
 				? [
-						{
-							service_req: {
-								service: {
-									in: service,
-								},
+					{
+						service_req: {
+							service: {
+								in: service,
 							},
 						},
-					]
+					},
+				]
 				: []),
 			...(category[0]
 				? [
-						{
-							service_req: {
-								inventory: {
-									category_masterId: {
-										in: category,
-									},
+					{
+						service_req: {
+							inventory: {
+								category_masterId: {
+									in: category,
 								},
 							},
 						},
-					]
+					},
+				]
 				: []),
 			...(subcategory[0]
 				? [
-						{
-							service_req: {
-								inventory: {
-									subcategory_masterId: {
-										in: subcategory,
-									},
+					{
+						service_req: {
+							inventory: {
+								subcategory_masterId: {
+									in: subcategory,
 								},
 							},
 						},
-					]
+					},
+				]
 				: []),
 			...(brand[0]
 				? [
-						{
-							service_req: {
-								inventory: {
-									brand_masterId: {
-										in: brand,
-									},
+					{
+						service_req: {
+							inventory: {
+								brand_masterId: {
+									in: brand,
 								},
 							},
 						},
-					]
+					},
+				]
 				: []),
 			...(status[0]
 				? [
-						{
-							service_req: {
-								status: {
-									in: status.map(Number),
-								},
+					{
+						service_req: {
+							status: {
+								in: status.map(Number),
 							},
 						},
-					]
+					},
+				]
 				: []),
 		]
 	}

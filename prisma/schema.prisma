@@ -966,9 +966,12 @@ model stock_req_product {
     quantity          Float         @default(1)
     inventory         inventory     @relation(fields: [inventoryId], references: [id])
     inventoryId       String
+    is_available      Boolean       @default(true)
     stock_request     stock_request @relation(fields: [stock_handover_no], references: [stock_handover_no])
     createdAt         DateTime      @default(now())
     updatedAt         DateTime      @updatedAt
+
+    @@unique([stock_handover_no, serial_no])
 }
 
 model inventory_buffer {

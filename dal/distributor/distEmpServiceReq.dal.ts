@@ -404,8 +404,7 @@ export const getEmpServiceReqOutboxDal = async (req: Request) => {
 }
 
 export const approveEmpServiceRequestDal = async (req: Request) => {
-	const { service_no, remark }: { service_no: string; remark: string } = req.body
-	const doc = req.files
+	const { service_no }: { service_no: string } = req.body
 
 	try {
 		const serviceReq = await prisma.emp_service_request.findFirst({
@@ -430,19 +429,9 @@ export const approveEmpServiceRequestDal = async (req: Request) => {
 			},
 		})
 
-		if (serviceReq?.service === 'dead' && !doc) {
-			throw { error: true, message: 'For dead stock request, document is mandatory' }
-		}
-
 		if (serviceReq?.status !== 10) {
 			throw { error: true, message: 'Invalid status of service request to be approved' }
 		}
-
-		const serviceReqProd = await prisma.emp_service_req_product.findMany({
-			where: {
-				service_no: service_no,
-			},
-		})
 
 		const empOutbox = await prisma.emp_service_req_outbox.count({
 			where: {
@@ -452,29 +441,6 @@ export const approveEmpServiceRequestDal = async (req: Request) => {
 
 		//start transaction
 		await prisma.$transaction(async tx => {
-			if (serviceReq?.service === 'dead') {
-				await Promise.all(
-					serviceReqProd.map(async prod => {
-						await addToDeadStock(prod?.serial_no, prod.quantity, remark, doc, String(serviceReq?.inventory?.subcategory?.name), tx, serviceReq?.service_no, serviceReq?.stock_handover_no)
-					})
-				)
-			}
-
-			if (serviceReq?.service === 'warranty') {
-				await Promise.all(
-					serviceReqProd.map(async prod => {
-						await warrantyClaim(prod?.serial_no, remark, String(serviceReq?.inventory?.subcategory?.name), tx, serviceReq?.service_no, serviceReq?.stock_handover_no)
-					})
-				)
-			}
-
-			if (serviceReq?.service === 'return') {
-				await Promise.all(
-					serviceReqProd.map(async prod => {
-						await returnToInventory(prod?.serial_no, prod.quantity, String(serviceReq?.inventory?.subcategory?.name), tx, serviceReq?.service_no, serviceReq?.stock_handover_no)
-					})
-				)
-			}
 
 			await tx.dist_emp_service_req_inbox.delete({
 				where: {
