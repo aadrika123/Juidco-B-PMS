@@ -9,16 +9,16 @@ const prisma = new PrismaClient()
 
 
 type reqType = {
-	products: productType[]
+	products: string[]
 	service: service_enum
 	stock_handover_no: string
 	inventoryId: string
 	auth: any
 }
 
-type productType = {
-	serial_no: string
-}
+// type productType = {
+// 	serial_no: string
+// }
 
 export const serviceTranslator = (service: service_enum): string => {
 	let result: string
@@ -66,7 +66,7 @@ export const createEmpServiceRequestDal = async (req: Request) => {
 					await tx.emp_service_req_product.create({
 						data: {
 							service_no: service_no,
-							serial_no: product?.serial_no,
+							serial_no: product,
 							inventoryId: inventoryId,
 						},
 					})
