@@ -70,6 +70,17 @@ export const createEmpServiceRequestDal = async (req: Request) => {
 							inventoryId: inventoryId,
 						},
 					})
+					await tx.stock_req_product.update({
+						where: {
+							stock_handover_no_serial_no: {
+								stock_handover_no: stock_handover_no,
+								serial_no: product
+							}
+						},
+						data: {
+							is_available: false
+						},
+					})
 				})
 			)
 
