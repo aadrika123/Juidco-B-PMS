@@ -559,7 +559,6 @@ export const approveStockReqDal = async (req: Request) => {
 				await prisma.$transaction(async tx => {
 					await Promise.all(
 						requiredProducts.map(async (product, index) => {
-							// let iterationQuantityBuffer: number = 0
 							if (Number(product?.quantity) - (Number(stockReq?.allotted_quantity) - assignedQuantityBuffer) <= 0) {
 								assignedQuantityBuffer = assignedQuantityBuffer + Number(product?.quantity)
 								await tx.$queryRawUnsafe(`
@@ -567,7 +566,6 @@ export const approveStockReqDal = async (req: Request) => {
 									SET is_available = false, quantity=0, updatedAt = CURRENT_TIMESTAMP
 									WHERE serial_no = '${product?.serial_no as string}'
 								`)
-								// iterationQuantityBuffer = Number(product?.quantity)
 							} else {
 								await tx.$queryRawUnsafe(`
 									UPDATE product.product_${stockReq?.inventory?.subcategory?.name.toLowerCase().replace(/\s/g, '')}
@@ -581,7 +579,7 @@ export const approveStockReqDal = async (req: Request) => {
 									stock_handover_no: item,
 									serial_no: product?.serial_no as string,
 									inventoryId: stockReq?.inventory?.id as string,
-									quantity: Number(product?.quantity) - (Number(stockReq?.allotted_quantity) - assignedQuantityBuffer)
+									quantity: Number(stockReq?.allotted_quantity) - assignedQuantityBuffer
 								},
 							})
 						})
