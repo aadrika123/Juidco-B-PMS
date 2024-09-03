@@ -105,6 +105,17 @@ export const getTotalStocksDal = async (req: Request) => {
 					WHERE inventory_id = '${item?.id}'
 					`)
 				item.opening_quantity = products[0]?.opening_quantity
+
+				const deadStock = await prisma.inventory_dead_stock.aggregate({
+					where: {
+						inventoryId: item?.id
+					},
+					_sum: {
+						quantity: true
+					}
+				})
+				item.dead_stock = deadStock?._sum?.quantity
+				item.total_quantity = Number(products[0]?.opening_quantity) + Number(deadStock?._sum?.quantity)
 			})
 		)
 
