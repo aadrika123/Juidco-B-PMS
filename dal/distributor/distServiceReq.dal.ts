@@ -65,11 +65,21 @@ export const createServiceRequestDal = async (req: Request) => {
 
 			await Promise.all(
 				products.map(async product => {
+					const quantityForService = await prisma.stock_req_product.findFirst({
+						where: {
+							stock_handover_no: stock_handover_no,
+							serial_no: product
+						},
+						select: {
+							quantity: true
+						}
+					})
 					await tx.service_req_product.create({
 						data: {
 							service_no: service_no,
 							serial_no: product,
 							inventoryId: inventoryId,
+							quantity: quantityForService?.quantity
 						},
 					})
 
