@@ -8,6 +8,8 @@ const prisma = new PrismaClient()
 export const getTotalStocksDal = async (req: Request) => {
 	const page: number | undefined = Number(req?.query?.page)
 	const take: number | undefined = Number(req?.query?.take)
+	const from: string | undefined = String(req?.query?.from)
+	const to: string | undefined = String(req?.query?.to)
 	const startIndex: number | undefined = (page - 1) * take
 	const endIndex: number | undefined = startIndex + take
 	let count: number
@@ -98,24 +100,31 @@ export const getTotalStocksDal = async (req: Request) => {
 		})
 
 		await Promise.all(
-			result.map(async (item: any) => {
+			result.map(async (item: any, index: number) => {
 				const products: any[] = await prisma.$queryRawUnsafe(`
-					SELECT sum(opening_quantity) as opening_quantity
+					SELECT sum(opening_quantity) as opening_quantity, serial_no,brand,quantity,opening_quantity,is_available,procurement_stock_id
 					FROM product.product_${item?.subcategory?.name.toLowerCase().replace(/\s/g, '')}
 					WHERE inventory_id = '${item?.id}'
+					${from && to ? `and createdat between '${from}' and '${to}'` : ''}
+					group by serial_no,brand,quantity,opening_quantity,is_available,procurement_stock_id
 					`)
-				item.opening_quantity = products[0]?.opening_quantity
 
-				const deadStock = await prisma.inventory_dead_stock.aggregate({
-					where: {
-						inventoryId: item?.id
-					},
-					_sum: {
-						quantity: true
-					}
-				})
-				item.dead_stock = deadStock?._sum?.quantity
-				item.total_quantity = Number(products[0]?.opening_quantity) + Number(deadStock?._sum?.quantity)
+				if (products.length === 0) {
+					result.splice(index, 1)
+				} else {
+					item.opening_quantity = products[0]?.opening_quantity
+					item.products = products
+					const deadStock = await prisma.inventory_dead_stock.aggregate({
+						where: {
+							inventoryId: item?.id
+						},
+						_sum: {
+							quantity: true
+						}
+					})
+					item.dead_stock = deadStock?._sum?.quantity
+					item.total_quantity = Number(products[0]?.opening_quantity) + Number(deadStock?._sum?.quantity)
+				}
 			})
 		)
 
