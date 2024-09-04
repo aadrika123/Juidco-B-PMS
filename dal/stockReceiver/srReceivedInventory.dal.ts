@@ -1285,8 +1285,6 @@ export const addToInventoryDal = async (req: Request) => {
 				},
 			})
 
-			console.log(historyExistence)
-
 			const supplier = await prisma.supplier_master.findFirst({
 				where: { procurement_no: procurement_no },
 				select: { id: true }
