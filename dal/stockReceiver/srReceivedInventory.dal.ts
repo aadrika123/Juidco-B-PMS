@@ -1694,7 +1694,7 @@ export const addProductDal = async (req: Request) => {
 		`
 		const totalQuantity: any[] = await prisma.$queryRawUnsafe(query)
 
-		const sumOfQuantity = product.reduce((total, product) => total + (product?.quantity ? product?.quantity : 1), 0)
+		const sumOfQuantity = product.reduce((total, product) => total + (Number(product?.quantity) ? Number(product?.quantity) : 1), 0)
 
 		if (totalQuantity[0]?.total_quantity + Number(sumOfQuantity) > totalNonAddedReceiving?._sum?.received_quantity) {
 			throw { error: true, meta: { message: 'Number of added products cannot be more than received stocks' } }
