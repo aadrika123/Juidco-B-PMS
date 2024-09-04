@@ -8,8 +8,8 @@ const prisma = new PrismaClient()
 export const getTotalStocksDal = async (req: Request) => {
 	const page: number | undefined = Number(req?.query?.page)
 	const take: number | undefined = Number(req?.query?.take)
-	const from: string | undefined = String(req?.query?.from)
-	const to: string | undefined = String(req?.query?.to)
+	const from: string | undefined = String(req?.query?.from)//yyyy-mm-dd
+	const to: string | undefined = String(req?.query?.to)//yyyy-mm-dd
 	const startIndex: number | undefined = (page - 1) * take
 	const endIndex: number | undefined = startIndex + take
 	let count: number
@@ -21,8 +21,6 @@ export const getTotalStocksDal = async (req: Request) => {
 
 	const category: any[] = Array.isArray(req?.query?.category) ? req?.query?.category : [req?.query?.category]
 	const subcategory: any[] = Array.isArray(req?.query?.scategory) ? req?.query?.scategory : [req?.query?.scategory]
-	// const brand: any[] = Array.isArray(req?.query?.brand) ? req?.query?.brand : [req?.query?.brand]
-	// const status: any[] = Array.isArray(req?.query?.status) ? req?.query?.status : [req?.query?.status]
 
 	//creating search options for the query
 	if (search) {
@@ -127,6 +125,294 @@ export const getTotalStocksDal = async (req: Request) => {
 				}
 			})
 		)
+
+		totalPage = Math.ceil(count / take)
+		if (endIndex < count) {
+			pagination.next = {
+				page: page + 1,
+				take: take,
+			}
+		}
+		if (startIndex > 0) {
+			pagination.prev = {
+				page: page - 1,
+				take: take,
+			}
+		}
+		pagination.currentPage = page
+		pagination.currentTake = take
+		pagination.totalPage = totalPage
+		pagination.totalResult = count
+		return {
+			data: result,
+			pagination: pagination,
+		}
+	} catch (err: any) {
+		console.log(err)
+		return { error: true, message: getErrorMessage(err) }
+	}
+}
+
+export const getDeadStocksDal = async (req: Request) => {
+	const page: number | undefined = Number(req?.query?.page)
+	const take: number | undefined = Number(req?.query?.take)
+	const from: string | undefined = String(req?.query?.from) //yyyy-mm-dd
+	const to: string | undefined = String(req?.query?.to)//yyyy-mm-dd
+	const startIndex: number | undefined = (page - 1) * take
+	const endIndex: number | undefined = startIndex + take
+	let count: number
+	let totalPage: number
+	let pagination: pagination = {}
+	const whereClause: Prisma.inventory_dead_stockWhereInput = {}
+
+	const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined
+
+	const category: any[] = Array.isArray(req?.query?.category) ? req?.query?.category : [req?.query?.category]
+	const subcategory: any[] = Array.isArray(req?.query?.scategory) ? req?.query?.scategory : [req?.query?.scategory]
+
+	//creating search options for the query
+	if (search) {
+		whereClause.OR = [
+			{
+				inventory: {
+					description: {
+						contains: search,
+						mode: 'insensitive',
+					}
+				},
+			}
+		]
+	}
+
+	if (category[0] || subcategory[0]) {
+		whereClause.AND = [
+			...(category[0]
+				? [
+					{
+						inventory: {
+							category_masterId: {
+								in: category,
+							},
+						}
+
+					},
+				]
+				: []),
+			...(subcategory[0]
+				? [
+					{
+						inventory: {
+							subcategory_masterId: {
+								in: subcategory,
+							},
+						}
+					},
+				]
+				: []),
+			...(from && to
+				? [
+					{
+						createdAt: {
+							gte: new Date(from),
+							lte: new Date(to)
+						}
+					}
+				]
+				: []),
+		]
+	}
+
+
+	try {
+		count = await prisma.inventory_dead_stock.count({
+			where: whereClause,
+		})
+		const result = await prisma.inventory_dead_stock.findMany({
+			orderBy: {
+				updatedAt: 'desc',
+			},
+			where: whereClause,
+			...(page && { skip: startIndex }),
+			...(take && { take: take }),
+			select: {
+				id: true,
+				serial_no: true,
+				remark1: true,
+				remark2: true,
+				quantity: true,
+				inventory: {
+					select: {
+						category: {
+							select: {
+								id: true,
+								name: true
+							}
+						},
+						subcategory: {
+							select: {
+								id: true,
+								name: true
+							}
+						},
+						unit: {
+							select: {
+								id: true,
+								name: true,
+								abbreviation: true
+							}
+						},
+						description: true
+					}
+				}
+			},
+		})
+
+		totalPage = Math.ceil(count / take)
+		if (endIndex < count) {
+			pagination.next = {
+				page: page + 1,
+				take: take,
+			}
+		}
+		if (startIndex > 0) {
+			pagination.prev = {
+				page: page - 1,
+				take: take,
+			}
+		}
+		pagination.currentPage = page
+		pagination.currentTake = take
+		pagination.totalPage = totalPage
+		pagination.totalResult = count
+		return {
+			data: result,
+			pagination: pagination,
+		}
+	} catch (err: any) {
+		console.log(err)
+		return { error: true, message: getErrorMessage(err) }
+	}
+}
+
+export const getStockMovementDal = async (req: Request) => {
+	const page: number | undefined = Number(req?.query?.page)
+	const take: number | undefined = Number(req?.query?.take)
+	const from: string | undefined = String(req?.query?.from) //yyyy-mm-dd
+	const to: string | undefined = String(req?.query?.to)//yyyy-mm-dd
+	const startIndex: number | undefined = (page - 1) * take
+	const endIndex: number | undefined = startIndex + take
+	let count: number
+	let totalPage: number
+	let pagination: pagination = {}
+	const whereClause: Prisma.stock_req_productWhereInput = {}
+
+	const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined
+
+	const category: any[] = Array.isArray(req?.query?.category) ? req?.query?.category : [req?.query?.category]
+	const subcategory: any[] = Array.isArray(req?.query?.scategory) ? req?.query?.scategory : [req?.query?.scategory]
+
+	//creating search options for the query
+	if (search) {
+		whereClause.OR = [
+			{
+				inventory: {
+					description: {
+						contains: search,
+						mode: 'insensitive',
+					}
+				},
+			}
+		]
+	}
+
+	if (category[0] || subcategory[0]) {
+		whereClause.AND = [
+			...(category[0]
+				? [
+					{
+						inventory: {
+							category_masterId: {
+								in: category,
+							},
+						}
+
+					},
+				]
+				: []),
+			...(subcategory[0]
+				? [
+					{
+						inventory: {
+							subcategory_masterId: {
+								in: subcategory,
+							},
+						}
+					},
+				]
+				: []),
+			...(from && to
+				? [
+					{
+						createdAt: {
+							gte: new Date(from),
+							lte: new Date(to)
+						}
+					}
+				]
+				: []),
+			{
+				stock_request: {
+					status: {
+						notIn: [-2, -1, 0, 1, 2, 80, 81, 82]
+					}
+				}
+			}
+		]
+	}
+
+
+	try {
+		count = await prisma.stock_req_product.count({
+			where: whereClause,
+		})
+		const result = await prisma.stock_req_product.findMany({
+			orderBy: {
+				updatedAt: 'desc',
+			},
+			where: whereClause,
+			...(page && { skip: startIndex }),
+			...(take && { take: take }),
+			select: {
+				id: true,
+				stock_handover_no: true,
+				serial_no: true,
+				quantity: true,
+				inventory: {
+					select: {
+						category: {
+							select: {
+								id: true,
+								name: true
+							}
+						},
+						subcategory: {
+							select: {
+								id: true,
+								name: true
+							}
+						},
+						unit: {
+							select: {
+								id: true,
+								name: true,
+								abbreviation: true
+							}
+						},
+						description: true
+					}
+				}
+			},
+		})
 
 		totalPage = Math.ceil(count / take)
 		if (endIndex < count) {
