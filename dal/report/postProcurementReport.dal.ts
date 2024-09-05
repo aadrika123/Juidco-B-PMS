@@ -10,7 +10,7 @@ export const getPostProcurementReportDal = async (req: Request) => {
 	const take: number | undefined = Number(req?.query?.take)
 	const from: string | undefined = String(req?.query?.from)//yyyy-mm-dd
 	const to: string | undefined = String(req?.query?.to)//yyyy-mm-dd
-	const status: string | undefined = String(req?.query?.status) //requested || pending || approved || rejected
+	// const status: string | undefined = String(req?.query?.status) //requested || pending || approved || rejected
 	const startIndex: number | undefined = (page - 1) * take
 	const endIndex: number | undefined = startIndex + take
 	let count: number
