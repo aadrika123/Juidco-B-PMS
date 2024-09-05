@@ -104,7 +104,7 @@ export const getTotalStocksDal = async (req: Request) => {
 					SELECT sum(opening_quantity) as opening_quantity, serial_no,brand,quantity,opening_quantity,is_available,procurement_stock_id
 					FROM product.product_${item?.subcategory?.name.toLowerCase().replace(/\s/g, '')}
 					WHERE inventory_id = '${item?.id}'
-					${from && to ? `and createdat between '${from}' and '${to}'` : ''}
+					${from && to ? `and updatedat between '${from}' and '${to}'` : ''}
 					group by serial_no,brand,quantity,opening_quantity,is_available,procurement_stock_id
 					`)
 
@@ -122,6 +122,8 @@ export const getTotalStocksDal = async (req: Request) => {
 					item.dead_stock = deadStock?._sum?.quantity
 					item.total_quantity = Number(products[0]?.opening_quantity) + Number(deadStock?._sum?.quantity)
 					dataToSend.push(item)
+				} else {
+					count = count - 1
 				}
 			})
 		)

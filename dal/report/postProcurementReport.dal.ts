@@ -5,7 +5,7 @@ import { pagination } from '../../type/common.type'
 
 const prisma = new PrismaClient()
 
-export const getPreProcurementReportDal = async (req: Request) => {
+export const getPostProcurementReportDal = async (req: Request) => {
 	const page: number | undefined = Number(req?.query?.page)
 	const take: number | undefined = Number(req?.query?.take)
 	const from: string | undefined = String(req?.query?.from)//yyyy-mm-dd
@@ -16,7 +16,7 @@ export const getPreProcurementReportDal = async (req: Request) => {
 	let count: number
 	let totalPage: number
 	let pagination: pagination = {}
-	const whereClause: Prisma.procurementWhereInput = {}
+	const whereClause: Prisma.receivingsWhereInput = {}
 
 	const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined
 
@@ -27,21 +27,18 @@ export const getPreProcurementReportDal = async (req: Request) => {
 	if (search) {
 		whereClause.OR = [
 			{
-				procurement_stocks: {
-					some: {
-						description: {
-							contains: search,
-							mode: 'insensitive',
-						},
-					}
-				}
-			},
-			{
 				procurement_no: {
 					contains: search,
 					mode: 'insensitive',
 				}
 			},
+			{
+				receiving_no: {
+					contains: search,
+					mode: 'insensitive',
+				}
+			}
+
 		]
 	}
 
@@ -50,12 +47,10 @@ export const getPreProcurementReportDal = async (req: Request) => {
 			...(category[0]
 				? [
 					{
-						procurement_stocks: {
-							some: {
-								category_masterId: {
-									in: category,
-								},
-							}
+						procurement: {
+							category_masterId: {
+								in: category,
+							},
 						}
 
 					},
@@ -64,11 +59,13 @@ export const getPreProcurementReportDal = async (req: Request) => {
 			...(subcategory[0]
 				? [
 					{
-						procurement_stocks: {
-							some: {
-								subCategory_masterId: {
-									in: subcategory,
-								},
+						procurement: {
+							procurement_stocks: {
+								some: {
+									subCategory_masterId: {
+										in: subcategory,
+									},
+								}
 							}
 						}
 					},
@@ -77,7 +74,7 @@ export const getPreProcurementReportDal = async (req: Request) => {
 			...(from && to
 				? [
 					{
-						createdAt: {
+						date: {
 							gte: new Date(from),
 							lte: new Date(to)
 						}
@@ -85,18 +82,16 @@ export const getPreProcurementReportDal = async (req: Request) => {
 				]
 				: []),
 			{
-				status: {
-					in: status === 'requested' ? [0] : status === 'approved' ? [14, 24, 3, 4, 5, 6, 7] : status === 'pending' ? [10, 11, 13, 20, 21, 23] : status === 'rejected' ? [12, 22] : [0]
-				}
+				is_added: false
 			}
 		]
 	}
 
 	try {
-		count = await prisma.procurement.count({
+		count = await prisma.receivings.count({
 			where: whereClause,
 		})
-		const result = await prisma.procurement.findMany({
+		const result = await prisma.receivings.findMany({
 			orderBy: {
 				updatedAt: 'desc',
 			},
@@ -106,14 +101,10 @@ export const getPreProcurementReportDal = async (req: Request) => {
 			select: {
 				id: true,
 				procurement_no: true,
-				category: {
-					select: {
-						id: true,
-						name: true
-					}
-				},
-				total_rate: true,
-				procurement_stocks: {
+				receiving_no: true,
+				date: true,
+				received_quantity: true,
+				procurement_stock: {
 					select: {
 						id: true,
 						subCategory: {
