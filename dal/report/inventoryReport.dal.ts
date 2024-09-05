@@ -8,14 +8,15 @@ const prisma = new PrismaClient()
 export const getTotalStocksDal = async (req: Request) => {
 	const page: number | undefined = Number(req?.query?.page)
 	const take: number | undefined = Number(req?.query?.take)
-	const from: string | undefined = String(req?.query?.from)//yyyy-mm-dd
-	const to: string | undefined = String(req?.query?.to)//yyyy-mm-dd
+	const from = req?.query?.from//yyyy-mm-dd
+	const to = req?.query?.to//yyyy-mm-dd
 	const startIndex: number | undefined = (page - 1) * take
 	const endIndex: number | undefined = startIndex + take
 	let count: number
 	let totalPage: number
 	let pagination: pagination = {}
 	const whereClause: Prisma.inventoryWhereInput = {}
+	const dataToSend: any[] = []
 
 	const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined
 
@@ -107,9 +108,7 @@ export const getTotalStocksDal = async (req: Request) => {
 					group by serial_no,brand,quantity,opening_quantity,is_available,procurement_stock_id
 					`)
 
-				if (products.length === 0) {
-					result.splice(index, 1)
-				} else {
+				if (products.length !== 0) {
 					item.opening_quantity = products[0]?.opening_quantity
 					item.products = products
 					const deadStock = await prisma.inventory_dead_stock.aggregate({
@@ -122,6 +121,7 @@ export const getTotalStocksDal = async (req: Request) => {
 					})
 					item.dead_stock = deadStock?._sum?.quantity
 					item.total_quantity = Number(products[0]?.opening_quantity) + Number(deadStock?._sum?.quantity)
+					dataToSend.push(item)
 				}
 			})
 		)
@@ -144,7 +144,7 @@ export const getTotalStocksDal = async (req: Request) => {
 		pagination.totalPage = totalPage
 		pagination.totalResult = count
 		return {
-			data: result,
+			data: dataToSend,
 			pagination: pagination,
 		}
 	} catch (err: any) {
