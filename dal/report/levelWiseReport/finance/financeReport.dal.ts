@@ -35,7 +35,7 @@ export const getFinanceBoqReportDal = async (req: Request) => {
 		]
 	}
 
-	if (category[0] || subcategory[0]) {
+	if (category[0] || subcategory[0] || from || to) {
 		whereClause.AND = [
 			...(category[0]
 				? [
@@ -147,7 +147,8 @@ export const getFinanceBoqReportDal = async (req: Request) => {
 							}
 						}
 					}
-				}
+				},
+				createdAt: true
 			},
 		})
 

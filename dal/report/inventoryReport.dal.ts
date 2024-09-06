@@ -101,7 +101,7 @@ export const getTotalStocksDal = async (req: Request) => {
 		await Promise.all(
 			result.map(async (item: any, index: number) => {
 				const products: any[] = await prisma.$queryRawUnsafe(`
-					SELECT sum(opening_quantity) as opening_quantity, serial_no,brand,quantity,opening_quantity,is_available,procurement_stock_id
+					SELECT sum(opening_quantity) as opening_quantity, serial_no,brand,quantity,opening_quantity,is_available,procurement_stock_id,createdat
 					FROM product.product_${item?.subcategory?.name.toLowerCase().replace(/\s/g, '')}
 					WHERE inventory_id = '${item?.id}'
 					${from && to ? `and updatedat between '${from}' and '${to}'` : ''}
@@ -186,7 +186,7 @@ export const getDeadStocksDal = async (req: Request) => {
 		]
 	}
 
-	if (category[0] || subcategory[0]) {
+	if (category[0] || subcategory[0] || from || to) {
 		whereClause.AND = [
 			...(category[0]
 				? [
@@ -265,7 +265,8 @@ export const getDeadStocksDal = async (req: Request) => {
 						},
 						description: true
 					}
-				}
+				},
+				createdAt: true
 			},
 		})
 
@@ -327,7 +328,7 @@ export const getStockMovementDal = async (req: Request) => {
 		]
 	}
 
-	if (category[0] || subcategory[0]) {
+	if (category[0] || subcategory[0] || from || to) {
 		whereClause.AND = [
 			...(category[0]
 				? [
@@ -411,7 +412,8 @@ export const getStockMovementDal = async (req: Request) => {
 						},
 						description: true
 					}
-				}
+				},
+				createdAt: true
 			},
 		})
 

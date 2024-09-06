@@ -35,7 +35,7 @@ export const getIaStockReqReportDal = async (req: Request) => {
 		]
 	}
 
-	if (category[0] || subcategory[0]) {
+	if (category[0] || subcategory[0] || from || to) {
 		whereClause.AND = [
 			...(category[0]
 				? [
@@ -140,7 +140,8 @@ export const getIaStockReqReportDal = async (req: Request) => {
 							}
 						}
 					}
-				}
+				},
+				createdAt: true
 			},
 		})
 
@@ -201,7 +202,7 @@ export const getIaServiceReqReportDal = async (req: Request) => {
 		]
 	}
 
-	if (category[0] || subcategory[0]) {
+	if (category[0] || subcategory[0] || from || to) {
 		whereClause.AND = [
 			...(category[0]
 				? [
@@ -306,7 +307,8 @@ export const getIaServiceReqReportDal = async (req: Request) => {
 						}
 
 					}
-				}
+				},
+				createdAt: true
 			},
 		})
 
@@ -368,7 +370,7 @@ export const getIaProcurementReportDal = async (req: Request) => {
 		]
 	}
 
-	if (category[0] || subcategory[0]) {
+	if (category[0] || subcategory[0] || from || to) {
 		whereClause.AND = [
 			...(category[0]
 				? [
@@ -464,7 +466,8 @@ export const getIaProcurementReportDal = async (req: Request) => {
 							}
 						}
 					}
-				}
+				},
+				createdAt: true
 			},
 		})
 
@@ -525,7 +528,7 @@ export const getIaBoqReportDal = async (req: Request) => {
 		]
 	}
 
-	if (category[0] || subcategory[0]) {
+	if (category[0] || subcategory[0] || from || to) {
 		whereClause.AND = [
 			...(category[0]
 				? [
@@ -637,7 +640,8 @@ export const getIaBoqReportDal = async (req: Request) => {
 							}
 						}
 					}
-				}
+				},
+				createdAt: true
 			},
 		})
 
@@ -698,7 +702,7 @@ export const getIaTenderReportDal = async (req: Request) => {
 		]
 	}
 
-	if (category[0] || subcategory[0]) {
+	if (category[0] || subcategory[0] || from || to) {
 		whereClause.AND = [
 			...(category[0]
 				? [
@@ -787,7 +791,8 @@ export const getIaTenderReportDal = async (req: Request) => {
 								emd: true,
 								emd_type: true,
 								emd_value: true,
-								estimated_amount: true
+								estimated_amount: true,
+								createdAt: true
 							}
 						},
 						procurement: {
