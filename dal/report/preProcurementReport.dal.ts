@@ -83,13 +83,12 @@ export const getPreProcurementReportDal = async (req: Request) => {
 						}
 					}
 				]
-				: []),
-			{
-				status: {
-					in: status === 'requested' ? [0] : status === 'approved' ? [14, 24, 3, 4, 5, 6, 7] : status === 'pending' ? [10, 11, 13, 20, 21, 23] : status === 'rejected' ? [12, 22] : [0]
-				}
-			}
+				: [])
 		]
+	}
+
+	whereClause.status = {
+		in: status === 'requested' ? [0] : status === 'approved' ? [14, 24, 3, 4, 5, 6, 7] : status === 'pending' ? [10, 11, 13, 20, 21, 23] : status === 'rejected' ? [12, 22] : [0]
 	}
 
 	try {
@@ -106,6 +105,7 @@ export const getPreProcurementReportDal = async (req: Request) => {
 			select: {
 				id: true,
 				procurement_no: true,
+				status: true,
 				category: {
 					select: {
 						id: true,

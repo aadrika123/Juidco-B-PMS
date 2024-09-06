@@ -79,15 +79,14 @@ export const getFinanceBoqReportDal = async (req: Request) => {
 						}
 					}
 				]
-				: []),
-			{
-				boq: {
-					status: {
-						in: [40]
-					}
-				}
-			}
+				: [])
 		]
+	}
+
+	whereClause.boq = {
+		status: {
+			in: [40]
+		}
 	}
 
 	try {

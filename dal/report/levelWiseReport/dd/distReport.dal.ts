@@ -84,14 +84,13 @@ export const getDistStockReqReportDal = async (req: Request) => {
 					}
 				]
 				: []),
-			{
-				stock_request: {
-					status: {
-						in: [-1, 0,]
-					}
-				}
-			}
 		]
+	}
+
+	whereClause.stock_request = {
+		status: {
+			in: [-1, 0,]
+		}
 	}
 
 	try {
@@ -113,37 +112,31 @@ export const getDistStockReqReportDal = async (req: Request) => {
 						emp_id: true,
 						emp_name: true,
 						allotted_quantity: true,
-						stock_req_product: {
+						inventory: {
 							select: {
-								serial_no: true,
-								quantity: true,
-								inventory: {
+								id: true,
+								category: {
 									select: {
 										id: true,
-										category: {
-											select: {
-												id: true,
-												name: true
-											}
-										},
-										subcategory: {
-											select: {
-												id: true,
-												name: true
-											}
-										},
-										unit: {
-											select: {
-												id: true,
-												name: true,
-												abbreviation: true
-											}
-										},
-										description: true,
-										quantity: true,
-										warranty: true,
+										name: true
 									}
-								}
+								},
+								subcategory: {
+									select: {
+										id: true,
+										name: true
+									}
+								},
+								unit: {
+									select: {
+										id: true,
+										name: true,
+										abbreviation: true
+									}
+								},
+								description: true,
+								quantity: true,
+								warranty: true,
 							}
 						}
 					}
@@ -256,15 +249,14 @@ export const getDistServiceReqReportDal = async (req: Request) => {
 						}
 					}
 				]
-				: []),
-			{
-				service_req: {
-					status: {
-						in: [0]
-					}
-				}
-			}
+				: [])
 		]
+	}
+
+	whereClause.service_req = {
+		status: {
+			in: [0]
+		}
 	}
 
 	try {

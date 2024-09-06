@@ -3,7 +3,8 @@ import {
     getIaStockReqReportDal,
     getIaServiceReqReportDal,
     getIaProcurementReportDal,
-    getIaBoqReportDal
+    getIaBoqReportDal,
+    getIaTenderReportDal
 } from "../../../../dal/report/levelWiseReport/ia/iaReport.dal";
 
 
@@ -74,6 +75,24 @@ export const getIaBoqReport = async (req: Request, res: Response) => {
         res.status(404).json({
             status: false,
             message: `Error while fetching IA BOQ report`,
+            error: result?.message,
+        })
+    }
+}
+
+export const getIaTenderReport = async (req: Request, res: Response) => {
+    const result: any = await getIaTenderReportDal(req)
+    if (!result?.error) {
+        res.status(200).json({
+            status: true,
+            message: `IA tender report fetched successfully`,
+            data: result?.data,
+            pagination: result?.pagination,
+        })
+    } else {
+        res.status(404).json({
+            status: false,
+            message: `Error while fetching IA tender report`,
             error: result?.message,
         })
     }

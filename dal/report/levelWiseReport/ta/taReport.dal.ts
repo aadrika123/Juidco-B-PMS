@@ -5,7 +5,8 @@ import { pagination } from '../../../../type/common.type'
 
 const prisma = new PrismaClient()
 
-export const getLevel2ProcurementReportDal = async (req: Request) => {
+
+export const getTaTenderReportDal = async (req: Request) => {
 	const page: number | undefined = Number(req?.query?.page)
 	const take: number | undefined = Number(req?.query?.take)
 	const from: string | undefined = String(req?.query?.from)//yyyy-mm-dd
@@ -15,7 +16,7 @@ export const getLevel2ProcurementReportDal = async (req: Request) => {
 	let count: number
 	let totalPage: number
 	let pagination: pagination = {}
-	const whereClause: Prisma.level2_inboxWhereInput = {}
+	const whereClause: Prisma.ta_inboxWhereInput = {}
 
 	const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined
 
@@ -26,7 +27,7 @@ export const getLevel2ProcurementReportDal = async (req: Request) => {
 	if (search) {
 		whereClause.OR = [
 			{
-				procurement_no: {
+				reference_no: {
 					contains: search,
 					mode: 'insensitive',
 				}
@@ -40,10 +41,12 @@ export const getLevel2ProcurementReportDal = async (req: Request) => {
 			...(category[0]
 				? [
 					{
-						procurement: {
-							category_masterId: {
-								in: category,
-							},
+						boq: {
+							procurement: {
+								category_masterId: {
+									in: category,
+								},
+							}
 						}
 
 					}
@@ -53,12 +56,14 @@ export const getLevel2ProcurementReportDal = async (req: Request) => {
 				? [
 
 					{
-						procurement: {
-							procurement_stocks: {
-								some: {
-									subCategory_masterId: {
-										in: subcategory,
-									},
+						boq: {
+							procurement: {
+								procurement_stocks: {
+									some: {
+										subCategory_masterId: {
+											in: subcategory,
+										},
+									}
 								}
 							}
 						}
@@ -79,17 +84,17 @@ export const getLevel2ProcurementReportDal = async (req: Request) => {
 		]
 	}
 
-	whereClause.procurement = {
+	whereClause.boq = {
 		status: {
-			in: [20, 23]
+			in: [60]
 		}
 	}
 
 	try {
-		count = await prisma.level2_inbox.count({
+		count = await prisma.ta_inbox.count({
 			where: whereClause,
 		})
-		const result = await prisma.level2_inbox.findMany({
+		const result = await prisma.ta_inbox.findMany({
 			orderBy: {
 				updatedAt: 'desc',
 			},
@@ -98,36 +103,56 @@ export const getLevel2ProcurementReportDal = async (req: Request) => {
 			...(take && { take: take }),
 			select: {
 				id: true,
-				procurement_no: true,
-				procurement: {
+				reference_no: true,
+				boq: {
 					select: {
-						total_rate: true,
-						is_rate_contract: true,
-						procurement_stocks: {
+						procurement_no: true,
+						estimated_cost: true,
+						hsn_code: true,
+						procurements: {
 							select: {
-								category: {
-									select: {
-										id: true,
-										name: true
-									}
-								},
-								subCategory: {
-									select: {
-										id: true,
-										name: true
-									}
-								},
-								unit: {
-									select: {
-										id: true,
-										name: true,
-										abbreviation: true
-									}
-								},
-								description: true,
 								quantity: true,
 								rate: true,
-								total_rate: true
+								amount: true
+							}
+						},
+						pre_tendering_details: {
+							select: {
+								emd: true,
+								emd_type: true,
+								emd_value: true,
+								estimated_amount: true
+							}
+						},
+						procurement: {
+							select: {
+								procurement_stocks: {
+									select: {
+										category: {
+											select: {
+												id: true,
+												name: true
+											}
+										},
+										subCategory: {
+											select: {
+												id: true,
+												name: true
+											}
+										},
+										unit: {
+											select: {
+												id: true,
+												name: true,
+												abbreviation: true
+											}
+										},
+										description: true,
+										quantity: true,
+										rate: true,
+										total_rate: true
+									}
+								}
 							}
 						}
 					}

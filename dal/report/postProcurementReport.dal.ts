@@ -80,12 +80,11 @@ export const getPostProcurementReportDal = async (req: Request) => {
 						}
 					}
 				]
-				: []),
-			{
-				is_added: false
-			}
+				: [])
 		]
 	}
+
+	whereClause.is_added = false
 
 	try {
 		count = await prisma.receivings.count({
