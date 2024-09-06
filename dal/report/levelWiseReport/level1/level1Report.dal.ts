@@ -75,15 +75,14 @@ export const getLevel1ProcurementReportDal = async (req: Request) => {
 						}
 					}
 				]
-				: []),
-			{
-				procurement: {
-					status: {
-						in: [10, 13]
-					}
-				}
-			}
+				: [])
 		]
+	}
+
+	whereClause.procurement = {
+		status: {
+			in: [10, 13]
+		}
 	}
 
 	try {

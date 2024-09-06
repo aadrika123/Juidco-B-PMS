@@ -361,15 +361,14 @@ export const getStockMovementDal = async (req: Request) => {
 						}
 					}
 				]
-				: []),
-			{
-				stock_request: {
-					status: {
-						notIn: [-2, -1, 0, 1, 2, 80, 81, 82]
-					}
-				}
-			}
+				: [])
 		]
+	}
+
+	whereClause.stock_request = {
+		status: {
+			notIn: [-2, -1, 0, 1, 2, 80, 81, 82]
+		}
 	}
 
 
