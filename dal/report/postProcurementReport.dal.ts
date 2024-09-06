@@ -42,7 +42,7 @@ export const getPostProcurementReportDal = async (req: Request) => {
 		]
 	}
 
-	if (category[0] || subcategory[0]) {
+	if (category[0] || subcategory[0] || from || to) {
 		whereClause.AND = [
 			...(category[0]
 				? [
@@ -124,7 +124,8 @@ export const getPostProcurementReportDal = async (req: Request) => {
 						description: true,
 						total_rate: true
 					}
-				}
+				},
+				createdAt: true
 			},
 		})
 

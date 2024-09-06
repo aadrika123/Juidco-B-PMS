@@ -35,7 +35,7 @@ export const getDistStockReqReportDal = async (req: Request) => {
 		]
 	}
 
-	if (category[0] || subcategory[0]) {
+	if (category[0] || subcategory[0] || from || to) {
 		whereClause.AND = [
 			...(category[0]
 				? [
@@ -140,7 +140,8 @@ export const getDistStockReqReportDal = async (req: Request) => {
 							}
 						}
 					}
-				}
+				},
+				createdAt: true
 			},
 		})
 
@@ -201,7 +202,7 @@ export const getDistServiceReqReportDal = async (req: Request) => {
 		]
 	}
 
-	if (category[0] || subcategory[0]) {
+	if (category[0] || subcategory[0] || from || to) {
 		whereClause.AND = [
 			...(category[0]
 				? [
@@ -306,7 +307,8 @@ export const getDistServiceReqReportDal = async (req: Request) => {
 						}
 
 					}
-				}
+				},
+				createdAt: true
 			},
 		})
 

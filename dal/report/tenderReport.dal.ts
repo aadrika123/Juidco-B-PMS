@@ -1,21 +1,22 @@
 import { Request } from 'express'
 import { Prisma, PrismaClient } from '@prisma/client'
-import getErrorMessage from '../../../../lib/getErrorMessage'
-import { pagination } from '../../../../type/common.type'
+import getErrorMessage from '../../lib/getErrorMessage'
+import { pagination } from '../../type/common.type'
 
 const prisma = new PrismaClient()
 
-export const getLevel1ProcurementReportDal = async (req: Request) => {
+export const getPreProcurementReportDal = async (req: Request) => {
 	const page: number | undefined = Number(req?.query?.page)
 	const take: number | undefined = Number(req?.query?.take)
 	const from: string | undefined = String(req?.query?.from)//yyyy-mm-dd
 	const to: string | undefined = String(req?.query?.to)//yyyy-mm-dd
+	const status: string | undefined = String(req?.query?.status) //requested || pending || approved || rejected
 	const startIndex: number | undefined = (page - 1) * take
 	const endIndex: number | undefined = startIndex + take
 	let count: number
 	let totalPage: number
 	let pagination: pagination = {}
-	const whereClause: Prisma.level1_inboxWhereInput = {}
+	const whereClause: Prisma.pre_tendering_detailsWhereInput = {}
 
 	const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined
 
@@ -26,12 +27,11 @@ export const getLevel1ProcurementReportDal = async (req: Request) => {
 	if (search) {
 		whereClause.OR = [
 			{
-				procurement_no: {
+				reference_no: {
 					contains: search,
 					mode: 'insensitive',
 				}
-			}
-
+			},
 		]
 	}
 
@@ -40,20 +40,23 @@ export const getLevel1ProcurementReportDal = async (req: Request) => {
 			...(category[0]
 				? [
 					{
-						procurement: {
-							category_masterId: {
-								in: category,
-							},
+						boq: {
+							procurement_stocks: {
+								some: {
+									category_masterId: {
+										in: category,
+									},
+								}
+							}
 						}
 
-					}
+					},
 				]
 				: []),
 			...(subcategory[0]
 				? [
-
 					{
-						procurement: {
+						boq: {
 							procurement_stocks: {
 								some: {
 									subCategory_masterId: {
@@ -62,7 +65,6 @@ export const getLevel1ProcurementReportDal = async (req: Request) => {
 								}
 							}
 						}
-
 					},
 				]
 				: []),
@@ -79,17 +81,11 @@ export const getLevel1ProcurementReportDal = async (req: Request) => {
 		]
 	}
 
-	whereClause.procurement = {
-		status: {
-			in: [10, 13]
-		}
-	}
-
 	try {
-		count = await prisma.level1_inbox.count({
+		count = await prisma.pre_tendering_details.count({
 			where: whereClause,
 		})
-		const result = await prisma.level1_inbox.findMany({
+		const result = await prisma.pre_tendering_details.findMany({
 			orderBy: {
 				updatedAt: 'desc',
 			},
@@ -98,13 +94,19 @@ export const getLevel1ProcurementReportDal = async (req: Request) => {
 			...(take && { take: take }),
 			select: {
 				id: true,
-				procurement_no: true,
-				procurement: {
+				reference_no: true,
+				emd: true,
+				emd_type: true,
+				emd_value: true,
+				pbg_type: true,
+				pbg_value: true,
+				tendering_type: true,
+				estimated_amount: true,
+				boq: {
 					select: {
-						total_rate: true,
-						is_rate_contract: true,
 						procurement_stocks: {
 							select: {
+								id: true,
 								category: {
 									select: {
 										id: true,
@@ -124,9 +126,9 @@ export const getLevel1ProcurementReportDal = async (req: Request) => {
 										abbreviation: true
 									}
 								},
-								description: true,
-								quantity: true,
 								rate: true,
+								quantity: true,
+								description: true,
 								total_rate: true
 							}
 						}
