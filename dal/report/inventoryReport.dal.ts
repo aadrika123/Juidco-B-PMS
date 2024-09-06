@@ -101,11 +101,11 @@ export const getTotalStocksDal = async (req: Request) => {
 		await Promise.all(
 			result.map(async (item: any, index: number) => {
 				const products: any[] = await prisma.$queryRawUnsafe(`
-					SELECT sum(opening_quantity) as opening_quantity, serial_no,brand,quantity,opening_quantity,is_available,procurement_stock_id,createdat
+					SELECT sum(opening_quantity) as opening_quantity, serial_no,brand,quantity,opening_quantity,is_available,procurement_stock_id,updatedat
 					FROM product.product_${item?.subcategory?.name.toLowerCase().replace(/\s/g, '')}
 					WHERE inventory_id = '${item?.id}'
 					${from && to ? `and updatedat between '${from}' and '${to}'` : ''}
-					group by serial_no,brand,quantity,opening_quantity,is_available,procurement_stock_id
+					group by serial_no,brand,quantity,opening_quantity,is_available,procurement_stock_id,updatedat
 					`)
 
 				if (products.length !== 0) {
