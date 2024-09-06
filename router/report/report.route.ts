@@ -5,7 +5,13 @@ import { getPreProcurementReport } from '../../controller/report/preProcurementR
 import { getPostProcurementReport } from '../../controller/report/postProcurementReport.controller'
 import { getDistStockReqReport, getDistServiceReqReport } from '../../controller/report/levelWiseReport/dd/distReport.controller'
 import { getDaStockReqReport, getDaServiceReqReport } from '../../controller/report/levelWiseReport/da/daReport.controller'
-import { getIaStockReqReport, getIaServiceReqReport } from '../../controller/report/levelWiseReport/ia/iaReport.controller'
+import { getIaStockReqReport, getIaServiceReqReport, getIaProcurementReport, getIaBoqReport } from '../../controller/report/levelWiseReport/ia/iaReport.controller'
+import { getLevel1ProcurementReport } from '../../controller/report/levelWiseReport/level1/level1Report.controller'
+import { getLevel2ProcurementReport } from '../../controller/report/levelWiseReport/level2/level2Report.controller'
+import { getFinanceBoqReport } from '../../controller/report/levelWiseReport/finance/financeReport.controller'
+
+
+
 
 //inventory reports------------------------------------------------------------------------------------------------------
 router.get('/inventory/total', getTotalStocks)
@@ -18,7 +24,7 @@ router.get('/pre-procurement', getPreProcurementReport)
 //post procurement reports------------------------------------------------------------------------------------------------------
 router.get('/post-procurement', getPostProcurementReport)
 
-//levelwise reports------------------------------------------------------------------------------------------------------
+//level wise reports------------------------------------------------------------------------------------------------------
 //dd
 router.get('/level-wise/dd/stock-request', getDistStockReqReport)
 router.get('/level-wise/dd/service-request', getDistServiceReqReport)
@@ -30,6 +36,18 @@ router.get('/level-wise/da/service-request', getDaServiceReqReport)
 //ia
 router.get('/level-wise/ia/stock-request', getIaStockReqReport)
 router.get('/level-wise/ia/service-request', getIaServiceReqReport)
+router.get('/level-wise/ia/procurement', getIaProcurementReport)
+router.get('/level-wise/ia/boq', getIaBoqReport)
+
+//level1
+router.get('/level-wise/level1/procurement', getLevel1ProcurementReport)
+
+//level2
+router.get('/level-wise/level2/procurement', getLevel2ProcurementReport)
+
+//finance
+router.get('/level-wise/finance/boq', getFinanceBoqReport)
+
 
 
 export default router
