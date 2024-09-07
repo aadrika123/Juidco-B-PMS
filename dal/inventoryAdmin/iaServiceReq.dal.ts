@@ -427,7 +427,7 @@ export const approveServiceRequestDal = async (req: Request) => {
 			},
 		})
 
-		if (serviceReq?.service === 'dead' && !doc) {
+		if (serviceReq?.service === 'dead' && doc?.length === 0) {
 			throw { error: true, message: 'For dead stock request, document is mandatory' }
 		}
 
@@ -505,11 +505,24 @@ export const approveServiceRequestDal = async (req: Request) => {
 				})
 			}
 
-			await tx.da_service_req_inbox.create({
-				data: {
-					service_no: service_no,
-				},
-			})
+			if (serviceReq?.service !== 'return') {
+				await tx.da_service_req_inbox.create({
+					data: {
+						service_no: service_no,
+					},
+				})
+			} else {
+				await tx.da_service_req_inbox.delete({
+					where: {
+						service_no: service_no,
+					},
+				})
+				await tx.da_service_req_outbox.create({
+					data: {
+						service_no: service_no,
+					},
+				})
+			}
 
 			if (daOutbox > 0) {
 				await tx.da_service_req_outbox.delete({
@@ -555,9 +568,14 @@ export const approveServiceRequestDal = async (req: Request) => {
 }
 
 export const rejectServiceRequestDal = async (req: Request) => {
-	const { service_no }: { service_no: string } = req.body
+	const { service_no, remark }: { service_no: string, remark: string } = req.body
 
 	try {
+
+		if (!service_no && !remark) {
+			throw { error: true, message: 'Both service number and remark are required' }
+		}
+
 		const serviceReq = await prisma.service_request.findFirst({
 			where: {
 				service_no: service_no,
@@ -612,11 +630,24 @@ export const rejectServiceRequestDal = async (req: Request) => {
 				})
 			}
 
-			await tx.da_service_req_inbox.create({
-				data: {
-					service_no: service_no,
-				},
-			})
+			if (serviceReq?.service !== 'return') {
+				await tx.da_service_req_inbox.create({
+					data: {
+						service_no: service_no,
+					},
+				})
+			} else {
+				await tx.da_service_req_inbox.delete({
+					where: {
+						service_no: service_no,
+					},
+				})
+				await tx.da_service_req_outbox.create({
+					data: {
+						service_no: service_no,
+					},
+				})
+			}
 
 			if (daOutbox > 0) {
 				await tx.da_service_req_outbox.delete({
@@ -632,6 +663,7 @@ export const rejectServiceRequestDal = async (req: Request) => {
 				},
 				data: {
 					status: 12,
+					remark: remark as string
 				},
 			})
 
@@ -783,9 +815,10 @@ const addToDeadStock = async (serial_no: string, quantity: number, remark: strin
 		)
 		.then((result: any) => result[0])
 
-	if (Number(product?.quantity) - quantity < 0) {
-		throw { error: true, message: 'Provided quantity is more than available quantity' }
-	}
+
+	// if (Number(product?.quantity) - quantity < 0) {
+	// 	throw { error: true, message: 'Provided quantity is more than available quantity' }
+	// }
 
 	await tx.$queryRawUnsafe(`
 			UPDATE product.product_${subcategory_name.toLowerCase().replace(/\s/g, '')}
