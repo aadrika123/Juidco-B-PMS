@@ -562,17 +562,18 @@ export const approveStockReqDal = async (req: Request) => {
 							let quantityToUpdate: number = 0
 							if (Number(product?.quantity) - (Number(stockReq?.allotted_quantity) - assignedQuantityBuffer) <= 0) {
 								assignedQuantityBuffer = assignedQuantityBuffer + Number(product?.quantity)
-								await tx.$queryRawUnsafe(`
-									UPDATE product.product_${stockReq?.inventory?.subcategory?.name.toLowerCase().replace(/\s/g, '')}
-									SET is_available = false, quantity=0, updatedAt = CURRENT_TIMESTAMP
-									WHERE serial_no = '${product?.serial_no as string}'
-								`)
 
 								const productQuantity: any[] = await tx.$queryRawUnsafe(`
 									select quantity from product.product_${stockReq?.inventory?.subcategory?.name.toLowerCase().replace(/\s/g, '')}
 									WHERE serial_no = '${product?.serial_no as string}'
 									`)
-								quantityToUpdate = productQuantity[0].quantity
+								quantityToUpdate = productQuantity[0].quantity as number
+
+								await tx.$queryRawUnsafe(`
+									UPDATE product.product_${stockReq?.inventory?.subcategory?.name.toLowerCase().replace(/\s/g, '')}
+									SET is_available = false, quantity=0, updatedAt = CURRENT_TIMESTAMP
+									WHERE serial_no = '${product?.serial_no as string}'
+								`)
 
 							} else {
 								await tx.$queryRawUnsafe(`
