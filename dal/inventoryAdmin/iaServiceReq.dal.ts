@@ -879,7 +879,7 @@ const warrantyClaim = async (serial_no: string, remark: string, subcategory_name
 			}
 		},
 		data: {
-			is_available: false
+			is_available: true
 		},
 	})
 
