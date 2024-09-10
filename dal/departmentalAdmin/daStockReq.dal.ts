@@ -586,9 +586,9 @@ export const procurementApprovalDal = async (req: Request) => {
 			await tx.notification.create({
 				data: {
 					role_id: Number(process.env.ROLE_DA),
-					title: 'Stock unavailable',
+					title: approve ? 'Proceed for procurement' : 'Do not proceed for procurement',
 					destination: 0,
-					description: ` Stock request : ${stock_handover_no} is currently unavailable. Want to procure?`,
+					description: ` Stock request : ${stock_handover_no} has ${!approve && 'no'} consent for procurement`,
 				},
 			})
 		})
