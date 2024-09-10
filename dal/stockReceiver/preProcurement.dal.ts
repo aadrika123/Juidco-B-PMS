@@ -4,6 +4,7 @@ import generateOrderNumber from '../../lib/orderNumberGenerator'
 import getErrorMessage from '../../lib/getErrorMessage'
 import { imageUploader } from '../../lib/imageUploader'
 import { pagination } from '../../type/common.type'
+import isUUID from '../../lib/uuidChecker'
 // import { getCategoryByName } from '../masterEntry/category.dal'
 // import { createSubcategoryNoReqDal } from '../masterEntry/subcategory.dal'
 // import { createBrandNoReqDal } from '../masterEntry/brand.dal'
@@ -55,6 +56,20 @@ export const createPreProcurementDal = async (req: Request) => {
 			})
 			await Promise.all(
 				procurement.map(async item => {
+					let description = item?.description
+
+					if (isUUID(description)) {
+						const inventoryData = await prisma.inventory.findFirst({
+							where: {
+								id: description
+							},
+							select: {
+								description: true
+							}
+						})
+						description = inventoryData?.description as string
+					}
+
 					await tx.procurement_stocks.create({
 						data: {
 							procurement_no: procurement_no,
@@ -65,7 +80,7 @@ export const createPreProcurementDal = async (req: Request) => {
 							rate: Number(item?.rate),
 							quantity: Number(item?.quantity),
 							total_rate: Number(item?.total_rate),
-							description: item?.description,
+							description: description,
 						},
 					})
 				})
