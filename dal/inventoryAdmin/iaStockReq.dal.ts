@@ -1066,3 +1066,36 @@ export const getProductsBystockReqDal = async (req: Request) => {
 		return { error: true, message: getErrorMessage(err) }
 	}
 }
+
+export const unavailabilityNotificationDal = async (req: Request) => {
+	const { stock_handover_no } = req.params
+
+	try {
+
+		await prisma.$transaction(async tx => {
+			await tx.stock_request.update({
+				where: {
+					stock_handover_no: stock_handover_no
+				},
+				data: {
+					is_notified: 1 //flag changed to 'notified'
+				}
+			})
+
+			await tx.notification.create({
+				data: {
+					role_id: Number(process.env.ROLE_DA),
+					title: 'Stock unavailable',
+					destination: 0,
+					description: ` Stock request : ${stock_handover_no} is currently unavailable. Want to procure?`,
+				},
+			})
+		})
+
+		return 'Notified'
+
+	} catch (err: any) {
+		console.log(err)
+		return { error: true, message: getErrorMessage(err) }
+	}
+}
