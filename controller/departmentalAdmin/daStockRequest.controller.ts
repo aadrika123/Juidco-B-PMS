@@ -1,5 +1,5 @@
 import { Request, Response } from 'express'
-import { getStockReqInboxDal, getStockReqOutboxDal, forwardToIaDal, rejectStockReqDal, returnStockReqDal } from '../../dal/departmentalAdmin/daStockReq.dal'
+import { getStockReqInboxDal, getStockReqOutboxDal, forwardToIaDal, rejectStockReqDal, returnStockReqDal, procurementApprovalDal } from '../../dal/departmentalAdmin/daStockReq.dal'
 
 export const getStockReqInbox = async (req: Request, res: Response) => {
 	const result: any = await getStockReqInboxDal(req)
@@ -83,6 +83,23 @@ export const returnStockReq = async (req: Request, res: Response) => {
 		res.status(404).json({
 			status: false,
 			message: `Error while returning`,
+			error: result?.message,
+		})
+	}
+}
+
+export const procurementApproval = async (req: Request, res: Response) => {
+	const result: any = await procurementApprovalDal(req)
+	if (!result?.error) {
+		res.status(200).json({
+			status: true,
+			message: `Action performed successfully`,
+			data: result,
+		})
+	} else {
+		res.status(404).json({
+			status: false,
+			message: `Error while performing action`,
 			error: result?.message,
 		})
 	}

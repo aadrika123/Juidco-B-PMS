@@ -1,5 +1,5 @@
 import { Request, Response } from 'express'
-import { getStockReqInboxDal, getStockReqOutboxDal, approveStockReqDal, rejectStockReqDal, returnStockReqDal, getProductsBystockReqDal } from '../../dal/inventoryAdmin/iaStockReq.dal'
+import { getStockReqInboxDal, getStockReqOutboxDal, approveStockReqDal, rejectStockReqDal, returnStockReqDal, getProductsBystockReqDal, unavailabilityNotificationDal } from '../../dal/inventoryAdmin/iaStockReq.dal'
 
 export const getStockReqInbox = async (req: Request, res: Response) => {
 	const result: any = await getStockReqInboxDal(req)
@@ -102,6 +102,23 @@ export const getProductsBystockReq = async (req: Request, res: Response) => {
 		res.status(404).json({
 			status: false,
 			message: `Error while fetching product list`,
+			error: result?.message,
+		})
+	}
+}
+
+export const unavailabilityNotification = async (req: Request, res: Response) => {
+	const result: any = await unavailabilityNotificationDal(req)
+	if (!result?.error) {
+		res.status(200).json({
+			status: true,
+			message: `DA notified`,
+			data: result
+		})
+	} else {
+		res.status(404).json({
+			status: false,
+			message: `Error while notifyiing`,
 			error: result?.message,
 		})
 	}

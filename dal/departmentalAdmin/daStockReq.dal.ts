@@ -46,61 +46,61 @@ export const getStockReqInboxDal = async (req: Request) => {
 		whereClause.AND = [
 			...(category[0]
 				? [
-						{
-							// stock_request: {
-							// 	category_masterId: {
-							// 		in: category,
-							// 	},
-							// },
-							stock_request: {
-								inventory: {
-									category_masterId: {
-										in: category,
-									},
+					{
+						// stock_request: {
+						// 	category_masterId: {
+						// 		in: category,
+						// 	},
+						// },
+						stock_request: {
+							inventory: {
+								category_masterId: {
+									in: category,
 								},
 							},
 						},
-					]
+					},
+				]
 				: []),
 			...(subcategory[0]
 				? [
-						{
-							// stock_request: {
-							// 	subcategory_masterId: {
-							// 		in: subcategory,
-							// 	},
-							// },
-							stock_request: {
-								inventory: {
-									subcategory_masterId: {
-										in: subcategory,
-									},
+					{
+						// stock_request: {
+						// 	subcategory_masterId: {
+						// 		in: subcategory,
+						// 	},
+						// },
+						stock_request: {
+							inventory: {
+								subcategory_masterId: {
+									in: subcategory,
 								},
 							},
 						},
-					]
+					},
+				]
 				: []),
 			...(brand[0]
 				? [
-						{
-							stock_request: {
-								brand_masterId: {
-									in: brand,
-								},
+					{
+						stock_request: {
+							brand_masterId: {
+								in: brand,
 							},
 						},
-					]
+					},
+				]
 				: []),
 			...(status[0]
 				? [
-						{
-							stock_request: {
-								status: {
-									in: status.map(Number),
-								},
+					{
+						stock_request: {
+							status: {
+								in: status.map(Number),
 							},
 						},
-					]
+					},
+				]
 				: []),
 		]
 	}
@@ -233,47 +233,47 @@ export const getStockReqOutboxDal = async (req: Request) => {
 		whereClause.AND = [
 			...(category[0]
 				? [
-						{
-							stock_request: {
-								category_masterId: {
-									in: category,
-								},
+					{
+						stock_request: {
+							category_masterId: {
+								in: category,
 							},
 						},
-					]
+					},
+				]
 				: []),
 			...(subcategory[0]
 				? [
-						{
-							stock_request: {
-								subcategory_masterId: {
-									in: subcategory,
-								},
+					{
+						stock_request: {
+							subcategory_masterId: {
+								in: subcategory,
 							},
 						},
-					]
+					},
+				]
 				: []),
 			...(brand[0]
 				? [
-						{
-							stock_request: {
-								brand_masterId: {
-									in: brand,
-								},
+					{
+						stock_request: {
+							brand_masterId: {
+								in: brand,
 							},
 						},
-					]
+					},
+				]
 				: []),
 			...(status[0]
 				? [
-						{
-							stock_request: {
-								status: {
-									in: status.map(Number),
-								},
+					{
+						stock_request: {
+							status: {
+								in: status.map(Number),
 							},
 						},
-					]
+					},
+				]
 				: []),
 		]
 	}
@@ -419,12 +419,12 @@ export const forwardToIaDal = async (req: Request) => {
 					}),
 					...(iaOutboxCount !== 0
 						? [
-								prisma.ia_stock_req_outbox.delete({
-									where: {
-										stock_handover_no: item,
-									},
-								}),
-							]
+							prisma.ia_stock_req_outbox.delete({
+								where: {
+									stock_handover_no: item,
+								},
+							}),
+						]
 						: []),
 					prisma.notification.create({
 						data: {
@@ -561,6 +561,38 @@ export const rejectStockReqDal = async (req: Request) => {
 				])
 			})
 		)
+		return 'Rejected'
+	} catch (err: any) {
+		console.log(err)
+		return { error: true, message: getErrorMessage(err) }
+	}
+}
+
+export const procurementApprovalDal = async (req: Request) => {
+	const { stock_handover_no, approve }: { stock_handover_no: string, approve: boolean } = req.body
+
+	try {
+
+		await prisma.$transaction(async tx => {
+			await tx.stock_request.update({
+				where: {
+					stock_handover_no: stock_handover_no
+				},
+				data: {
+					is_notified: approve ? 2 : -2  //allowed or not allowed
+				}
+			})
+
+			await tx.notification.create({
+				data: {
+					role_id: Number(process.env.ROLE_DA),
+					title: 'Stock unavailable',
+					destination: 0,
+					description: ` Stock request : ${stock_handover_no} is currently unavailable. Want to procure?`,
+				},
+			})
+		})
+
 		return 'Rejected'
 	} catch (err: any) {
 		console.log(err)

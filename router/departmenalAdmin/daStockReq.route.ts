@@ -1,7 +1,7 @@
 import express from 'express'
 import { daAuth } from '../../middleware/userAuth'
 const router = express.Router()
-import { getStockReqInbox, getStockReqOutbox, forwardToIa, rejectStockReq, returnStockReq } from '../../controller/departmentalAdmin/daStockRequest.controller'
+import { getStockReqInbox, getStockReqOutbox, forwardToIa, rejectStockReq, returnStockReq, procurementApproval } from '../../controller/departmentalAdmin/daStockRequest.controller'
 
 router.use(daAuth)
 
@@ -10,5 +10,7 @@ router.get('/outbox', getStockReqOutbox)
 router.post('/to-ia', forwardToIa)
 router.post('/reject', rejectStockReq)
 router.post('/return', returnStockReq)
+router.post('/return', returnStockReq)
+router.post('/procurement-approval', procurementApproval)
 
 export default router
