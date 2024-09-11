@@ -1264,31 +1264,39 @@ model criteria {
 enum offline_mode_enum {
     dd
     cash
+    bg
 }
 
 model bidder_master {
-    id             String             @id @default(uuid())
-    reference_no   String
-    name           String
-    gst_no         String
-    pan_no         String
-    address        String
-    bank           String
-    account_no     String
-    ifsc           String
-    emd            Boolean
-    emd_doc        String
-    payment_mode   payment_mode_enum?
-    offline_mode   offline_mode_enum?
-    dd_no          String?
-    transaction_no String?
-    bidding_amount Float
-    has_lost       Boolean            @default(false)
-    createdAt      DateTime           @default(now())
-    updatedAt      DateTime           @updatedAt
-    bid_details    bid_details        @relation(fields: [reference_no], references: [reference_no])
-    comparison     comparison?
-    bidder_doc     bidder_doc[]
+    id                String             @id @default(uuid())
+    reference_no      String
+    name              String
+    gst_no            String
+    pan_no            String
+    address           String
+    bank              String
+    account_no        String
+    ifsc              String
+    emd               Boolean
+    emd_doc           String
+    payment_mode      payment_mode_enum?
+    offline_mode      offline_mode_enum?
+    dd_no             String?
+    dd_date           DateTime?
+    dd_bank           String?
+    dd_transaction_no String?
+    bg_no             String?
+    bg_date           DateTime?
+    bg_bank           String?
+    bg_transaction_no String?
+    transaction_no    String?
+    bidding_amount    Float?
+    has_lost          Boolean            @default(false)
+    createdAt         DateTime           @default(now())
+    updatedAt         DateTime           @updatedAt
+    bid_details       bid_details        @relation(fields: [reference_no], references: [reference_no])
+    comparison        comparison?
+    bidder_doc        bidder_doc[]
 }
 
 model bidder_doc {

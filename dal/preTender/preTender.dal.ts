@@ -7,7 +7,7 @@ const prisma = new PrismaClient()
 
 type preTenderDetailsPayloadType = {
 	reference_no: string
-	emd: boolean
+	emd: string
 	estimated_amount: number
 	emd_type: pre_tendering_details_enum
 	emd_value: number
@@ -239,7 +239,7 @@ export const createPreTenderDetailsDal = async (req: Request) => {
 			result = await tx.pre_tendering_details.create({
 				data: {
 					reference_no: reference_no,
-					emd: Boolean(emd),
+					emd: emd === 'yes' ? true : false,
 					estimated_amount: Number(estimated_amount),
 					emd_type: emd_type,
 					emd_value: Number(emd_value),

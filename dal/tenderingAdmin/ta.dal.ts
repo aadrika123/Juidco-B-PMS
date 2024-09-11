@@ -617,7 +617,14 @@ export const addBidderDetailsDal = async (req: Request) => {
                     offline_mode: formattedBidder?.offline_mode as offline_mode_enum,
                     dd_no: formattedBidder?.dd_no && null,
                     transaction_no: String(formattedBidder?.transaction_no),
-                    bidding_amount: Number(formattedBidder?.bidding_amount),
+                    ...(formattedBidder?.bidding_amount && { bidding_amount: Number(formattedBidder?.bidding_amount) }),
+                    ...(formattedBidder?.dd_date && { dd_date: new Date(formattedBidder?.dd_date) }),
+                    ...(formattedBidder?.dd_bank && { dd_bank: Number(formattedBidder?.dd_bank) }),
+                    ...(formattedBidder?.dd_transaction_no && { dd_transaction_no: Number(formattedBidder?.dd_transaction_no) }),
+                    ...(formattedBidder?.bg_no && { bg_no: Number(formattedBidder?.bg_no) }),
+                    ...(formattedBidder?.bg_date && { bg_date: new Date(formattedBidder?.bg_date) }),
+                    ...(formattedBidder?.bg_bank && { bg_bank: Number(formattedBidder?.bg_bank) }),
+                    ...(formattedBidder?.bg_transaction_no && { bg_transaction_no: Number(formattedBidder?.bg_transaction_no) }),
                 },
             })
 
@@ -945,7 +952,7 @@ export const selectWinnerDal = async (req: Request) => {
         }
 
         if (winners.length === 0) {
-            throw { error: true, message: "Atleast one winner is required" }
+            throw { error: true, message: "At least one winner is required" }
         }
 
         const participants = await prisma.comparison.count({
