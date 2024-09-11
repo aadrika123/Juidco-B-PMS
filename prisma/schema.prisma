@@ -1228,20 +1228,27 @@ model ta_outbox {
     updatedAt    DateTime @updatedAt
 }
 
+enum comparison_ratio_enum {
+    t80f20
+    t70f30
+    t60f40
+}
+
 model bid_details {
-    id              String            @id @default(uuid())
-    reference_no    String            @unique
-    bid_type        bid_type_enum
-    no_of_bidders   Int?
-    status          Int               @default(0) // 0 = pending
-    creationStatus  Int               @default(0) // 0=pending, 1=type selected, 2=criteria added, 3=bidder added, 41=tech winner selected, 42= fin winner selected, 4=compared, 5=rate contract done 
-    boq             boq               @relation(fields: [reference_no], references: [reference_no])
-    createdAt       DateTime          @default(now())
-    updatedAt       DateTime          @updatedAt
-    criteria        criteria[]
-    bidder_master   bidder_master[]
-    comparison      comparison[]
-    supplier_master supplier_master[]
+    id               String                 @id @default(uuid())
+    reference_no     String                 @unique
+    bid_type         bid_type_enum
+    no_of_bidders    Int?
+    comparison_ratio comparison_ratio_enum?
+    status           Int                    @default(0) // 0 = pending
+    creationStatus   Int                    @default(0) // 0=pending, 1=type selected, 2=criteria added, 3=bidder added, 41=tech winner selected, 42= fin winner selected, 4=compared, 5=rate contract done 
+    boq              boq                    @relation(fields: [reference_no], references: [reference_no])
+    createdAt        DateTime               @default(now())
+    updatedAt        DateTime               @updatedAt
+    criteria         criteria[]
+    bidder_master    bidder_master[]
+    comparison       comparison[]
+    supplier_master  supplier_master[]
 }
 
 enum criteria_type_enum {
