@@ -539,7 +539,7 @@ export const returnBoqDal = async (req: Request) => {
 					reference_no: reference_no,
 				},
 				data: {
-					status: 43,
+					status: 41,
 					remark: remark,
 				},
 			})
