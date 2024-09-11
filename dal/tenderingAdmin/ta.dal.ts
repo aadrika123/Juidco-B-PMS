@@ -713,6 +713,36 @@ export const submitBidderDetailsDal = async (req: Request) => {
     }
 }
 
+type amountDataType = {
+    bidder_id: string,
+    amount: number
+}
+
+export const addBiddingAmountDal = async (req: Request) => {
+    const { amountData }: { amountData: amountDataType[] } = req.body
+    try {
+        if (amountData.length === 0) {
+            throw { error: true, message: "Amount data is required as 'amountData'" }
+        }
+
+        await Promise.all(
+            amountData.map(async item => {
+                await prisma.bidder_master.update({
+                    where: { id: item?.bidder_id },
+                    data: {
+                        bidding_amount: Number(item?.amount)
+                    }
+                })
+            })
+        )
+
+        return 'Bidder amount submitted'
+    } catch (err: any) {
+        console.log(err)
+        return { error: true, message: getErrorMessage(err) }
+    }
+}
+
 type comparisonCriteriaType = {
     criteria_id: string
     value: number
@@ -816,6 +846,92 @@ export const comparisonDal = async (req: Request) => {
     }
 }
 
+// export const comparisonDal = async (req: Request) => {
+//     const { reference_no, comparison_type, comparison_data, criteria_type }: comparisonPayloadType = req.body
+//     try {
+//         if (!reference_no) {
+//             throw { error: true, message: "Reference number is required as 'reference_no'" }
+//         }
+
+//         if (!comparison_type) {
+//             throw { error: true, message: "Comparison type is required as 'comparison_type'" }
+//         }
+
+//         if (comparison_data.length === 0) {
+//             throw { error: true, message: "Comparison data is required as 'comparison_data[]'" }
+//         }
+
+//         const bidDetails = await prisma.bid_details.findFirst({
+//             where: { reference_no: reference_no },
+//             select: {
+//                 bid_type: true,
+//                 creationStatus: true,
+//             },
+//         })
+
+//         const comparedData = await prisma.comparison.count({
+//             where: {
+//                 reference_no: reference_no,
+//                 comparison_criteria: {
+//                     some: {
+//                         criteria: {
+//                             criteria_type: 'technical',
+//                         },
+//                     },
+//                 },
+//             },
+//         })
+
+//         if (bidDetails?.creationStatus !== 3 && bidDetails?.creationStatus !== 41 && bidDetails?.creationStatus !== 42) {
+//             throw { error: true, message: 'Current creation status is not valid for this step ' }
+//         }
+
+//         if (bidDetails?.bid_type === 'fintech' && comparedData === 0 && criteria_type === 'financial') {
+//             throw { error: true, message: 'Technical comparison is not completed yet' }
+//         }
+
+//         await prisma.$transaction(async tx => {
+//             await Promise.all(
+//                 comparison_data.map(async item => {
+
+//                     const existingComparisonCount = await prisma.comparison.count({
+//                         where: {
+//                             reference_no: reference_no,
+//                             bidder_id: item?.bidder_id
+//                         }
+//                     })
+
+//                     if (existingComparisonCount === 0) {
+//                         await tx.comparison.create({
+//                             data: {
+//                                 reference_no: reference_no,
+//                                 bidder_id: item?.bidder_id,
+//                             },
+//                         })
+//                     }
+//                     await Promise.all(
+//                         item?.comparison_criteria.map(async criteriaData => {
+//                             await tx.comparison_criteria.create({
+//                                 data: {
+//                                     bidder_id: item?.bidder_id,
+//                                     criteria_id: criteriaData?.criteria_id,
+//                                     value: Number(criteriaData?.value),
+//                                     comparison_type: comparison_type,
+//                                 },
+//                             })
+//                         })
+//                     )
+//                 })
+//             )
+//         })
+
+//         return 'Comparison details details submitted'
+//     } catch (err: any) {
+//         console.log(err)
+//         return { error: true, message: getErrorMessage(err) }
+//     }
+// }
+
 export const comparisonResultDal = async (req: Request) => {
     const { reference_no } = req.params
     try {
@@ -873,6 +989,7 @@ export const comparisonResultDal = async (req: Request) => {
             where: { reference_no: reference_no },
             select: {
                 bid_type: true,
+                comparison_ratio: true,
                 comparison: {
                     where: {
                         bidder_master: {
@@ -925,6 +1042,20 @@ export const comparisonResultDal = async (req: Request) => {
             return acc
         }, {})
 
+        const lowestBiddingAmount = await prisma.bidder_master.findFirst({
+            where: {
+                reference_no: reference_no
+            },
+            orderBy: {
+                bidding_amount: 'asc'
+            },
+            select: {
+                bidding_amount: true
+            }
+        })
+
+        const [tech, fin] = rationExtractor(bidDetails?.comparison_ratio)
+
         //assign total score to the response
         bidDetails?.comparison.map((item: any) => {
             item.total_score = scores[item?.bidder_master?.id]
@@ -941,6 +1072,14 @@ export const comparisonResultDal = async (req: Request) => {
         console.log(err)
         return { error: true, message: getErrorMessage(err) }
     }
+}
+
+const rationExtractor = (string: string): number[] => {
+    const numbers = string.match(/\d+/g);
+    if (!numbers) {
+        return []; // Return an empty array if no numbers are found
+    }
+    return numbers.map(Number)
 }
 
 export const selectWinnerDal = async (req: Request) => {

@@ -12,7 +12,8 @@ import {
     selectWinnerDal,
     finalizeComparisonDal,
     setUnitPriceDal,
-    setComparisonRatioDal
+    setComparisonRatioDal,
+    addBiddingAmountDal
 } from "../../dal/tenderingAdmin/ta.dal";
 
 
@@ -234,6 +235,23 @@ export const setComparisonRatio = async (req: Request, res: Response) => {
         res.status(400).json({
             status: false,
             message: `Error while adding comparison ratio`,
+            error: result?.message
+        })
+    }
+}
+
+export const addBiddingAmount = async (req: Request, res: Response) => {
+    const result: any = await addBiddingAmountDal(req)
+    if (!result?.error) {
+        res.status(200).json({
+            status: true,
+            message: `Bidding amount added successfully`,
+            data: result
+        })
+    } else {
+        res.status(400).json({
+            status: false,
+            message: `Error while adding bidding amount`,
             error: result?.message
         })
     }

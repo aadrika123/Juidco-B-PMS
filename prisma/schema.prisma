@@ -700,6 +700,7 @@ model pre_tendering_details {
     tenure           Float?
     min_supplier     Int?
     max_supplier     Int?
+    no_of_covers     Int?
     createdAt        DateTime                   @default(now())
     updatedAt        DateTime                   @updatedAt
 }
