@@ -401,10 +401,10 @@ export const editPreProcurementDal = async (req: Request) => {
 		await prisma.$transaction([
 			...(historyExistence === 0
 				? [
-						prisma.procurement_history.create({
-							data: tempData,
-						}),
-					]
+					prisma.procurement_history.create({
+						data: tempData,
+					}),
+				]
 				: []),
 			prisma.procurement.update({
 				where: {
@@ -1371,6 +1371,12 @@ export const forwardToFinanceDal = async (req: Request) => {
 			}
 		}
 
+		const financeOutbox = await prisma.finance_boq_outbox.count({
+			where: {
+				reference_no: reference_no
+			}
+		})
+
 		//start transaction
 		await prisma.$transaction(async tx => {
 			await tx.da_boq_inbox.delete({
@@ -1390,6 +1396,14 @@ export const forwardToFinanceDal = async (req: Request) => {
 					reference_no: reference_no,
 				},
 			})
+
+			if (financeOutbox !== 0) {
+				await tx.finance_boq_outbox.delete({
+					where: {
+						reference_no: reference_no,
+					},
+				})
+			}
 
 			await tx.boq.update({
 				where: {
@@ -1694,68 +1708,68 @@ export const getPreTenderingInboxDal = async (req: Request) => {
 		whereClause.AND = [
 			...(category[0]
 				? [
-						{
-							boq: {
-								procurements: {
-									some: {
-										procurement: {
-											category_masterId: {
-												in: category,
-											},
+					{
+						boq: {
+							procurements: {
+								some: {
+									procurement: {
+										category_masterId: {
+											in: category,
 										},
 									},
 								},
 							},
 						},
-					]
+					},
+				]
 				: []),
 
 			...(subcategory[0]
 				? [
-						{
-							boq: {
-								procurements: {
-									some: {
-										procurement: {
-											subcategory_masterId: {
-												in: subcategory,
-											},
+					{
+						boq: {
+							procurements: {
+								some: {
+									procurement: {
+										subcategory_masterId: {
+											in: subcategory,
 										},
 									},
 								},
 							},
 						},
-					]
+					},
+				]
 				: []),
 
 			...(brand[0]
 				? [
-						{
-							boq: {
-								status: {
-									in: status.map(Number),
-								},
+					{
+						boq: {
+							status: {
+								in: status.map(Number),
 							},
 						},
-					]
+					},
+				]
 				: []),
 
 			...(brand[0]
 				? [
-						{
-							boq: {
-								procurements: {
-									some: {
-										procurement: {
-											brand_masterId: {
-												in: brand,
-											},
+					{
+						boq: {
+							procurements: {
+								some: {
+									procurement: {
+										brand_masterId: {
+											in: brand,
 										},
 									},
 								},
 							},
 						},
-					]
+					},
+				]
 				: []),
 		]
 	}
@@ -1893,68 +1907,68 @@ export const getPreTenderingOutboxDal = async (req: Request) => {
 		whereClause.AND = [
 			...(category[0]
 				? [
-						{
-							boq: {
-								procurements: {
-									some: {
-										procurement: {
-											category_masterId: {
-												in: category,
-											},
+					{
+						boq: {
+							procurements: {
+								some: {
+									procurement: {
+										category_masterId: {
+											in: category,
 										},
 									},
 								},
 							},
 						},
-					]
+					},
+				]
 				: []),
 
 			...(subcategory[0]
 				? [
-						{
-							boq: {
-								procurements: {
-									some: {
-										procurement: {
-											subcategory_masterId: {
-												in: subcategory,
-											},
+					{
+						boq: {
+							procurements: {
+								some: {
+									procurement: {
+										subcategory_masterId: {
+											in: subcategory,
 										},
 									},
 								},
 							},
 						},
-					]
+					},
+				]
 				: []),
 
 			...(brand[0]
 				? [
-						{
-							boq: {
-								status: {
-									in: status.map(Number),
-								},
+					{
+						boq: {
+							status: {
+								in: status.map(Number),
 							},
 						},
-					]
+					},
+				]
 				: []),
 
 			...(brand[0]
 				? [
-						{
-							boq: {
-								procurements: {
-									some: {
-										procurement: {
-											brand_masterId: {
-												in: brand,
-											},
+					{
+						boq: {
+							procurements: {
+								some: {
+									procurement: {
+										brand_masterId: {
+											in: brand,
 										},
 									},
 								},
 							},
 						},
-					]
+					},
+				]
 				: []),
 		]
 	}
