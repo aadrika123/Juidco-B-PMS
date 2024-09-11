@@ -14,7 +14,8 @@ import {
     finalizeComparison,
     setUnitPrice,
     setComparisonRatio,
-    addBiddingAmount
+    addBiddingAmount,
+    financialComparisonResult
 } from "../../controller/tenderingAdmin/ta.controller";
 import { upload } from "../../config/multer.config";
 
@@ -33,6 +34,7 @@ router.post('/submit-bidder', submitBidderDetails)
 router.post('/compare', comparison)
 router.post('/select-winner', selectWinner)
 router.post('/comparison-finalize', finalizeComparison)
+router.get('/comparison-result/financial/:reference_no', financialComparisonResult)
 router.get('/comparison-result/:reference_no', comparisonResult)
 router.post('/add-unit-price', setUnitPrice)
 router.post('/set-comparison-ratio', setComparisonRatio)

@@ -13,7 +13,8 @@ import {
     finalizeComparisonDal,
     setUnitPriceDal,
     setComparisonRatioDal,
-    addBiddingAmountDal
+    addBiddingAmountDal,
+    financialComparisonResultDal
 } from "../../dal/tenderingAdmin/ta.dal";
 
 
@@ -150,6 +151,23 @@ export const comparison = async (req: Request, res: Response) => {
         res.status(400).json({
             status: false,
             message: `Error while comparing`,
+            error: result?.message
+        })
+    }
+}
+
+export const financialComparisonResult = async (req: Request, res: Response) => {
+    const result: any = await financialComparisonResultDal(req)
+    if (!result?.error) {
+        res.status(201).json({
+            status: true,
+            message: `Financial comparison result fetched successfully`,
+            data: result
+        })
+    } else {
+        res.status(400).json({
+            status: false,
+            message: `Error while fetching financial comparison result`,
             error: result?.message
         })
     }
