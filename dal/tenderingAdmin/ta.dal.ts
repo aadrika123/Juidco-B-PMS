@@ -1,6 +1,6 @@
 import { Request } from 'express'
 import getErrorMessage from '../../lib/getErrorMessage'
-import { bid_type_enum, bidder_master, comparison_type_enum, criteria_type_enum, offline_mode_enum, payment_mode_enum, PrismaClient } from '@prisma/client'
+import { bid_type_enum, bidder_master, comparison_ratio_enum, comparison_type_enum, criteria_type_enum, offline_mode_enum, payment_mode_enum, PrismaClient } from '@prisma/client'
 
 import { pagination } from '../../type/common.type'
 import { imageUploaderV2 } from '../../lib/imageUploaderV2'
@@ -1309,6 +1309,35 @@ export const setUnitPriceDal = async (req: Request) => {
         })
 
         return 'Unit price added'
+
+    } catch (err: any) {
+        console.log(err)
+        return { error: true, message: getErrorMessage(err) }
+    }
+}
+
+export const setComparisonRatioDal = async (req: Request) => {
+    const { reference_no, ratio }: { reference_no: string, ratio: comparison_ratio_enum } = req.body
+    try {
+
+        await prisma.bid_details.update({
+            where: {
+                reference_no: reference_no
+            },
+            data: {
+                comparison_ratio: ratio
+            }
+        })
+
+        const ratioDecoder = (ratio: comparison_ratio_enum) => {
+            switch (ratio) {
+                case 't60f40': return '60 technical to 40 financial'
+                case 't70f30': return '70 technical to 30 financial'
+                case 't80f20': return '80 technical to 20 financial'
+            }
+        }
+
+        return `comparison ratio set to ${ratioDecoder(ratio)} `
 
     } catch (err: any) {
         console.log(err)
