@@ -2,7 +2,8 @@ import { Request, Response } from "express";
 import {
     getPreTenderDal,
     createPreTenderDetailsDal,
-    getPreTenderDetailsDal
+    getPreTenderDetailsDal,
+    addNoOfCoversDal
 } from "../../dal/preTender/preTender.dal";
 
 
@@ -52,6 +53,23 @@ export const getPreTenderDetails = async (req: Request, res: Response) => {
         res.status(400).json({
             status: false,
             message: `Error while fetching Pre tender details`,
+            error: result?.message
+        })
+    }
+}
+
+export const addNoOfCovers = async (req: Request, res: Response) => {
+    const result: any = await addNoOfCoversDal(req)
+    if (!result?.error) {
+        res.status(201).json({
+            status: true,
+            message: `added successfully`,
+            data: result
+        })
+    } else {
+        res.status(400).json({
+            status: false,
+            message: `Error while adding`,
             error: result?.message
         })
     }

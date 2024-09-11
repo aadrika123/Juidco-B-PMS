@@ -989,6 +989,7 @@ export const comparisonResultDal = async (req: Request) => {
             where: { reference_no: reference_no },
             select: {
                 bid_type: true,
+                comparison_ratio: true,
                 comparison: {
                     where: {
                         bidder_master: {
@@ -1041,6 +1042,20 @@ export const comparisonResultDal = async (req: Request) => {
             return acc
         }, {})
 
+        const lowestBiddingAmount = await prisma.bidder_master.findFirst({
+            where: {
+                reference_no: reference_no
+            },
+            orderBy: {
+                bidding_amount: 'asc'
+            },
+            select: {
+                bidding_amount: true
+            }
+        })
+
+        const [tech, fin] = rationExtractor(bidDetails?.comparison_ratio)
+
         //assign total score to the response
         bidDetails?.comparison.map((item: any) => {
             item.total_score = scores[item?.bidder_master?.id]
@@ -1057,6 +1072,14 @@ export const comparisonResultDal = async (req: Request) => {
         console.log(err)
         return { error: true, message: getErrorMessage(err) }
     }
+}
+
+const rationExtractor = (string: string): number[] => {
+    const numbers = string.match(/\d+/g);
+    if (!numbers) {
+        return []; // Return an empty array if no numbers are found
+    }
+    return numbers.map(Number)
 }
 
 export const selectWinnerDal = async (req: Request) => {

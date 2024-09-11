@@ -289,10 +289,36 @@ export const getPreTenderDetailsDal = async (req: Request) => {
 				tenure: true,
 				min_supplier: true,
 				max_supplier: true,
+				no_of_covers: true
 			},
 		})
 
 		return result ? result : null
+	} catch (err: any) {
+		console.log(err)
+		return { error: true, message: getErrorMessage(err) }
+	}
+}
+
+export const addNoOfCoversDal = async (req: Request) => {
+	const { reference_no, no_of_covers }: { reference_no: string, no_of_covers: number } = req.body
+	try {
+		if (!reference_no) {
+			throw { error: true, message: "Reference number is required as 'reference_no'" }
+		}
+
+		await prisma.$transaction(async tx => {
+			await tx.pre_tendering_details.update({
+				where: {
+					reference_no: reference_no
+				},
+				data: {
+					no_of_covers: Number(no_of_covers)
+				}
+			})
+		})
+
+		return 'added'
 	} catch (err: any) {
 		console.log(err)
 		return { error: true, message: getErrorMessage(err) }
