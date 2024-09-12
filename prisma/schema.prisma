@@ -299,6 +299,7 @@ model inventory {
     emp_service_request     emp_service_request[]
     emp_service_req_product emp_service_req_product[]
     emp_service_history     emp_service_history[]
+    stock_handover          stock_handover[]
 }
 
 model rate_contract {
@@ -959,6 +960,7 @@ model stock_request {
     ia_stock_req_outbox   ia_stock_req_outbox?
     stock_req_product     stock_req_product[]
     service_request       service_request[]
+    stock_handover        stock_handover[]
 }
 
 model stock_req_product {
@@ -974,6 +976,25 @@ model stock_req_product {
     updatedAt         DateTime      @updatedAt
 
     @@unique([stock_handover_no, serial_no])
+}
+
+model stock_handover {
+    id                String        @id @default(uuid())
+    stock_handover_no String
+    emp_id            String
+    emp_name          String?
+    ulb_id            Int?
+    serial_no         String
+    quantity          Float         @default(1)
+    return_date       DateTime?
+    is_alloted        Boolean       @default(true)
+    inventory         inventory     @relation(fields: [inventoryId], references: [id])
+    inventoryId       String
+    stock_request     stock_request @relation(fields: [stock_handover_no], references: [stock_handover_no])
+    createdAt         DateTime      @default(now())
+    updatedAt         DateTime      @updatedAt
+
+    @@unique([emp_id, serial_no])
 }
 
 model inventory_buffer {

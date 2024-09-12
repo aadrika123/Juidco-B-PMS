@@ -412,6 +412,11 @@ export const approveServiceRequestDal = async (req: Request) => {
 			select: {
 				service_no: true,
 				stock_handover_no: true,
+				stock_request: {
+					select: {
+						emp_id: true
+					}
+				},
 				status: true,
 				service: true,
 				inventory: {
@@ -474,7 +479,7 @@ export const approveServiceRequestDal = async (req: Request) => {
 			if (serviceReq?.service === 'return') {
 				await Promise.all(
 					serviceReqProd.map(async prod => {
-						await returnToInventory(prod?.serial_no, prod.quantity, String(serviceReq?.inventory?.subcategory?.name), tx, serviceReq?.service_no, serviceReq?.stock_handover_no)
+						await returnToInventory(prod?.serial_no, prod.quantity, String(serviceReq?.inventory?.subcategory?.name), tx, serviceReq?.service_no, serviceReq?.stock_handover_no, serviceReq?.stock_request?.emp_id)
 					})
 				)
 			}
@@ -928,7 +933,7 @@ const warrantyClaim = async (serial_no: string, remark: string, subcategory_name
 	})
 }
 
-const returnToInventory = async (serial_no: string, quantity: number, subcategory_name: string, tx: Prisma.TransactionClient, service_no: string, stock_handover_no: string) => {
+const returnToInventory = async (serial_no: string, quantity: number, subcategory_name: string, tx: Prisma.TransactionClient, service_no: string, stock_handover_no: string, emp_id: string) => {
 	const product = await prisma
 		.$queryRawUnsafe(
 			`
@@ -954,6 +959,19 @@ const returnToInventory = async (serial_no: string, quantity: number, subcategor
 				increment: quantity,
 			},
 		},
+	})
+
+	await tx.stock_handover.update({
+		where: {
+			emp_id_serial_no: {
+				emp_id: emp_id,
+				serial_no: serial_no
+			}
+		},
+		data: {
+			return_date: new Date(),
+			is_alloted: false
+		}
 	})
 
 	await tx.service_history.create({

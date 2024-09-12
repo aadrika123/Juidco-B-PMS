@@ -507,6 +507,9 @@ export const approveStockReqDal = async (req: Request) => {
 					select: {
 						allotted_quantity: true,
 						status: true,
+						emp_id: true,
+						emp_name: true,
+						ulb_id: true,
 						inventory: {
 							select: {
 								id: true,
@@ -591,6 +594,17 @@ export const approveStockReqDal = async (req: Request) => {
 									inventoryId: stockReq?.inventory?.id as string,
 									quantity: quantityToUpdate
 								},
+							})
+							await tx.stock_handover.create({
+								data: {
+									stock_handover_no: item,
+									emp_id: stockReq?.emp_id,
+									emp_name: stockReq?.emp_name,
+									ulb_id: stockReq?.ulb_id,
+									serial_no: product?.serial_no as string,
+									quantity: quantityToUpdate,
+									inventoryId: stockReq?.inventory?.id as string,
+								}
 							})
 						})
 					)
