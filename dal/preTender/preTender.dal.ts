@@ -291,7 +291,8 @@ export const getPreTenderDetailsDal = async (req: Request) => {
 				tenure: true,
 				min_supplier: true,
 				max_supplier: true,
-				no_of_covers: true
+				no_of_covers: true,
+				is_rate_contract: true
 			},
 		})
 
