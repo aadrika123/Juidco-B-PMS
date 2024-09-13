@@ -396,16 +396,16 @@ export const addCriteriaDal = async (req: Request) => {
             throw { error: true, message: 'No pre tender details found with this reference number' }
         }
 
-        const bidDetailsData = await prisma.bid_details.findFirst({
-            where: { reference_no: reference_no },
-            select: {
-                creationStatus: true,
-            },
-        })
+        // const bidDetailsData = await prisma.bid_details.findFirst({
+        //     where: { reference_no: reference_no },
+        //     select: {
+        //         creationStatus: true,
+        //     },
+        // })
 
-        if (bidDetailsData?.creationStatus !== 1) {
-            throw { error: true, message: 'Current creation status is not valid for this step ' }
-        }
+        // if (bidDetailsData?.creationStatus !== 1) {
+        //     throw { error: true, message: 'Current creation status is not valid for this step ' }
+        // }
 
         const addedCriteria = await prisma.criteria.findMany({
             where: {
@@ -475,9 +475,9 @@ export const submitCriteriaDal = async (req: Request) => {
             },
         })
 
-        if (bidDetailsData?.creationStatus !== 1) {
-            throw { error: true, message: 'Current creation status is not valid for this step ' }
-        }
+        // if (bidDetailsData?.creationStatus !== 1) {
+        //     throw { error: true, message: 'Current creation status is not valid for this step ' }
+        // }
 
         const addedCriteria = await prisma.criteria.findMany({
             where: {
@@ -573,9 +573,9 @@ export const addBidderDetailsDal = async (req: Request) => {
             }
         }
 
-        if (bidDetailsData?.creationStatus !== 2) {
-            throw { error: true, message: 'Current creation status is not valid for this step ' }
-        }
+        // if (bidDetailsData?.creationStatus !== 2) {
+        //     throw { error: true, message: 'Current creation status is not valid for this step ' }
+        // }
 
         if (bidDetailsData?.bid_type === 'technical' && !tech_doc) {
             throw { error: true, message: 'Technical document is required' }
@@ -693,9 +693,9 @@ export const submitBidderDetailsDal = async (req: Request) => {
             }
         }
 
-        if (bidDetailsData?.creationStatus !== 2) {
-            throw { error: true, message: 'Current creation status is not valid for this step ' }
-        }
+        // if (bidDetailsData?.creationStatus !== 2) {
+        //     throw { error: true, message: 'Current creation status is not valid for this step ' }
+        // }
 
         await prisma.$transaction(async tx => {
             await tx.bid_details.update({
@@ -796,9 +796,9 @@ export const comparisonDal = async (req: Request) => {
             },
         })
 
-        if (bidDetails?.creationStatus !== 3 && bidDetails?.creationStatus !== 41 && bidDetails?.creationStatus !== 42) {
-            throw { error: true, message: 'Current creation status is not valid for this step ' }
-        }
+        // if (bidDetails?.creationStatus !== 3 && bidDetails?.creationStatus !== 41 && bidDetails?.creationStatus !== 42) {
+        //     throw { error: true, message: 'Current creation status is not valid for this step ' }
+        // }
 
         if (bidDetails?.bid_type === 'fintech' && comparedData === 0 && criteria_type === 'financial') {
             throw { error: true, message: 'Technical comparison is not completed yet' }
@@ -932,6 +932,99 @@ export const comparisonDal = async (req: Request) => {
 //     }
 // }
 
+export const financialComparisonResultDal = async (req: Request) => {
+    const { reference_no } = req.params
+    try {
+        if (!reference_no) {
+            throw { error: true, message: "Reference number is required as 'reference_no'" }
+        }
+
+        const bidDetails = await prisma.bid_details.findFirst({
+            where: { reference_no: reference_no },
+            select: {
+                comparison_ratio: true,
+                comparison: {
+                    where: {
+                        bidder_master: {
+                            has_lost: false,
+                        }
+                    },
+                    select: {
+                        bidder_master: {
+                            select: {
+                                id: true,
+                                name: true,
+                                bidding_amount: true
+                            }
+                        },
+                        comparison_criteria: {
+                            where: {
+                                criteria: {
+                                    criteria_type: 'technical'
+                                }
+                            },
+                            select: {
+                                criteria: {
+                                    select: {
+                                        id: true,
+                                        heading: true,
+                                        description: true,
+                                    },
+                                },
+                                comparison_type: true,
+                                value: true,
+                            },
+                        },
+                    },
+                },
+            },
+        })
+
+        if (!bidDetails?.comparison_ratio) {
+            throw { error: true, message: "There is no comparison ratio" }
+        }
+
+        const lowestBiddingAmount = await prisma.bidder_master.findFirst({
+            where: {
+                reference_no: reference_no
+            },
+            orderBy: {
+                bidding_amount: 'asc'
+            },
+            select: {
+                bidding_amount: true
+            }
+        })
+
+        const [techRatio, finRatio] = ratioExtractor(bidDetails?.comparison_ratio)
+
+        bidDetails?.comparison.map((item: any) => {
+            const financialScore = (Number(lowestBiddingAmount?.bidding_amount) / Number(item?.bidder_master?.bidding_amount)) * 100
+            const technicalScore = item?.comparison_criteria.reduce((sum: number, item: any) => {
+                return sum + item?.value
+            }, 0)
+            const overallScore = (technicalScore * (techRatio / 100)) + (financialScore * (finRatio / 100))
+            item.lowest_bidding_amount = lowestBiddingAmount
+            item.technical_score = technicalScore
+            item.financial_score = financialScore
+            item.overall_score = overallScore
+        })
+
+        return { bidDetails }
+    } catch (err: any) {
+        console.log(err)
+        return { error: true, message: getErrorMessage(err) }
+    }
+}
+
+const ratioExtractor = (string: string): number[] => {
+    const numbers = string.match(/\d+/g);
+    if (!numbers) {
+        return []; // Return an empty array if no numbers are found
+    }
+    return numbers.map(Number)
+}
+
 export const comparisonResultDal = async (req: Request) => {
     const { reference_no } = req.params
     try {
@@ -1000,7 +1093,8 @@ export const comparisonResultDal = async (req: Request) => {
                         bidder_master: {
                             select: {
                                 id: true,
-                                name: true
+                                name: true,
+                                bidding_amount: true
                             }
                         },
                         comparison_criteria: {
@@ -1042,22 +1136,9 @@ export const comparisonResultDal = async (req: Request) => {
             return acc
         }, {})
 
-        const lowestBiddingAmount = await prisma.bidder_master.findFirst({
-            where: {
-                reference_no: reference_no
-            },
-            orderBy: {
-                bidding_amount: 'asc'
-            },
-            select: {
-                bidding_amount: true
-            }
-        })
-
-        const [tech, fin] = rationExtractor(bidDetails?.comparison_ratio)
-
         //assign total score to the response
         bidDetails?.comparison.map((item: any) => {
+
             item.total_score = scores[item?.bidder_master?.id]
         })
 
@@ -1072,14 +1153,6 @@ export const comparisonResultDal = async (req: Request) => {
         console.log(err)
         return { error: true, message: getErrorMessage(err) }
     }
-}
-
-const rationExtractor = (string: string): number[] => {
-    const numbers = string.match(/\d+/g);
-    if (!numbers) {
-        return []; // Return an empty array if no numbers are found
-    }
-    return numbers.map(Number)
 }
 
 export const selectWinnerDal = async (req: Request) => {
