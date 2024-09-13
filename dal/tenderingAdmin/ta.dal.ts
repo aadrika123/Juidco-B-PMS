@@ -1010,6 +1010,9 @@ export const financialComparisonResultDal = async (req: Request) => {
             item.overall_score = overallScore
         })
 
+        // Sort the comparison array by overall_score in descending order
+        bidDetails.comparison.sort((a: any, b: any) => b.overall_score - a.overall_score);
+
         return { bidDetails }
     } catch (err: any) {
         console.log(err)
