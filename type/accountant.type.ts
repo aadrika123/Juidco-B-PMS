@@ -10,7 +10,8 @@ export type boqData = {
 			rate: number
 			gst: number
 			amount?: number
-			remark: string
+			remark: string,
+			hsn_code?: string
 		},
 	]
 	gst?: number

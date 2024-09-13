@@ -450,6 +450,7 @@ model procurement_stocks {
     quantity                   Float?
     description                String?
     total_rate                 Float?
+    hsn_code                   String?
     createdAt                  DateTime                    @default(now())
     updatedAt                  DateTime                    @updatedAt
     boq_procurement_no         String?
@@ -610,6 +611,7 @@ model boq_procurement {
     rate           Float?
     amount         Float?
     remark         String?
+    hsn_code       String?
     createdAt      DateTime    @default(now())
     updatedAt      DateTime    @updatedAt
     procurement    procurement @relation(fields: [procurement_no], references: [procurement_no])

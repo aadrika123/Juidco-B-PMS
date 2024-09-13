@@ -396,16 +396,16 @@ export const addCriteriaDal = async (req: Request) => {
             throw { error: true, message: 'No pre tender details found with this reference number' }
         }
 
-        const bidDetailsData = await prisma.bid_details.findFirst({
-            where: { reference_no: reference_no },
-            select: {
-                creationStatus: true,
-            },
-        })
+        // const bidDetailsData = await prisma.bid_details.findFirst({
+        //     where: { reference_no: reference_no },
+        //     select: {
+        //         creationStatus: true,
+        //     },
+        // })
 
-        if (bidDetailsData?.creationStatus !== 1) {
-            throw { error: true, message: 'Current creation status is not valid for this step ' }
-        }
+        // if (bidDetailsData?.creationStatus !== 1) {
+        //     throw { error: true, message: 'Current creation status is not valid for this step ' }
+        // }
 
         const addedCriteria = await prisma.criteria.findMany({
             where: {
@@ -475,9 +475,9 @@ export const submitCriteriaDal = async (req: Request) => {
             },
         })
 
-        if (bidDetailsData?.creationStatus !== 1) {
-            throw { error: true, message: 'Current creation status is not valid for this step ' }
-        }
+        // if (bidDetailsData?.creationStatus !== 1) {
+        //     throw { error: true, message: 'Current creation status is not valid for this step ' }
+        // }
 
         const addedCriteria = await prisma.criteria.findMany({
             where: {
@@ -573,9 +573,9 @@ export const addBidderDetailsDal = async (req: Request) => {
             }
         }
 
-        if (bidDetailsData?.creationStatus !== 2) {
-            throw { error: true, message: 'Current creation status is not valid for this step ' }
-        }
+        // if (bidDetailsData?.creationStatus !== 2) {
+        //     throw { error: true, message: 'Current creation status is not valid for this step ' }
+        // }
 
         if (bidDetailsData?.bid_type === 'technical' && !tech_doc) {
             throw { error: true, message: 'Technical document is required' }
@@ -693,9 +693,9 @@ export const submitBidderDetailsDal = async (req: Request) => {
             }
         }
 
-        if (bidDetailsData?.creationStatus !== 2) {
-            throw { error: true, message: 'Current creation status is not valid for this step ' }
-        }
+        // if (bidDetailsData?.creationStatus !== 2) {
+        //     throw { error: true, message: 'Current creation status is not valid for this step ' }
+        // }
 
         await prisma.$transaction(async tx => {
             await tx.bid_details.update({
@@ -796,9 +796,9 @@ export const comparisonDal = async (req: Request) => {
             },
         })
 
-        if (bidDetails?.creationStatus !== 3 && bidDetails?.creationStatus !== 41 && bidDetails?.creationStatus !== 42) {
-            throw { error: true, message: 'Current creation status is not valid for this step ' }
-        }
+        // if (bidDetails?.creationStatus !== 3 && bidDetails?.creationStatus !== 41 && bidDetails?.creationStatus !== 42) {
+        //     throw { error: true, message: 'Current creation status is not valid for this step ' }
+        // }
 
         if (bidDetails?.bid_type === 'fintech' && comparedData === 0 && criteria_type === 'financial') {
             throw { error: true, message: 'Technical comparison is not completed yet' }
@@ -1135,20 +1135,6 @@ export const comparisonResultDal = async (req: Request) => {
             acc[comparison?.bidder_master?.id] = (acc[comparison?.bidder_master?.id] || 0) + sum
             return acc
         }, {})
-
-        const lowestBiddingAmount = await prisma.bidder_master.findFirst({
-            where: {
-                reference_no: reference_no
-            },
-            orderBy: {
-                bidding_amount: 'asc'
-            },
-            select: {
-                bidding_amount: true
-            }
-        })
-
-        const [tech, fin] = ratioExtractor(bidDetails?.comparison_ratio)
 
         //assign total score to the response
         bidDetails?.comparison.map((item: any) => {
