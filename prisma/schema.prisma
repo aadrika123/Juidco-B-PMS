@@ -704,6 +704,7 @@ model pre_tendering_details {
     min_supplier     Int?
     max_supplier     Int?
     no_of_covers     Int?
+    is_rate_contract Boolean                    @default(false)
     createdAt        DateTime                   @default(now())
     updatedAt        DateTime                   @updatedAt
 }

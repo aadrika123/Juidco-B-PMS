@@ -17,6 +17,7 @@ type preTenderDetailsPayloadType = {
 	tenure?: number
 	min_supplier?: number
 	max_supplier?: number
+	is_rate_contract: boolean
 }
 
 const checkExistence = async (reference_no: string) => {
@@ -214,7 +215,7 @@ export const getPreTenderDal = async (req: Request) => {
 }
 
 export const createPreTenderDetailsDal = async (req: Request) => {
-	const { reference_no, emd, estimated_amount, emd_type, emd_value, pbg_type, pbg_value, tendering_type, tenure, min_supplier, max_supplier }: preTenderDetailsPayloadType = req.body
+	const { reference_no, emd, estimated_amount, emd_type, emd_value, pbg_type, pbg_value, tendering_type, tenure, min_supplier, max_supplier, is_rate_contract }: preTenderDetailsPayloadType = req.body
 	try {
 		if (!reference_no) {
 			throw { error: true, message: "Reference number is required as 'reference_no'" }
@@ -246,9 +247,10 @@ export const createPreTenderDetailsDal = async (req: Request) => {
 					pbg_type: pbg_type,
 					pbg_value: Number(pbg_value),
 					tendering_type: tendering_type,
-					...(tendering_type === 'rate_contract' && { tenure: Number(tenure) }),
-					...(tendering_type === 'rate_contract' && { min_supplier: Number(min_supplier) }),
-					...(tendering_type === 'rate_contract' && { max_supplier: Number(max_supplier) }),
+					is_rate_contract: Boolean(is_rate_contract),
+					...(Boolean(is_rate_contract) && { tenure: Number(tenure) }),
+					...(Boolean(is_rate_contract) && { min_supplier: Number(min_supplier) }),
+					...(Boolean(is_rate_contract) && { max_supplier: Number(max_supplier) }),
 				},
 			})
 
