@@ -38,6 +38,7 @@ export const getBoqByRefNoDal = async (req: Request) => {
 						remark: true,
 						description: true,
 						gst: true,
+						hsn_code: true,
 						category: {
 							select: {
 								name: true,
