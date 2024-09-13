@@ -1279,7 +1279,8 @@ export const finalizeComparisonDal = async (req: Request) => {
                         procurement_no: true,
                         pre_tendering_details: {
                             select: {
-                                tendering_type: true
+                                tendering_type: true,
+                                is_rate_contract: true
                             }
                         }
                     }
@@ -1372,7 +1373,14 @@ export const finalizeComparisonDal = async (req: Request) => {
                     creationStatus: 4
                 }
             })
-            if (bidDetailsData?.boq?.pre_tendering_details?.tendering_type !== 'rate_contract') {
+            // if (bidDetailsData?.boq?.pre_tendering_details?.tendering_type !== 'rate_contract') {
+            //     await tx.da_post_procurement_inbox.create({
+            //         data: {
+            //             procurement_no: bidDetailsData?.boq?.procurement_no as string
+            //         }
+            //     })
+            // }
+            if (!bidDetailsData?.boq?.pre_tendering_details?.is_rate_contract) {
                 await tx.da_post_procurement_inbox.create({
                     data: {
                         procurement_no: bidDetailsData?.boq?.procurement_no as string
@@ -1438,7 +1446,11 @@ export const setUnitPriceDal = async (req: Request) => {
     try {
 
         if (!procurement_no) {
-            throw { error: true, message: "Procurement number is required as 'reference_no'" }
+            throw { error: true, message: "Procurement number is required as 'procurement_no'" }
+        }
+
+        if (!reference_no) {
+            throw { error: true, message: "Reference number is required as 'reference_no'" }
         }
 
         if (items?.length === 0) {
