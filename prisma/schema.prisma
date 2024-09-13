@@ -1235,6 +1235,7 @@ enum bid_type_enum {
     technical
     financial
     fintech
+    abc
 }
 
 model ta_inbox {
