@@ -944,6 +944,15 @@ export const financialComparisonResultDal = async (req: Request) => {
             where: { reference_no: reference_no },
             select: {
                 comparison_ratio: true,
+                boq: {
+                    select: {
+                        pre_tendering_details: {
+                            select: {
+                                is_rate_contract: true
+                            }
+                        }
+                    }
+                },
                 comparison: {
                     where: {
                         bidder_master: {
@@ -1089,6 +1098,15 @@ export const comparisonResultDal = async (req: Request) => {
             select: {
                 bid_type: true,
                 comparison_ratio: true,
+                boq: {
+                    select: {
+                        pre_tendering_details: {
+                            select: {
+                                is_rate_contract: true
+                            }
+                        }
+                    }
+                },
                 comparison: {
                     where: {
                         bidder_master: {
