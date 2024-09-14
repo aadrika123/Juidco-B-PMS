@@ -1076,6 +1076,8 @@ export const comparisonResultDal = async (req: Request) => {
                 return 'technical'
             } else if (bid_type?.bid_type === 'fintech' && techComparison !== 0 && finComparison === 0) {
                 return 'technical'
+            } else if (bid_type?.bid_type === 'abc' && techComparison !== 0 && finComparison === 0) {
+                return 'technical'
             } else {
                 return "financial"
             }
