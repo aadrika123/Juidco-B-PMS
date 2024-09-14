@@ -9,6 +9,7 @@ import { serviceTranslator } from '../distributor/distServiceReq.dal'
 import getErrorMessage from '../../lib/getErrorMessage'
 import { pagination } from '../../type/common.type'
 import { imageUploaderV2 } from '../../lib/imageUploaderV2'
+import { extractRoleName } from '../../lib/roleNameExtractor'
 
 const prisma = new PrismaClient()
 
@@ -551,6 +552,7 @@ export const approveServiceRequestDal = async (req: Request) => {
 					role_id: Number(process.env.ROLE_DIST),
 					title: 'Service request approved',
 					destination: 41,
+					from: await extractRoleName(Number(process.env.ROLE_IA)),
 					description: `${serviceTranslator(serviceReq?.service)} approved. Service Number : ${service_no}`,
 				},
 			})
@@ -560,6 +562,7 @@ export const approveServiceRequestDal = async (req: Request) => {
 					role_id: Number(process.env.ROLE_DA),
 					title: 'Service request approved',
 					destination: 26,
+					from: await extractRoleName(Number(process.env.ROLE_IA)),
 					description: `${serviceTranslator(serviceReq?.service)} approved. Service Number : ${service_no}`,
 				},
 			})
@@ -677,6 +680,7 @@ export const rejectServiceRequestDal = async (req: Request) => {
 					role_id: Number(process.env.ROLE_DIST),
 					title: 'Service request rejected',
 					destination: 41,
+					from: await extractRoleName(Number(process.env.ROLE_IA)),
 					description: `${serviceTranslator(serviceReq?.service)} rejected. Service Number : ${service_no}`,
 				},
 			})
@@ -686,6 +690,7 @@ export const rejectServiceRequestDal = async (req: Request) => {
 					role_id: Number(process.env.ROLE_DA),
 					title: 'Service request rejected',
 					destination: 26,
+					from: await extractRoleName(Number(process.env.ROLE_IA)),
 					description: `${serviceTranslator(serviceReq?.service)} rejected. Service Number : ${service_no}`,
 				},
 			})
@@ -788,6 +793,7 @@ export const returnServiceRequestDal = async (req: Request) => {
 					role_id: Number(process.env.ROLE_DIST),
 					title: 'Service request returned from IA',
 					destination: 41,
+					from: await extractRoleName(Number(process.env.ROLE_IA)),
 					description: `${serviceTranslator(serviceReq?.service)} returned from IA. Service Number : ${service_no}`,
 				},
 			})
@@ -797,6 +803,7 @@ export const returnServiceRequestDal = async (req: Request) => {
 					role_id: Number(process.env.ROLE_DA),
 					title: 'Service request returned from IA',
 					destination: 26,
+					from: await extractRoleName(Number(process.env.ROLE_IA)),
 					description: `${serviceTranslator(serviceReq?.service)} returned from IA. Service Number : ${service_no}`,
 				},
 			})

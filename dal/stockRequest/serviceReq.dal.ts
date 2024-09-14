@@ -2,6 +2,7 @@ import { Request } from 'express'
 import getErrorMessage from '../../lib/getErrorMessage'
 import { PrismaClient, service_enum, service_request } from '@prisma/client'
 import { serviceTranslator } from '../distributor/distServiceReq.dal'
+import { extractRoleName } from '../../lib/roleNameExtractor'
 
 const prisma = new PrismaClient()
 
@@ -132,6 +133,7 @@ export const editServiceRequestDal = async (req: Request) => {
 						role_id: Number(process.env.ROLE_IA),
 						title: 'New Service request',
 						destination: 81,
+						from: await extractRoleName(Number(process.env.ROLE_DIST)),
 						description: `There is a ${serviceTranslator(service)}. Service Number : ${service_no}`,
 					},
 				})
@@ -141,6 +143,7 @@ export const editServiceRequestDal = async (req: Request) => {
 					role_id: Number(process.env.ROLE_DA),
 					title: 'New Service request',
 					destination: 26,
+					from: await extractRoleName(Number(process.env.ROLE_DIST)),
 					description: `There is a ${serviceTranslator(service)}. Service Number : ${service_no}`,
 				},
 			})

@@ -8,6 +8,7 @@ import { PrismaClient, Prisma, emp_service_request, service_enum } from '@prisma
 import getErrorMessage from '../../lib/getErrorMessage'
 import { pagination } from '../../type/common.type'
 import { imageUploaderV2 } from '../../lib/imageUploaderV2'
+import { extractRoleName } from '../../lib/roleNameExtractor'
 
 const prisma = new PrismaClient()
 
@@ -482,6 +483,7 @@ export const approveEmpServiceRequestDal = async (req: Request) => {
 					role_id: Number(process.env.ROLE_DA),
 					title: 'Service request approved',
 					destination: 100,
+					from: await extractRoleName(Number(process.env.ROLE_DIST)),
 					description: `${serviceTranslator(serviceReq?.service)} approved. Service Number : ${service_no}`,
 				},
 			})
@@ -576,6 +578,7 @@ export const rejectServiceRequestDal = async (req: Request) => {
 					role_id: Number(process.env.ROLE_EMP),
 					title: 'Service request rejected',
 					destination: 100,
+					from: await extractRoleName(Number(process.env.ROLE_DIST)),
 					description: `${serviceTranslator(serviceReq?.service)} rejected. Service Number : ${service_no}`,
 				},
 			})

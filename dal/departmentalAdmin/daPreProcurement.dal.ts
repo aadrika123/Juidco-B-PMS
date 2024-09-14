@@ -3,6 +3,7 @@ import { PrismaClient } from '@prisma/client'
 import getErrorMessage from '../../lib/getErrorMessage'
 import { imageUploader } from '../../lib/imageUploader'
 import { pagination } from '../../type/common.type'
+import { extractRoleName } from '../../lib/roleNameExtractor'
 
 const prisma = new PrismaClient()
 
@@ -333,6 +334,7 @@ export const backToSrDal = async (req: Request) => {
 						role_id: Number(process.env.ROLE_SR),
 						title: 'Procurement returned',
 						destination: 10,
+						from: await extractRoleName(Number(process.env.ROLE_DA)),
 						description: `There is a procurement returned from DA to be revised. Procurement Number : ${inbox?.procurement_no}`,
 					},
 				}),
@@ -417,6 +419,7 @@ export const editPreProcurementDal = async (req: Request) => {
 					role_id: Number(process.env.ROLE_SR),
 					title: 'Procurement edited by DA',
 					destination: 10,
+					from: await extractRoleName(Number(process.env.ROLE_DA)),
 					description: `There is a procurement Edited by DA. Procurement Number : ${procurement_no}`,
 				},
 			}),
@@ -569,6 +572,7 @@ export const releaseForTenderByProcNoDal = async (req: Request) => {
 							role_id: Number(process.env.ROLE_SR),
 							title: 'Procurement released for tender',
 							destination: 15,
+							from: await extractRoleName(Number(process.env.ROLE_DA)),
 							description: `There is a procurement released for tender. Procurement Number : ${procurement_no}`,
 						},
 					}),
@@ -839,6 +843,7 @@ export const rejectByProcurementNoDal = async (req: Request) => {
 						role_id: Number(process.env.ROLE_SR),
 						title: 'Procurement rejected',
 						destination: 14,
+						from: await extractRoleName(Number(process.env.ROLE_DA)),
 						description: `There is a procurement rejected. Procurement Number : ${procurement_no}`,
 					},
 				}),
@@ -904,6 +909,7 @@ export const rejectDal = async (req: Request) => {
 						role_id: Number(process.env.ROLE_SR),
 						title: 'Procurement rejected',
 						destination: 14,
+						from: await extractRoleName(Number(process.env.ROLE_DA)),
 						description: `There is a procurement rejected. Procurement Number : ${inbox?.procurement_no}`,
 					},
 				}),
@@ -977,6 +983,7 @@ export const forwardToAccountantDal = async (req: Request) => {
 							role_id: Number(process.env.ROLE_ACC),
 							title: 'Procurement for BOQ',
 							destination: 30,
+							from: await extractRoleName(Number(process.env.ROLE_DA)),
 							description: `There is a procurement for BOQ. Procurement Number : ${inbox?.procurement_no}`,
 						},
 					}),
@@ -1489,6 +1496,7 @@ export const proceedForPostProcurementDal = async (req: Request) => {
 					role_id: Number(process.env.ROLE_IA),
 					title: 'Procurement ready for post procurement',
 					destination: 23,
+					from: await extractRoleName(Number(process.env.ROLE_DA)),
 					description: `There is a procurement ready for post procurement. Procurement Number : ${boq?.procurement?.procurement_no as string}`,
 				},
 			})
@@ -1565,6 +1573,7 @@ export const returnToAccountantDal = async (req: Request) => {
 					role_id: Number(process.env.ROLE_ACC),
 					title: 'BOQ returned',
 					destination: 31,
+					from: await extractRoleName(Number(process.env.ROLE_DA)),
 					description: `There is a BOQ returned from DA. Reference Number : ${reference_no}`,
 				},
 			})
@@ -1654,6 +1663,7 @@ export const rejectBoqDal = async (req: Request) => {
 					role_id: Number(process.env.ROLE_ACC),
 					title: 'BOQ rejected',
 					destination: 31,
+					from: await extractRoleName(Number(process.env.ROLE_DA)),
 					description: `There is a BOQ rejected. Reference Number : ${reference_no}`,
 				},
 			})
@@ -2121,6 +2131,7 @@ export const approveBoqForPtDal = async (req: Request) => {
 					role_id: Number(process.env.ROLE_ACC),
 					title: 'BOQ approved',
 					destination: 31,
+					from: await extractRoleName(Number(process.env.ROLE_DA)),
 					description: `There is a BOQ approved for pre-tendering form. Reference Number : ${reference_no}`,
 				},
 			})
@@ -2275,6 +2286,7 @@ export const approvePreTenderDal = async (req: Request) => {
 					role_id: Number(process.env.ROLE_ACC),
 					title: 'Pre-tendering form approved',
 					destination: 32,
+					from: await extractRoleName(Number(process.env.ROLE_DA)),
 					description: `There is a pre-tendering form approved. Reference Number : ${reference_no}`,
 				},
 			})
@@ -2359,6 +2371,7 @@ export const rejectPreTenderDal = async (req: Request) => {
 					role_id: Number(process.env.ROLE_ACC),
 					title: 'Pre-tendering form rejected',
 					destination: 32,
+					from: await extractRoleName(Number(process.env.ROLE_DA)),
 					description: `There is a pre-tendering form rejected. Reference Number : ${reference_no}`,
 				},
 			})
@@ -2433,6 +2446,7 @@ export const returnToAccPtDal = async (req: Request) => {
 					role_id: Number(process.env.ROLE_ACC),
 					title: 'Pre-tendering form returned',
 					destination: 32,
+					from: await extractRoleName(Number(process.env.ROLE_DA)),
 					description: `There is a pre-tendering form returned from DA. Reference Number : ${reference_no}`,
 				},
 			})

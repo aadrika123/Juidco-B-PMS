@@ -2,6 +2,7 @@ import { Request } from "express";
 import { PrismaClient } from "@prisma/client";
 import getErrorMessage from "../../lib/getErrorMessage";
 import { pagination } from "../../type/common.type";
+import { extractRoleName } from "../../lib/roleNameExtractor";
 
 
 const prisma = new PrismaClient()
@@ -507,6 +508,7 @@ export const SaveAdditionalDetailsProcurementDal = async (req: Request) => {
                     role_id: Number(process.env.ROLE_IA),
                     title: 'Ready to receive',
                     destination: 24,
+                    from: await extractRoleName(Number(process.env.ROLE_DA)),
                     description: ` Procurement number : ${procurement_no} is now ready to be received`,
                 },
             })

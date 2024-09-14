@@ -3,6 +3,7 @@ import { PrismaClient } from '@prisma/client'
 import getErrorMessage from '../../lib/getErrorMessage'
 import { pagination } from '../../type/common.type'
 import axios from 'axios'
+import { extractRoleName } from '../../lib/roleNameExtractor'
 
 const prisma = new PrismaClient()
 
@@ -480,6 +481,7 @@ export const approveBoqDal = async (req: Request) => {
 					role_id: Number(process.env.ROLE_DA),
 					title: 'BOQ approved by finance',
 					destination: 21,
+					from: 'Finance',
 					description: `There is a BOQ approved by finance. Reference Number : ${reference_no}`,
 				},
 			})
@@ -549,6 +551,7 @@ export const returnBoqDal = async (req: Request) => {
 					role_id: Number(process.env.ROLE_DA),
 					title: 'BOQ returned from finance',
 					destination: 21,
+					from: 'Finance',
 					description: `There is a BOQ return from finance. Reference Number : ${reference_no}`,
 				},
 			})

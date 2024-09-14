@@ -36,6 +36,7 @@ export const getNotificationsDal = async (req: Request) => {
 				description: true,
 				isSeen: true,
 				destination: true,
+				from: true,
 				createdAt: true,
 			},
 			orderBy: {

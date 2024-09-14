@@ -3,6 +3,7 @@ import { emp_service_request, PrismaClient, service_enum } from '@prisma/client'
 import getErrorMessage from '../../lib/getErrorMessage'
 import { pagination } from '../../type/common.type'
 import generateEmpServiceNumber from '../../lib/empServiceNumberGenerator'
+import { extractRoleName } from '../../lib/roleNameExtractor'
 
 const prisma = new PrismaClient()
 
@@ -110,6 +111,7 @@ export const createEmpServiceRequestDal = async (req: Request) => {
 					role_id: Number(process.env.ROLE_DIST),
 					title: 'New employee Service request',
 					destination: 42,
+					from: await extractRoleName(Number(process.env.ROLE_EMP)),
 					description: `There is a ${serviceTranslator(service)}. Service Number : ${service_no}`,
 				},
 			})

@@ -7,6 +7,7 @@ import { pagination, uploadedDoc } from '../../type/common.type'
 import { boqData } from '../../type/accountant.type'
 import generateReferenceNumber from '../../lib/referenceNumberGenerator'
 import axios from 'axios'
+import { extractRoleName } from '../../lib/roleNameExtractor'
 
 const prisma = new PrismaClient()
 
@@ -3296,6 +3297,7 @@ export const forwardToDaPtDal = async (req: Request) => {
 					role_id: Number(process.env.ROLE_DA),
 					title: 'Pre-tendering form to be approved',
 					destination: 22,
+					from: await extractRoleName(Number(process.env.ROLE_IA)),
 					description: `There is a pre-tendering form to be approved. Reference Number : ${reference_no}`,
 				},
 			})
@@ -3410,6 +3412,7 @@ export const forwardToTaPtDal = async (req: Request) => {
 					role_id: Number(process.env.ROLE_TA),
 					title: 'BOQ and Pre-tendering form to be approved',
 					destination: 90,
+					from: await extractRoleName(Number(process.env.ROLE_IA)),
 					description: `There are BOQ and pre-tendering form to be approved. Reference Number : ${reference_no}`,
 				},
 			})

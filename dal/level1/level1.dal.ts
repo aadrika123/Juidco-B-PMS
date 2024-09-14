@@ -3,6 +3,7 @@ import { PrismaClient } from '@prisma/client'
 import getErrorMessage from '../../lib/getErrorMessage'
 // import { imageUploader } from '../../lib/imageUploader'
 import { pagination } from '../../type/common.type'
+import { extractRoleName } from '../../lib/roleNameExtractor'
 // import generateReferenceNumber from '../../lib/referenceNumberGenerator'
 // import axios from 'axios'
 
@@ -380,6 +381,7 @@ export const forwardToLevel2Dal = async (req: Request) => {
 					role_id: Number(process.env.ROLE_LEVEL2),
 					title: 'procurement and Pre tender form to be reviewed',
 					destination: 60,
+					from: await extractRoleName(Number(process.env.ROLE_LEVEL1)),
 					description: `There is a procurement and Pre tender form to be approved. Procurement Number : ${procurement_no}`,
 				},
 			})
@@ -463,6 +465,7 @@ export const returnToDaDal = async (req: Request) => {
 					role_id: Number(process.env.ROLE_IA),
 					title: 'Procurement returned',
 					destination: 82,
+					from: await extractRoleName(Number(process.env.ROLE_LEVEL1)),
 					description: `There is a procurement returned from level 1. Procurement Number : ${procurement_no}`,
 				},
 			})
@@ -539,6 +542,7 @@ export const approvalByLevel1Dal = async (req: Request) => {
 					role_id: Number(process.env.ROLE_IA),
 					title: 'procurement  approved by level 1',
 					destination: 82,
+					from: await extractRoleName(Number(process.env.ROLE_LEVEL1)),
 					description: `There is a procurement approved by level 1. Procurement Number : ${procurement_no}`,
 				},
 			})
@@ -619,6 +623,7 @@ export const rejectionByLevel1Dal = async (req: Request) => {
 					role_id: Number(process.env.ROLE_IA),
 					title: 'procurement and pre tender rejected by level 1',
 					destination: 82,
+					from: await extractRoleName(Number(process.env.ROLE_LEVEL1)),
 					description: `There is a procurement rejected by level 1. Procurement Number : ${procurement_no}`,
 				},
 			})
