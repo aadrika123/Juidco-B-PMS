@@ -472,8 +472,7 @@ export const approveBoqDal = async (req: Request) => {
 					reference_no: reference_no,
 				},
 				data: {
-					status: 42,
-					remark: '' as string,
+					status: 42
 				},
 			})
 
