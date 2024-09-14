@@ -158,8 +158,8 @@ export const getTotalStocksDal = async (req: Request) => {
 export const getDeadStocksDal = async (req: Request) => {
 	const page: number | undefined = Number(req?.query?.page)
 	const take: number | undefined = Number(req?.query?.take)
-	const from: string | undefined = String(req?.query?.from) //yyyy-mm-dd
-	const to: string | undefined = String(req?.query?.to)//yyyy-mm-dd
+	const from: string | undefined = req?.query?.from ? String(req?.query?.from) : undefined//yyyy-mm-dd
+	const to: string | undefined = req?.query?.to ? String(req?.query?.to) : undefined//yyyy-mm-dd
 	const startIndex: number | undefined = (page - 1) * take
 	const endIndex: number | undefined = startIndex + take
 	let count: number
@@ -300,8 +300,8 @@ export const getDeadStocksDal = async (req: Request) => {
 export const getStockMovementDal = async (req: Request) => {
 	const page: number | undefined = Number(req?.query?.page)
 	const take: number | undefined = Number(req?.query?.take)
-	const from: string | undefined = String(req?.query?.from) //yyyy-mm-dd
-	const to: string | undefined = String(req?.query?.to)//yyyy-mm-dd
+	const from: string | undefined = req?.query?.from ? String(req?.query?.from) : undefined//yyyy-mm-dd
+	const to: string | undefined = req?.query?.to ? String(req?.query?.to) : undefined//yyyy-mm-dd
 	const startIndex: number | undefined = (page - 1) * take
 	const endIndex: number | undefined = startIndex + take
 	let count: number
