@@ -4,6 +4,7 @@ import { bid_type_enum, bidder_master, comparison_ratio_enum, comparison_type_en
 
 import { pagination } from '../../type/common.type'
 import { imageUploaderV2 } from '../../lib/imageUploaderV2'
+import { extractRoleName } from '../../lib/roleNameExtractor'
 
 const prisma = new PrismaClient()
 
@@ -1398,6 +1399,7 @@ export const finalizeComparisonDal = async (req: Request) => {
                     role_id: Number(process.env.ROLE_IA),
                     title: 'Bidding completed',
                     destination: 23,
+                    from: await extractRoleName(Number(process.env.ROLE_TA)),
                     description: `Bidding completed for Procurement Number : ${bidDetailsData?.boq?.procurement_no}`,
                 },
             })
@@ -1531,6 +1533,7 @@ export const setUnitPriceDal = async (req: Request) => {
                     role_id: Number(process.env.ROLE_IA),
                     title: 'Bidding completed',
                     destination: 23,
+                    from: await extractRoleName(Number(process.env.ROLE_TA)),
                     description: `Bidding completed for Procurement Number : ${procurement_no}`,
                 },
             })

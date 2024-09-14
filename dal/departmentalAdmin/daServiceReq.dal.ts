@@ -8,6 +8,7 @@ import { PrismaClient, service_request, service_enum } from '@prisma/client'
 import { serviceTranslator } from '../distributor/distServiceReq.dal'
 import getErrorMessage from '../../lib/getErrorMessage'
 import { pagination } from '../../type/common.type'
+import { extractRoleName } from '../../lib/roleNameExtractor'
 
 const prisma = new PrismaClient()
 
@@ -53,64 +54,64 @@ export const getServiceReqInboxDal = async (req: Request) => {
 		whereClause.AND = [
 			...(service[0]
 				? [
-						{
-							service_req: {
-								service: {
-									in: service,
-								},
+					{
+						service_req: {
+							service: {
+								in: service,
 							},
 						},
-					]
+					},
+				]
 				: []),
 			...(category[0]
 				? [
-						{
-							service_req: {
-								inventory: {
-									category_masterId: {
-										in: category,
-									},
+					{
+						service_req: {
+							inventory: {
+								category_masterId: {
+									in: category,
 								},
 							},
 						},
-					]
+					},
+				]
 				: []),
 			...(subcategory[0]
 				? [
-						{
-							service_req: {
-								inventory: {
-									subcategory_masterId: {
-										in: subcategory,
-									},
+					{
+						service_req: {
+							inventory: {
+								subcategory_masterId: {
+									in: subcategory,
 								},
 							},
 						},
-					]
+					},
+				]
 				: []),
 			...(brand[0]
 				? [
-						{
-							service_req: {
-								inventory: {
-									brand_masterId: {
-										in: brand,
-									},
+					{
+						service_req: {
+							inventory: {
+								brand_masterId: {
+									in: brand,
 								},
 							},
 						},
-					]
+					},
+				]
 				: []),
 			...(status[0]
 				? [
-						{
-							service_req: {
-								status: {
-									in: status.map(Number),
-								},
+					{
+						service_req: {
+							status: {
+								in: status.map(Number),
 							},
 						},
-					]
+					},
+				]
 				: []),
 		]
 	}
@@ -241,64 +242,64 @@ export const getServiceReqOutboxDal = async (req: Request) => {
 		whereClause.AND = [
 			...(service[0]
 				? [
-						{
-							service_req: {
-								service: {
-									in: service,
-								},
+					{
+						service_req: {
+							service: {
+								in: service,
 							},
 						},
-					]
+					},
+				]
 				: []),
 			...(category[0]
 				? [
-						{
-							service_req: {
-								inventory: {
-									category_masterId: {
-										in: category,
-									},
+					{
+						service_req: {
+							inventory: {
+								category_masterId: {
+									in: category,
 								},
 							},
 						},
-					]
+					},
+				]
 				: []),
 			...(subcategory[0]
 				? [
-						{
-							service_req: {
-								inventory: {
-									subcategory_masterId: {
-										in: subcategory,
-									},
+					{
+						service_req: {
+							inventory: {
+								subcategory_masterId: {
+									in: subcategory,
 								},
 							},
 						},
-					]
+					},
+				]
 				: []),
 			...(brand[0]
 				? [
-						{
-							service_req: {
-								inventory: {
-									brand_masterId: {
-										in: brand,
-									},
+					{
+						service_req: {
+							inventory: {
+								brand_masterId: {
+									in: brand,
 								},
 							},
 						},
-					]
+					},
+				]
 				: []),
 			...(status[0]
 				? [
-						{
-							service_req: {
-								status: {
-									in: status.map(Number),
-								},
+					{
+						service_req: {
+							status: {
+								in: status.map(Number),
 							},
 						},
-					]
+					},
+				]
 				: []),
 		]
 	}
@@ -453,6 +454,7 @@ export const approveServiceRequestDal = async (req: Request) => {
 					role_id: Number(process.env.ROLE_IA),
 					title: 'New Service request',
 					destination: 81,
+					from: await extractRoleName(Number(process.env.ROLE_DA)),
 					description: `There is a ${serviceTranslator(serviceReq?.service)}. Service Number : ${service_no}`,
 				},
 			})
@@ -461,6 +463,7 @@ export const approveServiceRequestDal = async (req: Request) => {
 					role_id: Number(process.env.ROLE_DIST),
 					title: 'Service request forwarded',
 					destination: 41,
+					from: await extractRoleName(Number(process.env.ROLE_DA)),
 					description: `${serviceTranslator(serviceReq?.service)} forwarded to Inventory Admin. Service Number : ${service_no}`,
 				},
 			})
@@ -539,6 +542,7 @@ export const rejectServiceRequestDal = async (req: Request) => {
 					role_id: Number(process.env.ROLE_DIST),
 					title: 'Service request rejected',
 					destination: 41,
+					from: await extractRoleName(Number(process.env.ROLE_DA)),
 					description: `${serviceTranslator(serviceReq?.service)} rejected. Service Number : ${service_no}`,
 				},
 			})
@@ -618,6 +622,7 @@ export const returnServiceRequestDal = async (req: Request) => {
 					role_id: Number(process.env.ROLE_DIST),
 					title: 'Service request returned',
 					destination: 41,
+					from: await extractRoleName(Number(process.env.ROLE_DA)),
 					description: `${serviceTranslator(serviceReq?.service)} returned from DA. Service Number : ${service_no}`,
 				},
 			})

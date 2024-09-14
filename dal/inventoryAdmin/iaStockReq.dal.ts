@@ -2,6 +2,7 @@ import { Request } from 'express'
 import { PrismaClient, Prisma, stock_request } from '@prisma/client'
 import getErrorMessage from '../../lib/getErrorMessage'
 import { pagination } from '../../type/common.type'
+import { extractRoleName } from '../../lib/roleNameExtractor'
 
 const prisma = new PrismaClient()
 
@@ -475,6 +476,7 @@ export const approveStockReqDal_legacy = async (req: Request) => {
 							role_id: Number(process.env.ROLE_DIST),
 							title: 'Stock approved',
 							destination: 40,
+							from: await extractRoleName(Number(process.env.ROLE_IA)),
 							description: `stock request : ${item} has approved`,
 						},
 					})
@@ -483,6 +485,7 @@ export const approveStockReqDal_legacy = async (req: Request) => {
 							role_id: Number(process.env.ROLE_DA),
 							title: 'Stock approved',
 							destination: 25,
+							from: await extractRoleName(Number(process.env.ROLE_IA)),
 							description: `stock request : ${item} has approved`,
 						},
 					})
@@ -653,6 +656,7 @@ export const approveStockReqDal = async (req: Request) => {
 							role_id: Number(process.env.ROLE_DIST),
 							title: 'Stock approved',
 							destination: 40,
+							from: await extractRoleName(Number(process.env.ROLE_IA)),
 							description: `stock request : ${item} has approved`,
 						},
 					})
@@ -661,6 +665,7 @@ export const approveStockReqDal = async (req: Request) => {
 							role_id: Number(process.env.ROLE_DA),
 							title: 'Stock approved',
 							destination: 25,
+							from: await extractRoleName(Number(process.env.ROLE_IA)),
 							description: `stock request : ${item} has approved`,
 						},
 					})
@@ -902,6 +907,7 @@ export const returnStockReqDal = async (req: Request) => {
 							role_id: Number(process.env.ROLE_DIST),
 							title: 'Stock returned',
 							destination: 40,
+							from: await extractRoleName(Number(process.env.ROLE_IA)),
 							description: `stock request : ${item} has returned`,
 						},
 					}),
@@ -910,6 +916,7 @@ export const returnStockReqDal = async (req: Request) => {
 							role_id: Number(process.env.ROLE_DA),
 							title: 'Stock returned',
 							destination: 25,
+							from: await extractRoleName(Number(process.env.ROLE_IA)),
 							description: `stock request : ${item} has returned`,
 						},
 					}),
@@ -985,6 +992,7 @@ export const rejectStockReqDal = async (req: Request) => {
 							role_id: Number(process.env.ROLE_DIST),
 							title: 'Stock rejected',
 							destination: 40,
+							from: await extractRoleName(Number(process.env.ROLE_IA)),
 							description: `stock request : ${item} has rejected`,
 						},
 					}),
@@ -993,6 +1001,7 @@ export const rejectStockReqDal = async (req: Request) => {
 							role_id: Number(process.env.ROLE_DA),
 							title: 'Stock rejected',
 							destination: 25,
+							from: await extractRoleName(Number(process.env.ROLE_IA)),
 							description: `stock request : ${item} has rejected`,
 						},
 					}),
@@ -1101,6 +1110,7 @@ export const unavailabilityNotificationDal = async (req: Request) => {
 					role_id: Number(process.env.ROLE_DA),
 					title: 'Stock unavailable',
 					destination: 0,
+					from: await extractRoleName(Number(process.env.ROLE_IA)),
 					description: ` Stock request : ${stock_handover_no} is currently unavailable. Want to procure?`,
 				},
 			})

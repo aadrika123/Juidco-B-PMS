@@ -5,6 +5,7 @@ import getErrorMessage from '../../lib/getErrorMessage'
 import { imageUploader } from '../../lib/imageUploader'
 import { pagination } from '../../type/common.type'
 import isUUID from '../../lib/uuidChecker'
+import { extractRoleName } from '../../lib/roleNameExtractor'
 // import { getCategoryByName } from '../masterEntry/category.dal'
 // import { createSubcategoryNoReqDal } from '../masterEntry/subcategory.dal'
 // import { createBrandNoReqDal } from '../masterEntry/brand.dal'
@@ -628,6 +629,7 @@ export const forwardToDaDal = async (req: Request) => {
 							role_id: Number(process.env.ROLE_DA),
 							title: 'New procurement',
 							destination: 20,
+							from: await extractRoleName(Number(process.env.ROLE_IA)),
 							description: `There is a new procurement to be approved. Procurement Number : ${inbox?.procurement_no}`,
 						},
 					}),
@@ -731,6 +733,7 @@ export const forwardToLevel1Dal = async (req: Request) => {
 					role_id: Number(process.env.ROLE_LEVEL1),
 					title: 'New procurement',
 					destination: 50,
+					from: await extractRoleName(Number(process.env.ROLE_IA)),
 					description: `There is a new procurement to be approved. Procurement Number : ${procurement_no}`,
 				},
 			})

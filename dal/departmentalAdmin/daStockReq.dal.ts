@@ -2,6 +2,7 @@ import { Request } from 'express'
 import { PrismaClient, Prisma } from '@prisma/client'
 import getErrorMessage from '../../lib/getErrorMessage'
 import { pagination } from '../../type/common.type'
+import { extractRoleName } from '../../lib/roleNameExtractor'
 
 const prisma = new PrismaClient()
 
@@ -431,6 +432,7 @@ export const forwardToIaDal = async (req: Request) => {
 							role_id: Number(process.env.ROLE_IA),
 							title: 'New stock request',
 							destination: 80,
+							from: await extractRoleName(Number(process.env.ROLE_DA)),
 							description: `There is a new stock request to be reviewed  : ${item}`,
 						},
 					}),
@@ -493,6 +495,7 @@ export const returnStockReqDal = async (req: Request) => {
 							role_id: Number(process.env.ROLE_DIST),
 							title: 'Stock returned',
 							destination: 40,
+							from: await extractRoleName(Number(process.env.ROLE_DA)),
 							description: `stock request : ${item} has been returned`,
 						},
 					}),
@@ -555,6 +558,7 @@ export const rejectStockReqDal = async (req: Request) => {
 							role_id: Number(process.env.ROLE_DIST),
 							title: 'Stock request rejected',
 							destination: 40,
+							from: await extractRoleName(Number(process.env.ROLE_DA)),
 							description: `stock request : ${item} has been rejected`,
 						},
 					}),
@@ -585,9 +589,10 @@ export const procurementApprovalDal = async (req: Request) => {
 
 			await tx.notification.create({
 				data: {
-					role_id: Number(process.env.ROLE_DA),
+					role_id: Number(process.env.ROLE_IA),
 					title: approve ? 'Proceed for procurement' : 'Do not proceed for procurement',
 					destination: 0,
+					from: await extractRoleName(Number(process.env.ROLE_DA)),
 					description: ` Stock request : ${stock_handover_no} has ${!approve && 'no'} consent for procurement`,
 				},
 			})

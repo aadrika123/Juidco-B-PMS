@@ -3,6 +3,7 @@ import { PrismaClient } from '@prisma/client'
 import generateStockHandoverNumber from '../../lib/stockHandoverNumberGenerator'
 import getErrorMessage from '../../lib/getErrorMessage'
 import { pagination } from '../../type/common.type'
+import { extractRoleName } from '../../lib/roleNameExtractor'
 
 const prisma = new PrismaClient()
 
@@ -505,6 +506,7 @@ export const forwardToDaDal = async (req: Request) => {
 							role_id: Number(process.env.ROLE_DA),
 							title: 'New stock request',
 							destination: 25,
+							from: await extractRoleName(Number(process.env.ROLE_DIST)),
 							description: `There is a new stock request to be reviewed  : ${item}`,
 						},
 					}),
