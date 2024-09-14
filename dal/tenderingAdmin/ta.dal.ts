@@ -1166,10 +1166,20 @@ export const comparisonResultDal = async (req: Request) => {
             item.total_score = scores[item?.bidder_master?.id]
         })
 
+        const bidderData = await prisma.bidder_master.findMany({
+            where: {
+                reference_no: reference_no,
+            },
+            select: {
+                bidding_amount: true
+            }
+        })
+
+        const totalBiddingAmount = bidderData.reduce((total, bidder) => total = total + (bidder?.bidding_amount ? bidder?.bidding_amount : 0), 0)
 
         if (bidDetails) {
             bidDetails.techComparison = techComparison === 0 ? false : true
-            bidDetails.finComparison = finComparison === 0 ? false : true
+            bidDetails.finComparison = bid_type?.bid_type === 'abc' ? totalBiddingAmount === 0 ? false : true : finComparison === 0 ? false : true
         }
 
         return { bidDetails }
