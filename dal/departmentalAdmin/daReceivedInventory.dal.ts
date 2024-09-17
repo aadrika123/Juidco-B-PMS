@@ -769,6 +769,7 @@ export const createReceivingDal = async (req: Request) => {
 				where: {
 					procurement_stocks: {
 						some: {
+							procurement_no: procurement_no,
 							is_partial: true,
 						},
 					},
