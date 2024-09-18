@@ -219,6 +219,7 @@ export const getRateContractDetailsNoDal = async (req: Request) => {
                 category_masterId: category as string
             },
             select: {
+                id: true,
                 category: {
                     select: {
                         id: true,
