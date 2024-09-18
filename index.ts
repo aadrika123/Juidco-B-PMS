@@ -37,6 +37,7 @@ import procurementRoute from './router/procurement/procurement.route'
 import tenderingAdminRoute from './router/tenderingAdmin/ta.route'
 import biddingRoute from './router/bidding/bidding.route'
 import reportRoute from './router/report/report.route'
+import dashboardRoutes from './router/dashboard/dashboard.route'
 
 config()
 
@@ -115,6 +116,9 @@ app.use('/api/pms/bidding', biddingRoute)
 
 //report routes
 app.use('/api/pms/report', reportRoute)
+
+//dashboard routes
+app.use('/api/pms/dashboard', dashboardRoutes)
 
 //----------------------------routes--------------------------------------------------------------------------------------------------------------------------
 
