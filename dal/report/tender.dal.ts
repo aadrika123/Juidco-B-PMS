@@ -1,18 +1,18 @@
 import { Request } from 'express'
-import { Prisma, PrismaClient } from '@prisma/client'
+import { Prisma, PrismaClient, tendering_type_enum } from '@prisma/client'
 import getErrorMessage from '../../lib/getErrorMessage'
 import { pagination } from '../../type/common.type'
 
 const prisma = new PrismaClient()
 
-export const getPreProcurementReportDal = async (req: Request) => {
+export const getTenderReportDal = async (req: Request) => {
 	const page: number | undefined = Number(req?.query?.page)
 	const take: number | undefined = Number(req?.query?.take)
 	const from: string | undefined = req?.query?.from ? String(req?.query?.from) : undefined//yyyy-mm-dd
 	const to: string | undefined = req?.query?.to ? String(req?.query?.to) : undefined//yyyy-mm-dd
-	const status: string | undefined = String(req?.query?.status) //requested || pending || approved || rejected
 	const startIndex: number | undefined = (page - 1) * take
 	const endIndex: number | undefined = startIndex + take
+	const tenderingType: string | undefined = req?.query?.ttype ? String(req?.query?.ttype) : undefined
 	let count: number
 	let totalPage: number
 	let pagination: pagination = {}
@@ -31,7 +31,8 @@ export const getPreProcurementReportDal = async (req: Request) => {
 					contains: search,
 					mode: 'insensitive',
 				}
-			},
+			}
+
 		]
 	}
 
@@ -41,30 +42,32 @@ export const getPreProcurementReportDal = async (req: Request) => {
 				? [
 					{
 						boq: {
-							procurement_stocks: {
-								some: {
-									category_masterId: {
-										in: category,
-									},
-								}
+							procurement: {
+								category_masterId: {
+									in: category,
+								},
 							}
 						}
 
-					},
+					}
 				]
 				: []),
 			...(subcategory[0]
 				? [
+
 					{
 						boq: {
-							procurement_stocks: {
-								some: {
-									subCategory_masterId: {
-										in: subcategory,
-									},
+							procurement: {
+								procurement_stocks: {
+									some: {
+										subCategory_masterId: {
+											in: subcategory,
+										},
+									}
 								}
 							}
 						}
+
 					},
 				]
 				: []),
@@ -81,6 +84,11 @@ export const getPreProcurementReportDal = async (req: Request) => {
 		]
 	}
 
+	if (tenderingType) {
+		whereClause.tendering_type = tenderingType as tendering_type_enum
+	}
+
+
 	try {
 		count = await prisma.pre_tendering_details.count({
 			where: whereClause,
@@ -95,41 +103,55 @@ export const getPreProcurementReportDal = async (req: Request) => {
 			select: {
 				id: true,
 				reference_no: true,
-				emd: true,
-				emd_type: true,
-				emd_value: true,
-				pbg_type: true,
-				pbg_value: true,
-				tendering_type: true,
-				estimated_amount: true,
 				boq: {
 					select: {
-						procurement_stocks: {
+						procurement_no: true,
+						estimated_cost: true,
+						hsn_code: true,
+						procurements: {
 							select: {
-								id: true,
-								category: {
-									select: {
-										id: true,
-										name: true
-									}
-								},
-								subCategory: {
-									select: {
-										id: true,
-										name: true
-									}
-								},
-								unit: {
-									select: {
-										id: true,
-										name: true,
-										abbreviation: true
-									}
-								},
-								rate: true,
 								quantity: true,
-								description: true,
-								total_rate: true
+								rate: true,
+								amount: true
+							}
+						},
+						pre_tendering_details: {
+							select: {
+								emd: true,
+								emd_type: true,
+								emd_value: true,
+								estimated_amount: true
+							}
+						},
+						procurement: {
+							select: {
+								procurement_stocks: {
+									select: {
+										category: {
+											select: {
+												id: true,
+												name: true
+											}
+										},
+										subCategory: {
+											select: {
+												id: true,
+												name: true
+											}
+										},
+										unit: {
+											select: {
+												id: true,
+												name: true,
+												abbreviation: true
+											}
+										},
+										description: true,
+										quantity: true,
+										rate: true,
+										total_rate: true
+									}
+								}
 							}
 						}
 					}

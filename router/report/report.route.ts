@@ -11,6 +11,7 @@ import { getLevel2ProcurementReport } from '../../controller/report/levelWiseRep
 import { getFinanceBoqReport } from '../../controller/report/levelWiseReport/finance/financeReport.controller'
 import { getTaTenderReport } from '../../controller/report/levelWiseReport/ta/taReport.controller'
 import { getStockList, getStockHistory } from '../../controller/report/stockHistory.controller'
+import { getTenderReport } from '../../controller/report/tender.controller'
 
 
 
@@ -57,6 +58,9 @@ router.get('/level-wise/ta/tender', getTaTenderReport)
 //stock history
 router.get('/stock-history/list', getStockList)
 router.get('/stock-history/:inventory', getStockHistory)
+
+//tender
+router.get('/tender', getTenderReport)
 
 
 
