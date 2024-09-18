@@ -2,11 +2,7 @@ import { Request } from 'express'
 import getErrorMessage from '../../lib/getErrorMessage'
 import { PrismaClient } from '@prisma/client'
 import { boqData } from '../../type/accountant.type'
-import { uploadedDoc } from '../../type/common.type'
-import { imageUploader } from '../../lib/imageUploader'
 import { imageUploaderV2 } from '../../lib/imageUploaderV2'
-import axios from 'axios'
-import { getPreTenderV2Dal } from '../accountant/accPreProcurement.dal'
 
 const prisma = new PrismaClient()
 
