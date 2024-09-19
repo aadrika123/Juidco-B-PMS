@@ -74,7 +74,8 @@ function groupByPeriod(data: any): {
 
 	// Initialize all 7 days of the current week with count = 0
 	weekRange.forEach((date) => {
-		const week = getFormattedDateMMDD(date);
+		// const week = getFormattedDateMMDD(date);
+		const week = date.toISOString().split('T')[0];
 		weekly[week] = { week: week, count: 0 };
 	});
 
@@ -88,7 +89,8 @@ function groupByPeriod(data: any): {
 		const date = new Date(entry.createdAt);
 
 		// Group by week (ISO week number)
-		const week = getFormattedDateMMDD(date);
+		// const week = getFormattedDateMMDD(date);
+		const week = date.toISOString().split('T')[0];
 		if (weekly[week]) {
 			weekly[week].count += entry._count._all;
 		}
