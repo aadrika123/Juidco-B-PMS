@@ -598,7 +598,7 @@ export const procurementApprovalDal = async (req: Request) => {
 			})
 		})
 
-		return 'Rejected'
+		return approve ? 'Approved' : 'Rejected'
 	} catch (err: any) {
 		console.log(err)
 		return { error: true, message: getErrorMessage(err) }
