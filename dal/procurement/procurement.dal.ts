@@ -227,3 +227,42 @@ export const getInventoryAdditionValidityNoDal = async (req: Request) => {
 		return { error: true, message: getErrorMessage(err) }
 	}
 }
+
+type procStockType = {
+	id: string,
+	subcategory?: string
+	brand?: string
+	unit?: string
+	description?: string,
+	rate?: number
+	quantity?: number
+	total_rate?: number
+
+}
+
+export const editProcurementStockDal = async (req: Request) => {
+	const { id, subcategory, brand, unit, description, rate, total_rate, quantity }: procStockType = req.body
+
+	try {
+
+		await prisma.procurement_stocks.update({
+			where: {
+				id: id,
+			},
+			data: {
+				subCategory_masterId: subcategory,
+				brand_masterId: brand,
+				unit_masterId: unit,
+				rate: Number(rate),
+				quantity: Number(quantity),
+				total_rate: Number(total_rate),
+				description: description,
+			},
+		})
+
+		return 'Updated'
+	} catch (err: any) {
+		console.log(err)
+		return { error: true, message: err?.message }
+	}
+}

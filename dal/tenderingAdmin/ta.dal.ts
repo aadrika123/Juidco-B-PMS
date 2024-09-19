@@ -416,11 +416,21 @@ export const addCriteriaDal = async (req: Request) => {
 
         const isAlreadyThere = addedCriteria.filter(item => item?.criteria_type === criteria_type)
 
-        if (isAlreadyThere.length > 0) {
-            throw { error: true, message: `Criteria type : ${criteria_type} is already added ` }
-        }
+        // if (isAlreadyThere.length > 0) {
+        //     throw { error: true, message: `Criteria type : ${criteria_type} is already added ` }
+        // }
 
         await prisma.$transaction(async tx => {
+
+            if (isAlreadyThere.length > 0) {
+                await tx.criteria.deleteMany({
+                    where: {
+                        reference_no: reference_no,
+                        criteria_type: criteria_type,
+                    }
+                })
+            }
+
             await Promise.all(
                 criteria.map(async item => {
                     await tx.criteria.create({
