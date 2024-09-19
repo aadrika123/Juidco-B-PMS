@@ -2,19 +2,19 @@ import { Request, Response } from "express";
 import {
     getInventoryDashboardDal,
     getAssignedStocksDal,
+    getCountsDal
 } from "../../dal/dashboard/inventoryDashboard.dal";
-import { getDistCountsDal } from "../../dal/dashboard/distDashboard.dal";
 
 
-export const getDistDashboard = async (req: Request, res: Response) => {
+export const getIaDashboard = async (req: Request, res: Response) => {
     try {
         const returnData = await getInventoryDashboardDal('return')
         const deadData = await getInventoryDashboardDal('dead')
         const assignedData = await getAssignedStocksDal()
-        const counts = await getDistCountsDal()
+        const counts = await getCountsDal()
         res.status(200).json({
             status: true,
-            message: `Distributor dashboard data fetched successfully`,
+            message: `IA dashboard data fetched successfully`,
             data: {
                 graph: { returnData, deadData, assignedData },
                 counts
@@ -23,7 +23,7 @@ export const getDistDashboard = async (req: Request, res: Response) => {
     } catch (err: any) {
         res.status(404).json({
             status: false,
-            message: `Error while fetching distributor dashboard data`,
+            message: `Error while fetching IA dashboard data`,
             error: err?.message
         })
     }
