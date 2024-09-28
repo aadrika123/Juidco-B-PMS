@@ -1,5 +1,5 @@
 import { Request } from 'express'
-import { PrismaClient, basic_details, bid_openers, cover_details, cover_details_docs, critical_dates, fee_details, work_details } from '@prisma/client'
+import { PrismaClient, basic_details, bid_openers, cover_details_docs, critical_dates, fee_details, payment_mode_enum, work_details, offline_banks_enum } from '@prisma/client'
 import getErrorMessage from '../../lib/getErrorMessage'
 import { imageUploader } from '../../lib/imageUploader'
 import { imageUploaderV2 } from '../../lib/imageUploaderV2'
@@ -2013,9 +2013,9 @@ export const createBasicDetailsPtDal = async (req: Request) => {
 			allow_offline_submission: Boolean(formattedData?.allow_offline_submission),
 			allow_resubmission: Boolean(formattedData?.allow_resubmission),
 			allow_withdrawl: Boolean(formattedData?.allow_withdrawl),
-			payment_mode: formattedData?.payment_mode,
-			onlinePyment_mode: formattedData?.onlinePyment_mode,
-			offline_banks: formattedData?.offline_banks,
+			payment_mode: formattedData?.payment_mode as payment_mode_enum,
+			...(formattedData?.payment_mode === 'online' && { onlinePyment_mode: formattedData?.onlinePyment_mode }),
+			...(formattedData?.payment_mode === 'offline' && { offline_banks: formattedData?.offline_banks as offline_banks_enum }),
 			contract_form: formattedData?.contract_form,
 			tender_category: formattedData?.tender_category,
 			tender_type: formattedData?.tender_type,
@@ -2110,6 +2110,7 @@ export const getBasicDetailsPtDal = async (req: Request) => {
 				contract_form: true,
 				tender_category: true,
 				tender_type: true,
+				bank: true
 			},
 		})
 

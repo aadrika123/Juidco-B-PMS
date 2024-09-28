@@ -95,14 +95,15 @@ model supplier_master {
 }
 
 model bank_master {
-    id        String   @id @default(uuid())
-    name      String
-    branch    String
-    address   String
-    ifsc      String
-    status    Boolean  @default(true)
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
+    id            String          @id @default(uuid())
+    name          String
+    branch        String
+    address       String
+    ifsc          String
+    status        Boolean         @default(true)
+    createdAt     DateTime        @default(now())
+    updatedAt     DateTime        @updatedAt
+    basic_details basic_details[]
 }
 
 // pre-procurement============================================================================================================================================================================================================================================================================================================
@@ -751,21 +752,29 @@ model tendering_form {
     da_pre_tender_outbox  da_pre_tender_outbox?
 }
 
+enum offline_banks_enum {
+    ss
+    bg
+    bc
+    dd
+}
+
 model basic_details {
-    id                       String            @id @default(uuid())
-    reference_no             String            @unique
+    id                       String              @id @default(uuid())
+    reference_no             String              @unique
     allow_offline_submission Boolean
     allow_resubmission       Boolean
     allow_withdrawl          Boolean
     payment_mode             payment_mode_enum
     onlinePyment_mode        String?
-    offline_banks            String?
+    bank                     bank_master?        @relation(fields: [onlinePyment_mode], references: [id])
+    offline_banks            offline_banks_enum?
     contract_form            String[]
     tender_category          String[]
     tender_type              String[]
-    createdAt                DateTime          @default(now())
-    updatedAt                DateTime          @updatedAt
-    tendering_form           tendering_form    @relation(fields: [reference_no], references: [reference_no])
+    createdAt                DateTime            @default(now())
+    updatedAt                DateTime            @updatedAt
+    tendering_form           tendering_form      @relation(fields: [reference_no], references: [reference_no])
 }
 
 model cover_details_docs {
