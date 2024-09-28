@@ -965,6 +965,7 @@ model stock_request {
     stock_req_product     stock_req_product[]
     service_request       service_request[]
     stock_handover        stock_handover[]
+    emp_service_request   emp_service_request[]
 }
 
 model stock_req_product {
@@ -1385,6 +1386,7 @@ model emp_service_request {
     inventory               inventory?                   @relation(fields: [inventoryId], references: [id])
     inventoryId             String?
     remark                  String?
+    stock_request           stock_request                @relation(fields: [stock_handover_no], references: [stock_handover_no])
     createdAt               DateTime                     @default(now())
     updatedAt               DateTime                     @updatedAt
     emp_service_req_product emp_service_req_product[]
