@@ -4,7 +4,7 @@ Status - Closed
 */
 
 import { Request } from 'express'
-import { PrismaClient, service_request, service_enum } from '@prisma/client'
+import { PrismaClient, service_enum } from '@prisma/client'
 import generateServiceNumber from '../../lib/serviceNumberGenerator'
 import getErrorMessage from '../../lib/getErrorMessage'
 import { pagination } from '../../type/common.type'
@@ -47,11 +47,12 @@ export const createServiceRequestDal = async (req: Request) => {
 	try {
 		const service_no = generateServiceNumber(ulb_id)
 
-		const data: Omit<service_request, 'createdAt' | 'updatedAt' | 'remark' | 'id'> = {
+		const data: any = {
 			service_no: service_no,
 			stock_handover_no: stock_handover_no,
 			service: service,
-			inventoryId: inventoryId,
+			// inventoryId: inventoryId,
+			inventory: { connect: { id: inventoryId as string } },
 			status: service === 'return' ? 20 : 10,
 		}
 
