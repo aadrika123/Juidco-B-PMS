@@ -108,8 +108,15 @@ export const getTotalStocksDal = async (req: Request) => {
 					group by serial_no,brand,quantity,opening_quantity,is_available,procurement_stock_id,updatedat
 					`)
 
+				const productsTotal: any[] = await prisma.$queryRawUnsafe(`
+						SELECT sum(opening_quantity) as opening_quantity
+						FROM product.product_${item?.subcategory?.name.toLowerCase().replace(/\s/g, '')}
+						WHERE inventory_id = '${item?.id}'
+						${from && to ? `and updatedat between '${from}' and '${to}'` : ''}
+						`)
+
 				if (products.length !== 0) {
-					item.opening_quantity = products[0]?.opening_quantity
+					// item.opening_quantity = products[0]?.opening_quantity
 					item.products = products
 					const deadStock = await prisma.inventory_dead_stock.aggregate({
 						where: {
@@ -120,7 +127,8 @@ export const getTotalStocksDal = async (req: Request) => {
 						}
 					})
 					item.dead_stock = deadStock?._sum?.quantity
-					item.total_quantity = Number(products[0]?.opening_quantity) + Number(deadStock?._sum?.quantity)
+					// item.total_quantity = Number(products[0]?.opening_quantity) + Number(deadStock?._sum?.quantity)
+					item.total_quantity = Number(productsTotal[0]?.opening_quantity)
 					dataToSend.push(item)
 				} else {
 					count = count - 1
