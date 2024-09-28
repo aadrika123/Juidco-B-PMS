@@ -1,5 +1,5 @@
 import { Request } from 'express'
-import { PrismaClient } from '@prisma/client'
+import { Prisma, PrismaClient } from '@prisma/client'
 import generateOrderNumber from '../../lib/orderNumberGenerator'
 import getErrorMessage from '../../lib/getErrorMessage'
 import { imageUploader } from '../../lib/imageUploader'
@@ -264,7 +264,7 @@ export const getPreProcurementDal = async (req: Request) => {
 	let count: number
 	let totalPage: number
 	let pagination: pagination = {}
-	const whereClause: any = {}
+	const whereClause: Prisma.ia_pre_procurement_inboxWhereInput = {}
 
 	const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined
 
@@ -283,12 +283,16 @@ export const getPreProcurementDal = async (req: Request) => {
 				},
 			},
 			{
-				procurement_stocks: {
-					description: {
-						contains: search,
-						mode: 'insensitive',
+				procurement: {
+					procurement_stocks: {
+						some: {
+							description: {
+								contains: search,
+								mode: 'insensitive',
+							},
+						}
 					},
-				},
+				}
 			},
 		]
 	}
@@ -298,30 +302,40 @@ export const getPreProcurementDal = async (req: Request) => {
 			...(category[0]
 				? [
 					{
-						category_masterId: {
-							in: category,
-						},
+						procurement: {
+							category_masterId: {
+								in: category,
+							},
+						}
 					},
 				]
 				: []),
 			...(subcategory[0]
 				? [
 					{
-						procurement_stocks: {
-							subcategory_masterId: {
-								in: subcategory,
+						procurement: {
+							procurement_stocks: {
+								some: {
+									subCategory_masterId: {
+										in: subcategory,
+									},
+								}
 							},
-						},
+						}
 					},
 				]
 				: []),
 			...(brand[0]
 				? [
 					{
-						procurement_stocks: {
-							brand_masterId: {
-								in: brand,
-							},
+						procurement: {
+							procurement_stocks: {
+								some: {
+									brand_masterId: {
+										in: brand,
+									},
+								}
+							}
 						},
 					},
 				]
@@ -329,9 +343,11 @@ export const getPreProcurementDal = async (req: Request) => {
 			...(status[0]
 				? [
 					{
-						status: {
-							in: status.map(Number),
-						},
+						procurement: {
+							status: {
+								in: status.map(Number),
+							},
+						}
 					},
 				]
 				: []),
@@ -923,7 +939,7 @@ export const getPreProcurementOutboxDal = async (req: Request) => {
 	let count: number
 	let totalPage: number
 	let pagination: pagination = {}
-	const whereClause: any = {}
+	const whereClause: Prisma.ia_pre_procurement_outboxWhereInput = {}
 
 	const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined
 
@@ -942,12 +958,16 @@ export const getPreProcurementOutboxDal = async (req: Request) => {
 				},
 			},
 			{
-				procurement_stocks: {
-					description: {
-						contains: search,
-						mode: 'insensitive',
+				procurement: {
+					procurement_stocks: {
+						some: {
+							description: {
+								contains: search,
+								mode: 'insensitive',
+							},
+						}
 					},
-				},
+				}
 			},
 		]
 	}
@@ -957,30 +977,40 @@ export const getPreProcurementOutboxDal = async (req: Request) => {
 			...(category[0]
 				? [
 					{
-						category_masterId: {
-							in: category,
-						},
+						procurement: {
+							category_masterId: {
+								in: category,
+							},
+						}
 					},
 				]
 				: []),
 			...(subcategory[0]
 				? [
 					{
-						procurement_stocks: {
-							subcategory_masterId: {
-								in: subcategory,
+						procurement: {
+							procurement_stocks: {
+								some: {
+									subCategory_masterId: {
+										in: subcategory,
+									},
+								}
 							},
-						},
+						}
 					},
 				]
 				: []),
 			...(brand[0]
 				? [
 					{
-						procurement_stocks: {
-							brand_masterId: {
-								in: brand,
-							},
+						procurement: {
+							procurement_stocks: {
+								some: {
+									brand_masterId: {
+										in: brand,
+									},
+								}
+							}
 						},
 					},
 				]
@@ -988,9 +1018,11 @@ export const getPreProcurementOutboxDal = async (req: Request) => {
 			...(status[0]
 				? [
 					{
-						status: {
-							in: status.map(Number),
-						},
+						procurement: {
+							status: {
+								in: status.map(Number),
+							},
+						}
 					},
 				]
 				: []),
