@@ -67,6 +67,7 @@ export const getPreTenderDal = async (req: Request) => {
 						contract_form: true,
 						tender_category: true,
 						tender_type: true,
+						bank: true
 					},
 				},
 				cover_details: {
