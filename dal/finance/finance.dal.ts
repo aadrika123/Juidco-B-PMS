@@ -548,7 +548,7 @@ export const returnBoqDal = async (req: Request) => {
 
 			await tx.notification.create({
 				data: {
-					role_id: Number(process.env.ROLE_DA),
+					role_id: Number(process.env.ROLE_IA),
 					title: 'BOQ returned from finance',
 					destination: 21,
 					from: 'Finance',

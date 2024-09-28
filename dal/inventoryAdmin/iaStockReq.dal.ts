@@ -864,7 +864,7 @@ export const returnStockReqDal = async (req: Request) => {
 						status: true,
 					},
 				})
-				if (status?.status < 1 || status?.status > 2) {
+				if (status?.status !== 1 || status?.status !== 80) {
 					throw { error: true, message: 'Stock request is not valid to be returned' }
 				}
 
