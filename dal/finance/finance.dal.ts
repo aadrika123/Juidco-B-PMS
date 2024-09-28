@@ -478,7 +478,7 @@ export const approveBoqDal = async (req: Request) => {
 
 			await tx.notification.create({
 				data: {
-					role_id: Number(process.env.ROLE_DA),
+					role_id: Number(process.env.ROLE_IA),
 					title: 'BOQ approved by finance',
 					destination: 21,
 					from: 'Finance',
