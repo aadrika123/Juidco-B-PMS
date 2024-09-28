@@ -201,6 +201,7 @@ export const getInventoryAdditionValidityNoDal = async (req: Request) => {
 		const receiving = await prisma.receivings.aggregate({
 			where: {
 				procurement_stock_id: procurement_stock_id,
+				is_added: false
 			},
 			_sum: {
 				received_quantity: true,
