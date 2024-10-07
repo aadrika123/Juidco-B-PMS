@@ -425,7 +425,7 @@ export const getIaProcurementReportDal = async (req: Request) => {
 		count = await prisma.ia_pre_procurement_inbox.count({
 			where: whereClause,
 		})
-		const result = await prisma.ia_pre_procurement_inbox.findMany({
+		const result: any = await prisma.ia_pre_procurement_inbox.findMany({
 			orderBy: {
 				updatedAt: 'desc',
 			},
@@ -439,6 +439,12 @@ export const getIaProcurementReportDal = async (req: Request) => {
 					select: {
 						total_rate: true,
 						is_rate_contract: true,
+						category: {
+							select: {
+								id: true,
+								name: true
+							}
+						},
 						procurement_stocks: {
 							select: {
 								category: {
@@ -472,6 +478,14 @@ export const getIaProcurementReportDal = async (req: Request) => {
 			},
 		})
 
+		const arrayToReturn: any[] = []
+
+		result?.forEach((item: any) => {
+			const temp = { ...item?.procurement }
+			delete item.procurement
+			arrayToReturn.push({ ...item, ...temp })
+		})
+
 		totalPage = Math.ceil(count / take)
 		if (endIndex < count) {
 			pagination.next = {
@@ -490,7 +504,7 @@ export const getIaProcurementReportDal = async (req: Request) => {
 		pagination.totalPage = totalPage
 		pagination.totalResult = count
 		return {
-			data: result,
+			data: arrayToReturn,
 			pagination: pagination,
 		}
 	} catch (err: any) {
