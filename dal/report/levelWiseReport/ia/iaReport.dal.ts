@@ -523,7 +523,7 @@ export const getIaBoqReportDal = async (req: Request) => {
 	let count: number
 	let totalPage: number
 	let pagination: pagination = {}
-	const whereClause: Prisma.acc_boq_inboxWhereInput = {}
+	const whereClause: Prisma.da_boq_inboxWhereInput = {}
 
 	const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined
 
@@ -598,10 +598,10 @@ export const getIaBoqReportDal = async (req: Request) => {
 	}
 
 	try {
-		count = await prisma.acc_boq_inbox.count({
+		count = await prisma.da_boq_inbox.count({
 			where: whereClause,
 		})
-		const result = await prisma.acc_boq_inbox.findMany({
+		const result = await prisma.da_boq_inbox.findMany({
 			orderBy: {
 				updatedAt: 'desc',
 			},
