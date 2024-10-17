@@ -600,9 +600,13 @@ export const addBidderDetailsDal = async (req: Request) => {
             throw { error: true, message: 'Both financial and technical documents are required' }
         }
 
-        const emd_doc_path = await imageUploaderV2(emd_doc)
+        let emd_doc_path: string[] = []
         let tech_doc_path: string[] = []
         let fin_doc_path: string[] = []
+
+        if (emd_doc) {
+            emd_doc_path = await imageUploaderV2(emd_doc)
+        }
 
         if (tech_doc) {
             tech_doc_path = await imageUploaderV2(tech_doc)
@@ -623,7 +627,7 @@ export const addBidderDetailsDal = async (req: Request) => {
                     account_no: String(formattedBidder?.account_no),
                     ifsc: formattedBidder?.ifsc,
                     emd: formattedBidder?.emd === 'yes' ? true : false,
-                    emd_doc: emd_doc_path[0],
+                    ...(emd_doc && { emd_doc: emd_doc_path[0] }),
                     payment_mode: formattedBidder?.payment_mode as payment_mode_enum,
                     offline_mode: formattedBidder?.offline_mode as offline_mode_enum,
                     dd_no: formattedBidder?.dd_no && null,

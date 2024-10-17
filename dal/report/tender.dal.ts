@@ -22,74 +22,80 @@ export const getTenderReportDal = async (req: Request) => {
 
 	const category: any[] = Array.isArray(req?.query?.category) ? req?.query?.category : [req?.query?.category]
 	const subcategory: any[] = Array.isArray(req?.query?.scategory) ? req?.query?.scategory : [req?.query?.scategory]
+	try {
 
-	//creating search options for the query
-	if (search) {
-		whereClause.OR = [
-			{
-				reference_no: {
-					contains: search,
-					mode: 'insensitive',
-				}
-			}
+		const validTenderingTypes = ['rate_contract', 'least_cost', 'qcbs']
 
-		]
-	}
-
-	if (category[0] || subcategory[0] || from || to) {
-		whereClause.AND = [
-			...(category[0]
-				? [
-					{
-						boq: {
-							procurement: {
-								category_masterId: {
-									in: category,
-								},
-							}
-						}
-
+		//creating search options for the query
+		if (search) {
+			whereClause.OR = [
+				{
+					reference_no: {
+						contains: search,
+						mode: 'insensitive',
 					}
-				]
-				: []),
-			...(subcategory[0]
-				? [
+				}
 
-					{
-						boq: {
-							procurement: {
-								procurement_stocks: {
-									some: {
-										subCategory_masterId: {
-											in: subcategory,
-										},
+			]
+		}
+
+		if (category[0] || subcategory[0] || from || to) {
+			whereClause.AND = [
+				...(category[0]
+					? [
+						{
+							boq: {
+								procurement: {
+									category_masterId: {
+										in: category,
+									},
+								}
+							}
+
+						}
+					]
+					: []),
+				...(subcategory[0]
+					? [
+
+						{
+							boq: {
+								procurement: {
+									procurement_stocks: {
+										some: {
+											subCategory_masterId: {
+												in: subcategory,
+											},
+										}
 									}
 								}
 							}
+
+						},
+					]
+					: []),
+				...(from && to
+					? [
+						{
+							createdAt: {
+								gte: new Date(from),
+								lte: new Date(to)
+							}
 						}
-
-					},
-				]
-				: []),
-			...(from && to
-				? [
-					{
-						createdAt: {
-							gte: new Date(from),
-							lte: new Date(to)
-						}
-					}
-				]
-				: [])
-		]
-	}
-
-	if (tenderingType) {
-		whereClause.tendering_type = tenderingType as tendering_type_enum
-	}
+					]
+					: [])
+			]
+		}
 
 
-	try {
+		if (tenderingType) {
+			if (validTenderingTypes.includes(tenderingType)) {
+				whereClause.tendering_type = tenderingType as tendering_type_enum;
+			} else {
+				throw { error: true, message: 'Invalid tendering type' }
+			}
+		}
+
 		count = await prisma.pre_tendering_details.count({
 			where: whereClause,
 		})
@@ -103,6 +109,7 @@ export const getTenderReportDal = async (req: Request) => {
 			select: {
 				id: true,
 				reference_no: true,
+				tendering_type: true,
 				boq: {
 					select: {
 						procurement_no: true,

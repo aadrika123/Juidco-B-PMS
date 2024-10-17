@@ -56,13 +56,16 @@ export const getStockReqByStockHandoverNoDal = async (req: Request) => {
 						},
 					},
 				},
+				emp_service_request: {
+					select: {
+						service_no: true,
+						service: true,
+						emp_service_req_product: true
+					},
+				}
 			},
 		})
-		// let resultToSend: any = {}
 
-		// const temp = { ...result?.procurement }
-		// delete result.procurement
-		// resultToSend = { ...result, ...temp }
 
 		return result
 	} catch (err: any) {

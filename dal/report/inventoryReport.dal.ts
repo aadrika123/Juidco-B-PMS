@@ -92,7 +92,7 @@ export const getTotalStocksDal = async (req: Request) => {
 					}
 				},
 				description: true,
-				quantity: true,
+				// quantity: true,
 				warranty: true,
 				supplier_master: true
 			},
@@ -115,6 +115,15 @@ export const getTotalStocksDal = async (req: Request) => {
 						${from && to ? `and updatedat between '${from}' and '${to}'` : ''}
 						`)
 
+				const stockReq = await prisma.stock_req_product.aggregate({
+					where: {
+						inventoryId: item?.id
+					},
+					_sum: {
+						quantity: true
+					}
+				})
+
 				if (products.length !== 0) {
 					// item.opening_quantity = products[0]?.opening_quantity
 					item.products = products
@@ -127,8 +136,8 @@ export const getTotalStocksDal = async (req: Request) => {
 						}
 					})
 					item.dead_stock = deadStock?._sum?.quantity
-					// item.total_quantity = Number(products[0]?.opening_quantity) + Number(deadStock?._sum?.quantity)
-					item.total_quantity = Number(productsTotal[0]?.opening_quantity)
+					item.total_quantity = Number(productsTotal[0]?.opening_quantity) + Number(deadStock?._sum?.quantity) + Number(stockReq?._sum.quantity)
+					item.quantity = Number(productsTotal[0]?.opening_quantity)
 					dataToSend.push(item)
 				} else {
 					count = count - 1
@@ -397,6 +406,19 @@ export const getStockMovementDal = async (req: Request) => {
 				stock_handover_no: true,
 				serial_no: true,
 				quantity: true,
+				stock_request: {
+					select: {
+						id: true,
+						createdAt: true,
+						emp_id: true,
+						emp_name: true,
+						stock_handover: {
+							select: {
+								createdAt: true
+							}
+						}
+					}
+				},
 				inventory: {
 					select: {
 						category: {

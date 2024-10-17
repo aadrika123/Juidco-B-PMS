@@ -727,6 +727,7 @@ export const forwardToLevel1Dal = async (req: Request) => {
 				},
 				data: {
 					status: statusToUpdate,
+					remark:''
 				},
 			})
 

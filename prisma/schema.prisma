@@ -1322,7 +1322,7 @@ model bidder_master {
     account_no        String
     ifsc              String
     emd               Boolean
-    emd_doc           String
+    emd_doc           String?
     payment_mode      payment_mode_enum?
     offline_mode      offline_mode_enum?
     dd_no             String?
