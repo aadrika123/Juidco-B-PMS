@@ -57,6 +57,7 @@ export const getProcurementByProcurementNoDal = async (req: Request) => {
 						description: true,
 						total_rate: true,
 						is_partial: true,
+						hsn_code: true
 					},
 				},
 				supplier_master: true,

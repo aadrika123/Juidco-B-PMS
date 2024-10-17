@@ -179,8 +179,8 @@ export const editBoqDal = async (req: Request) => {
 	const { boqData } = req.body
 	try {
 		const formattedBoqData: boqData = JSON.parse(boqData)
-		const img = req.files as Express.Multer.File[]
-		let docToSend: any[] = []
+		// const img = req.files as Express.Multer.File[]
+		// let docToSend: any[] = []
 
 		// const reference_no: string = generateReferenceNumber(formattedBoqData?.ulb_id)
 
@@ -200,43 +200,43 @@ export const editBoqDal = async (req: Request) => {
 			}
 		}
 
-		if (img) {
-			const uploaded: string[] = await imageUploaderV2(img) //It will return path for the uploaded document(s).
+		// if (img) {
+		// 	const uploaded: string[] = await imageUploaderV2(img) //It will return path for the uploaded document(s).
 
-			uploaded.map(doc => {
-				const preparedBoqDoc = {
-					reference_no: formattedBoqData?.reference_no,
-					docPath: doc,
-					remark: formattedBoqData?.remark,
-				}
-				docToSend.push(preparedBoqDoc)
-			})
-		}
+		// 	uploaded.map(doc => {
+		// 		const preparedBoqDoc = {
+		// 			reference_no: formattedBoqData?.reference_no,
+		// 			docPath: doc,
+		// 			remark: formattedBoqData?.remark,
+		// 		}
+		// 		docToSend.push(preparedBoqDoc)
+		// 	})
+		// }
 
 		//start transaction
 		await prisma.$transaction(async tx => {
 			await tx.boq.update({
 				where: {
-					reference_no: formattedBoqData?.reference_no,
+					procurement_no: formattedBoqData?.procurement_no,
 				},
 				data: {
-					procurement_no: formattedBoqData?.procurement_no,
-					estimated_cost: formattedBoqData?.estimated_cost,
-					remark: formattedBoqData?.remark,
-					hsn_code: formattedBoqData?.hsn_code,
+					...(formattedBoqData?.procurement_no && { procurement_no: formattedBoqData?.procurement_no }),
+					...(formattedBoqData?.estimated_cost && { estimated_cost: formattedBoqData?.estimated_cost }),
+					...(formattedBoqData?.remark && { remark: formattedBoqData?.remark }),
+					...(formattedBoqData?.hsn_code && { hsn_code: formattedBoqData?.hsn_code }),
 				},
 			})
 
-			if (img) {
-				await tx.boq_doc.deleteMany({
-					where: {
-						reference_no: formattedBoqData?.reference_no,
-					},
-				})
-				await tx.boq_doc.createMany({
-					data: docToSend,
-				})
-			}
+			// if (img) {
+			// 	await tx.boq_doc.deleteMany({
+			// 		where: {
+			// 			reference_no: formattedBoqData?.reference_no,
+			// 		},
+			// 	})
+			// 	await tx.boq_doc.createMany({
+			// 		data: docToSend,
+			// 	})
+			// }
 
 			await Promise.all(
 				formattedBoqData?.procurement.map(async item => {
@@ -263,6 +263,7 @@ export const editBoqDal = async (req: Request) => {
 							rate: Number(item?.rate),
 							gst: Number(item?.gst),
 							remark: item?.remark,
+							hsn_code: item?.hsn_code
 						},
 					})
 				})

@@ -411,7 +411,12 @@ export const getStockMovementDal = async (req: Request) => {
 						id: true,
 						createdAt: true,
 						emp_id: true,
-						emp_name: true
+						emp_name: true,
+						stock_handover: {
+							select: {
+								createdAt: true
+							}
+						}
 					}
 				},
 				inventory: {
