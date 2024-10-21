@@ -261,3 +261,49 @@ export const getRateContractDetailsNoDal = async (req: Request) => {
         return { error: true, message: getErrorMessage(err) }
     }
 }
+
+export const getBidderByIdDal = async (req: Request) => {
+    const { id } = req.params
+    try {
+
+        if (!id) {
+            throw { error: true, message: "ID is required as 'id'" }
+        }
+
+        const result = await prisma.bidder_master.findFirst({
+            where: {
+                id: id
+            },
+            select: {
+                id: true,
+                reference_no: true,
+                name: true,
+                gst_no: true,
+                pan_no: true,
+                address: true,
+                bank: true,
+                account_no: true,
+                ifsc: true,
+                emd: true,
+                emd_doc: true,
+                payment_mode: true,
+                offline_mode: true,
+                dd_no: true,
+                dd_date: true,
+                dd_bank: true,
+                dd_transaction_no: true,
+                bg_no: true,
+                bg_date: true,
+                bg_bank: true,
+                bg_transaction_no: true,
+                transaction_no: true,
+                bidding_amount: true
+            }
+        })
+
+        return result
+    } catch (err: any) {
+        console.log(err)
+        return { error: true, message: getErrorMessage(err) }
+    }
+}
