@@ -43,7 +43,7 @@ export const getStockReqInboxDal = async (req: Request) => {
 		]
 	}
 
-	if (category[0] || subcategory[0] || brand[0]) {
+	if (category[0] || subcategory[0] || brand[0] || status[0]) {
 		whereClause.AND = [
 			...(category[0]
 				? [
