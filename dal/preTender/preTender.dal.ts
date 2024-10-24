@@ -281,7 +281,19 @@ export const getPreTenderDetailsDal = async (req: Request) => {
 			},
 			select: {
 				reference_no: true,
-				boq: true,
+				boq: {
+					include: {
+						bid_details: {
+							select: {
+								bidder_master: {
+									select: {
+										id: true
+									}
+								}
+							}
+						}
+					}
+				},
 				emd: true,
 				estimated_amount: true,
 				emd_type: true,

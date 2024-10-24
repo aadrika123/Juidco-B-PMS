@@ -727,7 +727,7 @@ export const forwardToLevel1Dal = async (req: Request) => {
 				},
 				data: {
 					status: statusToUpdate,
-					remark:''
+					remark: ''
 				},
 			})
 
@@ -1165,7 +1165,7 @@ export const getPreProcurementRejectedDal = async (req: Request) => {
 	let count: number
 	let totalPage: number
 	let pagination: pagination = {}
-	const whereClause: any = {}
+	const whereClause: Prisma.ia_pre_procurement_inboxWhereInput = {}
 
 	const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined
 
@@ -1185,55 +1185,88 @@ export const getPreProcurementRejectedDal = async (req: Request) => {
 			},
 			{
 				procurement: {
-					description: {
-						contains: search,
-						mode: 'insensitive',
+					procurement_stocks: {
+						some: {
+							description: {
+								contains: search,
+								mode: 'insensitive',
+							},
+						}
 					},
-				},
+				}
 			},
 		]
 	}
 
-	//creating filter options for the query
-	if (category[0]) {
-		whereClause.procurement = {
-			category_masterId: {
-				in: category,
-			},
-		}
-	}
-	if (subcategory[0]) {
-		whereClause.procurement = {
-			subcategory_masterId: {
-				in: subcategory,
-			},
-		}
-	}
-	if (status[0]) {
-		whereClause.procurement = {
-			status: {
-				in: status.map(Number),
-			},
-		}
-	}
-	if (brand[0]) {
-		whereClause.procurement = {
-			brand_masterId: {
-				in: brand,
-			},
-		}
-	}
-	whereClause.procurement = {
-		status: {
-			status: -2,
+	// if (category[0] || subcategory[0] || brand[0]) {
+	whereClause.AND = [
+		{
+			procurement: {
+				status: {
+					in: [12, 22],
+				},
+			}
 		},
-	}
+		...(category[0]
+			? [
+				{
+					procurement: {
+						category_masterId: {
+							in: category,
+						},
+					}
+				},
+			]
+			: []),
+		...(subcategory[0]
+			? [
+				{
+					procurement: {
+						procurement_stocks: {
+							some: {
+								subCategory_masterId: {
+									in: subcategory,
+								},
+							}
+						},
+					}
+				},
+			]
+			: []),
+		...(brand[0]
+			? [
+				{
+					procurement: {
+						procurement_stocks: {
+							some: {
+								brand_masterId: {
+									in: brand,
+								},
+							}
+						}
+					},
+				},
+			]
+			: []),
+		...(status[0]
+			? [
+				{
+					procurement: {
+						status: {
+							in: status.map(Number),
+						},
+					}
+				},
+			]
+			: []),
+	]
+	// }
 
 	try {
-		count = await prisma.sr_pre_procurement_inbox.count({
+		count = await prisma.ia_pre_procurement_inbox.count({
 			where: whereClause,
 		})
-		const result = await prisma.sr_pre_procurement_inbox.findMany({
+		const result = await prisma.ia_pre_procurement_inbox.findMany({
 			orderBy: {
 				updatedAt: 'desc',
 			},
@@ -1246,37 +1279,16 @@ export const getPreProcurementRejectedDal = async (req: Request) => {
 				procurement: {
 					select: {
 						procurement_no: true,
-						// category: {
-						// 	select: {
-						// 		name: true,
-						// 	},
-						// },
-						// subcategory: {
-						// 	select: {
-						// 		name: true,
-						// 	},
-						// },
-						// brand: {
-						// 	select: {
-						// 		name: true,
-						// 	},
-						// },
-						// unit: {
-						// 	select: {
-						// 		name: true,
-						// 	},
-						// },
-						// description: true,
-						// quantity: true,
-						// rate: true,
+						category: {
+							select: {
+								name: true,
+							},
+						},
 						total_rate: true,
 						isEdited: true,
 						remark: true,
-						// status: {
-						// 	select: {
-						// 		status: true,
-						// 	},
-						// },
+						status: true,
+						// procurement_stocks: true,
 					},
 				},
 			},
@@ -1385,15 +1397,15 @@ export const getPreProcurementReleasedDal = async (req: Request) => {
 	}
 	whereClause.procurement = {
 		status: {
-			status: 2,
+			in: [12, 22]
 		},
 	}
 
 	try {
-		count = await prisma.sr_pre_procurement_inbox.count({
+		count = await prisma.ia_pre_procurement_inbox.count({
 			where: whereClause,
 		})
-		const result = await prisma.sr_pre_procurement_inbox.findMany({
+		const result = await prisma.ia_pre_procurement_inbox.findMany({
 			orderBy: {
 				updatedAt: 'desc',
 			},

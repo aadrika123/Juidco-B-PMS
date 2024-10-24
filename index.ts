@@ -38,6 +38,7 @@ import tenderingAdminRoute from './router/tenderingAdmin/ta.route'
 import biddingRoute from './router/bidding/bidding.route'
 import reportRoute from './router/report/report.route'
 import dashboardRoutes from './router/dashboard/dashboard.route'
+import deadStockRoute from './router/deadStock/deadStock.route'
 
 config()
 
@@ -93,6 +94,7 @@ app.use('/api/pms/emp-service', empServiceRoutes)
 
 //inventory routes
 app.use('/api/pms/inventory', inventoryRoute)
+app.use('/api/pms/dead-stock', deadStockRoute)
 
 //routes that are not for a single role only
 app.use('/api/pms/boq', boqRoute)
