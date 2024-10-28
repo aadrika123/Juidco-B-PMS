@@ -126,6 +126,23 @@ export const getProcurementByProcurementNoDal = async (req: Request) => {
 			)
 		}
 
+		if (result?.supplier_master) {
+			await Promise.all(
+				result?.supplier_master.map(async (supplier: any) => {
+					const bidderData = await prisma.bidder_master.findFirst({
+						where: {
+							reference_no: supplier?.reference_no
+						},
+						select: {
+							bidding_amount: true
+						}
+					})
+					console.log(bidderData)
+					supplier.bidding_amount = bidderData?.bidding_amount
+				})
+			)
+		}
+
 		return result
 	} catch (err: any) {
 		console.log(err)

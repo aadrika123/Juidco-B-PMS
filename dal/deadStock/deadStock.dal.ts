@@ -63,8 +63,8 @@ export const getItemDal = async (req: Request) => {
 			...(take && { take: take }),
 			select: {
 				id: true,
-				serial_no:true,
-				quantity:true,
+				serial_no: true,
+				quantity: true,
 				inventory: {
 					select: {
 						category: {
@@ -107,6 +107,63 @@ export const getItemDal = async (req: Request) => {
 			data: result,
 			pagination: pagination,
 		}
+	} catch (err: any) {
+		console.log(err)
+		return { error: true, message: getErrorMessage(err) }
+	}
+}
+
+export const retrieveItemDal = async (req: Request) => {
+	const { id } = req.body
+	try {
+
+		const stock = await prisma.inventory_dead_stock.findFirst({
+			where: {
+				id: id
+			},
+			include: {
+				inventory: {
+					select: {
+						subcategory: {
+							select: {
+								id: true,
+								name: true
+							}
+						}
+					}
+				}
+			}
+		})
+
+		await prisma.$transaction(async (tx) => {
+			await tx.inventory_dead_stock_image.deleteMany({
+				where: {
+					inventory_dead_stockId: id
+				}
+			})
+			await tx.inventory_dead_stock.delete({
+				where: {
+					id: id
+				}
+			})
+			await tx.inventory.update({
+				where: {
+					id: stock?.inventoryId
+				},
+				data: {
+					quantity: {
+						increment: stock?.quantity
+					}
+				}
+			})
+			await tx.$queryRawUnsafe(`
+				UPDATE product.product_${stock?.inventory?.subcategory?.name.toLowerCase().replace(/\s/g, '')}
+				SET is_available = true, is_dead = false, quantity = quantity + ${stock?.quantity}
+				WHERE serial_no = '${stock?.serial_no as string}'
+			`)
+		})
+
+		return 'Successfully retrieved'
 	} catch (err: any) {
 		console.log(err)
 		return { error: true, message: getErrorMessage(err) }
