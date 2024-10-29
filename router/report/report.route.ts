@@ -12,6 +12,7 @@ import { getFinanceBoqReport } from '../../controller/report/levelWiseReport/fin
 import { getTaTenderReport } from '../../controller/report/levelWiseReport/ta/taReport.controller'
 import { getStockList, getStockHistory } from '../../controller/report/stockHistory.controller'
 import { getTenderReport } from '../../controller/report/tender.controller'
+import { getWarrantyReport } from '../../controller/report/warranty.controller'
 
 
 
@@ -31,27 +32,21 @@ router.get('/post-procurement', getPostProcurementReport)
 //dd
 router.get('/level-wise/dd/stock-request', getDistStockReqReport)
 router.get('/level-wise/dd/service-request', getDistServiceReqReport)
-
 //da
 router.get('/level-wise/da/stock-request', getDaStockReqReport)
 router.get('/level-wise/da/service-request', getDaServiceReqReport)
-
 //ia
 router.get('/level-wise/ia/stock-request', getIaStockReqReport)
 router.get('/level-wise/ia/service-request', getIaServiceReqReport)
 router.get('/level-wise/ia/procurement', getIaProcurementReport)
 router.get('/level-wise/ia/boq', getIaBoqReport)
 router.get('/level-wise/ia/tender', getIaTenderReport)
-
 //level1
 router.get('/level-wise/level1/procurement', getLevel1ProcurementReport)
-
 //level2
 router.get('/level-wise/level2/procurement', getLevel2ProcurementReport)
-
 //finance
 router.get('/level-wise/finance/boq', getFinanceBoqReport)
-
 //ta
 router.get('/level-wise/ta/tender', getTaTenderReport)
 
@@ -62,6 +57,8 @@ router.get('/stock-history/:inventory', getStockHistory)
 //tender
 router.get('/tender', getTenderReport)
 
+//warranty claim
+router.get('/warranty', getWarrantyReport)
 
 
 export default router
