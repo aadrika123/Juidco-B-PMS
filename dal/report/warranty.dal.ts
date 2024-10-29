@@ -39,7 +39,7 @@ export const getWarrantyReportDal = async (req: Request) => {
 			]
 		}
 
-		if (category[0] || subcategory[0] || from || to || status[0]) {
+		if (category[0] || subcategory[0] || from || to || status?.length !== 0) {
 			whereClause.AND = [
 				...(category[0]
 					? [
@@ -76,7 +76,7 @@ export const getWarrantyReportDal = async (req: Request) => {
 						}
 					]
 					: []),
-				...(status[0]
+				...(status?.length !== 0
 					? [
 
 						{
