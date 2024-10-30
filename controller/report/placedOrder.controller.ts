@@ -1,22 +1,22 @@
 import { Request, Response } from "express";
 import {
-    getWarrantyReportDal
-} from "../../dal/report/warranty.dal";
+    getPlacedOrderReportDal
+} from "../../dal/report/placedOrder.dal";
 
 
-export const getWarrantyReport = async (req: Request, res: Response) => {
-    const result: any = await getWarrantyReportDal(req)
+export const getPlacedOrderReport = async (req: Request, res: Response) => {
+    const result: any = await getPlacedOrderReportDal(req)
     if (!result?.error) {
         res.status(200).json({
             status: true,
-            message: `Warranty report fetched successfully`,
+            message: `Placed order report fetched successfully`,
             data: result?.data,
             pagination: result?.pagination,
         })
     } else {
         res.status(404).json({
             status: false,
-            message: `Error while fetching warranty report`,
+            message: `Error while fetching placed order report`,
             error: result?.message,
         })
     }

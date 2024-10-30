@@ -5,7 +5,7 @@ import { pagination } from '../../type/common.type'
 
 const prisma = new PrismaClient()
 
-export const getWarrantyReportDal = async (req: Request) => {
+export const getPlacedOrderReportDal = async (req: Request) => {
 	const page: number | undefined = Number(req?.query?.page)
 	const take: number | undefined = Number(req?.query?.take)
 	const from: string | undefined = req?.query?.from ? String(req?.query?.from) : undefined//yyyy-mm-dd
@@ -15,13 +15,12 @@ export const getWarrantyReportDal = async (req: Request) => {
 	let count: number
 	let totalPage: number
 	let pagination: pagination = {}
-	const whereClause: Prisma.service_requestWhereInput = {}
+	const whereClause: Prisma.procurementWhereInput = {}
 
 	const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined
 
 	const category: any[] = Array.isArray(req?.query?.category) ? req?.query?.category : [req?.query?.category]
 	const subcategory: any[] = Array.isArray(req?.query?.scategory) ? req?.query?.scategory : [req?.query?.scategory]
-	const status: any = req?.query?.status === 'rejected' ? [12, 22] : req?.query?.status === 'claimed' ? [23] : req?.query?.status === 'pending' ? [0, 10, 11, 20, 21] : undefined
 
 	try {
 
@@ -29,70 +28,66 @@ export const getWarrantyReportDal = async (req: Request) => {
 		if (search) {
 			whereClause.OR = [
 				{
-					service_no: {
+					procurement_no: {
 						contains: search,
 						mode: 'insensitive',
 					}
 				}
-
 			]
 		}
 
-		if (category[0] || subcategory[0] || from || to || status?.length !== 0) {
-			whereClause.AND = [
-				...(category[0]
-					? [
-						{
-							inventory: {
-								category_masterId: {
-									in: category,
-								},
-							}
-						}
-					]
-					: []),
-				...(subcategory[0]
-					? [
+		// if (category[0] || subcategory[0] || from || to) {
+		whereClause.AND = [
+			...(category[0]
+				? [
+					{
+						category_masterId: {
+							in: category,
+						},
+					}
+				]
+				: []),
+			...(subcategory[0]
+				? [
 
-						{
-							inventory: {
-								subcategory_masterId: {
+					{
+						procurement_stocks: {
+							some: {
+								subCategory_masterId: {
 									in: subcategory,
 								},
 							}
-
-
-						},
-					]
-					: []),
-				...(from && to
-					? [
-						{
-							createdAt: {
-								gte: new Date(from),
-								lte: new Date(to)
-							}
 						}
-					]
-					: []),
-				...(status?.length !== 0
-					? [
+					},
+				]
+				: []),
+			...(from && to
+				? [
+					{
+						createdAt: {
+							gte: new Date(from),
+							lte: new Date(to)
+						}
+					}
+				]
+				: []),
+			{
+				boq: {
+					bid_details: {
+						creationStatus: {
+							notIn: [4, 5]
+						}
+					}
+				}
+			}
+		]
+		// }
 
-						{
-							status: {
-								in: status
-							}
-						},
-					]
-					: []),
-			]
-		}
 
-
-		count = await prisma.service_request.count({
+		count = await prisma.procurement.count({
 			where: whereClause,
 		})
-		const result = await prisma.service_request.findMany({
+		const result = await prisma.procurement.findMany({
 			orderBy: {
 				updatedAt: 'desc',
 			},
@@ -101,29 +96,35 @@ export const getWarrantyReportDal = async (req: Request) => {
 			...(take && { take: take }),
 			select: {
 				id: true,
-				stock_handover_no: true,
-				service_no: true,
+				procurement_no: true,
 				status: true,
-				inventory: {
+				category: {
 					select: {
-						category: {
+						id: true,
+						name: true
+					}
+				},
+				total_rate: true,
+				procurement_stocks: {
+					select: {
+						id: true,
+						subCategory: {
 							select: {
 								id: true,
 								name: true
 							}
 						},
-						subcategory: {
+						unit: {
 							select: {
 								id: true,
-								name: true
+								name: true,
+								abbreviation: true
 							}
-						}
-					}
-				},
-				service_req_product: {
-					select: {
-						serial_no: true,
-						quantity: true
+						},
+						rate: true,
+						quantity: true,
+						description: true,
+						total_rate: true
 					}
 				},
 				createdAt: true
