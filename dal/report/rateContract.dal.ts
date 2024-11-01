@@ -5,7 +5,7 @@ import { pagination } from '../../type/common.type'
 
 const prisma = new PrismaClient()
 
-export const getWarrantyReportDal = async (req: Request) => {
+export const getRateContractReportDal = async (req: Request) => {
 	const page: number | undefined = Number(req?.query?.page)
 	const take: number | undefined = Number(req?.query?.take)
 	const from: string | undefined = req?.query?.from ? String(req?.query?.from) : undefined//yyyy-mm-dd
@@ -15,13 +15,12 @@ export const getWarrantyReportDal = async (req: Request) => {
 	let count: number
 	let totalPage: number
 	let pagination: pagination = {}
-	const whereClause: Prisma.service_requestWhereInput = {}
+	const whereClause: Prisma.rate_contractWhereInput = {}
 
 	const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined
 
 	const category: any[] = Array.isArray(req?.query?.category) ? req?.query?.category : [req?.query?.category]
 	const subcategory: any[] = Array.isArray(req?.query?.scategory) ? req?.query?.scategory : [req?.query?.scategory]
-	const status: any = req?.query?.status === 'rejected' ? [12, 22] : req?.query?.status === 'claimed' ? [23] : req?.query?.status === 'pending' ? [0, 10, 11, 20, 21] : undefined
 
 	try {
 
@@ -29,7 +28,7 @@ export const getWarrantyReportDal = async (req: Request) => {
 		if (search) {
 			whereClause.OR = [
 				{
-					service_no: {
+					description: {
 						contains: search,
 						mode: 'insensitive',
 					}
@@ -38,16 +37,14 @@ export const getWarrantyReportDal = async (req: Request) => {
 			]
 		}
 
-		if (category[0] || subcategory[0] || from || to || status?.length !== 0) {
+		if (category[0] || subcategory[0] || from || to) {
 			whereClause.AND = [
 				...(category[0]
 					? [
 						{
-							inventory: {
-								category_masterId: {
-									in: category,
-								},
-							}
+							category_masterId: {
+								in: category,
+							},
 						}
 					]
 					: []),
@@ -55,11 +52,9 @@ export const getWarrantyReportDal = async (req: Request) => {
 					? [
 
 						{
-							inventory: {
-								subcategory_masterId: {
-									in: subcategory,
-								},
-							}
+							subcategory_masterId: {
+								in: subcategory,
+							},
 
 
 						},
@@ -74,25 +69,15 @@ export const getWarrantyReportDal = async (req: Request) => {
 							}
 						}
 					]
-					: []),
-				...(status?.length !== 0
-					? [
-
-						{
-							status: {
-								in: status
-							}
-						},
-					]
-					: []),
+					: [])
 			]
 		}
 
 
-		count = await prisma.service_request.count({
+		count = await prisma.rate_contract.count({
 			where: whereClause,
 		})
-		const result = await prisma.service_request.findMany({
+		const result = await prisma.rate_contract.findMany({
 			orderBy: {
 				updatedAt: 'desc',
 			},
@@ -101,32 +86,33 @@ export const getWarrantyReportDal = async (req: Request) => {
 			...(take && { take: take }),
 			select: {
 				id: true,
-				stock_handover_no: true,
-				service_no: true,
-				status: true,
-				inventory: {
+				category: {
 					select: {
-						category: {
-							select: {
-								id: true,
-								name: true
-							}
-						},
-						subcategory: {
-							select: {
-								id: true,
-								name: true
-							}
-						}
+						id: true,
+						name: true
 					}
 				},
-				service_req_product: {
+				subcategory: {
 					select: {
-						serial_no: true,
-						quantity: true
+						id: true,
+						name: true
 					}
 				},
-				createdAt: true
+				unit: {
+					select: {
+						id: true,
+						name: true
+					}
+				},
+				description: true,
+				start_date: true,
+				end_date: true,
+				createdAt: true,
+				rate_contract_supplier: {
+					include: {
+						supplier_master: true
+					}
+				}
 			},
 		})
 

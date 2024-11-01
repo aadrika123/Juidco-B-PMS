@@ -13,6 +13,8 @@ import { getTaTenderReport } from '../../controller/report/levelWiseReport/ta/ta
 import { getStockList, getStockHistory } from '../../controller/report/stockHistory.controller'
 import { getTenderReport } from '../../controller/report/tender.controller'
 import { getWarrantyReport } from '../../controller/report/warranty.controller'
+import { getRateContractReport } from '../../controller/report/rateContract.controller'
+import { getPlacedOrderReport } from '../../controller/report/placedOrder.controller'
 
 
 
@@ -59,6 +61,12 @@ router.get('/tender', getTenderReport)
 
 //warranty claim
 router.get('/warranty', getWarrantyReport)
+
+//rate of contract
+router.get('/rate-contract', getRateContractReport)
+
+//placed order
+router.get('/placed-order', getPlacedOrderReport)
 
 
 export default router
