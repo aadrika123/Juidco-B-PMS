@@ -325,3 +325,53 @@ export const getQuantityByItemIdDal = async (req: Request) => {
 		return { error: true, message: getErrorMessage(err) }
 	}
 }
+
+export const getItemByIdDal = async (req: Request) => {
+	const { id } = req.params
+	try {
+		if (!id) {
+			throw { error: true, message: "ID is required as 'id'" }
+		}
+		const invData = await prisma.inventory.findFirst({
+			where: {
+				id: id,
+			},
+			select: {
+				id: true,
+				category: {
+					select: {
+						id: true,
+						name: true,
+					},
+				},
+				subcategory: {
+					select: {
+						id: true,
+						name: true,
+					},
+				},
+				brand: {
+					select: {
+						id: true,
+						name: true,
+					},
+				},
+				unit: {
+					select: {
+						id: true,
+						name: true,
+						abbreviation: true
+					},
+				},
+				description: true,
+				quantity: true,
+				warranty: true,
+			},
+		})
+
+		return invData
+	} catch (err: any) {
+		console.log(err)
+		return { error: true, message: getErrorMessage(err) }
+	}
+}
