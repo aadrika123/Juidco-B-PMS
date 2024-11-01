@@ -10,6 +10,7 @@ import getErrorMessage from '../../lib/getErrorMessage'
 import { pagination } from '../../type/common.type'
 import { imageUploaderV2 } from '../../lib/imageUploaderV2'
 import { extractRoleName } from '../../lib/roleNameExtractor'
+import generateServiceNumber from '../../lib/serviceNumberGenerator'
 
 const prisma = new PrismaClient()
 
@@ -1022,3 +1023,71 @@ const returnToInventory = async (serial_no: string, quantity: number, subcategor
 // 		},
 // 	})
 // }
+
+
+export const createServiceRequestByIaDal = async (req: Request) => {
+	const { products, service, inventoryId, auth } = req.body
+
+	const ulb_id = auth?.ulb_id
+
+	try {
+
+		const inventoryData = await prisma.inventory.findFirst({
+			where: {
+				id: inventoryId
+			},
+			include: {
+				category: true,
+				subcategory: true
+			}
+		})
+
+		if (!inventoryData) {
+			throw new Error('No inventory data found')
+		}
+
+		// products?.map((item)=>{
+
+		// })
+
+		const product = await prisma
+		.$queryRawUnsafe(
+			`
+				SELECT *
+				FROM product.product_${inventoryData?.subcategory?.name.toLowerCase().replace(/\s/g, '')}
+				WHERE serial_no = '${products[0] as string}'
+	`
+		)
+		.then((result: any) => result[0])
+		// const product = await prisma
+		// 	.$queryRawUnsafe(
+		// 		`
+		// 			SELECT *
+		// 			FROM product.product_${inventoryData?.subcategory?.name.toLowerCase().replace(/\s/g, '')}
+		// 			WHERE serial_no = '${serial_no as string}'
+		// `
+		// 	)
+		// 	.then((result: any) => result[0])
+
+		//start transaction
+		// await prisma.$transaction(async tx => {
+
+		// 	await tx.notification.create({
+		// 		data: {
+		// 			role_id: Number(process.env.ROLE_DA),
+		// 			title: 'New Service request',
+		// 			destination: 26,
+		// 			description: `There is a ${serviceTranslator(service)}. Service Number: ${service_no} `,
+		// 		},
+		// 	})
+		// })
+
+		return {
+			abc:inventoryData,
+			pqr:product
+		}
+	} catch (err: any) {
+		console.log(err)
+		return { error: true, message: err?.message }
+	}
+}

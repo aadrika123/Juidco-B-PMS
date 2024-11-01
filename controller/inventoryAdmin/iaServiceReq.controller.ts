@@ -1,5 +1,5 @@
 import { Request, Response } from 'express'
-import { getServiceReqInboxDal, getServiceReqOutboxDal, approveServiceRequestDal, rejectServiceRequestDal, returnServiceRequestDal } from '../../dal/inventoryAdmin/iaServiceReq.dal'
+import { getServiceReqInboxDal, getServiceReqOutboxDal, approveServiceRequestDal, rejectServiceRequestDal, returnServiceRequestDal, createServiceRequestByIaDal } from '../../dal/inventoryAdmin/iaServiceReq.dal'
 
 export const getServiceReqInbox = async (req: Request, res: Response) => {
 	const result: any = await getServiceReqInboxDal(req)
@@ -83,6 +83,23 @@ export const returnServiceRequest = async (req: Request, res: Response) => {
 		res.status(404).json({
 			status: false,
 			message: `Error while returning`,
+			error: result?.message,
+		})
+	}
+}
+
+export const createServiceRequestByIa = async (req: Request, res: Response) => {
+	const result: any = await createServiceRequestByIaDal(req)
+	if (!result?.error) {
+		res.status(200).json({
+			status: true,
+			message: `Successfully`,
+			data: result,
+		})
+	} else {
+		res.status(404).json({
+			status: false,
+			message: `Error`,
 			error: result?.message,
 		})
 	}
