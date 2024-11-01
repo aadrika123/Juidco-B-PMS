@@ -23,7 +23,8 @@ export const getItem = async (req: Request, res: Response) => {
 		res.status(200).json({
 			status: true,
 			message: `Item list fetched successfully`,
-			data: result,
+			data: result?.data,
+			pagination: result?.pagination
 		})
 	} else {
 		res.status(404).json({
