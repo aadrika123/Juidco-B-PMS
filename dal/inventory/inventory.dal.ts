@@ -369,7 +369,19 @@ export const getItemByIdDal = async (req: Request) => {
 			},
 		})
 
-		return invData
+		const product = await prisma
+			.$queryRawUnsafe(
+				`
+				SELECT *
+				FROM product.product_${invData?.subcategory?.name.toLowerCase().replace(/\s/g, '')}
+				WHERE inventory_id = '${id as string}'
+					`
+			)
+
+		return {
+			...invData,
+			products: product
+		}
 	} catch (err: any) {
 		console.log(err)
 		return { error: true, message: getErrorMessage(err) }
