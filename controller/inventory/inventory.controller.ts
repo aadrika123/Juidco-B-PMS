@@ -1,5 +1,5 @@
 import { Request, Response } from 'express'
-import { createItemDal, getItemDal, getItemByFilterDal, getItemBySubcategoryBrandDal, getQuantityByItemIdDal } from '../../dal/inventory/inventory.dal'
+import { createItemDal, getItemDal, getItemByFilterDal, getItemBySubcategoryBrandDal, getQuantityByItemIdDal, getItemByIdDal } from '../../dal/inventory/inventory.dal'
 
 export const createItem = async (req: Request, res: Response) => {
 	const result: any = await createItemDal(req)
@@ -85,3 +85,22 @@ export const getQuantityByItemId = async (req: Request, res: Response) => {
 		})
 	}
 }
+
+export const getItemById = async (req: Request, res: Response) => {
+	const result: any = await getItemByIdDal(req)
+	if (!result?.error) {
+		res.status(200).json({
+			status: true,
+			message: `Item fetched successfully`,
+			data: result,
+		})
+	} else {
+		res.status(404).json({
+			status: false,
+			message: `Error while fetching item`,
+			error: result?.message,
+		})
+	}
+}
+
+
