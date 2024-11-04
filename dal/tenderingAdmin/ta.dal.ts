@@ -1117,7 +1117,9 @@ export const comparisonResultDal = async (req: Request) => {
                         pre_tendering_details: {
                             select: {
                                 is_rate_contract: true,
-                                tendering_type: true
+                                tendering_type: true,
+                                min_supplier: true,
+                                max_supplier: true
                             }
                         }
                     }
