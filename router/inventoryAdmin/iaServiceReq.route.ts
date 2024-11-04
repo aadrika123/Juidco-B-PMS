@@ -8,6 +8,6 @@ router.get('/outbox', getServiceReqOutbox)
 router.post('/approve', upload.array('doc'), approveServiceRequest)
 router.post('/reject', rejectServiceRequest)
 router.post('/return', returnServiceRequest)
-router.post('/service-by-ia', createServiceRequestByIa)
+router.post('/service-by-ia', upload.array('doc'), createServiceRequestByIa)
 
 export default router

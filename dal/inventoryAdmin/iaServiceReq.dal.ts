@@ -817,7 +817,8 @@ export const returnServiceRequestDal = async (req: Request) => {
 	}
 }
 
-const addToDeadStock = async (serial_no: string, quantity: number, remark: string, doc: any, subcategory_name: string, tx: Prisma.TransactionClient, service_no: string, stock_handover_no: string) => {
+const addToDeadStock = async (serial_no: string, quantity: number, remark: string, doc: any, subcategory_name: string, tx: Prisma.TransactionClient, service_no?: string, stock_handover_no?: string) => {
+
 	const product = await prisma
 		.$queryRawUnsafe(
 			`
@@ -832,6 +833,10 @@ const addToDeadStock = async (serial_no: string, quantity: number, remark: strin
 	// if (Number(product?.quantity) - quantity < 0) {
 	// 	throw { error: true, message: 'Provided quantity is more than available quantity' }
 	// }
+
+	if ((Number(product?.quantity) - quantity) < 0) {
+		throw new Error('No more quantity avalable')
+	}
 
 	await tx.$queryRawUnsafe(`
 			UPDATE product.product_${subcategory_name.toLowerCase().replace(/\s/g, '')}
@@ -861,30 +866,34 @@ const addToDeadStock = async (serial_no: string, quantity: number, remark: strin
 
 	const uploaded = await imageUploaderV2(doc)
 
-	uploaded.map(async item => {
-		await tx.inventory_dead_stock_image.create({
+	await Promise.all(
+		uploaded.map(async item => {
+			await tx.inventory_dead_stock_image.create({
+				data: {
+					doc_path: item,
+					uploader: 'IA',
+					inventory_dead_stockId: invDeadStock?.id,
+				},
+			})
+		})
+	)
+
+	if (stock_handover_no && service_no) {
+		await tx.service_history.create({
 			data: {
-				doc_path: item,
-				uploader: 'IA',
-				inventory_dead_stockId: invDeadStock?.id,
+				stock_handover_no: stock_handover_no,
+				service_no: service_no,
+				serial_no: serial_no,
+				quantity: quantity,
+				service: 'dead',
+				// inventory: { connect: { id: product?.inventory_id } },
+				inventoryId: product?.inventory_id,
 			},
 		})
-	})
-
-	await tx.service_history.create({
-		data: {
-			stock_handover_no: stock_handover_no,
-			service_no: service_no,
-			serial_no: serial_no,
-			quantity: quantity,
-			service: 'dead',
-			// inventory: { connect: { id: product?.inventory_id } },
-			inventoryId: product?.inventory_id,
-		},
-	})
+	}
 }
 
-const warrantyClaim = async (serial_no: string, remark: string, subcategory_name: string, tx: Prisma.TransactionClient, service_no: string, stock_handover_no: string) => {
+const warrantyClaim = async (serial_no: string, remark: string, subcategory_name: string, tx: Prisma.TransactionClient, service_no?: string, stock_handover_no?: string) => {
 	const product = await prisma
 		.$queryRawUnsafe(
 			`
@@ -901,11 +910,16 @@ const warrantyClaim = async (serial_no: string, remark: string, subcategory_name
 		},
 		select: {
 			warranty: true,
+			quantity: true
 		},
 	})
 
 	if (Number(!inv?.warranty)) {
 		throw { error: true, message: 'No warranty for the selected item' }
+	}
+
+	if (!product?.quantity) {
+		throw { error: true, message: 'No item avalable' }
 	}
 
 	await tx.inventory_warranty.create({
@@ -917,28 +931,31 @@ const warrantyClaim = async (serial_no: string, remark: string, subcategory_name
 		},
 	})
 
-	await tx.stock_req_product.update({
-		where: {
-			stock_handover_no_serial_no: {
-				stock_handover_no: stock_handover_no,
-				serial_no: product?.serial_no
-			}
-		},
-		data: {
-			is_available: true
-		},
-	})
+	if (stock_handover_no && service_no) {
+		await tx.stock_req_product.update({
+			where: {
+				stock_handover_no_serial_no: {
+					stock_handover_no: stock_handover_no,
+					serial_no: product?.serial_no
+				}
+			},
+			data: {
+				is_available: true
+			},
+		})
 
-	await tx.service_history.create({
-		data: {
-			stock_handover_no: stock_handover_no,
-			service_no: service_no,
-			serial_no: serial_no,
-			service: 'warranty',
-			// inventory: { connect: { id: product?.inventory_id } },
-			inventoryId: product?.inventory_id,
-		},
-	})
+
+		await tx.service_history.create({
+			data: {
+				stock_handover_no: stock_handover_no,
+				service_no: service_no,
+				serial_no: serial_no,
+				service: 'warranty',
+				// inventory: { connect: { id: product?.inventory_id } },
+				inventoryId: product?.inventory_id,
+			},
+		})
+	}
 }
 
 const returnToInventory = async (serial_no: string, quantity: number, subcategory_name: string, tx: Prisma.TransactionClient, service_no: string, stock_handover_no: string, emp_id: string) => {
@@ -1026,11 +1043,16 @@ const returnToInventory = async (serial_no: string, quantity: number, subcategor
 
 
 export const createServiceRequestByIaDal = async (req: Request) => {
-	const { products, service, inventoryId, auth } = req.body
+	const { product, quantity, service, inventoryId, remark } = req.body
+	const doc = req.files
 
-	const ulb_id = auth?.ulb_id
+	// const ulb_id = auth?.ulb_id
 
 	try {
+
+		if (service === 'dead' && !quantity) {
+			throw new Error('Quantity is required for dead stock')
+		}
 
 		const inventoryData = await prisma.inventory.findFirst({
 			where: {
@@ -1046,46 +1068,29 @@ export const createServiceRequestByIaDal = async (req: Request) => {
 			throw new Error('No inventory data found')
 		}
 
-		// products?.map((item)=>{
-
-		// })
-
-		const product = await prisma
-		.$queryRawUnsafe(
-			`
-				SELECT *
-				FROM product.product_${inventoryData?.subcategory?.name.toLowerCase().replace(/\s/g, '')}
-				WHERE serial_no = '${products[0] as string}'
-	`
-		)
-		.then((result: any) => result[0])
-		// const product = await prisma
-		// 	.$queryRawUnsafe(
+		// 	const productData = await prisma.$queryRawUnsafe(
 		// 		`
 		// 			SELECT *
 		// 			FROM product.product_${inventoryData?.subcategory?.name.toLowerCase().replace(/\s/g, '')}
-		// 			WHERE serial_no = '${serial_no as string}'
+		// 			WHERE inventory_id = '${inventoryId as string}'
 		// `
 		// 	)
-		// 	.then((result: any) => result[0])
+		// 		.then((result: any) => result[0])
 
-		//start transaction
-		// await prisma.$transaction(async tx => {
 
-		// 	await tx.notification.create({
-		// 		data: {
-		// 			role_id: Number(process.env.ROLE_DA),
-		// 			title: 'New Service request',
-		// 			destination: 26,
-		// 			description: `There is a ${serviceTranslator(service)}. Service Number: ${service_no} `,
-		// 		},
-		// 	})
-		// })
+		// start transaction
+		await prisma.$transaction(async tx => {
+			if (inventoryData?.subcategory?.name) {
+				if (service === 'dead') {
+					await addToDeadStock(product, Number(quantity), remark, doc, inventoryData?.subcategory?.name, tx)
+				}
+				if (service === 'warranty') {
+					await warrantyClaim(product, remark, inventoryData?.subcategory?.name, tx)
+				}
+			}
+		})
 
-		return {
-			abc:inventoryData,
-			pqr:product
-		}
+		return 'Successfull'
 	} catch (err: any) {
 		console.log(err)
 		return { error: true, message: err?.message }
