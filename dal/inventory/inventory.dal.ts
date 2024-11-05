@@ -335,6 +335,9 @@ export const getItemByIdDal = async (req: Request) => {
 		const invData = await prisma.inventory.findFirst({
 			where: {
 				id: id,
+				quantity: {
+					not: 0
+				}
 			},
 			select: {
 				id: true,
@@ -374,7 +377,7 @@ export const getItemByIdDal = async (req: Request) => {
 				`
 				SELECT *
 				FROM product.product_${invData?.subcategory?.name.toLowerCase().replace(/\s/g, '')}
-				WHERE inventory_id = '${id as string}'
+				WHERE inventory_id = '${id as string}' and quantity != 0 and is_available =  true
 					`
 			)
 
