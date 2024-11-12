@@ -4,9 +4,9 @@ import { createItem, getItem, getItemByFilter, getItemBySubcategoryBrand, getQua
 
 router.post('/', createItem)
 router.get('/', getItem)
-router.get('/:id', getItemById)
 router.get('/by-filter', getItemByFilter)
 router.post('/by-subcategory-brand', getItemBySubcategoryBrand)
 router.get('/total-available/:id', getQuantityByItemId)
+router.get('/:id', getItemById)
 
 export default router

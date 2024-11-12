@@ -29,7 +29,8 @@ export const getBidDetailsDal = async (req: Request) => {
                         pre_tendering_details: {
                             select: {
                                 tendering_type: true,
-                                is_rate_contract: true
+                                is_rate_contract: true,
+                                emd: true
                             }
                         }
                     }

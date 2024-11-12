@@ -153,6 +153,8 @@ export const getItemByFilterDal = async (req: Request) => {
 		return { error: true, message: 'Category and sub-category are required' }
 	}
 
+	console.log(req?.query?.category,req?.query?.scategory)
+
 	//creating search options for the query
 	if (search) {
 		whereClause.OR = [
@@ -335,6 +337,9 @@ export const getItemByIdDal = async (req: Request) => {
 		const invData = await prisma.inventory.findFirst({
 			where: {
 				id: id,
+				quantity: {
+					not: 0
+				}
 			},
 			select: {
 				id: true,
@@ -374,7 +379,7 @@ export const getItemByIdDal = async (req: Request) => {
 				`
 				SELECT *
 				FROM product.product_${invData?.subcategory?.name.toLowerCase().replace(/\s/g, '')}
-				WHERE inventory_id = '${id as string}'
+				WHERE inventory_id = '${id as string}' and quantity != 0 and is_available =  true
 					`
 			)
 
