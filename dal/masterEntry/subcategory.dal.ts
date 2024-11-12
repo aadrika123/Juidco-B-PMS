@@ -208,17 +208,32 @@ export const getSubcategoryActiveOnlyDal = async (req: Request) => {
 
 export const editSubcategoryDal = async (req: Request) => {
 	const { id, name } = req.body
+	let result: any
 	try {
 		if (!id) {
 			throw { error: true, message: "ID i required as 'id'" }
 		}
-		const result = await prisma.subcategory_master.update({
+		const subCategory = await prisma.subcategory_master.findFirst({
 			where: {
 				id: id,
 			},
-			data: {
-				name: name,
-			},
+		})
+		await prisma.$transaction(async (tx) => {
+			await prisma
+				.$queryRawUnsafe(
+					`
+					ALTER TABLE product.product_${subCategory?.name?.toLowerCase().replace(/\s/g, '')} RENAME TO product_${name?.toLowerCase().replace(/\s/g, '')};
+				`
+				)
+				.then((result: any) => result[0])
+			result = await prisma.subcategory_master.update({
+				where: {
+					id: id,
+				},
+				data: {
+					name: name,
+				},
+			})
 		})
 		return result
 	} catch (err: any) {

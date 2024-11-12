@@ -287,11 +287,36 @@ export const getPostProcurementDal = async (req: Request) => {
 
         let resultToSend: any[] = []
 
-        result.map(async (item: any) => {
-            const temp = { ...item?.procurement }
-            delete item.procurement
-            resultToSend.push({ ...item, ...temp })
-        })
+        await Promise.all(
+            result.map(async (item: any) => {
+                const temp = { ...item?.procurement }
+                const supplier = await prisma.supplier_master.findFirst({
+                    where: {
+                        procurement_no: item?.procurement_no
+                    },
+                    select: {
+                        bid_details: {
+                            select: {
+                                bidder_master: {
+                                    where: {
+                                        has_lost: false
+                                    },
+                                    select: {
+                                        bidding_amount: true
+                                    }
+                                }
+                            }
+                        }
+                    }
+                })
+
+                temp.total_rate = supplier?.bid_details?.bidder_master[0]?.bidding_amount || temp?.total_rate
+
+                delete item.procurement
+
+                resultToSend.push({ ...item, ...temp })
+            })
+        )
 
         totalPage = Math.ceil(count / take)
         if (endIndex < count) {
@@ -901,11 +926,41 @@ export const getPostProcurementOutboxDal = async (req: Request) => {
 
         let resultToSend: any[] = []
 
-        result.map(async (item: any) => {
-            const temp = { ...item?.procurement }
-            delete item.procurement
-            resultToSend.push({ ...item, ...temp })
-        })
+        await Promise.all(
+            result.map(async (item: any) => {
+                const temp = { ...item?.procurement }
+                const supplier = await prisma.supplier_master.findFirst({
+                    where: {
+                        procurement_no: item?.procurement_no
+                    },
+                    select: {
+                        bid_details: {
+                            select: {
+                                bidder_master: {
+                                    where: {
+                                        has_lost: false
+                                    },
+                                    select: {
+                                        bidding_amount: true
+                                    }
+                                }
+                            }
+                        }
+                    }
+                })
+
+                temp.total_rate = supplier?.bid_details?.bidder_master[0]?.bidding_amount || temp?.total_rate
+
+                delete item.procurement
+
+                resultToSend.push({ ...item, ...temp })
+            })
+        )
+        // result.map(async (item: any) => {
+        //     const temp = { ...item?.procurement }
+        //     delete item.procurement
+        //     resultToSend.push({ ...item, ...temp })
+        // })
 
         totalPage = Math.ceil(count / take)
         if (endIndex < count) {

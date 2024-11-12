@@ -153,6 +153,8 @@ export const getItemByFilterDal = async (req: Request) => {
 		return { error: true, message: 'Category and sub-category are required' }
 	}
 
+	console.log(req?.query?.category,req?.query?.scategory)
+
 	//creating search options for the query
 	if (search) {
 		whereClause.OR = [
