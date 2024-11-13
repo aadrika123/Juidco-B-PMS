@@ -1,6 +1,6 @@
 import { Request } from 'express'
 import getErrorMessage from '../../lib/getErrorMessage'
-import { bid_type_enum, bidder_master, comparison_ratio_enum, comparison_type_enum, criteria_type_enum, offline_mode_enum, payment_mode_enum, PrismaClient } from '@prisma/client'
+import { bid_type_enum, bidder_master, tendering_type_enum, comparison_ratio_enum, comparison_type_enum, criteria_type_enum, offline_mode_enum, payment_mode_enum, Prisma, PrismaClient } from '@prisma/client'
 
 import { pagination } from '../../type/common.type'
 import { imageUploaderV2 } from '../../lib/imageUploaderV2'
@@ -16,7 +16,7 @@ export const getTaInboxDal = async (req: Request) => {
     let count: number
     let totalPage: number
     let pagination: pagination = {}
-    const whereClause: any = {}
+    const whereClause: Prisma.ta_inboxWhereInput = {}
 
     const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined
 
@@ -26,8 +26,11 @@ export const getTaInboxDal = async (req: Request) => {
     const brand: any[] = Array.isArray(req?.query?.brand) ? req?.query?.brand : [req?.query?.brand]
     const creationstatus: any[] = Array.isArray(req?.query?.creationstatus) ? req?.query?.creationstatus : [req?.query?.creationstatus]
 
+
     //creating search options for the query
     if (search) {
+        const tenderingTypes = ["least_cost", "qcbs", "rate_contract"];
+        const matchedTypes = tenderingTypes.filter(type => type.includes(search.toLowerCase()));
         whereClause.OR = [
             {
                 reference_no: {
@@ -35,16 +38,30 @@ export const getTaInboxDal = async (req: Request) => {
                     mode: 'insensitive',
                 },
             },
-            {
-                boq: {
-                    pre_tendering_details: {
-                        tendering_type: {
-                            contains: search,
-                            mode: 'insensitive',
-                        },
-                    },
-                },
-            },
+
+            // ...(matchedTypes.length > 0
+            //     ? [
+            //         {
+            //             boq: {
+            //                 some: {
+            //                     pre_tendering_details: {
+            //                         tendering_type: { in: matchedTypes },
+            //                     },
+            //                 },
+            //             },
+            //         },
+            //     ]
+            //     : []),
+
+            // {
+            //     boq: {
+            //         pre_tendering_details: {
+            //             tendering_type: {
+            //                 equals: search,
+            //             }
+            //         },
+            //     },
+            // },
         ]
     }
 
@@ -634,12 +651,12 @@ export const addBidderDetailsDal = async (req: Request) => {
                     transaction_no: String(formattedBidder?.transaction_no),
                     ...(formattedBidder?.bidding_amount && { bidding_amount: Number(formattedBidder?.bidding_amount) }),
                     ...(formattedBidder?.dd_date && { dd_date: new Date(formattedBidder?.dd_date) }),
-                    ...(formattedBidder?.dd_bank && { dd_bank: Number(formattedBidder?.dd_bank) }),
-                    ...(formattedBidder?.dd_transaction_no && { dd_transaction_no: Number(formattedBidder?.dd_transaction_no) }),
-                    ...(formattedBidder?.bg_no && { bg_no: Number(formattedBidder?.bg_no) }),
+                    ...(formattedBidder?.dd_bank && { dd_bank: String(formattedBidder?.dd_bank) }),
+                    ...(formattedBidder?.dd_transaction_no && { dd_transaction_no: String(formattedBidder?.dd_transaction_no) }),
+                    ...(formattedBidder?.bg_no && { bg_no: String(formattedBidder?.bg_no) }),
                     ...(formattedBidder?.bg_date && { bg_date: new Date(formattedBidder?.bg_date) }),
-                    ...(formattedBidder?.bg_bank && { bg_bank: Number(formattedBidder?.bg_bank) }),
-                    ...(formattedBidder?.bg_transaction_no && { bg_transaction_no: Number(formattedBidder?.bg_transaction_no) }),
+                    ...(formattedBidder?.bg_bank && { bg_bank: String(formattedBidder?.bg_bank) }),
+                    ...(formattedBidder?.bg_transaction_no && { bg_transaction_no: String(formattedBidder?.bg_transaction_no) }),
                 },
             })
 
