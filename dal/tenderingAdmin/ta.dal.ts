@@ -187,7 +187,7 @@ export const getTaOutboxDal = async (req: Request) => {
     const brand: any[] = Array.isArray(req?.query?.brand) ? req?.query?.brand : [req?.query?.brand]
     const creationstatus: any[] = Array.isArray(req?.query?.creationstatus) ? req?.query?.creationstatus : [req?.query?.creationstatus]
     const tenderType: any[] = Array.isArray(req?.query?.tendertype) ? req?.query?.tendertype : [req?.query?.tendertype]
-
+console.log(tenderType)
     //creating search options for the query
     if (search) {
         whereClause.OR = [
