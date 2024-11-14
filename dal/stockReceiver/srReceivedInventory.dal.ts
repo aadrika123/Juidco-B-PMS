@@ -1143,6 +1143,18 @@ export const getReceivedInventoryOutboxByIdDal = async (req: Request) => {
 	}
 }
 
+const getRateContractSupplier = async (id: string) => {
+	const result = await prisma.rate_contract_supplier.findFirst({
+		where: {
+			id: id
+		},
+		select: {
+			supplier_masterId: true
+		}
+	})
+	return result?.supplier_masterId
+}
+
 export const addToInventoryDal = async (req: Request) => {
 	const { procurement_no, procurement_stock_id, dead_stock, inventory, warranty } = req.body
 	const img = req.files
@@ -1178,7 +1190,7 @@ export const addToInventoryDal = async (req: Request) => {
 		}
 
 		const procData = await prisma.procurement.findFirst({
-			where: { procurement_no: procurement_no },
+			where: { procurement_no: procurement_no }
 		})
 
 		// const subcategory = await prisma.subcategory_master.findFirst({
@@ -1309,6 +1321,7 @@ export const addToInventoryDal = async (req: Request) => {
 
 				currentInventoryId = updatedInv?.id
 
+
 				if (!exist) {
 					const historyCreation = await tx.stock_addition_history.create({
 						data: {
@@ -1326,7 +1339,7 @@ export const addToInventoryDal = async (req: Request) => {
 						category: { connect: { id: procData?.category_masterId } },
 						subcategory: { connect: { id: procStockData?.subCategory?.id } },
 						// brand: { connect: { id: procData?.brand_masterId } },
-						supplier_master: { connect: { id: procData?.is_rate_contract ? procData?.rate_contract_supplier : supplier?.id } },
+						supplier_master: { connect: { id: procData?.is_rate_contract ? await getRateContractSupplier(procData?.rate_contract_supplier as string) : supplier?.id } },
 						// supplier_masterId: supplier?.id,
 						unit: { connect: { id: procStockData?.unit_masterId } },
 						description: procStockData?.description,
