@@ -328,7 +328,6 @@ model rate_contract_supplier {
     supplier_masterId String?
     createdAt         DateTime         @default(now())
     updatedAt         DateTime         @updatedAt
-    procurement       procurement[]
 }
 
 model inventory_dead_stock {
@@ -432,7 +431,6 @@ model procurement {
     procurement_stocks_history   procurement_stocks_history[]
     boq                          boq?
     supplier_master              supplier_master[]
-    rate_contract_supplier_data  rate_contract_supplier?       @relation(fields: [rate_contract_supplier], references: [id])
 }
 
 model procurement_stocks {
