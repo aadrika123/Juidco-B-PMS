@@ -294,10 +294,12 @@ export const getStockReqOutboxDal = async (req: Request) => {
 				},
 			},
 			{
-				emp_id: {
-					description: {
-						contains: search,
-						mode: 'insensitive',
+				stock_request: {
+					inventory: {
+						description: {
+							contains: search,
+							mode: 'insensitive',
+						},
 					},
 				},
 			},
