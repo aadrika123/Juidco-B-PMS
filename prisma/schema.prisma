@@ -433,7 +433,6 @@ model procurement {
     boq                          boq?
     supplier_master              supplier_master[]
     rate_contract_supplier_data  rate_contract_supplier?       @relation(fields: [rate_contract_supplier], references: [id])
-    rate_contract_supplierId     String
 }
 
 model procurement_stocks {
