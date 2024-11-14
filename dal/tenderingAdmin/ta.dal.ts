@@ -25,12 +25,11 @@ export const getTaInboxDal = async (req: Request) => {
     const status: any[] = Array.isArray(req?.query?.status) ? req?.query?.status : [req?.query?.status]
     const brand: any[] = Array.isArray(req?.query?.brand) ? req?.query?.brand : [req?.query?.brand]
     const creationstatus: any[] = Array.isArray(req?.query?.creationstatus) ? req?.query?.creationstatus : [req?.query?.creationstatus]
+    const tenderType: any[] = Array.isArray(req?.query?.tendertype) ? req?.query?.tendertype : [req?.query?.tendertype]
 
 
     //creating search options for the query
     if (search) {
-        const tenderingTypes = ["least_cost", "qcbs", "rate_contract"];
-        const matchedTypes = tenderingTypes.filter(type => type.includes(search.toLowerCase()));
         whereClause.OR = [
             {
                 reference_no: {
@@ -38,36 +37,25 @@ export const getTaInboxDal = async (req: Request) => {
                     mode: 'insensitive',
                 },
             },
-
-            // ...(matchedTypes.length > 0
-            //     ? [
-            //         {
-            //             boq: {
-            //                 some: {
-            //                     pre_tendering_details: {
-            //                         tendering_type: { in: matchedTypes },
-            //                     },
-            //                 },
-            //             },
-            //         },
-            //     ]
-            //     : []),
-
-            // {
-            //     boq: {
-            //         pre_tendering_details: {
-            //             tendering_type: {
-            //                 equals: search,
-            //             }
-            //         },
-            //     },
-            // },
         ]
     }
 
     //creating filter options for the query
     if (category[0] || subcategory[0] || brand[0]) {
         whereClause.AND = [
+            ...(tenderType[0]
+                ? [
+                    {
+                        boq: {
+                            pre_tendering_details: {
+                                tendering_type: {
+                                    in: tenderType,
+                                }
+                            },
+                        },
+                    },
+                ]
+                : []),
             ...(category[0]
                 ? [
                     {
@@ -198,6 +186,7 @@ export const getTaOutboxDal = async (req: Request) => {
     const status: any[] = Array.isArray(req?.query?.status) ? req?.query?.status : [req?.query?.status]
     const brand: any[] = Array.isArray(req?.query?.brand) ? req?.query?.brand : [req?.query?.brand]
     const creationstatus: any[] = Array.isArray(req?.query?.creationstatus) ? req?.query?.creationstatus : [req?.query?.creationstatus]
+    const tenderType: any[] = Array.isArray(req?.query?.tendertype) ? req?.query?.tendertype : [req?.query?.tendertype]
 
     //creating search options for the query
     if (search) {
@@ -208,22 +197,25 @@ export const getTaOutboxDal = async (req: Request) => {
                     mode: 'insensitive',
                 },
             },
-            {
-                boq: {
-                    pre_tendering_details: {
-                        tendering_type: {
-                            contains: search,
-                            mode: 'insensitive',
-                        },
-                    },
-                },
-            },
         ]
     }
 
     //creating filter options for the query
     if (category[0] || subcategory[0] || brand[0]) {
         whereClause.AND = [
+            ...(tenderType[0]
+                ? [
+                    {
+                        boq: {
+                            pre_tendering_details: {
+                                tendering_type: {
+                                    in: tenderType,
+                                }
+                            },
+                        },
+                    },
+                ]
+                : []),
             ...(category[0]
                 ? [
                     {
