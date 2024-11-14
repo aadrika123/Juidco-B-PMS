@@ -201,7 +201,7 @@ export const getTaOutboxDal = async (req: Request) => {
     }
 
     //creating filter options for the query
-    if (category[0] || subcategory[0] || brand[0]) {
+    if (category[0] || subcategory[0] || brand[0] || tenderType[0]) {
         whereClause.AND = [
             ...(tenderType[0]
                 ? [
