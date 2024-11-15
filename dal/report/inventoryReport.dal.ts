@@ -98,13 +98,17 @@ export const getTotalStocksDal = async (req: Request) => {
 			},
 		})
 
+
+		const formattedFrom = from ? `${from} 00:00:00` : null;
+		const formattedTo = to ? `${to} 23:59:59` : null;
+
 		await Promise.all(
 			result.map(async (item: any, index: number) => {
 				const products: any[] = await prisma.$queryRawUnsafe(`
 					SELECT sum(opening_quantity) as opening_quantity, serial_no,brand,quantity,opening_quantity,is_available,procurement_stock_id,updatedat
 					FROM product.product_${item?.subcategory?.name.toLowerCase().replace(/\s/g, '')}
 					WHERE inventory_id = '${item?.id}'
-					${from && to ? `and updatedat between '${from}' and '${to}'` : ''}
+						${formattedFrom && formattedTo ? `and updatedat between '${formattedFrom}' and '${formattedTo}'` : ''}
 					group by serial_no,brand,quantity,opening_quantity,is_available,procurement_stock_id,updatedat
 					`)
 
@@ -112,7 +116,7 @@ export const getTotalStocksDal = async (req: Request) => {
 						SELECT sum(opening_quantity) as opening_quantity
 						FROM product.product_${item?.subcategory?.name.toLowerCase().replace(/\s/g, '')}
 						WHERE inventory_id = '${item?.id}'
-						${from && to ? `and updatedat between '${from}' and '${to}'` : ''}
+							${formattedFrom && formattedTo ? `and updatedat between '${formattedFrom}' and '${formattedTo}'` : ''}
 						`)
 
 				const stockReq = await prisma.stock_req_product.aggregate({
