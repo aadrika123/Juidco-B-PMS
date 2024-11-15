@@ -400,7 +400,7 @@ model procurement {
     total_rate                   Float?
     isEdited                     Boolean                       @default(false)
     is_partial                   Boolean                       @default(true)
-    status                       Int                           @default(0) //   0=pending, 10=level1, 11=level1 returned, 12=level1 rejected, 13=level1 revised, 14=level1 approved, 20=level2, 21=level2 return, 22=level2 rejected, 23=level2 revised, 24=level2 approved, 3=supplier assigned, 4=stock partially recieved, 5=stock recieved, 6=partially added, 7=added     
+    status                       Int                           @default(0) //   0=pending, 10=level1, 11=level1 returned, 12=level1 rejected, 13=level1 revised, 14=level1 approved,100= boq forwared to finance, 20=level2, 21=level2 return, 22=level2 rejected, 23=level2 revised, 24=level2 approved, 3=supplier assigned, 4=stock partially recieved, 5=stock recieved, 6=partially added, 7=added     
     remark                       String?
     is_rate_contract             Boolean                       @default(false)
     createdAt                    DateTime                      @default(now())

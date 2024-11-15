@@ -1418,6 +1418,11 @@ export const forwardToFinanceDal = async (req: Request) => {
 				},
 				data: {
 					status: 40,
+					procurement: {
+						update: {
+							status: 100
+						}
+					}
 				},
 			})
 
