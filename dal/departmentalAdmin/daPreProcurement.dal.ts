@@ -1037,6 +1037,18 @@ export const getBoqInboxDal = async (req: Request) => {
 			// 		},
 			// 	},
 			// },
+			{
+				boq: {
+				  procurement_stocks: {
+					some: {
+					  procurement_no: {
+						contains: search,
+						mode: 'insensitive',
+					  },
+					},
+				  },
+				},
+			  },
 		]
 	}
 

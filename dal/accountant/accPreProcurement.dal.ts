@@ -479,13 +479,15 @@ export const createBoqDal = async (req: Request) => {
 		}
 
 		//start transaction
+
 		await prisma.$transaction(async tx => {
-			await tx.boq.create({
+			const datas = await tx.boq.create({
 				data: {
 					reference_no: reference_no,
 					procurement_no: formattedBoqData?.procurement_no,
 					estimated_cost: formattedBoqData?.estimated_cost,
 					remark: formattedBoqData?.remark,
+					gstchecked:formattedBoqData?.gstChecked,
 					// hsn_code: formattedBoqData?.hsn_code,
 				},
 			})

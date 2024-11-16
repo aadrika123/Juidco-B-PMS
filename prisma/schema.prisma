@@ -600,6 +600,7 @@ model boq {
     bid_details           bid_details?
     ta_inbox              ta_inbox?
     ta_outbox             ta_outbox?
+    gstchecked            Boolean?  @default(false) 
 }
 
 model boq_procurement {

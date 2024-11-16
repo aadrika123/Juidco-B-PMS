@@ -19,6 +19,7 @@ export type boqData = {
 	remark?: string
 	ulb_id: string
 	hsn_code?: string
+	gstChecked?: boolean
 }
 
 // export type boqData = {
