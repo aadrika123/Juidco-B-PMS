@@ -94,7 +94,8 @@ export const getTotalStocksDal = async (req: Request) => {
 				description: true,
 				// quantity: true,
 				warranty: true,
-				supplier_master: true
+				supplier_master: true,
+				quantity:true
 			},
 		})
 
@@ -141,8 +142,15 @@ export const getTotalStocksDal = async (req: Request) => {
 					})
 					item.dead_stock = deadStock?._sum?.quantity
 					item.total_quantity = Number(productsTotal[0]?.opening_quantity) + Number(deadStock?._sum?.quantity) + Number(stockReq?._sum.quantity)
-					item.quantity = Number(productsTotal[0]?.opening_quantity)
-					dataToSend.push(item)
+					// item.quantity = Number(productsTotal[0]?.opening_quantity)
+					item.quantity = item.quantity
+					dataToSend.push(item);
+
+      dataToSend.sort((a, b) => {
+    if (a.name < b.name) return -1;
+    if (a.name > b.name) return 1;
+    return a.quantity - b.quantity; 
+});
 				} else {
 					count = count - 1
 				}
