@@ -25,7 +25,9 @@ export const getTaInboxDal = async (req: Request) => {
     const status: any[] = Array.isArray(req?.query?.status) ? req?.query?.status : [req?.query?.status]
     const brand: any[] = Array.isArray(req?.query?.brand) ? req?.query?.brand : [req?.query?.brand]
     const creationstatus: any[] = Array.isArray(req?.query?.creationstatus) ? req?.query?.creationstatus : [req?.query?.creationstatus]
-    const tenderType: any[] = Array.isArray(req?.query?.tendertype) ? req?.query?.tendertype : [req?.query?.tendertype]
+    const tenderType: any[] = Array.isArray(req?.query?.tendertype) ? req?.query?.tendertype : [req?.query?.tendertype];
+    const filteredCreationStatus = creationstatus.filter(status => status !== 4 && status !== 5)
+
 
 
     //creating search options for the query
@@ -82,13 +84,13 @@ export const getTaInboxDal = async (req: Request) => {
                     },
                 ]
                 : []),
-            ...(creationstatus[0]
+            ...(filteredCreationStatus[0]
                 ? [
                     {
                         boq: {
                             bid_details: {
                                 creationStatus: {
-                                    in: creationstatus.map(Number),
+                                    in: filteredCreationStatus.map(Number),
                                 },
                             },
                         },
@@ -170,24 +172,23 @@ export const getTaInboxDal = async (req: Request) => {
 }
 
 export const getTaOutboxDal = async (req: Request) => {
-    const page: number | undefined = Number(req?.query?.page)
-    const take: number | undefined = Number(req?.query?.take)
-    const startIndex: number | undefined = (page - 1) * take
-    const endIndex: number | undefined = startIndex + take
-    let count: number
-    let totalPage: number
-    let pagination: pagination = {}
-    const whereClause: any = {}
+    const page: number | undefined = Number(req?.query?.page);
+    const take: number | undefined = Number(req?.query?.take);
+    const startIndex: number | undefined = (page - 1) * take;
+    const endIndex: number | undefined = startIndex + take;
+    let count: number;
+    let totalPage: number;
+    let pagination: pagination = {};
+    const whereClause: Prisma.ta_inboxWhereInput = {};
 
-    const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined
+    const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined;
+    const category: any[] = Array.isArray(req?.query?.category) ? req?.query?.category : [req?.query?.category];
+    const subcategory: any[] = Array.isArray(req?.query?.scategory) ? req?.query?.scategory : [req?.query?.scategory];
+    const status: any[] = Array.isArray(req?.query?.status) ? req?.query?.status : [req?.query?.status];
+    const tenderType: any[] = Array.isArray(req?.query?.tendertype) ? req?.query?.tendertype : [req?.query?.tendertype];
+    const creationstatus: any[] = [4, 5];  // Filter for creationStatus 4 and 5
 
-    const category: any[] = Array.isArray(req?.query?.category) ? req?.query?.category : [req?.query?.category]
-    const subcategory: any[] = Array.isArray(req?.query?.scategory) ? req?.query?.scategory : [req?.query?.scategory]
-    const status: any[] = Array.isArray(req?.query?.status) ? req?.query?.status : [req?.query?.status]
-    const brand: any[] = Array.isArray(req?.query?.brand) ? req?.query?.brand : [req?.query?.brand]
-    const creationstatus: any[] = Array.isArray(req?.query?.creationstatus) ? req?.query?.creationstatus : [req?.query?.creationstatus]
-    const tenderType: any[] = Array.isArray(req?.query?.tendertype) ? req?.query?.tendertype : [req?.query?.tendertype]
-    //creating search options for the query
+    // Create search options
     if (search) {
         whereClause.OR = [
             {
@@ -196,72 +197,63 @@ export const getTaOutboxDal = async (req: Request) => {
                     mode: 'insensitive',
                 },
             },
-        ]
+        ];
     }
 
-    //creating filter options for the query
-    if (category[0] || subcategory[0] || brand[0] || tenderType[0]) {
-        whereClause.AND = [
-            ...(tenderType[0]
-                ? [
-                    {
-                        boq: {
-                            pre_tendering_details: {
-                                tendering_type: {
-                                    in: tenderType,
-                                }
-                            },
+    // Create filter options
+    const andFilters: Prisma.ta_inboxWhereInput[] = [];
+
+    // Filter by category and tenderType (optional)
+    if (category[0] || tenderType[0]) {
+        if (tenderType[0]) {
+            andFilters.push({
+                boq: {
+                    pre_tendering_details: {
+                        tendering_type: {
+                            in: tenderType,
                         },
                     },
-                ]
-                : []),
-            ...(category[0]
-                ? [
-                    {
-                        boq: {
-                            procurement: {
-                                category_masterId: {
-                                    in: category,
-                                },
-                            },
+                },
+            });
+        }
+
+        if (category[0]) {
+            andFilters.push({
+                boq: {
+                    procurement: {
+                        category_masterId: {
+                            in: category,
                         },
                     },
-                ]
-                : []),
-            ...(status[0]
-                ? [
-                    {
-                        boq: {
-                            bid_details: {
-                                status: {
-                                    in: status.map(Number),
-                                },
-                            },
-                        },
-                    },
-                ]
-                : []),
-            ...(creationstatus[0]
-                ? [
-                    {
-                        boq: {
-                            bid_details: {
-                                creationStatus: {
-                                    in: creationstatus.map(Number),
-                                },
-                            },
-                        },
-                    },
-                ]
-                : []),
-        ]
+                },
+            });
+        }
+    }
+
+    // Add filter for bid_details creationStatus 4 and 5
+    andFilters.push({
+        boq: {
+            bid_details: {
+                creationStatus: {
+                    in: creationstatus, // Filter for creationStatus 4 or 5
+                },
+            },
+        },
+    });
+
+    // Add all filters to whereClause
+    if (andFilters.length > 0) {
+        whereClause.AND = andFilters;
     }
 
     try {
-        count = await prisma.ta_outbox.count({
+        // Get the count of matching records
+        count = await prisma.ta_inbox.count({
             where: whereClause,
-        })
-        const result = await prisma.ta_outbox.findMany({
+        });
+
+        // Get the matching records
+        const result = await prisma.ta_inbox.findMany({
             orderBy: {
                 updatedAt: 'desc',
             },
@@ -293,40 +285,43 @@ export const getTaOutboxDal = async (req: Request) => {
                         bid_details: {
                             select: {
                                 status: true,
-                                creationStatus: true,
+                                creationStatus: true, // Include creationStatus in the select
                             },
                         },
                     },
                 },
             },
-        })
+        });
 
-        totalPage = Math.ceil(count / take)
+        // Calculate pagination
+        totalPage = Math.ceil(count / take);
         if (endIndex < count) {
             pagination.next = {
                 page: page + 1,
                 take: take,
-            }
+            };
         }
         if (startIndex > 0) {
             pagination.prev = {
                 page: page - 1,
                 take: take,
-            }
+            };
         }
-        pagination.currentPage = page
-        pagination.currentTake = take
-        pagination.totalPage = totalPage
-        pagination.totalResult = count
+        pagination.currentPage = page;
+        pagination.currentTake = take;
+        pagination.totalPage = totalPage;
+        pagination.totalResult = count;
+
+        // Return the result with pagination data
         return {
             data: result,
             pagination: pagination,
-        }
+        };
     } catch (err: any) {
-        console.log(err)
-        return { error: true, message: getErrorMessage(err) }
+        console.log(err);
+        return { error: true, message: getErrorMessage(err) };
     }
-}
+};
 
 export const selectBidTypeDal = async (req: Request) => {
     const { reference_no, bid_type }: { reference_no: string; bid_type: bid_type_enum } = req.body

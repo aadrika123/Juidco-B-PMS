@@ -41,7 +41,7 @@ export const getTaOutbox = async (req: Request, res: Response) => {
     if (!result?.error) {
         res.status(200).json({
             status: true,
-            message: `Bid details list fetched successfully`,
+            message: `Bid Outbox details list fetched successfully`,
             data: result?.data,
             pagination: result?.pagination,
         })
