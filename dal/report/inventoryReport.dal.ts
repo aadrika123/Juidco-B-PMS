@@ -104,9 +104,14 @@ export const getTotalStocksDal = async (req: Request) => {
 				description: true,
 				// quantity: true,
 				warranty: true,
-				supplier_master: true
+				supplier_master: true,
+				quantity:true
 			},
 		})
+
+
+		const formattedFrom = from ? `${from} 00:00:00` : null;
+		const formattedTo = to ? `${to} 23:59:59` : null;
 
 		await Promise.all(
 			result.map(async (item: any, index: number) => {
@@ -114,7 +119,7 @@ export const getTotalStocksDal = async (req: Request) => {
 					SELECT sum(opening_quantity) as opening_quantity, serial_no,brand,quantity,opening_quantity,is_available,procurement_stock_id,updatedat
 					FROM product.product_${item?.subcategory?.name.toLowerCase().replace(/\s/g, '')}
 					WHERE inventory_id = '${item?.id}'
-					${from && to ? `and updatedat between '${from}' and '${to}'` : ''}
+						${formattedFrom && formattedTo ? `and updatedat between '${formattedFrom}' and '${formattedTo}'` : ''}
 					group by serial_no,brand,quantity,opening_quantity,is_available,procurement_stock_id,updatedat
 					`)
 
@@ -122,7 +127,7 @@ export const getTotalStocksDal = async (req: Request) => {
 						SELECT sum(opening_quantity) as opening_quantity
 						FROM product.product_${item?.subcategory?.name.toLowerCase().replace(/\s/g, '')}
 						WHERE inventory_id = '${item?.id}'
-						${from && to ? `and updatedat between '${from}' and '${to}'` : ''}
+							${formattedFrom && formattedTo ? `and updatedat between '${formattedFrom}' and '${formattedTo}'` : ''}
 						`)
 
 				const stockReq = await prisma.stock_req_product.aggregate({
@@ -147,8 +152,15 @@ export const getTotalStocksDal = async (req: Request) => {
 					})
 					item.dead_stock = deadStock?._sum?.quantity
 					item.total_quantity = Number(productsTotal[0]?.opening_quantity) + Number(deadStock?._sum?.quantity) + Number(stockReq?._sum.quantity)
-					item.quantity = Number(productsTotal[0]?.opening_quantity)
-					dataToSend.push(item)
+					// item.quantity = Number(productsTotal[0]?.opening_quantity)
+					item.quantity = item.quantity
+					dataToSend.push(item);
+
+      dataToSend.sort((a, b) => {
+    if (a.name < b.name) return -1;
+    if (a.name > b.name) return 1;
+    return a.quantity - b.quantity; 
+});
 				} else {
 					count = count - 1
 				}
@@ -181,6 +193,197 @@ export const getTotalStocksDal = async (req: Request) => {
 		return { error: true, message: getErrorMessage(err) }
 	}
 }
+
+export const getTotalRemainingStocksDal = async (req: Request) => {
+    const page: number | undefined = Number(req?.query?.page);
+    const take: number | undefined = Number(req?.query?.take);
+    const from = req?.query?.from; // yyyy-mm-dd
+    const to = req?.query?.to; // yyyy-mm-dd
+    const startIndex: number | undefined = (page - 1) * take;
+    const endIndex: number | undefined = startIndex + take;
+    let count: number;
+    let totalPage: number;
+    let pagination: pagination = {};
+    const whereClause: Prisma.inventoryWhereInput = {};
+    const dataToSend: any[] = [];
+
+    const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined;
+
+    const category: any[] = Array.isArray(req?.query?.category) ? req?.query?.category : [req?.query?.category];
+    const subcategory: any[] = Array.isArray(req?.query?.scategory) ? req?.query?.scategory : [req?.query?.scategory];
+
+    // creating search options for the query
+    if (search) {
+        whereClause.OR = [
+            {
+                description: {
+                    contains: search,
+                    mode: 'insensitive',
+                },
+            },
+        ];
+    }
+
+    if (category[0] || subcategory[0]) {
+        whereClause.AND = [
+            ...(category[0]
+                ? [
+                    {
+                        category_masterId: {
+                            in: category,
+                        },
+                    },
+                ]
+                : []),
+            ...(subcategory[0]
+                ? [
+                    {
+                        subcategory_masterId: {
+                            in: subcategory,
+                        },
+                    },
+                ]
+                : []),
+        ];
+    }
+
+    try {
+        count = await prisma.inventory.count({
+            where: whereClause,
+        });
+
+        const result = await prisma.inventory.findMany({
+            orderBy: {
+                updatedAt: 'desc',
+            },
+            where: whereClause,
+            ...(page && { skip: startIndex }),
+            ...(take && { take: take }),
+            select: {
+                id: true,
+                category: {
+                    select: {
+                        id: true,
+                        name: true,
+                    },
+                },
+                subcategory: {
+                    select: {
+                        id: true,
+                        name: true,
+                    },
+                },
+                unit: {
+                    select: {
+                        id: true,
+                        name: true,
+                        abbreviation: true,
+                    },
+                },
+                description: true,
+                quantity: true,
+                warranty: true,
+                supplier_master: true,
+            },
+        });
+
+        const formattedFrom = from ? `${from} 00:00:00` : null;
+        const formattedTo = to ? `${to} 23:59:59` : null;
+
+        await Promise.all(
+            result.map(async (item: any) => {
+                // Query products data for the inventory item
+                const products: any[] = await prisma.$queryRawUnsafe(`
+                    SELECT sum(opening_quantity) as opening_quantity, 
+                        serial_no, brand, quantity, opening_quantity, 
+                        is_available, procurement_stock_id, updatedat
+                    FROM product.product_${item?.subcategory?.name.toLowerCase().replace(/\s/g, '')}
+                    WHERE inventory_id = '${item?.id}'
+                    ${formattedFrom && formattedTo ? `and updatedat between '${formattedFrom}' and '${formattedTo}'` : ''}
+                    GROUP BY serial_no, brand, quantity, opening_quantity, is_available, procurement_stock_id, updatedat
+                `);
+
+                // Query total products opening quantity for the inventory item
+                const productsTotal: any[] = await prisma.$queryRawUnsafe(`
+                    SELECT sum(opening_quantity) as opening_quantity
+                    FROM product.product_${item?.subcategory?.name.toLowerCase().replace(/\s/g, '')}
+                    WHERE inventory_id = '${item?.id}'
+                    ${formattedFrom && formattedTo ? `and updatedat between '${formattedFrom}' and '${formattedTo}'` : ''}
+                `);
+
+                // Query stock requirements for the inventory item
+                const stockReq = await prisma.stock_req_product.aggregate({
+                    where: {
+                        inventoryId: item?.id,
+                    },
+                    _sum: {
+                        quantity: true,
+                    },
+                });
+
+                // If products data is available, calculate the total remaining quantity
+                if (products.length !== 0) {
+                    item.products = products;
+
+                    // Query dead stock data for the inventory item
+                    const deadStock = await prisma.inventory_dead_stock.aggregate({
+                        where: {
+                            inventoryId: item?.id,
+                        },
+                        _sum: {
+                            quantity: true,
+                        },
+                    });
+
+                    // Calculate total remaining stock
+                    const openingQuantity = Number(productsTotal[0]?.opening_quantity) || 0;
+                    const deadStockQuantity = deadStock?._sum?.quantity || 0;
+                    const stockReqQuantity = stockReq?._sum?.quantity || 0;
+
+                    item.dead_stock = deadStockQuantity;
+					console.log("openingQuantity",openingQuantity,"deadStockQuantity",deadStockQuantity,"stockReqQuantity",stockReqQuantity)
+                    item.remaining_quantity = openingQuantity - deadStockQuantity - stockReqQuantity;
+
+                    // Push to dataToSend array
+                    dataToSend.push(item);
+                } else {
+                    count = count - 1; // Decrease count if no products data
+                }
+            })
+        );
+
+        // Calculate total pages for pagination
+        totalPage = Math.ceil(count / take);
+
+        if (endIndex < count) {
+            pagination.next = {
+                page: page + 1,
+                take: take,
+            };
+        }
+
+        if (startIndex > 0) {
+            pagination.prev = {
+                page: page - 1,
+                take: take,
+            };
+        }
+
+        pagination.currentPage = page;
+        pagination.currentTake = take;
+        pagination.totalPage = totalPage;
+        pagination.totalResult = count;
+
+        return {
+            data: dataToSend,
+            pagination: pagination,
+        };
+    } catch (err: any) {
+        console.log(err);
+        return { error: true, message: getErrorMessage(err) };
+    }
+};
+
 
 export const getDeadStocksDal = async (req: Request) => {
 	const page: number | undefined = Number(req?.query?.page)

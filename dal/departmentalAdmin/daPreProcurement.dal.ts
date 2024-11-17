@@ -1088,6 +1088,18 @@ export const getBoqInboxDal = async (req: Request) => {
 			// 		},
 			// 	},
 			// },
+			{
+				boq: {
+				  procurement_stocks: {
+					some: {
+					  procurement_no: {
+						contains: search,
+						mode: 'insensitive',
+					  },
+					},
+				  },
+				},
+			  },
 		]
 	}
 
@@ -1494,6 +1506,11 @@ export const forwardToFinanceDal = async (req: Request) => {
 				},
 				data: {
 					status: 40,
+					procurement: {
+						update: {
+							status: 100
+						}
+					}
 				},
 			})
 
