@@ -4,7 +4,7 @@ Status - Closed
 */
 
 import { Request } from 'express'
-import { PrismaClient, service_request, service_enum } from '@prisma/client'
+import { PrismaClient, service_request, service_enum, Prisma } from '@prisma/client'
 import generateServiceNumber from '../../lib/serviceNumberGenerator'
 import getErrorMessage from '../../lib/getErrorMessage'
 import { pagination } from '../../type/common.type'
@@ -53,6 +53,7 @@ export const createServiceRequestDal = async (req: Request) => {
 			service: service,
 			inventoryId: inventoryId,
 			status: service === 'return' ? 20 : 10,
+			ulb_id: ulb_id
 		}
 
 		let serviceReq: any
@@ -120,6 +121,7 @@ export const createServiceRequestDal = async (req: Request) => {
 						title: 'New Service request',
 						destination: 81,
 						description: `There is a ${serviceTranslator(service)}. Service Number : ${service_no}`,
+						ulb_id
 					},
 				})
 			}
@@ -129,6 +131,7 @@ export const createServiceRequestDal = async (req: Request) => {
 					title: 'New Service request',
 					destination: 26,
 					description: `There is a ${serviceTranslator(service)}. Service Number : ${service_no}`,
+					ulb_id
 				},
 			})
 		})
@@ -148,7 +151,8 @@ export const getServiceReqInboxDal = async (req: Request) => {
 	let count: number
 	let totalPage: number
 	let pagination: pagination = {}
-	const whereClause: any = {}
+	const whereClause: Prisma.dist_service_req_inboxWhereInput = {}
+	const ulb_id = req?.body?.auth?.ulb_id
 
 	const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined
 
@@ -241,6 +245,19 @@ export const getServiceReqInboxDal = async (req: Request) => {
 					},
 				]
 				: []),
+			{
+				service_req: {
+					ulb_id: ulb_id
+				}
+			}
+		]
+	} else {
+		whereClause.AND = [
+			{
+				service_req: {
+					ulb_id: ulb_id
+				}
+			}
 		]
 	}
 
@@ -336,7 +353,8 @@ export const getServiceReqOutboxDal = async (req: Request) => {
 	let count: number
 	let totalPage: number
 	let pagination: pagination = {}
-	const whereClause: any = {}
+	const whereClause: Prisma.dist_service_req_outboxWhereInput = {}
+	const ulb_id = req?.body?.auth?.ulb_id
 
 	const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined
 
@@ -429,6 +447,19 @@ export const getServiceReqOutboxDal = async (req: Request) => {
 					},
 				]
 				: []),
+			{
+				service_req: {
+					ulb_id: ulb_id
+				}
+			}
+		]
+	} else {
+		whereClause.AND = [
+			{
+				service_req: {
+					ulb_id: ulb_id
+				}
+			}
 		]
 	}
 

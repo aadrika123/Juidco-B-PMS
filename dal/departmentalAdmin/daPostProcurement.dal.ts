@@ -1,5 +1,5 @@
 import { Request } from "express";
-import { PrismaClient } from "@prisma/client";
+import { Prisma, PrismaClient } from "@prisma/client";
 import getErrorMessage from "../../lib/getErrorMessage";
 import { pagination } from "../../type/common.type";
 import { extractRoleName } from "../../lib/roleNameExtractor";
@@ -179,7 +179,8 @@ export const getPostProcurementDal = async (req: Request) => {
     let count: number
     let totalPage: number
     let pagination: pagination = {}
-    const whereClause: any = {}
+    const whereClause: Prisma.da_post_procurement_inboxWhereInput = {}
+    const ulb_id = req?.body?.auth?.ulb_id
 
     const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined
 
@@ -198,12 +199,16 @@ export const getPostProcurementDal = async (req: Request) => {
                 },
             },
             {
-                procurement_stocks: {
-                    description: {
-                        contains: search,
-                        mode: 'insensitive',
+                procurement: {
+                    procurement_stocks: {
+                        some: {
+                            description: {
+                                contains: search,
+                                mode: 'insensitive',
+                            },
+                        }
                     },
-                },
+                }
             },
         ]
     }
@@ -213,44 +218,65 @@ export const getPostProcurementDal = async (req: Request) => {
             ...(category[0]
                 ? [
                     {
-                        category_masterId: {
-                            in: category,
-                        },
+                        procurement: {
+                            category_masterId: {
+                                in: category,
+                            },
+                        }
                     },
                 ]
                 : []),
             ...(subcategory[0]
                 ? [
                     {
-                        procurement_stocks: {
-                            subcategory_masterId: {
-                                in: subcategory,
+                        procurement: {
+                            procurement_stocks: {
+                                some: {
+                                    subCategory_masterId: {
+                                        in: subcategory,
+                                    },
+                                }
                             },
-                        },
+                        }
                     },
                 ]
                 : []),
             ...(brand[0]
                 ? [
                     {
-                        procurement_stocks: {
-                            brand_masterId: {
-                                in: brand,
+                        procurement: {
+                            procurement_stocks: {
+                                some: {
+                                    brand_masterId: {
+                                        in: brand,
+                                    },
+                                }
                             },
-                        },
+                        }
                     },
                 ]
                 : []),
             ...(status[0]
                 ? [
                     {
-                        status: {
-                            in: status.map(Number),
-                        },
+                        procurement: {
+                            status: {
+                                in: status.map(Number),
+                            },
+                        }
                     },
                 ]
                 : []),
+            {
+                procurement: {
+                    ulb_id: ulb_id
+                }
+            }
         ]
+    } else {
+        whereClause.procurement = {
+            ulb_id: ulb_id
+        }
     }
 
     try {
@@ -495,7 +521,7 @@ export const getPostProcurementByOrderNoDal = async (req: Request) => {
 
 export const SaveAdditionalDetailsProcurementDal = async (req: Request) => {
     const { procurement_no } = req.body
-
+    const ulb_id = req?.body?.auth?.ulb_id
 
     try {
         //start transaction
@@ -535,6 +561,7 @@ export const SaveAdditionalDetailsProcurementDal = async (req: Request) => {
                     destination: 24,
                     from: await extractRoleName(Number(process.env.ROLE_DA)),
                     description: ` Procurement number : ${procurement_no} is now ready to be received`,
+                    ulb_id
                 },
             })
         })
@@ -818,7 +845,8 @@ export const getPostProcurementOutboxDal = async (req: Request) => {
     let count: number
     let totalPage: number
     let pagination: pagination = {}
-    const whereClause: any = {}
+    const whereClause: Prisma.da_post_procurement_outboxWhereInput = {}
+    const ulb_id = req?.body?.auth?.ulb_id
 
     const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined
 
@@ -837,12 +865,16 @@ export const getPostProcurementOutboxDal = async (req: Request) => {
                 },
             },
             {
-                procurement_stocks: {
-                    description: {
-                        contains: search,
-                        mode: 'insensitive',
+                procurement: {
+                    procurement_stocks: {
+                        some: {
+                            description: {
+                                contains: search,
+                                mode: 'insensitive',
+                            },
+                        }
                     },
-                },
+                }
             },
         ]
     }
@@ -852,44 +884,65 @@ export const getPostProcurementOutboxDal = async (req: Request) => {
             ...(category[0]
                 ? [
                     {
-                        category_masterId: {
-                            in: category,
-                        },
+                        procurement: {
+                            category_masterId: {
+                                in: category,
+                            },
+                        }
                     },
                 ]
                 : []),
             ...(subcategory[0]
                 ? [
                     {
-                        procurement_stocks: {
-                            subcategory_masterId: {
-                                in: subcategory,
+                        procurement: {
+                            procurement_stocks: {
+                                some: {
+                                    subCategory_masterId: {
+                                        in: subcategory,
+                                    },
+                                }
                             },
-                        },
+                        }
                     },
                 ]
                 : []),
             ...(brand[0]
                 ? [
                     {
-                        procurement_stocks: {
-                            brand_masterId: {
-                                in: brand,
+                        procurement: {
+                            procurement_stocks: {
+                                some: {
+                                    brand_masterId: {
+                                        in: brand,
+                                    },
+                                }
                             },
-                        },
+                        }
                     },
                 ]
                 : []),
             ...(status[0]
                 ? [
                     {
-                        status: {
-                            in: status.map(Number),
-                        },
+                        procurement: {
+                            status: {
+                                in: status.map(Number),
+                            },
+                        }
                     },
                 ]
                 : []),
+            {
+                procurement: {
+                    ulb_id: ulb_id
+                }
+            }
         ]
+    } else {
+        whereClause.procurement = {
+            ulb_id: ulb_id
+        }
     }
 
     try {

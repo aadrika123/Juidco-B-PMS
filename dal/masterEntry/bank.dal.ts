@@ -1,17 +1,19 @@
 import { Request } from 'express'
-import { PrismaClient } from '@prisma/client'
+import { Prisma, PrismaClient } from '@prisma/client'
 import { pagination } from '../../type/common.type'
 
 const prisma = new PrismaClient()
 
 export const createBankDal = async (req: Request) => {
 	const { name, branch, address, ifsc } = req.body
+	const ulb_id = req?.body?.auth?.ulb_id
 
 	const data: any = {
 		name: name,
 		branch: branch,
 		address: address,
-		ifsc: ifsc
+		ifsc: ifsc,
+		ulb_id: ulb_id
 	}
 
 	try {
@@ -33,7 +35,8 @@ export const getBankDal = async (req: Request) => {
 	let count: number
 	let totalPage: number
 	let pagination: pagination = {}
-	const whereClause: any = {}
+	const whereClause: Prisma.bank_masterWhereInput = {}
+	const ulb_id = req?.body?.auth?.ulb_id
 
 	const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined
 	const status: boolean | undefined = req?.query?.status === undefined ? undefined : req?.query?.status === 'true' ? true : false
@@ -71,6 +74,15 @@ export const getBankDal = async (req: Request) => {
 					},
 				]
 				: []),
+			{
+				ulb_id: ulb_id
+			}
+		]
+	} else {
+		whereClause.AND = [
+			{
+				ulb_id: ulb_id
+			}
 		]
 	}
 	try {
@@ -128,10 +140,12 @@ export const getBankByIdDal = async (req: Request) => {
 }
 
 export const getBankActiveOnlyDal = async (req: Request) => {
+	const ulb_id = req?.body?.auth?.ulb_id
 	try {
 		const result = await prisma.bank_master.findMany({
 			where: {
 				status: true,
+				ulb_id: ulb_id
 			},
 			orderBy: {
 				updatedAt: 'desc',

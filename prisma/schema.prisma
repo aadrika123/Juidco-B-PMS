@@ -23,6 +23,7 @@ model category_master {
     procurement_stocks         procurement_stocks[]
     procurement_stocks_history procurement_stocks_history[]
     rate_contract              rate_contract[]
+    ulb_id                     Int                          @default(2)
 }
 
 model subcategory_master {
@@ -40,6 +41,7 @@ model subcategory_master {
     procurement_stocks         procurement_stocks[]
     procurement_stocks_history procurement_stocks_history[]
     rate_contract              rate_contract[]
+    ulb_id                     Int                          @default(2)
 }
 
 model brand_master {
@@ -55,6 +57,7 @@ model brand_master {
     procurement_before_boq     procurement_before_boq[]
     procurement_stocks         procurement_stocks[]
     procurement_stocks_history procurement_stocks_history[]
+    ulb_id                     Int                          @default(2)
 }
 
 model unit_master {
@@ -70,6 +73,7 @@ model unit_master {
     procurement_stocks         procurement_stocks[]
     procurement_stocks_history procurement_stocks_history[]
     rate_contract              rate_contract[]
+    ulb_id                     Int                          @default(2)
 }
 
 model supplier_master {
@@ -92,6 +96,7 @@ model supplier_master {
     procurement_before_boq procurement_before_boq[]
     bid_details            bid_details?             @relation(fields: [reference_no], references: [reference_no])
     rate_contract_supplier rate_contract_supplier[]
+    ulb_id                 Int                      @default(2)
 }
 
 model bank_master {
@@ -104,6 +109,7 @@ model bank_master {
     createdAt     DateTime        @default(now())
     updatedAt     DateTime        @updatedAt
     basic_details basic_details[]
+    ulb_id        Int             @default(2)
 }
 
 // pre-procurement============================================================================================================================================================================================================================================================================================================
@@ -301,6 +307,7 @@ model inventory {
     emp_service_req_product emp_service_req_product[]
     emp_service_history     emp_service_history[]
     stock_handover          stock_handover[]
+    ulb_id                  Int                       @default(2)
 }
 
 model rate_contract {
@@ -317,6 +324,7 @@ model rate_contract {
     unit                   unit_master?             @relation(fields: [unit_masterId], references: [id])
     unit_masterId          String?
     rate_contract_supplier rate_contract_supplier[]
+    ulb_id                 Int                      @default(2)
 }
 
 model rate_contract_supplier {
@@ -431,6 +439,7 @@ model procurement {
     procurement_stocks_history   procurement_stocks_history[]
     boq                          boq?
     supplier_master              supplier_master[]
+    ulb_id                       Int                           @default(2)
 }
 
 model procurement_stocks {
@@ -600,6 +609,7 @@ model boq {
     bid_details           bid_details?
     ta_inbox              ta_inbox?
     ta_outbox             ta_outbox?
+    ulb_id                Int                    @default(2)
 }
 
 model boq_procurement {
@@ -939,6 +949,7 @@ model notification {
     destination Int? //0 = no inbox(perform any operation) ,10=sr pre-proc inbox,14=sr pre-proc rejected,15=sr pre-proc released, 20=da pre-proc inbox, 21=da boq inbox, 22=da pre-tender inbox, 30=acc pre-proc inbox, 31=acc boq inbox, 32=acc pre-tender inbox, 11=sr post-proc inbox, 12=sr rec-inv inbox, 23=da post proc inbox, 24=da rec-inv inbox, 25=da stock req inbox, 26=da service req inbox, 13=sr stock req inbox, 40=dist stock-req inbox, 41=dist service req inbox, 42=dist emp service req inbox, 50=level1 inbox, 60=level2 inbox,70=finance, 80=IA stock req inbox, 81=IA service req inbox, 82=IA procurement inbox, 90=TA boq inbox, 100=emp service req inbox
     createdAt   DateTime @default(now())
     updatedAt   DateTime @updatedAt
+    ulb_id      Int      @default(2)
 }
 
 // notification================================================================================================================================================================
@@ -1061,6 +1072,7 @@ model service_request {
     da_service_req_inbox    da_service_req_inbox?
     da_service_req_outbox   da_service_req_outbox?
     service_history         service_history?
+    ulb_id                  Int                      @default(2)
 }
 
 model service_req_product {
@@ -1404,6 +1416,7 @@ model emp_service_request {
     dd_service_req_outbox   dist_emp_service_req_outbox?
     emp_service_req_inbox   emp_service_req_inbox?
     emp_service_req_outbox  emp_service_req_outbox?
+    ulb_id                  Int                          @default(2)
 }
 
 model emp_service_req_product {

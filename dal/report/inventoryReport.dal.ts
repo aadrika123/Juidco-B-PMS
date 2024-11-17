@@ -16,6 +16,7 @@ export const getTotalStocksDal = async (req: Request) => {
 	let totalPage: number
 	let pagination: pagination = {}
 	const whereClause: Prisma.inventoryWhereInput = {}
+	const ulb_id = req?.body?.auth?.ulb_id
 	const dataToSend: any[] = []
 
 	const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined
@@ -55,7 +56,16 @@ export const getTotalStocksDal = async (req: Request) => {
 						},
 					},
 				]
-				: [])
+				: []),
+			{
+				ulb_id: ulb_id
+			}
+		]
+	} else {
+		whereClause.AND = [
+			{
+				ulb_id: ulb_id
+			}
 		]
 	}
 
@@ -183,6 +193,7 @@ export const getDeadStocksDal = async (req: Request) => {
 	let totalPage: number
 	let pagination: pagination = {}
 	const whereClause: Prisma.inventory_dead_stockWhereInput = {}
+	const ulb_id = req?.body?.auth?.ulb_id
 
 	const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined
 
@@ -238,6 +249,19 @@ export const getDeadStocksDal = async (req: Request) => {
 					}
 				]
 				: []),
+			{
+				inventory: {
+					ulb_id: ulb_id
+				}
+			}
+		]
+	} else {
+		whereClause.AND = [
+			{
+				inventory: {
+					ulb_id: ulb_id
+				}
+			}
 		]
 	}
 
@@ -325,6 +349,7 @@ export const getStockMovementDal = async (req: Request) => {
 	let totalPage: number
 	let pagination: pagination = {}
 	const whereClause: Prisma.stock_req_productWhereInput = {}
+	const ulb_id = req?.body?.auth?.ulb_id
 
 	const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined
 
@@ -379,7 +404,20 @@ export const getStockMovementDal = async (req: Request) => {
 						}
 					}
 				]
-				: [])
+				: []),
+			{
+				stock_request: {
+					ulb_id: ulb_id
+				}
+			}
+		]
+	} else {
+		whereClause.AND = [
+			{
+				stock_request: {
+					ulb_id: ulb_id
+				}
+			}
 		]
 	}
 

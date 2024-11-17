@@ -1,5 +1,5 @@
 import { Request } from 'express'
-import { PrismaClient, basic_details, bid_openers, cover_details_docs, critical_dates, fee_details, payment_mode_enum, work_details, offline_banks_enum } from '@prisma/client'
+import { PrismaClient, basic_details, bid_openers, cover_details_docs, critical_dates, fee_details, payment_mode_enum, work_details, offline_banks_enum, Prisma } from '@prisma/client'
 import getErrorMessage from '../../lib/getErrorMessage'
 import { imageUploader } from '../../lib/imageUploader'
 import { imageUploaderV2 } from '../../lib/imageUploaderV2'
@@ -20,6 +20,7 @@ export const getPreProcurementForBoqDal = async (req: Request) => {
 	let totalPage: number
 	let pagination: pagination = {}
 	const whereClause: any = {}
+	const ulb_id = req?.body?.auth?.ulb_id
 
 	const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined
 
@@ -121,6 +122,7 @@ export const getPreProcurementForBoqDal = async (req: Request) => {
 		status: {
 			status: 1,
 		},
+		ulb_id: ulb_id
 	}
 
 	try {
@@ -219,7 +221,8 @@ export const getPreProcurementDal = async (req: Request) => {
 	let count: number
 	let totalPage: number
 	let pagination: pagination = {}
-	const whereClause: any = {}
+	const whereClause: Prisma.acc_pre_procurement_inboxWhereInput = {}
+	const ulb_id = req?.body?.auth?.ulb_id
 
 	const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined
 
@@ -239,10 +242,14 @@ export const getPreProcurementDal = async (req: Request) => {
 			},
 			{
 				procurement: {
-					description: {
-						contains: search,
-						mode: 'insensitive',
-					},
+					procurement_stocks: {
+						some: {
+							description: {
+								contains: search,
+								mode: 'insensitive',
+							},
+						}
+					}
 				},
 			},
 		]
@@ -258,26 +265,35 @@ export const getPreProcurementDal = async (req: Request) => {
 	}
 	if (subcategory[0]) {
 		whereClause.procurement = {
-			subcategory_masterId: {
-				in: subcategory,
-			},
+			procurement_stocks: {
+				some: {
+					subCategory_masterId: {
+						in: subcategory,
+					},
+				}
+			}
 		}
 	}
 	if (status[0]) {
 		whereClause.procurement = {
 			status: {
-				status: {
-					in: status.map(Number),
-				},
+				in: status.map(Number),
 			},
 		}
 	}
 	if (brand[0]) {
 		whereClause.procurement = {
-			brand_masterId: {
-				in: brand,
-			},
+			procurement_stocks: {
+				some: {
+					brand_masterId: {
+						in: brand,
+					},
+				}
+			}
 		}
+	}
+	whereClause.procurement = {
+		ulb_id: ulb_id
 	}
 	// whereClause.NOT = [
 	//     {
@@ -442,6 +458,8 @@ export const getPreProcurementBulkByOrderNoDal = async (req: Request) => {
 
 export const createBoqDal = async (req: Request) => {
 	const { boqData } = req.body
+	const formattedAuth = typeof req?.body?.auth !== 'string' ? JSON.stringify(req?.body?.auth) : req.body?.auth
+	const ulb_id = JSON.parse(formattedAuth)?.ulb_id
 	try {
 		const formattedBoqData: boqData = JSON.parse(boqData)
 		const img = req.files as Express.Multer.File[]
@@ -487,6 +505,7 @@ export const createBoqDal = async (req: Request) => {
 					estimated_cost: formattedBoqData?.estimated_cost,
 					remark: formattedBoqData?.remark,
 					// hsn_code: formattedBoqData?.hsn_code,
+					ulb_id: ulb_id
 				},
 			})
 
@@ -726,7 +745,8 @@ export const getPreProcurementOutboxDal = async (req: Request) => {
 	let count: number
 	let totalPage: number
 	let pagination: pagination = {}
-	const whereClause: any = {}
+	const whereClause: Prisma.acc_pre_procurement_outboxWhereInput = {}
+	const ulb_id = req?.body?.auth?.ulb_id
 
 	const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined
 
@@ -746,10 +766,14 @@ export const getPreProcurementOutboxDal = async (req: Request) => {
 			},
 			{
 				procurement: {
-					description: {
-						contains: search,
-						mode: 'insensitive',
-					},
+					procurement_stocks: {
+						some: {
+							description: {
+								contains: search,
+								mode: 'insensitive',
+							},
+						}
+					}
 				},
 			},
 		]
@@ -765,27 +789,41 @@ export const getPreProcurementOutboxDal = async (req: Request) => {
 	}
 	if (subcategory[0]) {
 		whereClause.procurement = {
-			subcategory_masterId: {
-				in: subcategory,
-			},
+			procurement_stocks: {
+				some: {
+					subCategory_masterId: {
+						in: subcategory,
+					},
+				}
+			}
 		}
 	}
 	if (status[0]) {
 		whereClause.procurement = {
 			status: {
-				status: {
-					in: status.map(Number),
-				},
+				in: status.map(Number),
 			},
 		}
 	}
 	if (brand[0]) {
 		whereClause.procurement = {
-			brand_masterId: {
-				in: brand,
-			},
+			procurement_stocks: {
+				some: {
+					brand_masterId: {
+						in: brand,
+					},
+				}
+			}
 		}
 	}
+
+	whereClause.AND = [
+		{
+			procurement: {
+				ulb_id
+			}
+		}
+	]
 	// whereClause.NOT = [
 	//     {
 	//         procurement: {
@@ -1562,7 +1600,8 @@ export const getPreTenderingInboxDal = async (req: Request) => {
 	let count: number
 	let totalPage: number
 	let pagination: pagination = {}
-	const whereClause: any = {}
+	const whereClause: Prisma.acc_pre_tender_inboxWhereInput = {}
+	const ulb_id = req?.body?.auth?.ulb_id
 
 	const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined
 
@@ -1580,14 +1619,14 @@ export const getPreTenderingInboxDal = async (req: Request) => {
 					mode: 'insensitive',
 				},
 			},
-			{
-				procurement: {
-					description: {
-						contains: search,
-						mode: 'insensitive',
-					},
-				},
-			},
+			// {
+			// 	procurement: {
+			// 		description: {
+			// 			contains: search,
+			// 			mode: 'insensitive',
+			// 		},
+			// 	},
+			// },
 		]
 	}
 
@@ -1597,17 +1636,19 @@ export const getPreTenderingInboxDal = async (req: Request) => {
 			...(category[0]
 				? [
 					{
-						boq: {
-							procurements: {
-								some: {
-									procurement: {
-										category_masterId: {
-											in: category,
+						tendering_form: {
+							boq: {
+								procurements: {
+									some: {
+										procurement: {
+											category_masterId: {
+												in: category,
+											},
 										},
 									},
 								},
 							},
-						},
+						}
 					},
 				]
 				: []),
@@ -1615,17 +1656,23 @@ export const getPreTenderingInboxDal = async (req: Request) => {
 			...(subcategory[0]
 				? [
 					{
-						boq: {
-							procurements: {
-								some: {
-									procurement: {
-										subcategory_masterId: {
-											in: subcategory,
+						tendering_form: {
+							boq: {
+								procurements: {
+									some: {
+										procurement: {
+											procurement_stocks: {
+												some: {
+													subCategory_masterId: {
+														in: subcategory,
+													},
+												}
+											}
 										},
 									},
 								},
 							},
-						},
+						}
 					},
 				]
 				: []),
@@ -1633,11 +1680,13 @@ export const getPreTenderingInboxDal = async (req: Request) => {
 			...(brand[0]
 				? [
 					{
-						boq: {
-							status: {
-								in: status.map(Number),
+						tendering_form: {
+							boq: {
+								status: {
+									in: status.map(Number),
+								},
 							},
-						},
+						}
 					},
 				]
 				: []),
@@ -1645,20 +1694,33 @@ export const getPreTenderingInboxDal = async (req: Request) => {
 			...(brand[0]
 				? [
 					{
-						boq: {
-							procurements: {
-								some: {
-									procurement: {
-										brand_masterId: {
-											in: brand,
+						tendering_form: {
+							boq: {
+								procurements: {
+									some: {
+										procurement: {
+											procurement_stocks: {
+												some: {
+													brand_masterId: {
+														in: brand,
+													},
+												}
+											}
 										},
 									},
 								},
 							},
-						},
+						}
 					},
 				]
 				: []),
+			{
+				tendering_form: {
+					boq: {
+						ulb_id: ulb_id
+					}
+				}
+			}
 		]
 	}
 
@@ -1761,7 +1823,8 @@ export const getPreTenderingOutboxDal = async (req: Request) => {
 	let count: number
 	let totalPage: number
 	let pagination: pagination = {}
-	const whereClause: any = {}
+	const whereClause: Prisma.acc_pre_tender_outboxWhereInput = {}
+	const ulb_id = req?.body?.auth?.ulb_id
 
 	const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined
 
@@ -1779,14 +1842,14 @@ export const getPreTenderingOutboxDal = async (req: Request) => {
 					mode: 'insensitive',
 				},
 			},
-			{
-				procurement: {
-					description: {
-						contains: search,
-						mode: 'insensitive',
-					},
-				},
-			},
+			// {
+			// 	procurement: {
+			// 		description: {
+			// 			contains: search,
+			// 			mode: 'insensitive',
+			// 		},
+			// 	},
+			// },
 		]
 	}
 
@@ -1796,17 +1859,19 @@ export const getPreTenderingOutboxDal = async (req: Request) => {
 			...(category[0]
 				? [
 					{
-						boq: {
-							procurements: {
-								some: {
-									procurement: {
-										category_masterId: {
-											in: category,
+						tendering_form: {
+							boq: {
+								procurements: {
+									some: {
+										procurement: {
+											category_masterId: {
+												in: category,
+											},
 										},
 									},
 								},
 							},
-						},
+						}
 					},
 				]
 				: []),
@@ -1814,17 +1879,23 @@ export const getPreTenderingOutboxDal = async (req: Request) => {
 			...(subcategory[0]
 				? [
 					{
-						boq: {
-							procurements: {
-								some: {
-									procurement: {
-										subcategory_masterId: {
-											in: subcategory,
+						tendering_form: {
+							boq: {
+								procurements: {
+									some: {
+										procurement: {
+											procurement_stocks: {
+												some: {
+													subCategory_masterId: {
+														in: subcategory,
+													},
+												}
+											}
 										},
 									},
 								},
 							},
-						},
+						}
 					},
 				]
 				: []),
@@ -1832,11 +1903,13 @@ export const getPreTenderingOutboxDal = async (req: Request) => {
 			...(brand[0]
 				? [
 					{
-						boq: {
-							status: {
-								in: status.map(Number),
+						tendering_form: {
+							boq: {
+								status: {
+									in: status.map(Number),
+								},
 							},
-						},
+						}
 					},
 				]
 				: []),
@@ -1844,20 +1917,33 @@ export const getPreTenderingOutboxDal = async (req: Request) => {
 			...(brand[0]
 				? [
 					{
-						boq: {
-							procurements: {
-								some: {
-									procurement: {
-										brand_masterId: {
-											in: brand,
+						tendering_form: {
+							boq: {
+								procurements: {
+									some: {
+										procurement: {
+											procurement_stocks: {
+												some: {
+													brand_masterId: {
+														in: brand,
+													},
+												}
+											}
 										},
 									},
 								},
 							},
-						},
+						}
 					},
 				]
 				: []),
+			{
+				tendering_form: {
+					boq: {
+						ulb_id: ulb_id
+					}
+				}
+			}
 		]
 	}
 
@@ -3223,6 +3309,7 @@ export const finalSubmissionPtDal = async (req: Request) => {
 
 export const forwardToDaPtDal = async (req: Request) => {
 	const { reference_no }: { reference_no: string } = req.body
+	const ulb_id = req?.body?.auth?.ulb_id
 	try {
 		const preTender = await prisma.tendering_form.findFirst({
 			where: {
@@ -3300,6 +3387,7 @@ export const forwardToDaPtDal = async (req: Request) => {
 					destination: 22,
 					from: await extractRoleName(Number(process.env.ROLE_IA)),
 					description: `There is a pre-tendering form to be approved. Reference Number : ${reference_no}`,
+					ulb_id: ulb_id
 				},
 			})
 		})
@@ -3313,6 +3401,7 @@ export const forwardToDaPtDal = async (req: Request) => {
 
 export const forwardToTaPtDal = async (req: Request) => {
 	const { reference_no }: { reference_no: string } = req.body
+	const ulb_id = req?.body?.auth?.ulb_id
 	try {
 		const preTender = await prisma.tendering_form.findFirst({
 			where: {
@@ -3415,6 +3504,7 @@ export const forwardToTaPtDal = async (req: Request) => {
 					destination: 90,
 					from: await extractRoleName(Number(process.env.ROLE_IA)),
 					description: `There are BOQ and pre-tendering form to be approved. Reference Number : ${reference_no}`,
+					ulb_id
 				},
 			})
 		})

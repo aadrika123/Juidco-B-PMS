@@ -14,7 +14,8 @@ export const getStockReqInboxDal = async (req: Request) => {
 	let count: number
 	let totalPage: number
 	let pagination: pagination = {}
-	const whereClause: any = {}
+	const whereClause: Prisma.ia_stock_req_inboxWhereInput = {}
+	const ulb_id = req?.body?.auth?.ulb_id
 
 	const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined
 
@@ -33,12 +34,20 @@ export const getStockReqInboxDal = async (req: Request) => {
 				},
 			},
 			{
-				emp_id: {
-					description: {
+				stock_request: {
+					emp_id: {
 						contains: search,
 						mode: 'insensitive',
 					},
-				},
+				}
+			},
+			{
+				stock_request: {
+					emp_name: {
+						contains: search,
+						mode: 'insensitive',
+					},
+				}
 			},
 		]
 	}
@@ -95,6 +104,19 @@ export const getStockReqInboxDal = async (req: Request) => {
 					},
 				]
 				: []),
+			{
+				stock_request: {
+					ulb_id: ulb_id
+				}
+			}
+		]
+	} else {
+		whereClause.AND = [
+			{
+				stock_request: {
+					ulb_id: ulb_id
+				}
+			}
 		]
 	}
 
@@ -193,7 +215,8 @@ export const getStockReqOutboxDal = async (req: Request) => {
 	let count: number
 	let totalPage: number
 	let pagination: pagination = {}
-	const whereClause: any = {}
+	const whereClause: Prisma.ia_stock_req_outboxWhereInput = {}
+	const ulb_id = req?.body?.auth?.ulb_id
 
 	const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined
 
@@ -212,17 +235,25 @@ export const getStockReqOutboxDal = async (req: Request) => {
 				},
 			},
 			{
-				emp_id: {
-					description: {
+				stock_request: {
+					emp_id: {
 						contains: search,
 						mode: 'insensitive',
 					},
-				},
+				}
+			},
+			{
+				stock_request: {
+					emp_name: {
+						contains: search,
+						mode: 'insensitive',
+					},
+				}
 			},
 		]
 	}
 
-	if (category[0] || subcategory[0] || brand[0]) {
+	if (category[0] || subcategory[0] || brand[0] || status[0]) {
 		whereClause.AND = [
 			...(category[0]
 				? [
@@ -274,6 +305,19 @@ export const getStockReqOutboxDal = async (req: Request) => {
 					},
 				]
 				: []),
+			{
+				stock_request: {
+					ulb_id: ulb_id
+				}
+			}
+		]
+	} else {
+		whereClause.AND = [
+			{
+				stock_request: {
+					ulb_id: ulb_id
+				}
+			}
 		]
 	}
 
@@ -366,6 +410,7 @@ export const getStockReqOutboxDal = async (req: Request) => {
 
 export const approveStockReqDal_legacy = async (req: Request) => {
 	const { stock_handover_no }: { stock_handover_no: string[] } = req.body
+	const ulb_id = req?.body?.auth?.ulb_id
 
 	try {
 		await Promise.all(
@@ -478,6 +523,7 @@ export const approveStockReqDal_legacy = async (req: Request) => {
 							destination: 40,
 							from: await extractRoleName(Number(process.env.ROLE_IA)),
 							description: `stock request : ${item} has approved`,
+							ulb_id
 						},
 					})
 					await tx.notification.create({
@@ -487,6 +533,7 @@ export const approveStockReqDal_legacy = async (req: Request) => {
 							destination: 25,
 							from: await extractRoleName(Number(process.env.ROLE_IA)),
 							description: `stock request : ${item} has approved`,
+							ulb_id
 						},
 					})
 				})
@@ -501,6 +548,7 @@ export const approveStockReqDal_legacy = async (req: Request) => {
 
 export const approveStockReqDal = async (req: Request) => {
 	const { stock_handover_no, serial_nos }: { stock_handover_no: string[], serial_nos: string[] } = req.body
+	const ulb_id = req?.body?.auth?.ulb_id
 
 	try {
 		await Promise.all(
@@ -658,6 +706,7 @@ export const approveStockReqDal = async (req: Request) => {
 							destination: 40,
 							from: await extractRoleName(Number(process.env.ROLE_IA)),
 							description: `stock request : ${item} has approved`,
+							ulb_id
 						},
 					})
 					await tx.notification.create({
@@ -667,6 +716,7 @@ export const approveStockReqDal = async (req: Request) => {
 							destination: 25,
 							from: await extractRoleName(Number(process.env.ROLE_IA)),
 							description: `stock request : ${item} has approved`,
+							ulb_id
 						},
 					})
 				})
@@ -852,6 +902,7 @@ const fetchRequiredProducts = async (stockReq: any, limit: number = 1): Promise<
 
 export const returnStockReqDal = async (req: Request) => {
 	const { stock_handover_no, remark }: { stock_handover_no: string[], remark?: string } = req.body
+	const ulb_id = req?.body?.auth?.ulb_id
 
 	try {
 		await Promise.all(
@@ -909,6 +960,7 @@ export const returnStockReqDal = async (req: Request) => {
 							destination: 40,
 							from: await extractRoleName(Number(process.env.ROLE_IA)),
 							description: `stock request : ${item} has returned`,
+							ulb_id
 						},
 					}),
 					prisma.notification.create({
@@ -918,6 +970,7 @@ export const returnStockReqDal = async (req: Request) => {
 							destination: 25,
 							from: await extractRoleName(Number(process.env.ROLE_IA)),
 							description: `stock request : ${item} has returned`,
+							ulb_id
 						},
 					}),
 				])
@@ -932,6 +985,7 @@ export const returnStockReqDal = async (req: Request) => {
 
 export const rejectStockReqDal = async (req: Request) => {
 	const { stock_handover_no, remark }: { stock_handover_no: string[], remark: string } = req.body
+	const ulb_id = req?.body?.auth?.ulb_id
 
 	try {
 		await Promise.all(
@@ -994,6 +1048,7 @@ export const rejectStockReqDal = async (req: Request) => {
 							destination: 40,
 							from: await extractRoleName(Number(process.env.ROLE_IA)),
 							description: `stock request : ${item} has rejected`,
+							ulb_id
 						},
 					}),
 					prisma.notification.create({
@@ -1003,6 +1058,7 @@ export const rejectStockReqDal = async (req: Request) => {
 							destination: 25,
 							from: await extractRoleName(Number(process.env.ROLE_IA)),
 							description: `stock request : ${item} has rejected`,
+							ulb_id
 						},
 					}),
 				])
@@ -1092,6 +1148,7 @@ export const getProductsBystockReqDal = async (req: Request) => {
 
 export const unavailabilityNotificationDal = async (req: Request) => {
 	const { stock_handover_no } = req.params
+	const ulb_id = req?.body?.auth?.ulb_id
 
 	try {
 
@@ -1112,6 +1169,7 @@ export const unavailabilityNotificationDal = async (req: Request) => {
 					destination: 0,
 					from: await extractRoleName(Number(process.env.ROLE_IA)),
 					description: ` Stock request : ${stock_handover_no} is currently unavailable. Want to procure?`,
+					ulb_id
 				},
 			})
 		})

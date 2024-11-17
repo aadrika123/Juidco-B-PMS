@@ -17,6 +17,7 @@ export const getTaInboxDal = async (req: Request) => {
     let totalPage: number
     let pagination: pagination = {}
     const whereClause: Prisma.ta_inboxWhereInput = {}
+    const ulb_id = req?.body?.auth?.ulb_id
 
     const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined
 
@@ -95,6 +96,19 @@ export const getTaInboxDal = async (req: Request) => {
                     },
                 ]
                 : []),
+            {
+                boq: {
+                    ulb_id: ulb_id
+                }
+            }
+        ]
+    } else {
+        whereClause.AND = [
+            {
+                boq: {
+                    ulb_id: ulb_id
+                }
+            }
         ]
     }
 
@@ -177,7 +191,8 @@ export const getTaOutboxDal = async (req: Request) => {
     let count: number
     let totalPage: number
     let pagination: pagination = {}
-    const whereClause: any = {}
+    const whereClause: Prisma.ta_outboxWhereInput = {}
+    const ulb_id = req?.body?.auth?.ulb_id
 
     const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined
 
@@ -254,6 +269,19 @@ export const getTaOutboxDal = async (req: Request) => {
                     },
                 ]
                 : []),
+            {
+                boq: {
+                    ulb_id: ulb_id
+                }
+            }
+        ]
+    } else {
+        whereClause.AND = [
+            {
+                boq: {
+                    ulb_id: ulb_id
+                }
+            }
         ]
     }
 
@@ -1320,6 +1348,7 @@ export const selectWinnerDal = async (req: Request) => {
 
 export const finalizeComparisonDal = async (req: Request) => {
     const { reference_no }: { reference_no: string } = req.body
+    const ulb_id = req?.body?.auth?.ulb_id
     try {
 
         if (!reference_no) {
@@ -1454,6 +1483,7 @@ export const finalizeComparisonDal = async (req: Request) => {
                     destination: 23,
                     from: await extractRoleName(Number(process.env.ROLE_TA)),
                     description: `Bidding completed for Procurement Number : ${bidDetailsData?.boq?.procurement_no}`,
+                    ulb_id
                 },
             })
 
@@ -1503,6 +1533,7 @@ const calculateEndDate = (start_date: Date, tenure: number): Date => {
 
 export const setUnitPriceDal = async (req: Request) => {
     const { reference_no, procurement_no, items }: setUnitPricePayloadType = req.body
+    const ulb_id = req?.body?.auth?.ulb_id
     try {
 
         if (!procurement_no) {
@@ -1588,6 +1619,7 @@ export const setUnitPriceDal = async (req: Request) => {
                     destination: 23,
                     from: await extractRoleName(Number(process.env.ROLE_TA)),
                     description: `Bidding completed for Procurement Number : ${procurement_no}`,
+                    ulb_id
                 },
             })
 

@@ -34,7 +34,8 @@ export const getServiceReqInboxDal = async (req: Request) => {
 	let count: number
 	let totalPage: number
 	let pagination: pagination = {}
-	const whereClause: any = {}
+	const whereClause: Prisma.ia_service_req_inboxWhereInput = {}
+	const ulb_id = req?.body?.auth?.ulb_id
 
 	const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined
 
@@ -127,6 +128,19 @@ export const getServiceReqInboxDal = async (req: Request) => {
 					},
 				]
 				: []),
+			{
+				service_req: {
+					ulb_id: ulb_id
+				}
+			}
+		]
+	} else {
+		whereClause.AND = [
+			{
+				service_req: {
+					ulb_id: ulb_id
+				}
+			}
 		]
 	}
 
@@ -222,7 +236,8 @@ export const getServiceReqOutboxDal = async (req: Request) => {
 	let count: number
 	let totalPage: number
 	let pagination: pagination = {}
-	const whereClause: any = {}
+	const whereClause: Prisma.ia_service_req_outboxWhereInput = {}
+	const ulb_id = req?.body?.auth?.ulb_id
 
 	const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined
 
@@ -315,6 +330,19 @@ export const getServiceReqOutboxDal = async (req: Request) => {
 					},
 				]
 				: []),
+			{
+				service_req: {
+					ulb_id: ulb_id
+				}
+			}
+		]
+	} else {
+		whereClause.AND = [
+			{
+				service_req: {
+					ulb_id: ulb_id
+				}
+			}
 		]
 	}
 
@@ -405,6 +433,8 @@ export const getServiceReqOutboxDal = async (req: Request) => {
 export const approveServiceRequestDal = async (req: Request) => {
 	const { service_no, remark }: { service_no: string; remark: string } = req.body
 	const doc = req.files
+	const formattedAuth = typeof req?.body?.auth !== 'string' ? JSON.stringify(req?.body?.auth) : req.body?.auth
+	const ulb_id = JSON.parse(formattedAuth)?.ulb_id
 
 	try {
 		const serviceReq = await prisma.service_request.findFirst({
@@ -555,6 +585,7 @@ export const approveServiceRequestDal = async (req: Request) => {
 					destination: 41,
 					from: await extractRoleName(Number(process.env.ROLE_IA)),
 					description: `${serviceTranslator(serviceReq?.service)} approved. Service Number : ${service_no}`,
+					ulb_id
 				},
 			})
 
@@ -565,6 +596,7 @@ export const approveServiceRequestDal = async (req: Request) => {
 					destination: 26,
 					from: await extractRoleName(Number(process.env.ROLE_IA)),
 					description: `${serviceTranslator(serviceReq?.service)} approved. Service Number : ${service_no}`,
+					ulb_id
 				},
 			})
 		})
@@ -578,6 +610,7 @@ export const approveServiceRequestDal = async (req: Request) => {
 
 export const rejectServiceRequestDal = async (req: Request) => {
 	const { service_no, remark }: { service_no: string, remark: string } = req.body
+	const ulb_id = req?.body?.auth?.ulb_id
 
 	try {
 
@@ -683,6 +716,7 @@ export const rejectServiceRequestDal = async (req: Request) => {
 					destination: 41,
 					from: await extractRoleName(Number(process.env.ROLE_IA)),
 					description: `${serviceTranslator(serviceReq?.service)} rejected. Service Number : ${service_no}`,
+					ulb_id
 				},
 			})
 
@@ -693,6 +727,7 @@ export const rejectServiceRequestDal = async (req: Request) => {
 					destination: 26,
 					from: await extractRoleName(Number(process.env.ROLE_IA)),
 					description: `${serviceTranslator(serviceReq?.service)} rejected. Service Number : ${service_no}`,
+					ulb_id
 				},
 			})
 		})
@@ -706,6 +741,7 @@ export const rejectServiceRequestDal = async (req: Request) => {
 
 export const returnServiceRequestDal = async (req: Request) => {
 	const { service_no }: { service_no: string } = req.body
+	const ulb_id = req?.body?.auth?.ulb_id
 
 	try {
 		const serviceReq = await prisma.service_request.findFirst({
@@ -796,6 +832,7 @@ export const returnServiceRequestDal = async (req: Request) => {
 					destination: 41,
 					from: await extractRoleName(Number(process.env.ROLE_IA)),
 					description: `${serviceTranslator(serviceReq?.service)} returned from IA. Service Number : ${service_no}`,
+					ulb_id
 				},
 			})
 
@@ -806,6 +843,7 @@ export const returnServiceRequestDal = async (req: Request) => {
 					destination: 26,
 					from: await extractRoleName(Number(process.env.ROLE_IA)),
 					description: `${serviceTranslator(serviceReq?.service)} returned from IA. Service Number : ${service_no}`,
+					ulb_id
 				},
 			})
 		})
@@ -1046,7 +1084,8 @@ export const createServiceRequestByIaDal = async (req: Request) => {
 	const { product, quantity, service, inventoryId, remark } = req.body
 	const doc = req.files
 
-	// const ulb_id = auth?.ulb_id
+	// const formattedBody = typeof req.body !== 'string' ? JSON.stringify(req.body) : req.body
+	// const ulb_id = JSON.parse(formattedBody)?.auth?.ulb_id
 
 	try {
 

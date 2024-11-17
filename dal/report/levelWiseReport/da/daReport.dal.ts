@@ -16,6 +16,7 @@ export const getDaStockReqReportDal = async (req: Request) => {
 	let totalPage: number
 	let pagination: pagination = {}
 	const whereClause: Prisma.da_stock_req_inboxWhereInput = {}
+	const ulb_id = req?.body?.auth?.ulb_id
 
 	const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined
 
@@ -83,7 +84,20 @@ export const getDaStockReqReportDal = async (req: Request) => {
 						}
 					}
 				]
-				: [])
+				: []),
+			{
+				stock_request: {
+					ulb_id: ulb_id
+				}
+			}
+		]
+	} else {
+		whereClause.AND = [
+			{
+				stock_request: {
+					ulb_id: ulb_id
+				}
+			}
 		]
 	}
 
@@ -183,6 +197,7 @@ export const getDaServiceReqReportDal = async (req: Request) => {
 	let totalPage: number
 	let pagination: pagination = {}
 	const whereClause: Prisma.da_service_req_inboxWhereInput = {}
+	const ulb_id = req?.body?.auth?.ulb_id
 
 	const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined
 
@@ -251,6 +266,19 @@ export const getDaServiceReqReportDal = async (req: Request) => {
 					}
 				]
 				: []),
+			{
+				service_req: {
+					ulb_id: ulb_id
+				}
+			}
+		]
+	} else {
+		whereClause.AND = [
+			{
+				service_req: {
+					ulb_id: ulb_id
+				}
+			}
 		]
 	}
 

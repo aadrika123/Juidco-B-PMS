@@ -1,5 +1,5 @@
 import { Request } from 'express'
-import { PrismaClient } from '@prisma/client'
+import { Prisma, PrismaClient } from '@prisma/client'
 import generateStockHandoverNumber from '../../lib/stockHandoverNumberGenerator'
 import getErrorMessage from '../../lib/getErrorMessage'
 import { pagination } from '../../type/common.type'
@@ -93,7 +93,8 @@ export const getStockReqInboxDal = async (req: Request) => {
 	let count: number
 	let totalPage: number
 	let pagination: pagination = {}
-	const whereClause: any = {}
+	const whereClause: Prisma.dist_stock_req_inboxWhereInput = {}
+	const ulb_id = req?.body?.auth?.ulb_id
 
 	const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined
 
@@ -176,6 +177,19 @@ export const getStockReqInboxDal = async (req: Request) => {
 					},
 				]
 				: []),
+			{
+				stock_request: {
+					ulb_id: ulb_id
+				}
+			}
+		]
+	} else {
+		whereClause.AND = [
+			{
+				stock_request: {
+					ulb_id: ulb_id
+				}
+			}
 		]
 	}
 
@@ -275,7 +289,8 @@ export const getStockReqOutboxDal = async (req: Request) => {
 	let count: number
 	let totalPage: number
 	let pagination: pagination = {}
-	const whereClause: any = {}
+	const whereClause: Prisma.dist_stock_req_outboxWhereInput = {}
+	const ulb_id = req?.body?.auth?.ulb_id
 
 	const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined
 
@@ -312,8 +327,10 @@ export const getStockReqOutboxDal = async (req: Request) => {
 				? [
 					{
 						stock_request: {
-							category_masterId: {
-								in: category,
+							inventory: {
+								category_masterId: {
+									in: category,
+								},
 							},
 						},
 					},
@@ -323,8 +340,10 @@ export const getStockReqOutboxDal = async (req: Request) => {
 				? [
 					{
 						stock_request: {
-							subcategory_masterId: {
-								in: subcategory,
+							inventory: {
+								subcategory_masterId: {
+									in: subcategory,
+								},
 							},
 						},
 					},
@@ -334,8 +353,10 @@ export const getStockReqOutboxDal = async (req: Request) => {
 				? [
 					{
 						stock_request: {
-							brand_masterId: {
-								in: brand,
+							inventory: {
+								brand_masterId: {
+									in: brand,
+								},
 							},
 						},
 					},
@@ -352,6 +373,19 @@ export const getStockReqOutboxDal = async (req: Request) => {
 					},
 				]
 				: []),
+			{
+				stock_request: {
+					ulb_id: ulb_id
+				}
+			}
+		]
+	} else {
+		whereClause.AND = [
+			{
+				stock_request: {
+					ulb_id: ulb_id
+				}
+			}
 		]
 	}
 
@@ -444,6 +478,7 @@ export const getStockReqOutboxDal = async (req: Request) => {
 
 export const forwardToDaDal = async (req: Request) => {
 	const { stock_handover_no }: { stock_handover_no: string[] } = req.body
+	const ulb_id = req?.body?.auth?.ulb_id
 
 	try {
 		await Promise.all(
@@ -510,6 +545,7 @@ export const forwardToDaDal = async (req: Request) => {
 							destination: 25,
 							from: await extractRoleName(Number(process.env.ROLE_DIST)),
 							description: `There is a new stock request to be reviewed  : ${item}`,
+							ulb_id
 						},
 					}),
 				])

@@ -1,5 +1,5 @@
 import { Request } from 'express'
-import { PrismaClient } from '@prisma/client'
+import { Prisma, PrismaClient } from '@prisma/client'
 import getErrorMessage from '../../lib/getErrorMessage'
 import { pagination } from '../../type/common.type'
 import axios from 'axios'
@@ -71,7 +71,8 @@ export const getBoqInboxDal = async (req: Request) => {
 	let count: number
 	let totalPage: number
 	let pagination: pagination = {}
-	const whereClause: any = {}
+	const whereClause: Prisma.finance_boq_inboxWhereInput = {}
+	const ulb_id = req?.body?.auth?.ulb_id
 
 	const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined
 
@@ -94,10 +95,14 @@ export const getBoqInboxDal = async (req: Request) => {
 					procurements: {
 						some: {
 							procurement: {
-								description: {
-									contains: search,
-									mode: 'insensitive',
-								},
+								procurement_stocks: {
+									some: {
+										description: {
+											contains: search,
+											mode: 'insensitive',
+										},
+									}
+								}
 							},
 						},
 					},
@@ -125,9 +130,13 @@ export const getBoqInboxDal = async (req: Request) => {
 			procurement_stocks: {
 				some: {
 					procurement: {
-						subcategory_masterId: {
-							in: subcategory,
-						},
+						procurement_stocks: {
+							some: {
+								subCategory_masterId: {
+									in: subcategory,
+								},
+							}
+						}
 					},
 				},
 			},
@@ -145,13 +154,21 @@ export const getBoqInboxDal = async (req: Request) => {
 			procurement_stocks: {
 				some: {
 					procurement: {
-						brand_masterId: {
-							in: brand,
-						},
+						procurement_stocks: {
+							some: {
+								brand_masterId: {
+									in: brand,
+								},
+							}
+						}
 					},
 				},
 			},
 		}
+	}
+
+	whereClause.boq = {
+		ulb_id: ulb_id
 	}
 
 	try {
@@ -252,7 +269,8 @@ export const getBoqOutboxDal = async (req: Request) => {
 	let count: number
 	let totalPage: number
 	let pagination: pagination = {}
-	const whereClause: any = {}
+	const whereClause: Prisma.finance_boq_outboxWhereInput = {}
+	const ulb_id = req?.body?.auth?.ulb_id
 
 	const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined
 
@@ -275,10 +293,14 @@ export const getBoqOutboxDal = async (req: Request) => {
 					procurements: {
 						some: {
 							procurement: {
-								description: {
-									contains: search,
-									mode: 'insensitive',
-								},
+								procurement_stocks: {
+									some: {
+										description: {
+											contains: search,
+											mode: 'insensitive',
+										},
+									}
+								}
 							},
 						},
 					},
@@ -306,9 +328,13 @@ export const getBoqOutboxDal = async (req: Request) => {
 			procurement_stocks: {
 				some: {
 					procurement: {
-						subcategory_masterId: {
-							in: subcategory,
-						},
+						procurement_stocks: {
+							some: {
+								subCategory_masterId: {
+									in: subcategory,
+								},
+							}
+						}
 					},
 				},
 			},
@@ -326,13 +352,21 @@ export const getBoqOutboxDal = async (req: Request) => {
 			procurement_stocks: {
 				some: {
 					procurement: {
-						brand_masterId: {
-							in: brand,
-						},
+						procurement_stocks: {
+							some: {
+								brand_masterId: {
+									in: brand,
+								},
+							}
+						}
 					},
 				},
 			},
 		}
+	}
+
+	whereClause.boq = {
+		ulb_id: ulb_id
 	}
 
 	try {
@@ -427,6 +461,7 @@ export const getBoqOutboxDal = async (req: Request) => {
 
 export const approveBoqDal = async (req: Request) => {
 	const { reference_no }: { reference_no: string } = req.body
+	const ulb_id = req?.body?.auth?.ulb_id
 	try {
 		const boqData = await prisma.boq.findFirst({
 			where: {
@@ -483,6 +518,7 @@ export const approveBoqDal = async (req: Request) => {
 					destination: 21,
 					from: 'Finance',
 					description: `There is a BOQ approved by finance. Reference Number : ${reference_no}`,
+					ulb_id
 				},
 			})
 		})
@@ -496,6 +532,7 @@ export const approveBoqDal = async (req: Request) => {
 
 export const returnBoqDal = async (req: Request) => {
 	const { reference_no, remark }: { reference_no: string; remark: string } = req.body
+	const ulb_id = req?.body?.auth?.ulb_id
 	try {
 		const boqData = await prisma.boq.findFirst({
 			where: {
@@ -553,6 +590,7 @@ export const returnBoqDal = async (req: Request) => {
 					destination: 21,
 					from: 'Finance',
 					description: `There is a BOQ return from finance. Reference Number : ${reference_no}`,
+					ulb_id
 				},
 			})
 		})
