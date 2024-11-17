@@ -1,5 +1,5 @@
 import { Request } from 'express'
-import { PrismaClient } from '@prisma/client'
+import { Prisma, PrismaClient } from '@prisma/client'
 import generateReceivingNumber from '../../lib/receivingNumberGenerator'
 import { imageUploader } from '../../lib/imageUploader'
 import axios from 'axios'
@@ -230,7 +230,8 @@ export const getReceivedInventoryDal = async (req: Request) => {
 	let count: number
 	let totalPage: number
 	let pagination: pagination = {}
-	const whereClause: any = {}
+	const whereClause: Prisma.da_received_inventory_inboxWhereInput = {}
+	const ulb_id = req?.body?.auth?.ulb_id
 
 	const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined
 
@@ -249,12 +250,16 @@ export const getReceivedInventoryDal = async (req: Request) => {
 				},
 			},
 			{
-				procurement_stocks: {
-					description: {
-						contains: search,
-						mode: 'insensitive',
+				procurement: {
+					procurement_stocks: {
+						some: {
+							description: {
+								contains: search,
+								mode: 'insensitive',
+							},
+						}
 					},
-				},
+				}
 			},
 		]
 	}
@@ -264,43 +269,68 @@ export const getReceivedInventoryDal = async (req: Request) => {
 			...(category[0]
 				? [
 					{
-						category_masterId: {
-							in: category,
-						},
+						procurement: {
+							category_masterId: {
+								in: category,
+							},
+						}
 					},
 				]
 				: []),
 			...(subcategory[0]
 				? [
 					{
-						procurement_stocks: {
-							subcategory_masterId: {
-								in: subcategory,
+						procurement: {
+							procurement_stocks: {
+								some: {
+									subCategory_masterId: {
+										in: subcategory,
+									},
+								}
 							},
-						},
+						}
 					},
 				]
 				: []),
 			...(brand[0]
 				? [
 					{
-						procurement_stocks: {
-							brand_masterId: {
-								in: brand,
+						procurement: {
+							procurement_stocks: {
+								some: {
+									brand_masterId: {
+										in: brand,
+									},
+								}
 							},
-						},
+						}
 					},
 				]
 				: []),
 			...(status[0]
 				? [
 					{
-						status: {
-							in: status.map(Number),
-						},
+						procurement: {
+							status: {
+								in: status.map(Number),
+							},
+						}
 					},
 				]
 				: []),
+			{
+				procurement: {
+					ulb_id: ulb_id
+				}
+			}
+		]
+	} else {
+		whereClause.AND = [
+			{
+				procurement: {
+					ulb_id: ulb_id
+				}
+			}
 		]
 	}
 
@@ -1187,7 +1217,8 @@ export const getReceivedInventoryOutboxDal = async (req: Request) => {
 	let count: number
 	let totalPage: number
 	let pagination: pagination = {}
-	const whereClause: any = {}
+	const whereClause: Prisma.da_received_inventory_outboxWhereInput = {}
+	const ulb_id = req?.body?.auth?.ulb_id
 
 	const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined
 
@@ -1206,12 +1237,16 @@ export const getReceivedInventoryOutboxDal = async (req: Request) => {
 				},
 			},
 			{
-				procurement_stocks: {
-					description: {
-						contains: search,
-						mode: 'insensitive',
+				procurement: {
+					procurement_stocks: {
+						some: {
+							description: {
+								contains: search,
+								mode: 'insensitive',
+							},
+						}
 					},
-				},
+				}
 			},
 		]
 	}
@@ -1221,43 +1256,68 @@ export const getReceivedInventoryOutboxDal = async (req: Request) => {
 			...(category[0]
 				? [
 					{
-						category_masterId: {
-							in: category,
-						},
+						procurement: {
+							category_masterId: {
+								in: category,
+							},
+						}
 					},
 				]
 				: []),
 			...(subcategory[0]
 				? [
 					{
-						procurement_stocks: {
-							subcategory_masterId: {
-								in: subcategory,
+						procurement: {
+							procurement_stocks: {
+								some: {
+									subCategory_masterId: {
+										in: subcategory,
+									},
+								}
 							},
-						},
+						}
 					},
 				]
 				: []),
 			...(brand[0]
 				? [
 					{
-						procurement_stocks: {
-							brand_masterId: {
-								in: brand,
+						procurement: {
+							procurement_stocks: {
+								some: {
+									brand_masterId: {
+										in: brand,
+									},
+								}
 							},
-						},
+						}
 					},
 				]
 				: []),
 			...(status[0]
 				? [
 					{
-						status: {
-							in: status.map(Number),
-						},
+						procurement: {
+							status: {
+								in: status.map(Number),
+							},
+						}
 					},
 				]
 				: []),
+			{
+				procurement: {
+					ulb_id: ulb_id
+				}
+			}
+		]
+	} else {
+		whereClause.AND = [
+			{
+				procurement: {
+					ulb_id: ulb_id
+				}
+			}
 		]
 	}
 

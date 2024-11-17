@@ -36,7 +36,8 @@ export const getEmpServiceReqInboxDal = async (req: Request) => {
 	let count: number
 	let totalPage: number
 	let pagination: pagination = {}
-	const whereClause: any = {}
+	const whereClause: Prisma.dist_emp_service_req_inboxWhereInput = {}
+	const ulb_id = req?.body?.auth?.ulb_id
 
 	const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined
 
@@ -129,6 +130,19 @@ export const getEmpServiceReqInboxDal = async (req: Request) => {
 					},
 				]
 				: []),
+			{
+				emp_service_req: {
+					ulb_id: ulb_id
+				}
+			}
+		]
+	} else {
+		whereClause.AND = [
+			{
+				emp_service_req: {
+					ulb_id: ulb_id
+				}
+			}
 		]
 	}
 
@@ -224,7 +238,8 @@ export const getEmpServiceReqOutboxDal = async (req: Request) => {
 	let count: number
 	let totalPage: number
 	let pagination: pagination = {}
-	const whereClause: any = {}
+	const whereClause: Prisma.dist_emp_service_req_outboxWhereInput = {}
+	const ulb_id = req?.body?.auth?.ulb_id
 
 	const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined
 
@@ -317,6 +332,19 @@ export const getEmpServiceReqOutboxDal = async (req: Request) => {
 					},
 				]
 				: []),
+			{
+				emp_service_req: {
+					ulb_id: ulb_id
+				}
+			}
+		]
+	} else {
+		whereClause.AND = [
+			{
+				emp_service_req: {
+					ulb_id: ulb_id
+				}
+			}
 		]
 	}
 
@@ -406,6 +434,7 @@ export const getEmpServiceReqOutboxDal = async (req: Request) => {
 
 export const approveEmpServiceRequestDal = async (req: Request) => {
 	const { service_no }: { service_no: string } = req.body
+	const ulb_id = req?.body?.auth?.ulb_id
 
 	try {
 		const serviceReq = await prisma.emp_service_request.findFirst({
@@ -485,6 +514,7 @@ export const approveEmpServiceRequestDal = async (req: Request) => {
 					destination: 100,
 					from: await extractRoleName(Number(process.env.ROLE_DIST)),
 					description: `${serviceTranslator(serviceReq?.service)} approved. Service Number : ${service_no}`,
+					ulb_id
 				},
 			})
 		})
@@ -498,6 +528,7 @@ export const approveEmpServiceRequestDal = async (req: Request) => {
 
 export const rejectServiceRequestDal = async (req: Request) => {
 	const { service_no, remark }: { service_no: string, remark: string } = req.body
+	const ulb_id = req?.body?.auth?.ulb_id
 
 	try {
 		const serviceReq = await prisma.emp_service_request.findFirst({
@@ -580,6 +611,7 @@ export const rejectServiceRequestDal = async (req: Request) => {
 					destination: 100,
 					from: await extractRoleName(Number(process.env.ROLE_DIST)),
 					description: `${serviceTranslator(serviceReq?.service)} rejected. Service Number : ${service_no}`,
+					ulb_id
 				},
 			})
 		})

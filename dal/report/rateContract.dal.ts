@@ -16,6 +16,7 @@ export const getRateContractReportDal = async (req: Request) => {
 	let totalPage: number
 	let pagination: pagination = {}
 	const whereClause: Prisma.rate_contractWhereInput = {}
+	const ulb_id = req?.body?.auth?.ulb_id
 
 	const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined
 
@@ -69,7 +70,16 @@ export const getRateContractReportDal = async (req: Request) => {
 							}
 						}
 					]
-					: [])
+					: []),
+				{
+					ulb_id: ulb_id,
+				},
+			]
+		} else {
+			whereClause.AND = [
+				{
+					ulb_id: ulb_id,
+				},
 			]
 		}
 

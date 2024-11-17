@@ -1,5 +1,5 @@
 import { Request } from 'express'
-import { emp_service_request, PrismaClient, service_enum } from '@prisma/client'
+import { emp_service_request, Prisma, PrismaClient, service_enum } from '@prisma/client'
 import getErrorMessage from '../../lib/getErrorMessage'
 import { pagination } from '../../type/common.type'
 import generateEmpServiceNumber from '../../lib/empServiceNumberGenerator'
@@ -52,6 +52,7 @@ export const createEmpServiceRequestDal = async (req: Request) => {
 			inventoryId: inventoryId,
 			user_id: auth?.id,
 			status: 10,
+			ulb_id: ulb_id
 		}
 
 		let serviceReq: any
@@ -113,6 +114,7 @@ export const createEmpServiceRequestDal = async (req: Request) => {
 					destination: 42,
 					from: await extractRoleName(Number(process.env.ROLE_EMP)),
 					description: `There is a ${serviceTranslator(service)}. Service Number : ${service_no}`,
+					ulb_id
 				},
 			})
 		})
@@ -134,7 +136,8 @@ export const getServiceReqInboxDal = async (req: Request) => {
 	let count: number
 	let totalPage: number
 	let pagination: pagination = {}
-	const whereClause: any = {}
+	const whereClause: Prisma.emp_service_req_inboxWhereInput = {}
+	const ulb_id = req?.body?.auth?.ulb_id
 
 	const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined
 
@@ -232,6 +235,10 @@ export const getServiceReqInboxDal = async (req: Request) => {
 
 	whereClause.emp_service_req = {
 		user_id: req?.body?.auth?.id
+	}
+
+	whereClause.emp_service_req = {
+		ulb_id: ulb_id
 	}
 
 	try {
@@ -326,7 +333,8 @@ export const getServiceReqOutboxDal = async (req: Request) => {
 	let count: number
 	let totalPage: number
 	let pagination: pagination = {}
-	const whereClause: any = {}
+	const whereClause: Prisma.emp_service_req_outboxWhereInput = {}
+	const ulb_id = req?.body?.auth?.ulb_id
 
 	const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined
 
@@ -424,6 +432,10 @@ export const getServiceReqOutboxDal = async (req: Request) => {
 
 	whereClause.emp_service_req = {
 		user_id: req?.body?.auth?.id
+	}
+
+	whereClause.emp_service_req = {
+		ulb_id: ulb_id
 	}
 
 	try {

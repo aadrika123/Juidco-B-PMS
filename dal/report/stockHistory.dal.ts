@@ -16,6 +16,7 @@ export const getStockListDal = async (req: Request) => {
 	let totalPage: number
 	let pagination: pagination = {}
 	const whereClause: Prisma.inventoryWhereInput = {}
+	const ulb_id = req?.body?.auth?.ulb_id
 
 	const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined
 
@@ -64,7 +65,16 @@ export const getStockListDal = async (req: Request) => {
 						}
 					}
 				]
-				: [])
+				: []),
+			{
+				ulb_id: ulb_id
+			}
+		]
+	} else {
+		whereClause.AND = [
+			{
+				ulb_id: ulb_id
+			}
 		]
 	}
 

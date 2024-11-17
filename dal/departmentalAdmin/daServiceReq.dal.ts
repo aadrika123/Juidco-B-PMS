@@ -4,7 +4,7 @@ Status - Closed
 */
 
 import { Request } from 'express'
-import { PrismaClient, service_request, service_enum } from '@prisma/client'
+import { PrismaClient, service_request, service_enum, Prisma } from '@prisma/client'
 import { serviceTranslator } from '../distributor/distServiceReq.dal'
 import getErrorMessage from '../../lib/getErrorMessage'
 import { pagination } from '../../type/common.type'
@@ -20,7 +20,8 @@ export const getServiceReqInboxDal = async (req: Request) => {
 	let count: number
 	let totalPage: number
 	let pagination: pagination = {}
-	const whereClause: any = {}
+	const whereClause: Prisma.da_service_req_inboxWhereInput = {}
+	const ulb_id = req?.body?.auth?.ulb_id
 
 	const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined
 
@@ -113,6 +114,19 @@ export const getServiceReqInboxDal = async (req: Request) => {
 					},
 				]
 				: []),
+			{
+				service_req: {
+					ulb_id: ulb_id
+				}
+			}
+		]
+	} else {
+		whereClause.AND = [
+			{
+				service_req: {
+					ulb_id: ulb_id
+				}
+			}
 		]
 	}
 
@@ -208,7 +222,8 @@ export const getServiceReqOutboxDal = async (req: Request) => {
 	let count: number
 	let totalPage: number
 	let pagination: pagination = {}
-	const whereClause: any = {}
+	const whereClause: Prisma.da_service_req_outboxWhereInput = {}
+	const ulb_id = req?.body?.auth?.ulb_id
 
 	const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined
 
@@ -301,6 +316,19 @@ export const getServiceReqOutboxDal = async (req: Request) => {
 					},
 				]
 				: []),
+			{
+				service_req: {
+					ulb_id: ulb_id
+				}
+			}
+		]
+	} else {
+		whereClause.AND = [
+			{
+				service_req: {
+					ulb_id: ulb_id
+				}
+			}
 		]
 	}
 
@@ -390,6 +418,7 @@ export const getServiceReqOutboxDal = async (req: Request) => {
 
 export const approveServiceRequestDal = async (req: Request) => {
 	const { service_no }: { service_no: string } = req.body
+	const ulb_id = req?.body?.auth?.ulb_id
 
 	try {
 		const serviceReq = await prisma.service_request.findFirst({
@@ -456,6 +485,7 @@ export const approveServiceRequestDal = async (req: Request) => {
 					destination: 81,
 					from: await extractRoleName(Number(process.env.ROLE_DA)),
 					description: `There is a ${serviceTranslator(serviceReq?.service)}. Service Number : ${service_no}`,
+					ulb_id
 				},
 			})
 			await tx.notification.create({
@@ -465,6 +495,7 @@ export const approveServiceRequestDal = async (req: Request) => {
 					destination: 41,
 					from: await extractRoleName(Number(process.env.ROLE_DA)),
 					description: `${serviceTranslator(serviceReq?.service)} forwarded to Inventory Admin. Service Number : ${service_no}`,
+					ulb_id
 				},
 			})
 		})
@@ -478,6 +509,7 @@ export const approveServiceRequestDal = async (req: Request) => {
 
 export const rejectServiceRequestDal = async (req: Request) => {
 	const { service_no }: { service_no: string } = req.body
+	const ulb_id = req?.body?.auth?.ulb_id
 
 	try {
 		const serviceReq = await prisma.service_request.findFirst({
@@ -544,6 +576,7 @@ export const rejectServiceRequestDal = async (req: Request) => {
 					destination: 41,
 					from: await extractRoleName(Number(process.env.ROLE_DA)),
 					description: `${serviceTranslator(serviceReq?.service)} rejected. Service Number : ${service_no}`,
+					ulb_id
 				},
 			})
 		})
@@ -557,6 +590,7 @@ export const rejectServiceRequestDal = async (req: Request) => {
 
 export const returnServiceRequestDal = async (req: Request) => {
 	const { service_no, remark }: { service_no: string; remark: string } = req.body
+	const ulb_id = req?.body?.auth?.ulb_id
 
 	try {
 		const serviceReq = await prisma.service_request.findFirst({
@@ -624,6 +658,7 @@ export const returnServiceRequestDal = async (req: Request) => {
 					destination: 41,
 					from: await extractRoleName(Number(process.env.ROLE_DA)),
 					description: `${serviceTranslator(serviceReq?.service)} returned from DA. Service Number : ${service_no}`,
+					ulb_id
 				},
 			})
 		})

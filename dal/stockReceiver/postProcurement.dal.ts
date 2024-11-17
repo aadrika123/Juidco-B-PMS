@@ -1,5 +1,5 @@
 import { Request } from 'express'
-import { PrismaClient } from '@prisma/client'
+import { Prisma, PrismaClient } from '@prisma/client'
 import getErrorMessage from '../../lib/getErrorMessage'
 import { pagination } from '../../type/common.type'
 
@@ -13,7 +13,8 @@ export const getPostProcurementDal = async (req: Request) => {
 	let count: number
 	let totalPage: number
 	let pagination: pagination = {}
-	const whereClause: any = {}
+	const whereClause: Prisma.sr_post_procurement_inboxWhereInput = {}
+	const ulb_id = req?.body?.auth?.ulb_id
 
 	const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined
 
@@ -33,10 +34,14 @@ export const getPostProcurementDal = async (req: Request) => {
 			},
 			{
 				procurement: {
-					description: {
-						contains: search,
-						mode: 'insensitive',
-					},
+					procurement_stocks: {
+						some: {
+							description: {
+								contains: search,
+								mode: 'insensitive',
+							},
+						}
+					}
 				},
 			},
 		]
@@ -52,9 +57,13 @@ export const getPostProcurementDal = async (req: Request) => {
 	}
 	if (subcategory[0]) {
 		whereClause.procurement = {
-			subcategory_masterId: {
-				in: subcategory,
-			},
+			procurement_stocks: {
+				some: {
+					subCategory_masterId: {
+						in: subcategory,
+					},
+				}
+			}
 		}
 	}
 	if (status[0]) {
@@ -66,10 +75,17 @@ export const getPostProcurementDal = async (req: Request) => {
 	}
 	if (brand[0]) {
 		whereClause.procurement = {
-			brand: {
-				in: brand,
-			},
+			procurement_stocks: {
+				some: {
+					brand_masterId: {
+						in: brand,
+					},
+				}
+			}
 		}
+	}
+	whereClause.procurement = {
+		ulb_id: ulb_id
 	}
 
 	try {

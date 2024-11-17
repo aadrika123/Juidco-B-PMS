@@ -1,5 +1,5 @@
 import { Request } from 'express'
-import { PrismaClient } from '@prisma/client'
+import { Prisma, PrismaClient } from '@prisma/client'
 import { imageUploader } from '../../lib/imageUploader'
 import axios from 'axios'
 import getErrorMessage from '../../lib/getErrorMessage'
@@ -231,7 +231,8 @@ export const getReceivedInventoryDal = async (req: Request) => {
 	let count: number
 	let totalPage: number
 	let pagination: pagination = {}
-	const whereClause: any = {}
+	const whereClause: Prisma.sr_received_inventory_inboxWhereInput = {}
+	const ulb_id = req?.body?.auth?.ulb_id
 
 	const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined
 
@@ -250,60 +251,81 @@ export const getReceivedInventoryDal = async (req: Request) => {
 				},
 			},
 			{
-				procurement_stocks: {
-					description: {
-						contains: search,
-						mode: 'insensitive',
-					},
+				procurement: {
+					procurement_stocks: {
+						some: {
+							description: {
+								contains: search,
+								mode: 'insensitive',
+							},
+						}
+					}
 				},
 			},
 		]
 	}
 
-	if (category[0] || subcategory[0] || brand[0]) {
-		whereClause.AND = [
-			...(category[0]
-				? [
-					{
+	// if (category[0] || subcategory[0] || brand[0]) {
+	whereClause.AND = [
+		...(category[0]
+			? [
+				{
+					procurement: {
 						category_masterId: {
 							in: category,
 						},
-					},
-				]
-				: []),
-			...(subcategory[0]
-				? [
-					{
+					}
+				},
+			]
+			: []),
+		...(subcategory[0]
+			? [
+				{
+					procurement: {
 						procurement_stocks: {
-							subcategory_masterId: {
-								in: subcategory,
-							},
-						},
+							some: {
+								subCategory_masterId: {
+									in: subcategory,
+								},
+							}
+						}
 					},
-				]
-				: []),
-			...(brand[0]
-				? [
-					{
+				},
+			]
+			: []),
+		...(brand[0]
+			? [
+				{
+					procurement: {
 						procurement_stocks: {
-							brand_masterId: {
-								in: brand,
+							some: {
+								brand_masterId: {
+									in: brand,
+								},
 							},
-						},
-					},
-				]
-				: []),
-			...(status[0]
-				? [
-					{
+						}
+					}
+				},
+			]
+			: []),
+		...(status[0]
+			? [
+				{
+					procurement: {
 						status: {
 							in: status.map(Number),
 						},
-					},
-				]
-				: []),
-		]
-	}
+					}
+				},
+			]
+			: []),
+		{
+			procurement: {
+				ulb_id: ulb_id
+			}
+		}
+	]
+	// }
 
 	try {
 		count = await prisma.sr_received_inventory_inbox.count({
@@ -865,7 +887,8 @@ export const getReceivedInventoryOutboxDal = async (req: Request) => {
 	let count: number
 	let totalPage: number
 	let pagination: pagination = {}
-	const whereClause: any = {}
+	const whereClause: Prisma.sr_received_inventory_outboxWhereInput = {}
+	const ulb_id = req?.body?.auth?.ulb_id
 
 	const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined
 
@@ -884,60 +907,81 @@ export const getReceivedInventoryOutboxDal = async (req: Request) => {
 				},
 			},
 			{
-				procurement_stocks: {
-					description: {
-						contains: search,
-						mode: 'insensitive',
-					},
+				procurement: {
+					procurement_stocks: {
+						some: {
+							description: {
+								contains: search,
+								mode: 'insensitive',
+							},
+						}
+					}
 				},
 			},
 		]
 	}
 
-	if (category[0] || subcategory[0] || brand[0]) {
-		whereClause.AND = [
-			...(category[0]
-				? [
-					{
+	// if (category[0] || subcategory[0] || brand[0]) {
+	whereClause.AND = [
+		...(category[0]
+			? [
+				{
+					procurement: {
 						category_masterId: {
 							in: category,
 						},
-					},
-				]
-				: []),
-			...(subcategory[0]
-				? [
-					{
+					}
+				},
+			]
+			: []),
+		...(subcategory[0]
+			? [
+				{
+					procurement: {
 						procurement_stocks: {
-							subcategory_masterId: {
-								in: subcategory,
-							},
-						},
+							some: {
+								subCategory_masterId: {
+									in: subcategory,
+								},
+							}
+						}
 					},
-				]
-				: []),
-			...(brand[0]
-				? [
-					{
+				},
+			]
+			: []),
+		...(brand[0]
+			? [
+				{
+					procurement: {
 						procurement_stocks: {
-							brand_masterId: {
-								in: brand,
+							some: {
+								brand_masterId: {
+									in: brand,
+								},
 							},
-						},
-					},
-				]
-				: []),
-			...(status[0]
-				? [
-					{
+						}
+					}
+				},
+			]
+			: []),
+		...(status[0]
+			? [
+				{
+					procurement: {
 						status: {
 							in: status.map(Number),
 						},
-					},
-				]
-				: []),
-		]
-	}
+					}
+				},
+			]
+			: []),
+		{
+			procurement: {
+				ulb_id: ulb_id
+			}
+		}
+	]
+	// }
 
 	try {
 		count = await prisma.sr_received_inventory_outbox.count({
@@ -1156,23 +1200,24 @@ const getRateContractSupplier = async (id: string) => {
 }
 
 export const addToInventoryDal = async (req: Request) => {
-    const { procurement_no, procurement_stock_id, dead_stock, inventory, warranty } = req.body;
-    const img = req.files;
-    let inventoryId = inventory;
-    let exist: boolean = false;
-    let currentInventoryId: string;
-
-    try {
-        const totalNonAddedReceiving: any = await prisma.receivings.aggregate({
-            where: {
-                procurement_no: procurement_no || '',
-                procurement_stock_id: procurement_stock_id,
-                is_added: false,
-            },
-            _sum: {
-                received_quantity: true,
-            },
-        });
+	const { procurement_no, procurement_stock_id, dead_stock, inventory, warranty } = req.body
+	const img = req.files
+	const formattedAuth = typeof req?.body?.auth !== 'string' ? JSON.stringify(req?.body?.auth) : req.body?.auth
+	const ulb_id = JSON.parse(formattedAuth)?.ulb_id
+	let inventoryId = inventory
+	let exist: boolean = false
+	let currentInventoryId: string
+	try {
+		const totalNonAddedReceiving: any = await prisma.receivings.aggregate({
+			where: {
+				procurement_no: procurement_no || '',
+				procurement_stock_id: procurement_stock_id,
+				is_added: false,
+			},
+			_sum: {
+				received_quantity: true,
+			},
+		})
 
         if (totalNonAddedReceiving?._sum?.received_quantity === null) {
             throw { error: true, message: 'No receiving to be added' };

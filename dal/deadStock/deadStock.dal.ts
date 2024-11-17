@@ -15,6 +15,7 @@ export const getItemDal = async (req: Request) => {
 	let totalPage: number
 	let pagination: pagination = {}
 	const whereClause: Prisma.inventory_dead_stockWhereInput = {}
+	const ulb_id = req?.body?.auth?.ulb_id
 
 	// const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined
 	const search: any[] = Array.isArray(req?.query?.search) ? req?.query?.search : [req?.query?.search]
@@ -49,6 +50,14 @@ export const getItemDal = async (req: Request) => {
 			}
 		}
 	}
+
+	whereClause.AND = [
+		{
+			inventory: {
+				ulb_id: ulb_id
+			}
+		}
+	]
 
 	try {
 		count = await prisma.inventory_dead_stock.count({

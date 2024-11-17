@@ -52,7 +52,8 @@ export const createPreProcurementDal = async (req: Request) => {
 					category: { connect: { id: category } },
 					total_rate: total_rate,
 					is_rate_contract: is_rate_contract,
-					...(is_rate_contract && { rate_contract_supplier: supplier })
+					...(is_rate_contract && { rate_contract_supplier: supplier }),
+					ulb_id: ulb_id
 				},
 			})
 			await Promise.all(
@@ -265,6 +266,7 @@ export const getPreProcurementDal = async (req: Request) => {
 	let totalPage: number
 	let pagination: pagination = {}
 	const whereClause: Prisma.ia_pre_procurement_inboxWhereInput = {}
+	const ulb_id = req?.body?.auth?.ulb_id
 
 	const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined
 
@@ -351,6 +353,19 @@ export const getPreProcurementDal = async (req: Request) => {
 					},
 				]
 				: []),
+			{
+				procurement: {
+					ulb_id: ulb_id
+				}
+			}
+		]
+	} else {
+		whereClause.AND = [
+			{
+				procurement: {
+					ulb_id: ulb_id
+				}
+			}
 		]
 	}
 
@@ -545,6 +560,8 @@ export const getPreProcurementByOrderNoDal = async (req: Request) => {
 export const forwardToDaDal = async (req: Request) => {
 	const { preProcurement }: { preProcurement: string } = req.body
 	const img = req.files
+	const formattedAuth = typeof req?.body?.auth !== 'string' ? JSON.stringify(req?.body?.auth) : req.body?.auth
+	const ulb_id = JSON.parse(formattedAuth)?.ulb_id
 
 	try {
 		await Promise.all(
@@ -647,6 +664,7 @@ export const forwardToDaDal = async (req: Request) => {
 							destination: 20,
 							from: await extractRoleName(Number(process.env.ROLE_IA)),
 							description: `There is a new procurement to be approved. Procurement Number : ${inbox?.procurement_no}`,
+							ulb_id
 						},
 					}),
 				])
@@ -662,6 +680,7 @@ export const forwardToDaDal = async (req: Request) => {
 export const forwardToLevel1Dal = async (req: Request) => {
 	const { procurement_no }: { procurement_no: string } = req.body
 	const img = req?.files
+	const ulb_id = req?.body?.auth?.ulb_id
 
 	try {
 		const procData = await prisma.procurement.findFirst({
@@ -752,6 +771,7 @@ export const forwardToLevel1Dal = async (req: Request) => {
 					destination: 50,
 					from: await extractRoleName(Number(process.env.ROLE_IA)),
 					description: `There is a new procurement to be approved. Procurement Number : ${procurement_no}`,
+					ulb_id
 				},
 			})
 		})
@@ -941,6 +961,7 @@ export const getPreProcurementOutboxDal = async (req: Request) => {
 	let totalPage: number
 	let pagination: pagination = {}
 	const whereClause: Prisma.ia_pre_procurement_outboxWhereInput = {}
+	const ulb_id = req?.body?.auth?.ulb_id
 
 	const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined
 
@@ -1027,6 +1048,19 @@ export const getPreProcurementOutboxDal = async (req: Request) => {
 					},
 				]
 				: []),
+			{
+				procurement: {
+					ulb_id: ulb_id
+				}
+			}
+		]
+	} else {
+		whereClause.AND = [
+			{
+				procurement: {
+					ulb_id: ulb_id
+				}
+			}
 		]
 	}
 
@@ -1166,6 +1200,7 @@ export const getPreProcurementRejectedDal = async (req: Request) => {
 	let totalPage: number
 	let pagination: pagination = {}
 	const whereClause: Prisma.ia_pre_procurement_inboxWhereInput = {}
+	const ulb_id = req?.body?.auth?.ulb_id
 
 	const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined
 
@@ -1259,6 +1294,11 @@ export const getPreProcurementRejectedDal = async (req: Request) => {
 				},
 			]
 			: []),
+		{
+			procurement: {
+				ulb_id: ulb_id
+			}
+		}
 	]
 	// }
 
@@ -1337,7 +1377,8 @@ export const getPreProcurementReleasedDal = async (req: Request) => {
 	let count: number
 	let totalPage: number
 	let pagination: pagination = {}
-	const whereClause: any = {}
+	const whereClause: Prisma.ia_pre_procurement_inboxWhereInput = {}
+	const ulb_id = req?.body?.auth?.ulb_id
 
 	const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined
 
@@ -1357,10 +1398,14 @@ export const getPreProcurementReleasedDal = async (req: Request) => {
 			},
 			{
 				procurement: {
-					description: {
-						contains: search,
-						mode: 'insensitive',
-					},
+					procurement_stocks: {
+						some: {
+							description: {
+								contains: search,
+								mode: 'insensitive',
+							},
+						}
+					}
 				},
 			},
 		]
@@ -1376,9 +1421,13 @@ export const getPreProcurementReleasedDal = async (req: Request) => {
 	}
 	if (subcategory[0]) {
 		whereClause.procurement = {
-			subcategory_masterId: {
-				in: subcategory,
-			},
+			procurement_stocks: {
+				some: {
+					subCategory_masterId: {
+						in: subcategory,
+					},
+				}
+			}
 		}
 	}
 	if (status[0]) {
@@ -1390,16 +1439,35 @@ export const getPreProcurementReleasedDal = async (req: Request) => {
 	}
 	if (brand[0]) {
 		whereClause.procurement = {
-			brand_masterId: {
-				in: brand,
-			},
+			procurement_stocks: {
+				some: {
+					brand_masterId: {
+						in: brand,
+					},
+				}
+			}
 		}
 	}
-	whereClause.procurement = {
-		status: {
-			in: [12, 22]
+	// whereClause.procurement = {
+	// 	status: {
+	// 		in: [12, 22]
+	// 	},
+	// }
+
+	whereClause.AND = [
+		{
+			procurement: {
+				status: {
+					in: [12, 22]
+				},
+			}
 		},
-	}
+		{
+			procurement: {
+				ulb_id: ulb_id
+			}
+		}
+	]
 
 	try {
 		count = await prisma.ia_pre_procurement_inbox.count({

@@ -14,6 +14,7 @@ export const getNotificationsDal = async (req: Request) => {
 				role_id: {
 					in: roles,
 				},
+				ulb_id: authData?.ulb_id
 			},
 		})
 		const unseenCount = await prisma.notification.count({
@@ -22,6 +23,7 @@ export const getNotificationsDal = async (req: Request) => {
 					in: roles,
 				},
 				isSeen: false,
+				ulb_id: authData?.ulb_id
 			},
 		})
 		const notifications = await prisma.notification.findMany({
@@ -29,6 +31,7 @@ export const getNotificationsDal = async (req: Request) => {
 				role_id: {
 					in: roles,
 				},
+				ulb_id: authData?.ulb_id
 			},
 			select: {
 				id: true,

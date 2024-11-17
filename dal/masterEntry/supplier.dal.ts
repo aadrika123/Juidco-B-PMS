@@ -6,10 +6,12 @@ const prisma = new PrismaClient()
 
 export const createSupplierDal = async (req: Request) => {
 	const { name, gst_no } = req.body
+	const ulb_id = req?.body?.auth?.ulb_id
 
 	const data: any = {
 		name: name,
 		gst_no: gst_no,
+		ulb_id: ulb_id
 	}
 
 	try {
@@ -32,6 +34,7 @@ export const getSupplierDal = async (req: Request) => {
 	let totalPage: number
 	let pagination: pagination = {}
 	const whereClause: any = {}
+	const ulb_id = req?.body?.auth?.ulb_id
 
 	const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined
 	const status: boolean | undefined = req?.query?.status === undefined ? undefined : req?.query?.status === 'true' ? true : false
@@ -63,6 +66,14 @@ export const getSupplierDal = async (req: Request) => {
 				: []),
 		]
 	}
+
+	whereClause.AND = [
+		...(Array.isArray(whereClause?.AND) ? [whereClause?.AND] : []),
+		{
+			ulb_id: ulb_id,
+		},
+	]
+
 	try {
 		count = await prisma.supplier_master.count({
 			where: whereClause,
@@ -118,10 +129,12 @@ export const getSupplierByIdDal = async (req: Request) => {
 }
 
 export const getSupplierActiveOnlyDal = async (req: Request) => {
+	const ulb_id = req?.body?.auth?.ulb_id
 	try {
 		const result = await prisma.supplier_master.findMany({
 			where: {
 				status: true,
+				ulb_id: ulb_id
 			},
 			orderBy: {
 				updatedAt: 'desc',
