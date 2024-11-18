@@ -321,6 +321,16 @@ export const getTotalRemainingStocksDal = async (req: Request) => {
                     },
                 });
 
+                // Query warranty stock data for the inventory item
+                const warrantyStock = await prisma.inventory_warranty.aggregate({
+                    where: {
+                        inventoryId: item?.id,
+                    },
+                    _sum: {
+                        quantity: true,
+                    },
+                });
+
                 // If products data is available, calculate the total remaining quantity
                 if (products.length !== 0) {
                     item.products = products;
@@ -339,10 +349,14 @@ export const getTotalRemainingStocksDal = async (req: Request) => {
                     const openingQuantity = Number(productsTotal[0]?.opening_quantity) || 0;
                     const deadStockQuantity = deadStock?._sum?.quantity || 0;
                     const stockReqQuantity = stockReq?._sum?.quantity || 0;
+                    const warrantyStockQuantity = warrantyStock?._sum?.quantity || 0;
 
                     item.dead_stock = deadStockQuantity;
-					console.log("openingQuantity",openingQuantity,"deadStockQuantity",deadStockQuantity,"stockReqQuantity",stockReqQuantity)
-                    item.remaining_quantity = openingQuantity - deadStockQuantity - stockReqQuantity;
+                    item.warranty_stock = warrantyStockQuantity;
+
+                    // Calculate remaining quantity, now subtracting warranty stock
+                    item.remaining_quantity = openingQuantity - deadStockQuantity - stockReqQuantity - warrantyStockQuantity;
+					console.log("openingQuantity",openingQuantity  ,"deadStockQuantity", deadStockQuantity , "stockReqQuantity", stockReqQuantity , "warrantyStockQuantity", warrantyStockQuantity)
 
                     // Push to dataToSend array
                     dataToSend.push(item);
