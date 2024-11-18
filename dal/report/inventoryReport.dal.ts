@@ -194,6 +194,292 @@ export const getTotalStocksDal = async (req: Request) => {
 	}
 }
 
+// export const getProcurementStocksDal = async (req: Request) => {
+// 	const page: number | undefined = Number(req?.query?.page)
+// 	const take: number | undefined = Number(req?.query?.take)
+// 	const from = req?.query?.from//yyyy-mm-dd
+// 	const to = req?.query?.to//yyyy-mm-dd
+// 	const startIndex: number | undefined = (page - 1) * take
+// 	const endIndex: number | undefined = startIndex + take
+// 	let count: number
+// 	let totalPage: number
+// 	let pagination: pagination = {}
+// 	const whereClause: Prisma.procurementWhereInput = {}
+// 	const ulb_id = req?.body?.auth?.ulb_id
+// 	const dataToSend: any[] = []
+
+// 	const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined
+
+// 	const category: any[] = Array.isArray(req?.query?.category) ? req?.query?.category : [req?.query?.category]
+// 	const subcategory: any[] = Array.isArray(req?.query?.scategory) ? req?.query?.scategory : [req?.query?.scategory]
+
+// 	//creating search options for the query
+// 	if (search) {
+// 		whereClause.OR = [
+// 			{
+// 				procurement_no: {
+// 					contains: search,
+// 					mode: 'insensitive',
+// 				  },
+// 			}
+// 		]
+// 	}
+
+// 	if (category[0] || subcategory[0]) {
+// 		whereClause.AND = [
+// 			...(category[0]
+// 				? [
+// 					{
+// 						category_masterId: {
+// 							in: category,
+// 						},
+
+// 					},
+// 				]
+// 				: []),
+// 			...(subcategory[0]
+// 				? [
+// 					{
+// 						// subcategory_masterId: {
+// 						// 	in: subcategory,
+// 						// },
+// 						category_masterId: {
+// 							in: subcategory, 
+// 						  },
+// 					},
+// 				]
+// 				: []),
+// 			{
+// 				ulb_id: ulb_id
+// 			}
+// 		]
+// 	} else {
+// 		whereClause.AND = [
+// 			{
+// 				ulb_id: ulb_id
+// 			}
+// 		]
+// 	}
+
+// 	try {
+// 		count = await prisma.procurement.count({
+// 			where: whereClause,
+// 		})
+// 		const result = await prisma.procurement.findMany({
+// 			orderBy: {
+// 				updatedAt: 'desc',
+// 			},
+// 			where: whereClause,
+// 			...(page && { skip: startIndex }),
+// 			...(take && { take: take }),
+// 			select: {
+// 				id: true,
+// 				category: {
+// 					select: {
+// 						id: true,
+// 						name: true,
+// 					}
+// 				},
+// 				supplier_master: true,
+// 				status: true,
+// 			},
+// 		});
+		
+		
+
+
+// 		const formattedFrom = from ? `${from} 00:00:00` : null;
+// 		const formattedTo = to ? `${to} 23:59:59` : null;
+
+// 		await Promise.all(
+// 			result.map(async (item: any, index: number) => {
+// 				const products: any[] = await prisma.$queryRawUnsafe(`
+// 					SELECT sum(opening_quantity) as opening_quantity, serial_no,brand,quantity,opening_quantity,is_available,procurement_stock_id,updatedat
+// 					FROM product.product_${item?.subcategory?.name.toLowerCase().replace(/\s/g, '')}
+// 					WHERE inventory_id = '${item?.id}'
+// 						${formattedFrom && formattedTo ? `and updatedat between '${formattedFrom}' and '${formattedTo}'` : ''}
+// 					group by serial_no,brand,quantity,opening_quantity,is_available,procurement_stock_id,updatedat
+// 					`)
+
+// 				const productsTotal: any[] = await prisma.$queryRawUnsafe(`
+// 						SELECT sum(opening_quantity) as opening_quantity
+// 						FROM product.product_${item?.subcategory?.name.toLowerCase().replace(/\s/g, '')}
+// 						WHERE inventory_id = '${item?.id}'
+// 							${formattedFrom && formattedTo ? `and updatedat between '${formattedFrom}' and '${formattedTo}'` : ''}
+// 						`)
+
+// 				const stockReq = await prisma.stock_req_product.aggregate({
+// 					where: {
+// 						inventoryId: item?.id
+// 					},
+// 					_sum: {
+// 						quantity: true
+// 					}
+// 				})
+
+// 				if (products.length !== 0) {
+// 					// item.opening_quantity = products[0]?.opening_quantity
+// 					item.products = products
+// 					const deadStock = await prisma.inventory_dead_stock.aggregate({
+// 						where: {
+// 							inventoryId: item?.id
+// 						},
+// 						_sum: {
+// 							quantity: true
+// 						}
+// 					})
+// 					item.dead_stock = deadStock?._sum?.quantity
+// 					item.total_quantity = Number(productsTotal[0]?.opening_quantity) + Number(deadStock?._sum?.quantity) + Number(stockReq?._sum.quantity)
+// 					// item.quantity = Number(productsTotal[0]?.opening_quantity)
+// 					item.quantity = item.quantity
+// 					dataToSend.push(item);
+
+//       dataToSend.sort((a, b) => {
+//     if (a.name < b.name) return -1;
+//     if (a.name > b.name) return 1;
+//     return a.quantity - b.quantity; 
+// });
+// 				} else {
+// 					count = count - 1
+// 				}
+// 			})
+// 		)
+
+// 		totalPage = Math.ceil(count / take)
+// 		if (endIndex < count) {
+// 			pagination.next = {
+// 				page: page + 1,
+// 				take: take,
+// 			}
+// 		}
+// 		if (startIndex > 0) {
+// 			pagination.prev = {
+// 				page: page - 1,
+// 				take: take,
+// 			}
+// 		}
+// 		pagination.currentPage = page
+// 		pagination.currentTake = take
+// 		pagination.totalPage = totalPage
+// 		pagination.totalResult = count
+// 		return {
+// 			data: dataToSend,
+// 			pagination: pagination,
+// 		}
+// 	} catch (err: any) {
+// 		console.log(err)
+// 		return { error: true, message: getErrorMessage(err) }
+// 	}
+//   };
+  
+export const getProcurementStocksDal = async (req: Request) => {
+	const page: number | undefined = Number(req?.query?.page) || 1; 
+	const take: number | undefined = Number(req?.query?.take) || 10; 
+	const from = req?.query?.from; 
+	const to = req?.query?.to; 
+	const ulb_id = req?.body?.auth?.ulb_id; 
+	
+	let category_masterid = req?.query?.category_masterid;
+	if (Array.isArray(category_masterid)) {
+	  category_masterid = category_masterid[0]; 
+	}
+  
+	const startIndex: number = (page - 1) * take;
+	const endIndex: number = startIndex + take;
+	let count: number;
+	let totalPage: number;
+	let pagination: pagination = { currentPage: page, currentTake: take, totalPage: 0, totalResult: 0 };
+  
+
+	const whereClause: Prisma.procurementWhereInput = {};
+  
+	if (ulb_id) {
+	  whereClause.ulb_id = ulb_id; 
+	}
+  
+	if (from && to) {
+	  whereClause.updatedAt = {
+		gte: new Date(`${from}T00:00:00Z`), 
+		lte: new Date(`${to}T23:59:59Z`), 
+	  };
+	}
+  
+	if (category_masterid) {
+	  whereClause.category = {
+		id: category_masterid, 
+	  };
+	}
+  
+	const dataToSend: any[] = [];
+  
+	try {
+	  const result = await prisma.procurement.findMany({
+		orderBy: {
+		  updatedAt: 'desc', 
+		},
+		where: whereClause,
+		skip: startIndex, 
+		take: take, 
+		select: {
+		  id: true,
+		  category: {
+			select: {
+			  id: true,
+			  name: true,
+			},
+		  },
+		  supplier_master: true, 
+		  status: true,
+		  procurement_stocks: {
+			select: {
+			  description: true, 
+			},
+		  },
+		},
+	  });
+
+	  dataToSend.push(...result);
+
+	  count = await prisma.procurement.count({
+		where: whereClause,
+	  });
+  
+
+	  totalPage = Math.ceil(count / take);
+
+	  if (endIndex < count) {
+		pagination.next = {
+		  page: page + 1, 
+		  take: take,
+		};
+	  }
+  
+	  if (startIndex > 0) {
+		pagination.prev = {
+		  page: page - 1, 
+		  take: take,
+		};
+	  }
+  
+	  pagination.totalPage = totalPage;
+	  pagination.totalResult = count;
+  
+	  return {
+		data: dataToSend,
+		pagination: pagination,
+	  };
+	} catch (err: any) {
+	  console.log(err); 
+	  return { error: true, message: getErrorMessage(err) }; 
+	}
+  };
+  
+  
+  
+  
+
+
+
 export const getTotalRemainingStocksDal = async (req: Request) => {
     const page: number | undefined = Number(req?.query?.page);
     const take: number | undefined = Number(req?.query?.take);
