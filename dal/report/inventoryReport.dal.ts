@@ -212,7 +212,6 @@ export const getTotalRemainingStocksDal = async (req: Request) => {
     const category: any[] = Array.isArray(req?.query?.category) ? req?.query?.category : [req?.query?.category];
     const subcategory: any[] = Array.isArray(req?.query?.scategory) ? req?.query?.scategory : [req?.query?.scategory];
 
-    // creating search options for the query
     if (search) {
         whereClause.OR = [
             {
@@ -292,7 +291,6 @@ export const getTotalRemainingStocksDal = async (req: Request) => {
 
         await Promise.all(
             result.map(async (item: any) => {
-                // Query products data for the inventory item
                 const products: any[] = await prisma.$queryRawUnsafe(`
                     SELECT sum(opening_quantity) as opening_quantity, 
                         serial_no, brand, quantity, opening_quantity, 
@@ -303,7 +301,6 @@ export const getTotalRemainingStocksDal = async (req: Request) => {
                     GROUP BY serial_no, brand, quantity, opening_quantity, is_available, procurement_stock_id, updatedat
                 `);
 
-                // Query total products opening quantity for the inventory item
                 const productsTotal: any[] = await prisma.$queryRawUnsafe(`
                     SELECT sum(opening_quantity) as opening_quantity
                     FROM product.product_${item?.subcategory?.name.toLowerCase().replace(/\s/g, '')}
@@ -311,7 +308,6 @@ export const getTotalRemainingStocksDal = async (req: Request) => {
                     ${formattedFrom && formattedTo ? `and updatedat between '${formattedFrom}' and '${formattedTo}'` : ''}
                 `);
 
-                // Query stock requirements for the inventory item
                 const stockReq = await prisma.stock_req_product.aggregate({
                     where: {
                         inventoryId: item?.id,
@@ -321,7 +317,6 @@ export const getTotalRemainingStocksDal = async (req: Request) => {
                     },
                 });
 
-                // Query warranty stock data for the inventory item
                 const warrantyStock = await prisma.inventory_warranty.aggregate({
                     where: {
                         inventoryId: item?.id,
@@ -331,11 +326,8 @@ export const getTotalRemainingStocksDal = async (req: Request) => {
                     },
                 });
 
-                // If products data is available, calculate the total remaining quantity
                 if (products.length !== 0) {
                     item.products = products;
-
-                    // Query dead stock data for the inventory item
                     const deadStock = await prisma.inventory_dead_stock.aggregate({
                         where: {
                             inventoryId: item?.id,
@@ -344,8 +336,6 @@ export const getTotalRemainingStocksDal = async (req: Request) => {
                             quantity: true,
                         },
                     });
-
-                    // Calculate total remaining stock
                     const openingQuantity = Number(productsTotal[0]?.opening_quantity) || 0;
                     const deadStockQuantity = deadStock?._sum?.quantity || 0;
                     const stockReqQuantity = stockReq?._sum?.quantity || 0;
@@ -354,19 +344,14 @@ export const getTotalRemainingStocksDal = async (req: Request) => {
                     item.dead_stock = deadStockQuantity;
                     item.warranty_stock = warrantyStockQuantity;
 
-                    // Calculate remaining quantity, now subtracting warranty stock
                     item.remaining_quantity = openingQuantity - deadStockQuantity - stockReqQuantity - warrantyStockQuantity;
-					console.log("openingQuantity",openingQuantity  ,"deadStockQuantity", deadStockQuantity , "stockReqQuantity", stockReqQuantity , "warrantyStockQuantity", warrantyStockQuantity)
-
-                    // Push to dataToSend array
                     dataToSend.push(item);
                 } else {
-                    count = count - 1; // Decrease count if no products data
+                    count = count - 1;
                 }
             })
         );
 
-        // Calculate total pages for pagination
         totalPage = Math.ceil(count / take);
 
         if (endIndex < count) {
