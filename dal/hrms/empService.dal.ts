@@ -124,6 +124,16 @@ export const createEmpServiceRequestDal = async (req: Request) => {
 		
 		  })
 		);
+
+
+		await tx.stock_request.update({
+        where: {
+          stock_handover_no: stock_handover_no, 
+        },
+        data: {
+          status: 55, 
+        },
+      });
   
 		// Create entries for emp_service_req_outbox and dist_emp_service_req_inbox
 		await tx.emp_service_req_outbox.create({
