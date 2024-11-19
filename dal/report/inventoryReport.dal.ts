@@ -378,7 +378,7 @@ export const getProcurementStocksDal = async (req: Request) => {
 	const from = req?.query?.from; 
 	const to = req?.query?.to; 
 	const ulb_id = req?.body?.auth?.ulb_id; 
-	
+	const status = req?.query?.status_level ? Number(req.query.status_level) : undefined; 
 	let category_masterid = req?.query?.category_masterid;
 	if (Array.isArray(category_masterid)) {
 	  category_masterid = category_masterid[0]; 
@@ -390,9 +390,8 @@ export const getProcurementStocksDal = async (req: Request) => {
 	let totalPage: number;
 	let pagination: pagination = { currentPage: page, currentTake: take, totalPage: 0, totalResult: 0 };
   
-
 	const whereClause: Prisma.procurementWhereInput = {};
-  
+
 	if (ulb_id) {
 	  whereClause.ulb_id = ulb_id; 
 	}
@@ -409,6 +408,11 @@ export const getProcurementStocksDal = async (req: Request) => {
 		id: category_masterid, 
 	  };
 	}
+  
+
+	if (status !== undefined) {
+		whereClause.status = status; 
+	  }
   
 	const dataToSend: any[] = [];
   
@@ -444,7 +448,6 @@ export const getProcurementStocksDal = async (req: Request) => {
 		where: whereClause,
 	  });
   
-
 	  totalPage = Math.ceil(count / take);
 
 	  if (endIndex < count) {
@@ -472,7 +475,8 @@ export const getProcurementStocksDal = async (req: Request) => {
 	  console.log(err); 
 	  return { error: true, message: getErrorMessage(err) }; 
 	}
-  };
+};
+
   
   
   
