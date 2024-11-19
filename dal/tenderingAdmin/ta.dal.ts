@@ -753,29 +753,34 @@ type amountDataType = {
 }
 
 export const addBiddingAmountDal = async (req: Request) => {
-    const { amountData }: { amountData: amountDataType[] } = req.body
+    const { amountData }: { amountData: amountDataType[] } = req.body;
     try {
         if (amountData.length === 0) {
-            throw { error: true, message: "Amount data is required as 'amountData'" }
+            throw { error: true, message: "Amount data is required as 'amountData'" };
         }
 
         await Promise.all(
             amountData.map(async item => {
-                await prisma.bidder_master.update({
-                    where: { id: item?.bidder_id },
-                    data: {
-                        bidding_amount: Number(item?.amount)
-                    }
-                })
-            })
-        )
+                if (!item?.bidder_id || !item?.amount) {
+                    throw { error: true, message: "Missing bidder_id or amount" };
+                }
 
-        return 'Bidder amount submitted'
+                await prisma.bidder_master.update({
+                    where: { id: item.bidder_id },
+                    data: {
+                        bidding_amount: Number(item.amount)
+                    }
+                });
+            })
+        );
+
+        return 'Bidder amount submitted';
     } catch (err: any) {
-        console.log(err)
-        return { error: true, message: getErrorMessage(err) }
+        console.log(err);
+        return { error: true, message: getErrorMessage(err) };
     }
-}
+};
+
 
 type comparisonCriteriaType = {
     criteria_id: string
