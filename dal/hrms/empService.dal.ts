@@ -40,6 +40,15 @@ export const serviceTranslator = (service: service_enum): string => {
 export const createEmpServiceRequestDal = async (req: Request) => {
 	const { products, service, stock_handover_no, inventoryId, auth }: reqType = req.body;
 	const ulb_id = auth?.ulb_id;
+	let statusCode:any;
+
+	if(service === 'dead'){
+		statusCode=6
+	}else if(service === 'warranty'){
+		statusCode=7
+	}else if(service === 'return'){
+		statusCode=55
+	}
   
 	try {
 	  const service_no = generateEmpServiceNumber(ulb_id);
@@ -125,13 +134,15 @@ export const createEmpServiceRequestDal = async (req: Request) => {
 		  })
 		);
 
+		
+
 
 		await tx.stock_request.update({
         where: {
           stock_handover_no: stock_handover_no, 
         },
         data: {
-          status: 55, 
+          status: statusCode, 
         },
       });
   
