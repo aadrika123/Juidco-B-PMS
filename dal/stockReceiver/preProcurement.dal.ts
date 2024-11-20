@@ -436,6 +436,249 @@ export const getPreProcurementDal = async (req: Request) => {
 	}
 }
 
+
+export const getInventoryDatatDal = async (req: Request) => {
+	const page: number | undefined = Number(req?.query?.page);
+	const take: number | undefined = Number(req?.query?.take);
+	const startIndex: number | undefined = (page - 1) * take;
+	const endIndex: number | undefined = startIndex + take;
+	let count: number;
+	let totalPage: number;
+	let pagination: pagination = {};
+	const whereClause: Prisma.inventoryWhereInput = {};  
+	const ulb_id = req?.body?.auth?.ulb_id;
+  
+	const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined;
+  
+	const category: any[] = Array.isArray(req?.query?.category) ? req?.query?.category : [req?.query?.category];
+	const subcategory: any[] = Array.isArray(req?.query?.scategory) ? req?.query?.scategory : [req?.query?.scategory];
+	const brand: any[] = Array.isArray(req?.query?.brand) ? req?.query?.brand : [req?.query?.brand];
+
+	if (search) {
+	  whereClause.OR = [
+		{
+		  description: {
+			contains: search,
+			mode: 'insensitive',
+		  },
+		},
+	  ];
+	}
+  
+	if (category[0] || subcategory[0] || brand[0]) {
+	  whereClause.AND = [
+		...(category[0]
+		  ? [
+			  {
+				category_masterId: {
+				  in: category,
+				},
+			  },
+			]
+		  : []),
+		...(subcategory[0]
+		  ? [
+			  {
+				subcategory_masterId: {
+				  in: subcategory,
+				},
+			  },
+			]
+		  : []),
+		...(brand[0]
+		  ? [
+			  {
+				brand_masterId: {
+				  in: brand,
+				},
+			  },
+			]
+		  : []),
+		{
+		  ulb_id: ulb_id,
+		},
+	  ];
+	} else {
+	  whereClause.AND = [
+		{
+		  ulb_id: ulb_id,
+		},
+	  ];
+	}
+  
+	try {
+
+	  count = await prisma.inventory.count({
+		where: whereClause,
+	  });
+  
+
+	  const result = await prisma.inventory.findMany({
+		orderBy: {
+		  updatedAt: 'desc',
+		},
+		where: whereClause,
+		...(page && { skip: startIndex }),
+		...(take && { take: take }),
+		include: {
+			stock_req_product: {
+			select: {
+			  stock_handover_no: true, 
+			  serial_no:true
+			},
+		  },
+		  category: {
+			select: {
+			  name: true,
+			},
+		  },
+		  subcategory: {
+			select: {
+			  name: true,
+			},
+		  },
+		  brand: {
+			select: {
+			  name: true,
+			},
+		  },
+		},
+	  });
+
+	  const resultToSend = result.map(item => ({
+		id: item.id,
+		description: item.description,
+		quantity: item.quantity,
+		warranty: item.warranty,
+		category: item.category?.name,
+		subcategory: item.subcategory?.name,
+		brand: item.brand?.name,
+		unit_masterId: item.unit_masterId,
+		supplier_masterId: item.supplier_masterId,
+		createdAt: item.createdAt,
+		updatedAt: item.updatedAt,
+		stock_handover_no: item.stock_req_product && item.stock_req_product.length > 0 ? item.stock_req_product[0].stock_handover_no : null, 
+		serial_no: item.stock_req_product && item.stock_req_product.length > 0 ? item.stock_req_product[0].serial_no : null, 
+	  }));
+  
+	  totalPage = Math.ceil(count / take);
+	  if (endIndex < count) {
+		pagination.next = {
+		  page: page + 1,
+		  take: take,
+		};
+	  }
+	  if (startIndex > 0) {
+		pagination.prev = {
+		  page: page - 1,
+		  take: take,
+		};
+	  }
+	  pagination.currentPage = page;
+	  pagination.currentTake = take;
+	  pagination.totalPage = totalPage;
+	  pagination.totalResult = count;
+
+	  return {
+		data: resultToSend,
+		pagination: pagination,
+	  };
+	} catch (err: any) {
+	  console.log(err);
+	  return { error: true, message: getErrorMessage(err) };
+	}
+  };
+  
+  
+
+  export const getInventoryByHandoverNoAndId = async (req: Request) => {
+
+	const {  id } = req.params;
+	console.log("req.params",req.params)
+  
+	if (!id ) {
+	  return {
+		error: true,
+		message: 'Both handover_no and id must be provided.',
+	  };
+	}
+  
+	try {
+	  const inventoryData = await prisma.inventory.findFirst({
+		where: {
+		  stock_req_product: {
+			some: {
+			  stock_handover_no: String(id), 
+			},
+		  },
+		},
+		include: {
+		  stock_req_product: {
+			where: {
+			  stock_handover_no: String(id), 
+			},
+			select: {
+			  stock_handover_no: true,
+			  serial_no: true,
+			},
+		  },
+		  category: {
+			select: {
+			  name: true,
+			},
+		  },
+		  subcategory: {
+			select: {
+			  name: true,
+			},
+		  },
+		  brand: {
+			select: {
+			  name: true,
+			},
+		  },
+		},
+	  });
+	  console.log("inventoryData",inventoryData)
+  
+	  if (!inventoryData) {
+		return {
+		  error: true,
+		  message: 'No inventory found for the given id and handover_no.',
+		};
+	  }
+  
+	  return {
+		data: {
+		  id: inventoryData.id,
+		  description: inventoryData.description,
+		  quantity: inventoryData.quantity,
+		  warranty: inventoryData.warranty,
+		  category: inventoryData.category?.name,
+		  subcategory: inventoryData.subcategory?.name,
+		  brand: inventoryData.brand?.name,
+		  unit_masterId: inventoryData.unit_masterId,
+		  supplier_masterId: inventoryData.supplier_masterId,
+		  createdAt: inventoryData.createdAt,
+		  updatedAt: inventoryData.updatedAt,
+		  stock_handover_no: inventoryData.stock_req_product[0]?.stock_handover_no,
+		  serial_no: inventoryData.stock_req_product[0]?.serial_no,
+		},
+	  };
+	} catch (err: any) {
+	  console.log(err);
+	  return { error: true, message: getErrorMessage(err) };
+	}
+  };
+  
+  
+  
+  
+
+
+
+
+
 export const getPreProcurementByIdDal = async (req: Request) => {
 	const { id } = req.params
 	try {
