@@ -855,81 +855,94 @@ export const returnServiceRequestDal = async (req: Request) => {
 	}
 }
 
-const addToDeadStock = async (serial_no: string, quantity: number, remark: string, doc: any, subcategory_name: string, tx: Prisma.TransactionClient, service_no?: string, stock_handover_no?: string) => {
+const addToDeadStock = async (
+	serial_no: string, 
+	quantity: number, 
+	remark: string, 
+	doc: any, 
+	subcategory_name: string, 
+	tx: Prisma.TransactionClient, 
+	service_no?: string, 
+	stock_handover_no?: string
+  ) => {
+	console.log("serial_no:", serial_no);
 
+	const sanitizedSubcategoryName = subcategory_name.toLowerCase().replace(/\s/g, '');
+  
 	const product = await prisma
-		.$queryRawUnsafe(
-			`
-					SELECT *
-					FROM product.product_${subcategory_name.toLowerCase().replace(/\s/g, '')}
-					WHERE serial_no = '${serial_no as string}'
-				`
-		)
-		.then((result: any) => result[0])
-
-
-	// if (Number(product?.quantity) - quantity < 0) {
-	// 	throw { error: true, message: 'Provided quantity is more than available quantity' }
-	// }
-
-	if ((Number(product?.quantity) - quantity) < 0) {
-		throw new Error('No more quantity avalable')
+	  .$queryRawUnsafe(
+		`
+		  SELECT *
+		  FROM product.product_${sanitizedSubcategoryName}
+		  WHERE serial_no = '${serial_no}'
+		`
+	  )
+	  .then((result: any) => result[0]);
+  
+	console.log("facing issue here ", product?.quantity);
+	console.log("quantity", quantity);
+  
+	if ((Number(product?.opening_quantity) - quantity) < 0) {
+	  throw new Error('No more quantity available');
 	}
-
+  
 	await tx.$queryRawUnsafe(`
-			UPDATE product.product_${subcategory_name.toLowerCase().replace(/\s/g, '')}
-			SET is_available = false, is_dead = true, quantity=${Number(product?.quantity) - quantity}
-			WHERE serial_no = '${serial_no as string}'
-		`)
-
+	  UPDATE product.product_${sanitizedSubcategoryName}
+	  SET is_available = false, 
+		  is_dead = true, 
+		  quantity = ${Number(product?.opening_quantity) - quantity}, 
+		  opening_quantity = ${Number(product?.opening_quantity) - quantity}
+	  WHERE serial_no = '${serial_no}'
+	`);
+  
 	await tx.inventory.update({
-		where: {
-			id: product?.inventory_id,
+	  where: {
+		id: product?.inventory_id,
+	  },
+	  data: {
+		quantity: {
+		  decrement: quantity,
 		},
-		data: {
-			quantity: {
-				decrement: quantity,
-			},
-		},
-	})
-
+	  },
+	});
+  
 	const invDeadStock = await tx.inventory_dead_stock.create({
-		data: {
-			inventoryId: product?.inventory_id,
-			serial_no: product?.serial_no,
-			quantity: quantity,
-			remark2: remark,
-		},
-	})
+	  data: {
+		inventoryId: product?.inventory_id,
+		serial_no: product?.serial_no,
+		quantity: quantity,
+		remark2: remark,
+	  },
+	});
 
-	const uploaded = await imageUploaderV2(doc)
-
+	const uploaded = await imageUploaderV2(doc);
+	
 	await Promise.all(
-		uploaded.map(async item => {
-			await tx.inventory_dead_stock_image.create({
-				data: {
-					doc_path: item,
-					uploader: 'IA',
-					inventory_dead_stockId: invDeadStock?.id,
-				},
-			})
-		})
-	)
-
+	  uploaded.map(async (item) => {
+		await tx.inventory_dead_stock_image.create({
+		  data: {
+			doc_path: item,
+			uploader: 'IA',
+			inventory_dead_stockId: invDeadStock?.id,
+		  },
+		});
+	  })
+	);
+  
 	if (stock_handover_no && service_no) {
-		await tx.service_history.create({
-			data: {
-				stock_handover_no: stock_handover_no,
-				service_no: service_no,
-				serial_no: serial_no,
-				quantity: quantity,
-				service: 'dead',
-				// inventory: { connect: { id: product?.inventory_id } },
-				inventoryId: product?.inventory_id,
-			},
-		})
+	  await tx.service_history.create({
+		data: {
+		  stock_handover_no: stock_handover_no,
+		  service_no: service_no,
+		  serial_no: serial_no,
+		  quantity: quantity,
+		  service: 'dead',
+		  inventoryId: product?.inventory_id,
+		},
+	  });
 	}
-}
+  };
+  
 
 const warrantyClaim = async (serial_no: string, remark: string, subcategory_name: string, tx: Prisma.TransactionClient, service_no?: string, stock_handover_no?: string) => {
 	const product = await prisma
