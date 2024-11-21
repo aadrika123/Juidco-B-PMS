@@ -454,6 +454,9 @@ export const getInventoryDatatDal = async (req: Request) => {
 	const subcategory: any[] = Array.isArray(req?.query?.scategory) ? req?.query?.scategory : [req?.query?.scategory];
 	const brand: any[] = Array.isArray(req?.query?.brand) ? req?.query?.brand : [req?.query?.brand];
 
+	whereClause.quantity = {
+		gt: 0, 
+	  };
 	if (search) {
 	  whereClause.OR = [
 		{
@@ -594,7 +597,6 @@ export const getInventoryDatatDal = async (req: Request) => {
   export const getInventoryByHandoverNoAndId = async (req: Request) => {
 
 	const {  id } = req.params;
-	console.log("req.params",req.params)
   
 	if (!id ) {
 	  return {
@@ -639,7 +641,6 @@ export const getInventoryDatatDal = async (req: Request) => {
 		  },
 		},
 	  });
-	  console.log("inventoryData",inventoryData)
   
 	  if (!inventoryData) {
 		return {
@@ -672,6 +673,49 @@ export const getInventoryDatatDal = async (req: Request) => {
   };
   
   
+  
+  export const updateInventoryQuantityDal = async (req: Request) => {
+	const { id } = req.params;
+	const { quantity } = req.body;  
+	console.log("api hit ")
+	if (!id || quantity === undefined || quantity <= 0) {
+	  return {
+		error: true,
+		message: 'Both id and a valid quantity must be provided. Quantity must be greater than 0.',
+	  };
+	}
+	
+	try {
+	  const inventoryData = await prisma.inventory.findFirst({
+		where: {
+		  stock_req_product: {
+			some: {
+			  stock_handover_no: String(id),
+			},
+		  },
+		},
+	  });
+	  console.log("api hit ",inventoryData)
+	  
+	  if (!inventoryData) {
+		return {
+		  error: true,
+		  message: 'No inventory found for the given id and handover_no.',
+		};
+	  }
+
+	  const updatedInventory = await prisma.inventory.update({
+		where: { id: inventoryData.id },
+		data: { quantity: (inventoryData?.quantity - quantity) }, 
+	  });
+	  return {
+		data: updatedInventory
+	  };
+	} catch (err: any) {
+	  console.log(err);
+	  return { error: true, message: getErrorMessage(err) };
+	}
+  };
   
   
 

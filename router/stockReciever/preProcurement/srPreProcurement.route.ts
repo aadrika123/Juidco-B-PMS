@@ -15,7 +15,8 @@ import {
     editPreProcurement,
     forwardToLevel1,
     getInventoryData,
-    getInventoryByHandoverNo
+    getInventoryByHandoverNo,
+    updateInventoryQuantity
 } from "../../../controller/stockReceiver/srPreProcurement.controller";
 
 router.use(iaAuth)
@@ -24,6 +25,7 @@ router.post('/pre-procurement', createPreProcurement)
 router.get('/pre-procurement', getPreProcurement)
 router.get('/deadstock', getInventoryData)
 router.get('/deadstockby/:id', getInventoryByHandoverNo)
+router.post('/deadstockupdateby/:id', updateInventoryQuantity)
 router.get('/pre-procurement/rejected', getPreProcurementRejected)
 router.get('/pre-procurement/released', getPreProcurementReleased)
 router.get('/pre-procurement/outbox', getPreProcurementOutbox)

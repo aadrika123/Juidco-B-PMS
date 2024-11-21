@@ -510,6 +510,106 @@ export const forwardToIaDal = async (req: Request) => {
 	}
 }
 
+
+export const forwardToIaDeadDal = async (req: Request) => {
+
+	const { stock_handover_no, service_no, inventoryId }: { 
+	  stock_handover_no: string[], 
+	  service_no: string[], 
+	  inventoryId: string | any 
+	} = req.body;
+	
+	const ulb_id = req?.body?.auth?.ulb_id;
+  
+	if (!stock_handover_no || stock_handover_no.length === 0) {
+	  return { error: true, message: 'No stock_handover_no provided.' };
+	}
+	
+	try {
+	  await Promise.all(
+		stock_handover_no.map(async (item: string) => {
+		  // Fetch the stock request by stock_handover_no
+		  let stockReq = await prisma.service_request.findFirst({
+			where: { stock_handover_no: item },
+			select: { status: true, stock_handover_no: true, service_no: true },
+		  });
+
+  
+		  if (!stockReq) {
+			console.log(`No service request found for stock_handover_no: ${item}. Creating a new record.`);
+
+			stockReq = await prisma.service_request.create({
+			  data: {
+				stock_handover_no: item,
+				service_no: service_no[0], 
+				status: 0,  
+				remark: '',
+				service: 'dead',  
+				inventoryId: String(inventoryId),  
+			  },
+			});
+  
+		  }
+
+		  const iaOutboxCount: number = await prisma.ia_stock_req_outbox.count({
+			where: { stock_handover_no: item },
+		  });
+  
+		  await prisma.$transaction([
+			prisma.da_stock_req_outbox.create({
+			  data: { stock_handover_no: item },
+			}),
+			prisma.ia_service_req_inbox.create({
+				data: { service_no: service_no[0] },
+			  }),
+  
+			prisma.ia_stock_req_inbox.create({
+			  data: { stock_handover_no: item },
+			}),
+  
+			prisma.da_stock_req_inbox.delete({
+			  where: { stock_handover_no: item },
+			}),
+  
+			prisma.service_request.update({
+			  where: { stock_handover_no: stockReq.stock_handover_no, service_no: stockReq.service_no },
+			  data: {
+				status: 20,  // Set status to "IA"
+				remark: '',
+			  },
+			}),
+  
+			...(iaOutboxCount !== 0
+			  ? [
+				  prisma.ia_stock_req_outbox.delete({
+					where: { stock_handover_no: item },
+				  }),
+				]
+			  : []),
+
+			prisma.notification.create({
+			  data: {
+				role_id: Number(process.env.ROLE_IA),  
+				title: 'New stock request',
+				destination: 80,  
+				from: await extractRoleName(Number(process.env.ROLE_DA)),  
+				description: `There is a new stock request to be reviewed: ${item}`, 
+				ulb_id,  
+			  },
+			}),
+		  ]);
+		})
+	  );
+  
+	  return 'Forwarded';
+	} catch (err: any) {
+	  console.log(err);
+	  return { error: true, message: getErrorMessage(err) };
+	}
+  };
+  
+  
+
 export const returnStockReqDal = async (req: Request) => {
 	const { stock_handover_no, remark }: { stock_handover_no: string[]; remark: string } = req.body
 	const ulb_id = req?.body?.auth?.ulb_id

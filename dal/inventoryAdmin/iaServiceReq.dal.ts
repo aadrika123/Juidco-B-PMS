@@ -27,7 +27,9 @@ type productType = {
 }
 
 export const getServiceReqInboxDal = async (req: Request) => {
+	console.log("ia data here")
 	const page: number | undefined = Number(req?.query?.page)
+	// const take: number | undefined = Number(req?.query?.take)
 	const take: number | undefined = Number(req?.query?.take)
 	const startIndex: number | undefined = (page - 1) * take
 	const endIndex: number | undefined = startIndex + take
@@ -878,9 +880,7 @@ const addToDeadStock = async (
 		`
 	  )
 	  .then((result: any) => result[0]);
-  
-	console.log("facing issue here ", product?.quantity);
-	console.log("quantity", quantity);
+
   
 	if ((Number(product?.opening_quantity) - quantity) < 0) {
 	  throw new Error('No more quantity available');
