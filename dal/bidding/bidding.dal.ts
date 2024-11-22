@@ -263,6 +263,64 @@ export const getRateContractDetailsNoDal = async (req: Request) => {
     }
 }
 
+
+export const getAllRateContractDetailsNoDal = async (req: Request) => {
+    console.log("here called");
+    const { category } = req.params;
+
+    // Validate if the category is provided
+    if (!category) {
+        throw { error: true, message: "Category is required as 'category'" };
+    }
+
+    try {
+        // Fetch rate contract details by category
+        const result = await prisma.rate_contract.findMany({
+            where: {
+                category_masterId: category as string,  // Filtering by the category parameter
+            },
+            select: {
+                rate_contract_supplier: {
+                    select: {
+                        id: true,
+                        unit_price: true,
+                        supplier_master: {
+                            select: {
+                                id: true,
+                                name: true,
+                            },
+                        },
+                    },
+                },
+            },
+        });
+
+        // Flatten the result into a single array
+        const flatSuppliers = result.flatMap(contract =>
+            contract.rate_contract_supplier.map(supplier => ({
+                id: supplier.id,
+                unit_price: supplier.unit_price,
+                supplier_master: supplier.supplier_master ? {
+                    id: supplier.supplier_master?.id,
+                    name: supplier.supplier_master?.name,
+                } : null,
+            }))
+        );
+        
+
+        // Return the structured response in the correct format
+        return {
+            status: true,
+            message: "Rate contract details fetched successfully",
+            data: flatSuppliers,  // Return the flattened array
+        };
+
+    } catch (err: any) {
+        console.error(err);
+        return { error: true, message: getErrorMessage(err) };
+    }
+};
+
 export const getBidderByIdDal = async (req: Request) => {
     const { id } = req.params
     try {

@@ -159,8 +159,6 @@ export const getItemByFilterDal = async (req: Request) => {
 	}
 
 	console.log(req?.query?.category, req?.query?.scategory)
-
-	//creating search options for the query
 	if (search) {
 		whereClause.OR = [
 			{
@@ -171,23 +169,6 @@ export const getItemByFilterDal = async (req: Request) => {
 			},
 		]
 	}
-
-	//creating filter options for the query
-	// if (category[0]) {
-	// 	whereClause.category_masterId = {
-	// 		in: category,
-	// 	}
-	// }
-	// if (subcategory[0]) {
-	// 	whereClause.subcategory_masterId = {
-	// 		in: subcategory,
-	// 	}
-	// }
-	// if (brand[0]) {
-	// 	whereClause.brand_masterId = {
-	// 		in: brand,
-	// 	}
-	// }
 	if (category[0] || subcategory[0]) {
 		whereClause.AND = [
 			...(category[0]
