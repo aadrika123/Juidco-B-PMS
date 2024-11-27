@@ -1,5 +1,5 @@
 import { Request, Response } from 'express'
-import { createCategoryDal, getCategoryByIdDal, getCategoryDal, editCategoryDal, switchStatusDal, getCategoryActiveOnlyDal } from '../../dal/masterEntry/category.dal'
+import { createCategoryDal, getCategoryByIdDal, getCategoryDal, editCategoryDal, switchStatusDal, getCategoryActiveOnlyDal, getCategoryActiveOnlyByIdDal } from '../../dal/masterEntry/category.dal'
 
 export const createCategory = async (req: Request, res: Response) => {
 	const result: any = await createCategoryDal(req)
@@ -68,6 +68,22 @@ export const getCategoryActiveOnly = async (req: Request, res: Response) => {
 	}
 }
 
+export const getCategoryActiveOnlyById = async (req: Request, res: Response) => {
+	const result: any = await getCategoryActiveOnlyByIdDal(req)
+	if (!result?.error) {
+		res.status(201).json({
+			status: true,
+			message: `Active category list fetched successfully`,
+			data: result,
+		})
+	} else {
+		res.status(400).json({
+			status: false,
+			message: `Error while fetching category`,
+			error: result?.message,
+		})
+	}
+} 
 export const editCategory = async (req: Request, res: Response) => {
 	const result: any = await editCategoryDal(req)
 	if (!result?.error) {

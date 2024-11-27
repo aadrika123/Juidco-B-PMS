@@ -501,6 +501,7 @@ export const getTotalRemainingStocksDal = async (req: Request) => {
 
     const category: any[] = Array.isArray(req?.query?.category) ? req?.query?.category : [req?.query?.category];
     const subcategory: any[] = Array.isArray(req?.query?.scategory) ? req?.query?.scategory : [req?.query?.scategory];
+    const ulb_id = req?.body?.auth?.ulb_id;
 
     if (search) {
         whereClause.OR = [
@@ -533,10 +534,21 @@ export const getTotalRemainingStocksDal = async (req: Request) => {
                     },
                 ]
                 : []),
+            {
+                ulb_id: ulb_id, // Filter by ulb_id
+            },
+        ];
+    } else {
+        // If no category or subcategory filters are provided, still apply ulb_id filter
+        whereClause.AND = [
+            {
+                ulb_id: ulb_id,
+            },
         ];
     }
 
     try {
+        // Count the total number of records based on the whereClause
         count = await prisma.inventory.count({
             where: whereClause,
         });
@@ -672,6 +684,7 @@ export const getTotalRemainingStocksDal = async (req: Request) => {
         return { error: true, message: getErrorMessage(err) };
     }
 };
+
 
 
 export const getDeadStocksDal = async (req: Request) => {
