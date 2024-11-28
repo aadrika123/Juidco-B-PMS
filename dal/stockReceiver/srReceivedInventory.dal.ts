@@ -1204,6 +1204,7 @@ export const addToInventoryDal = async (req: Request) => {
 	const img = req.files
 	const formattedAuth = typeof req?.body?.auth !== 'string' ? JSON.stringify(req?.body?.auth) : req.body?.auth
 	const ulb_id = JSON.parse(formattedAuth)?.ulb_id
+	console.log("ulb_id",ulb_id)
 	let inventoryId = inventory
 	let exist: boolean = false
 	let currentInventoryId: string
@@ -1365,12 +1366,14 @@ export const addToInventoryDal = async (req: Request) => {
                         },
                         unit: { connect: { id: procStockData?.unit_masterId } },
                         description: procStockData?.description,
+						ulb_id:ulb_id,
                         quantity: dead_stock
                             ? totalNonAddedReceiving?._sum?.received_quantity - Number(dead_stock)
                             : totalNonAddedReceiving?._sum?.received_quantity,
                         ...(warranty && { warranty: Boolean(warranty) }),
                     },
                 });
+				console.log("testing the inventory",createdInv)
 
                 currentInventoryId = createdInv?.id;
 
