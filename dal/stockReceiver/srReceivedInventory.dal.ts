@@ -1204,7 +1204,6 @@ export const addToInventoryDal = async (req: Request) => {
 	const img = req.files
 	const formattedAuth = typeof req?.body?.auth !== 'string' ? JSON.stringify(req?.body?.auth) : req.body?.auth
 	const ulb_id = JSON.parse(formattedAuth)?.ulb_id
-	console.log("ulb_id",ulb_id)
 	let inventoryId = inventory
 	let exist: boolean = false
 	let currentInventoryId: string
@@ -1249,7 +1248,6 @@ export const addToInventoryDal = async (req: Request) => {
                 description: true,
             },
         });
-		console.log("procStockData",procStockData)
 
         const query = `
             SELECT SUM(quantity) as total_quantity
@@ -1373,7 +1371,6 @@ export const addToInventoryDal = async (req: Request) => {
                         ...(warranty && { warranty: Boolean(warranty) }),
                     },
                 });
-				console.log("testing the inventory",createdInv)
 
                 currentInventoryId = createdInv?.id;
 
