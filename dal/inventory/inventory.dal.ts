@@ -197,7 +197,7 @@ export const getItemByFilterDal = async (req: Request) => {
 		]
 	}
 
-	// for emergency 
+	// for imergency 
     // if(ulb_id) {
 	// 	whereClause.AND = [
 	// 		{ ulb_id: ulb_id }
