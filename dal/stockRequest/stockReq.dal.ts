@@ -5,74 +5,82 @@ import { PrismaClient } from '@prisma/client'
 const prisma = new PrismaClient()
 
 export const getStockReqByStockHandoverNoDal = async (req: Request) => {
-	const { stock_handover_no } = req.params
+	const { stock_handover_no } = req.params;
+	
 	try {
-		const result = await prisma.stock_request.findFirst({
-			where: {
-				stock_handover_no: stock_handover_no,
-			},
+	  const result = await prisma.stock_request.findFirst({
+		where: {
+		  stock_handover_no: stock_handover_no,  
+		},
+		select: {
+		  id: true,
+		  stock_handover_no: true,
+		  ulb_id: true,
+		  emp_id: true,
+		  emp_name: true,
+		  allotted_quantity: true,
+		  isEdited: true,
+		  status: true,
+		  remark: true,
+		  createdAt: true,
+		  is_notified: true,
+		  is_alloted: true,
+		  stock_req_product: true,  
+		  inventory: {  
 			select: {
-				id: true,
-				stock_handover_no: true,
-				ulb_id: true,
-				emp_id: true,
-				emp_name: true,
-				allotted_quantity: true,
-				isEdited: true,
-				status: true,
-				remark: true,
-				createdAt: true,
-				is_notified: true,
-				is_alloted: true,
-				stock_req_product: true,
-				inventory: {
-					select: {
-						id: true,
-						description: true,
-						category: {
-							select: {
-								id: true,
-								name: true,
-							},
-						},
-						subcategory: {
-							select: {
-								id: true,
-								name: true,
-							},
-						},
-						brand: {
-							select: {
-								id: true,
-								name: true,
-							},
-						},
-						unit: {
-							select: {
-								id: true,
-								name: true,
-								abbreviation: true,
-							},
-						},
-					},
-				},
-				emp_service_request: {
-					select: {
-						service_no: true,
-						service: true,
-						emp_service_req_product: true
-					},
-				}
+			  id: true,  
+			  warranty:true,
+			  description: true,
+			//   category: {
+			// 	select: {
+			// 	  id: true,
+			// 	  name: true,
+			// 	},
+			//   },
+			//   subcategory: {
+			// 	select: {
+			// 	  id: true,
+			// 	  name: true,
+			// 	},
+			//   },
+			//   brand: {
+			// 	select: {
+			// 	  id: true,
+			// 	  name: true,
+			// 	},
+			//   },
+			//   unit: {
+			// 	select: {
+			// 	  id: true,
+			// 	  name: true,
+			// 	  abbreviation: true,
+			// 	},
+			//   },
 			},
-		})
-
-
-		return result
+		  },
+		  emp_service_request: {
+			select: {
+			  service_no: true,
+			  service: true,
+			  emp_service_req_product: true,  // Service request details
+			},
+		  },
+		},
+	  });
+  
+	  // Check if the stock request exists
+	  if (!result) {
+		return { error: true, message: "Stock request not found" };
+	  }
+  
+	  // Return the data fetched from the database
+	  return result;
 	} catch (err: any) {
-		console.log(err)
-		return { error: true, message: getErrorMessage(err) }
+	  console.log(err);
+	  return { error: true, message: getErrorMessage(err) };  // You may want to implement getErrorMessage to format errors
 	}
-}
+  };
+  
 
 export const editStockRequestDal = async (req: Request) => {
 	const { stock_handover_no, inventory, emp_id, emp_name, allotted_quantity } = req.body
