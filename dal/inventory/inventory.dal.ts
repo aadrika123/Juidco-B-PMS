@@ -169,40 +169,40 @@ export const getItemByFilterDal = async (req: Request) => {
 			},
 		]
 	}
-	// if (category[0] || subcategory[0]) {
-	// 	whereClause.AND = [
-	// 		...(category[0]
-	// 			? [
-	// 				{
-	// 					category_masterId: {
-	// 						in: category,
-	// 					},
-	// 				},
-	// 			]
-	// 			: []),
-	// 		...(subcategory[0]
-	// 			? [
-	// 				{
-	// 					subcategory_masterId: {
-	// 						in: subcategory,
-	// 					},
-	// 				},
-	// 			]
-	// 			: []),
-	// 		{ ulb_id: ulb_id }
-	// 	]
-	// } else {
-	// 	whereClause.AND = [
-	// 		{ ulb_id: ulb_id }
-	// 	]
-	// }
-
-	// for imergency 
-    if(ulb_id) {
+	if (category[0] || subcategory[0]) {
+		whereClause.AND = [
+			...(category[0]
+				? [
+					{
+						category_masterId: {
+							in: category,
+						},
+					},
+				]
+				: []),
+			...(subcategory[0]
+				? [
+					{
+						subcategory_masterId: {
+							in: subcategory,
+						},
+					},
+				]
+				: []),
+			{ ulb_id: ulb_id }
+		]
+	} else {
 		whereClause.AND = [
 			{ ulb_id: ulb_id }
 		]
 	}
+
+	// for emergency 
+    // if(ulb_id) {
+	// 	whereClause.AND = [
+	// 		{ ulb_id: ulb_id }
+	// 	]
+	// }
 
 	try {
 		count = await prisma.inventory.count({
