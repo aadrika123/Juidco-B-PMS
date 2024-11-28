@@ -44,6 +44,7 @@ export const createServiceRequestDal = async (req: Request) => {
 	const ulb_id = auth?.ulb_id;
 	try {
 		const service_no = generateServiceNumber(ulb_id);
+		console.log("service_no",service_no)
 
 		const data: Omit<service_request, 'createdAt' | 'updatedAt' | 'remark' | 'id'> = {
 			service_no: service_no,

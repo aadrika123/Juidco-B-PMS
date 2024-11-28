@@ -4,6 +4,7 @@ import getErrorMessage from '../../lib/getErrorMessage'
 import { pagination } from '../../type/common.type'
 import generateEmpServiceNumber from '../../lib/empServiceNumberGenerator'
 import { extractRoleName } from '../../lib/roleNameExtractor'
+import { createServiceRequestDal } from '../distributor/distServiceReq.dal'
 
 const prisma = new PrismaClient()
 
@@ -171,6 +172,9 @@ export const createEmpServiceRequestDal = async (req: Request) => {
 		  },
 		});
 	  });
+
+	const val =  await createServiceRequestDal(req);
+	console.log("val",val)
   
 	  return serviceReq;
 	} catch (err: any) {
