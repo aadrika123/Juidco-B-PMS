@@ -180,6 +180,7 @@ export const getServiceReqInboxDal = async (req: Request) => {
 		})
 
 		let resultToSend: any[] = []
+		console.log("da.service.request",result)
 
 		result.map(async (item: any) => {
 			const temp = { ...item?.service_req }

@@ -169,29 +169,36 @@ export const getItemByFilterDal = async (req: Request) => {
 			},
 		]
 	}
-	if (category[0] || subcategory[0]) {
-		whereClause.AND = [
-			...(category[0]
-				? [
-					{
-						category_masterId: {
-							in: category,
-						},
-					},
-				]
-				: []),
-			...(subcategory[0]
-				? [
-					{
-						subcategory_masterId: {
-							in: subcategory,
-						},
-					},
-				]
-				: []),
-			{ ulb_id: ulb_id }
-		]
-	} else {
+	// if (category[0] || subcategory[0]) {
+	// 	whereClause.AND = [
+	// 		...(category[0]
+	// 			? [
+	// 				{
+	// 					category_masterId: {
+	// 						in: category,
+	// 					},
+	// 				},
+	// 			]
+	// 			: []),
+	// 		...(subcategory[0]
+	// 			? [
+	// 				{
+	// 					subcategory_masterId: {
+	// 						in: subcategory,
+	// 					},
+	// 				},
+	// 			]
+	// 			: []),
+	// 		{ ulb_id: ulb_id }
+	// 	]
+	// } else {
+	// 	whereClause.AND = [
+	// 		{ ulb_id: ulb_id }
+	// 	]
+	// }
+
+	// for imergency 
+    if(ulb_id) {
 		whereClause.AND = [
 			{ ulb_id: ulb_id }
 		]
@@ -201,6 +208,11 @@ export const getItemByFilterDal = async (req: Request) => {
 		count = await prisma.inventory.count({
 			where: whereClause,
 		})
+
+		// console.log("whereClausewhereClause",whereClause)
+		console.log("category",category)
+		console.log("subcategory",subcategory)
+
 		const result = await prisma.inventory.findMany({
 			orderBy: {
 				updatedAt: 'desc',
@@ -233,6 +245,7 @@ export const getItemByFilterDal = async (req: Request) => {
 				warranty: true,
 			},
 		})
+		console.log("resultresult line 236",result)
 		totalPage = Math.ceil(count / take)
 		if (endIndex < count) {
 			pagination.next = {

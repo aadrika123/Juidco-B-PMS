@@ -954,6 +954,10 @@ const warrantyClaim = async (serial_no: string, remark: string, subcategory_name
 				`
 		)
 		.then((result: any) => result[0])
+		console.log("subcategory_namesubcategory_name",subcategory_name)
+		console.log("serial_noserial_no",serial_no)
+
+		console.log("product",product)
 
 	const inv = await prisma.inventory.findFirst({
 		where: {

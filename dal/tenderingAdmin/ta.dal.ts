@@ -986,7 +986,10 @@ export const financialComparisonResultDal = async (req: Request) => {
                     select: {
                         pre_tendering_details: {
                             select: {
-                                is_rate_contract: true
+                                is_rate_contract: true,
+                                max_supplier:true,
+                                min_supplier:true
+
                             }
                         }
                     }
