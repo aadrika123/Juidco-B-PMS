@@ -31,31 +31,31 @@ export const getStockReqByStockHandoverNoDal = async (req: Request) => {
 			  id: true,  
 			  warranty:true,
 			  description: true,
-			//   category: {
-			// 	select: {
-			// 	  id: true,
-			// 	  name: true,
-			// 	},
-			//   },
-			//   subcategory: {
-			// 	select: {
-			// 	  id: true,
-			// 	  name: true,
-			// 	},
-			//   },
-			//   brand: {
-			// 	select: {
-			// 	  id: true,
-			// 	  name: true,
-			// 	},
-			//   },
-			//   unit: {
-			// 	select: {
-			// 	  id: true,
-			// 	  name: true,
-			// 	  abbreviation: true,
-			// 	},
-			//   },
+			  category: {
+				select: {
+				  id: true,
+				  name: true,
+				},
+			  },
+			  subcategory: {
+				select: {
+				  id: true,
+				  name: true,
+				},
+			  },
+			  brand: {
+				select: {
+				  id: true,
+				  name: true,
+				},
+			  },
+			  unit: {
+				select: {
+				  id: true,
+				  name: true,
+				  abbreviation: true,
+				},
+			  },
 			},
 		  },
 		  emp_service_request: {
