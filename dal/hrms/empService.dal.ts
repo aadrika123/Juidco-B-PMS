@@ -162,14 +162,21 @@ export const createEmpServiceRequestDal = async (req: Request) => {
 		  },
 		});
 
-		console.log("products 164",products)
-		const querys =   await tx.$queryRawUnsafe(`
-			UPDATE product.product_${subcategory.toLowerCase().replace(/\s/g, '')}
-			SET is_available = true, is_dead = false, quantity = quantity + ${quantity}
-			WHERE serial_no = '${products[0] as string}'
-		`)
 
-		console.log("querysquerysquerys",querys)
+// Dynamically update the product table
+const product = products[0]
+const tableName = `product.product_${subcategory.toLowerCase().replace(/\s/g, '')}`;
+console.log("datatatatat",products, service, stock_handover_no, inventoryId, auth, quantity, subcategory)
+
+console.log("tableNametableName",tableName)
+// Perform the update query
+const datas = await tx.$queryRawUnsafe(`
+  UPDATE ${tableName} 
+  SET is_available = true, is_dead = false, quantity = quantity + $1
+  WHERE serial_no = $2
+`, quantity, product);
+
+console.log("datasdatasdatas",datas)
   
 		// Create a notification for the service request
 		await tx.notification.create({

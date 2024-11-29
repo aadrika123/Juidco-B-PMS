@@ -532,11 +532,28 @@ export const approveServiceRequestDal = async (req: Request) => {
 				},
 			})
 
-			await tx.dist_service_req_inbox.create({
-				data: {
-					service_no: service_no,
+			// await tx.dist_service_req_inbox.create({
+			// 	data: {
+			// 		service_no: service_no,
+			// 	},
+			// })
+
+
+			const existingInboxEntry = await tx.dist_service_req_inbox.findUnique({
+				where: {
+				  service_no: service_no, 
 				},
-			})
+			  });
+			  
+			  if (!existingInboxEntry) {
+				await tx.dist_service_req_inbox.create({
+				  data: {
+					service_no: service_no,
+				  },
+				});
+			  } else {
+				console.log(`Service number ${service_no} already exists in dist_service_req_inbox. Skipping insert.`);
+			  }
 
 			if (distOutbox > 0) {
 				await tx.dist_service_req_outbox.delete({
