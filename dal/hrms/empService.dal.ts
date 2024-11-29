@@ -16,7 +16,8 @@ type reqType = {
 	stock_handover_no: string
 	inventoryId: string
 	auth: any,
-	quantity:any
+	quantity:any,
+	subcategory:string
 }
 
 // type productType = {
@@ -40,7 +41,7 @@ export const serviceTranslator = (service: service_enum): string => {
 }
 
 export const createEmpServiceRequestDal = async (req: Request) => {
-	const { products, service, stock_handover_no, inventoryId, auth,quantity }: reqType = req.body;
+	const { products, service, stock_handover_no, inventoryId, auth,quantity,subcategory }: reqType = req.body;
 	const ulb_id = auth?.ulb_id;
 	let statusCode:any;
 
@@ -162,12 +163,13 @@ export const createEmpServiceRequestDal = async (req: Request) => {
 		});
 
 		console.log("products 164",products)
-		// const querys =   await tx.$queryRawUnsafe(`
-		// 	UPDATE product.product_${procStockData?.subCategory?.name.toLowerCase().replace(/\s/g, '')}
-		// 	SET is_available = true, is_dead = false, quantity = quantity + ${quantity}
-		// 	WHERE serial_no = '${products[0] as string}'
-		// `)
+		const querys =   await tx.$queryRawUnsafe(`
+			UPDATE product.product_${subcategory.toLowerCase().replace(/\s/g, '')}
+			SET is_available = true, is_dead = false, quantity = quantity + ${quantity}
+			WHERE serial_no = '${products[0] as string}'
+		`)
 
+		console.log("querysquerysquerys",querys)
   
 		// Create a notification for the service request
 		await tx.notification.create({
