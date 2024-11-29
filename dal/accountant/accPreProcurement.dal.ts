@@ -2253,7 +2253,7 @@ export const createWorkDetailsPtDal = async (req: Request) => {
 				reference_no: formattedData?.reference_no,
 			},
 		})
-
+console.log("formattedData?.pre_bidformattedData?.pre_bidformattedData?.pre_bidformattedData?.pre_bid",formattedData?.pre_bid)
 		const preparedData = {
 			reference_no: formattedData?.reference_no,
 			workDiscription: formattedData?.workDiscription,

@@ -260,28 +260,63 @@ type procStockType = {
 }
 
 export const editProcurementStockDal = async (req: Request) => {
-	const { id, subcategory, brand, unit, description, rate, total_rate, quantity }: procStockType = req.body
-
+	const { id, subcategory, brand, unit, description, rate, total_rate, quantity }: procStockType = req.body;
+  
 	try {
-
-		await prisma.procurement_stocks.update({
-			where: {
-				id: id,
-			},
-			data: {
-				subCategory_masterId: subcategory,
-				brand_masterId: brand,
-				unit_masterId: unit,
-				rate: Number(rate),
-				quantity: Number(quantity),
-				total_rate: Number(total_rate),
-				description: description,
-			},
-		})
-
-		return 'Updated'
+	  // Step 1: Update the procurement stock
+	  await prisma.procurement_stocks.update({
+		where: {
+		  id: id,
+		},
+		data: {
+		  subCategory_masterId: subcategory,
+		  brand_masterId: brand,
+		  unit_masterId: unit,
+		  rate: Number(rate),
+		  quantity: Number(quantity),
+		  total_rate: Number(total_rate),
+		  description: description,
+		},
+	  });
+  
+	  // Step 2: Get the procurement_no associated with the updated stock
+	  const procurementStock = await prisma.procurement_stocks.findUnique({
+		where: { id: id },
+		select: {
+		  procurement_no: true,
+		},
+	  });
+  
+	  if (!procurementStock) {
+		throw { error: true, message: 'Procurement stock not found' };
+	  }
+  
+	  // Step 3: Calculate the new total_rate from the updated procurement_stocks
+	  const updatedTotalRate = await prisma.procurement_stocks.aggregate({
+		_sum: {
+		  total_rate: true,
+		},
+		where: {
+		  procurement_no: procurementStock.procurement_no,
+		},
+	  });
+  
+	  // Step 4: Update the total_rate in the procurement table based on the sum from procurement_stocks
+	  if (updatedTotalRate._sum.total_rate !== null) {
+		await prisma.procurement.update({
+		  where: {
+			procurement_no: procurementStock.procurement_no,
+		  },
+		  data: {
+			total_rate: updatedTotalRate._sum.total_rate,
+		  },
+		});
+	  }
+  
+	  return 'Updated';
 	} catch (err: any) {
-		console.log(err)
-		return { error: true, message: err?.message }
+	  console.log(err);
+	  return { error: true, message: err?.message };
 	}
-}
+  };
+  

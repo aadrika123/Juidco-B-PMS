@@ -152,6 +152,7 @@ export const getInboxDal = async (req: Request) => {
 				},
 			},
 		})
+		console.log('result',result)
 
 		let resultToSend: any[] = []
 
