@@ -2253,7 +2253,22 @@ export const createWorkDetailsPtDal = async (req: Request) => {
 				reference_no: formattedData?.reference_no,
 			},
 		})
-console.log("formattedData?.pre_bidformattedData?.pre_bidformattedData?.pre_bidformattedData?.pre_bid",formattedData?.pre_bid)
+		let values: boolean; // Declare the variable with type boolean
+
+		if (typeof formattedData?.pre_bid === 'string') {
+			if (formattedData?.pre_bid === 'no') {
+				values = false;
+			} else if (formattedData?.pre_bid === 'yes') {
+				values = true;
+			} else {
+				values = false;
+			}
+		} else if (typeof formattedData?.pre_bid === 'boolean') {
+			values = formattedData?.pre_bid;
+		} else {
+			values = false;
+		}
+		console.log("formattedData?.pre_bidformattedData?.pre_bidformattedData?.pre_bidformattedData?.pre_bid", formattedData?.pre_bid)
 		const preparedData = {
 			reference_no: formattedData?.reference_no,
 			workDiscription: formattedData?.workDiscription,
@@ -2266,7 +2281,7 @@ console.log("formattedData?.pre_bidformattedData?.pre_bidformattedData?.pre_bidf
 			completionPeriod: Number(formattedData?.completionPeriod),
 			location: formattedData?.location,
 			pinCode: String(formattedData?.pinCode),
-			pre_bid: Boolean(formattedData?.pre_bid),
+			pre_bid: Boolean(values),
 			preBidMeeting: formattedData?.preBidMeeting,
 			preBidMeetingAdd: formattedData?.preBidMeetingAdd,
 			bidOpeningPlace: formattedData?.bidOpeningPlace,
