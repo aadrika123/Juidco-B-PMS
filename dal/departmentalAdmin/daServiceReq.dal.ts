@@ -13,6 +13,7 @@ import { extractRoleName } from '../../lib/roleNameExtractor'
 const prisma = new PrismaClient()
 
 export const getServiceReqInboxDal = async (req: Request) => {
+	console.log("called for service reqqq")
 	const page: number | undefined = Number(req?.query?.page)
 	const take: number | undefined = Number(req?.query?.take)
 	const startIndex: number | undefined = (page - 1) * take
@@ -180,7 +181,7 @@ export const getServiceReqInboxDal = async (req: Request) => {
 		})
 
 		let resultToSend: any[] = []
-		console.log("da.service.request",result)
+		// console.log("da.service.request",result)
 
 		result.map(async (item: any) => {
 			const temp = { ...item?.service_req }

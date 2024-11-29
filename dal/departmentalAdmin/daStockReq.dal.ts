@@ -7,6 +7,7 @@ import { extractRoleName } from '../../lib/roleNameExtractor'
 const prisma = new PrismaClient()
 
 export const getStockReqInboxDal = async (req: Request) => {
+	console.log("here data is availabel for stockreq")
 	const page: number | undefined = Number(req?.query?.page)
 	const take: number | undefined = Number(req?.query?.take)
 	const startIndex: number | undefined = (page - 1) * take

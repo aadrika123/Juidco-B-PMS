@@ -465,6 +465,7 @@ export const approveServiceRequestDal = async (req: Request) => {
 				service_req_product: true,
 			},
 		})
+		console.log('serviceReqserviceReq',serviceReq)
 
 		if (serviceReq?.service === 'dead' && doc?.length === 0) {
 			throw { error: true, message: 'For dead stock request, document is mandatory' }
@@ -492,6 +493,7 @@ export const approveServiceRequestDal = async (req: Request) => {
 			},
 		})
 
+		console.log("serviceReq?.serviceserviceReq?.service",serviceReq?.service)
 		//start transaction
 		await prisma.$transaction(async tx => {
 			if (serviceReq?.service === 'dead') {
@@ -945,6 +947,7 @@ const addToDeadStock = async (
   
 
 const warrantyClaim = async (serial_no: string, remark: string, subcategory_name: string, tx: Prisma.TransactionClient, service_no?: string, stock_handover_no?: string) => {
+	console.log("subcategory_namesubcategory_name",subcategory_name)
 	const product = await prisma
 		.$queryRawUnsafe(
 			`
