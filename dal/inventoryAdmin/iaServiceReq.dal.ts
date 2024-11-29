@@ -630,135 +630,144 @@ export const approveServiceRequestDal = async (req: Request) => {
 }
 
 export const rejectServiceRequestDal = async (req: Request) => {
-	const { service_no, remark }: { service_no: string, remark: string } = req.body
-	const ulb_id = req?.body?.auth?.ulb_id
-
+	const { service_no, remark }: { service_no: string, remark: string } = req.body;
+	const ulb_id = req?.body?.auth?.ulb_id;
+  
 	try {
-
-		if (!service_no && !remark) {
-			throw { error: true, message: 'Both service number and remark are required' }
+  
+	  if (!service_no && !remark) {
+		throw { error: true, message: 'Both service number and remark are required' };
+	  }
+  
+	  const serviceReq = await prisma.service_request.findFirst({
+		where: {
+		  service_no: service_no,
+		},
+		select: {
+		  status: true,
+		  service: true,
+		},
+	  });
+  
+	  if (serviceReq?.status !== 20) {
+		throw { error: true, message: 'Invalid status of service request to be rejected' };
+	  }
+  
+	  const distOutbox = await prisma.dist_service_req_outbox.count({
+		where: {
+		  service_no: service_no,
+		},
+	  });
+  
+	  const daOutbox = await prisma.da_service_req_outbox.count({
+		where: {
+		  service_no: service_no,
+		},
+	  });
+  
+	  // Start transaction
+	  await prisma.$transaction(async tx => {
+		
+		// Delete from IA Service Request Inbox
+		await tx.ia_service_req_inbox.delete({
+		  where: {
+			service_no: service_no,
+		  },
+		});
+  
+		// Create new IA Service Request Outbox
+		await tx.ia_service_req_outbox.create({
+		  data: {
+			service_no: service_no,
+		  },
+		});
+  
+		// Create new Dist Service Request Inbox if it doesn't exist
+		const distInboxExists = await tx.dist_service_req_inbox.findUnique({
+		  where: {
+			service_no: service_no,
+		  },
+		});
+  
+		if (!distInboxExists) {
+		  await tx.dist_service_req_inbox.create({
+			data: {
+			  service_no: service_no,
+			},
+		  });
 		}
-
-		const serviceReq = await prisma.service_request.findFirst({
+  
+		// Handle DA Service Request Inbox or Outbox
+		if (serviceReq?.service !== 'return') {
+		  await tx.da_service_req_inbox.create({
+			data: {
+			  service_no: service_no,
+			},
+		  });
+		} else {
+		  await tx.da_service_req_inbox.delete({
 			where: {
-				service_no: service_no,
+			  service_no: service_no,
 			},
-			select: {
-				status: true,
-				service: true,
+		  });
+		  await tx.da_service_req_outbox.create({
+			data: {
+			  service_no: service_no,
 			},
-		})
-
-		if (serviceReq?.status !== 20) {
-			throw { error: true, message: 'Invalid status of service request to be rejected' }
+		  });
 		}
-
-		const distOutbox = await prisma.dist_service_req_outbox.count({
+  
+		// Delete from Dist Service Request Outbox if exists
+		if (distOutbox > 0) {
+		  await tx.dist_service_req_outbox.delete({
 			where: {
-				service_no: service_no,
+			  service_no: service_no,
 			},
-		})
-
-		const daOutbox = await prisma.da_service_req_outbox.count({
-			where: {
-				service_no: service_no,
-			},
-		})
-
-		//start transaction
-		await prisma.$transaction(async tx => {
-			await tx.ia_service_req_inbox.delete({
-				where: {
-					service_no: service_no,
-				},
-			})
-
-			await tx.ia_service_req_outbox.create({
-				data: {
-					service_no: service_no,
-				},
-			})
-
-			await tx.dist_service_req_inbox.create({
-				data: {
-					service_no: service_no,
-				},
-			})
-
-			if (distOutbox > 0) {
-				await tx.dist_service_req_outbox.delete({
-					where: {
-						service_no: service_no,
-					},
-				})
-			}
-
-			if (serviceReq?.service !== 'return') {
-				await tx.da_service_req_inbox.create({
-					data: {
-						service_no: service_no,
-					},
-				})
-			} else {
-				await tx.da_service_req_inbox.delete({
-					where: {
-						service_no: service_no,
-					},
-				})
-				await tx.da_service_req_outbox.create({
-					data: {
-						service_no: service_no,
-					},
-				})
-			}
-
-			if (daOutbox > 0) {
-				await tx.da_service_req_outbox.delete({
-					where: {
-						service_no: service_no,
-					},
-				})
-			}
-
-			await tx.service_request.update({
-				where: {
-					service_no: service_no,
-				},
-				data: {
-					status: 12,
-					remark: remark as string
-				},
-			})
-
-			await tx.notification.create({
-				data: {
-					role_id: Number(process.env.ROLE_DIST),
-					title: 'Service request rejected',
-					destination: 41,
-					from: await extractRoleName(Number(process.env.ROLE_IA)),
-					description: `${serviceTranslator(serviceReq?.service)} rejected. Service Number : ${service_no}`,
-					ulb_id
-				},
-			})
-
-			await tx.notification.create({
-				data: {
-					role_id: Number(process.env.ROLE_DA),
-					title: 'Service request rejected',
-					destination: 26,
-					from: await extractRoleName(Number(process.env.ROLE_IA)),
-					description: `${serviceTranslator(serviceReq?.service)} rejected. Service Number : ${service_no}`,
-					ulb_id
-				},
-			})
-		})
-
-		return 'Rejected by DA'
+		  });
+		}
+  
+		// Update service request status and add remark
+		await tx.service_request.update({
+		  where: {
+			service_no: service_no,
+		  },
+		  data: {
+			status: 12,
+			remark: remark as string,
+		  },
+		});
+  
+		// Create notifications
+		await tx.notification.create({
+		  data: {
+			role_id: Number(process.env.ROLE_DIST),
+			title: 'Service request rejected',
+			destination: 41,
+			from: await extractRoleName(Number(process.env.ROLE_IA)),
+			description: `${serviceTranslator(serviceReq?.service)} rejected. Service Number : ${service_no}`,
+			ulb_id,
+		  },
+		});
+  
+		await tx.notification.create({
+		  data: {
+			role_id: Number(process.env.ROLE_DA),
+			title: 'Service request rejected',
+			destination: 26,
+			from: await extractRoleName(Number(process.env.ROLE_IA)),
+			description: `${serviceTranslator(serviceReq?.service)} rejected. Service Number : ${service_no}`,
+			ulb_id,
+		  },
+		});
+	  });
+  
+	  return 'Rejected by DA';
 	} catch (err: any) {
-		console.log(err)
-		return { error: true, message: err?.message }
+	  console.log(err);
+	  return { error: true, message: err?.message };
 	}
-}
+  };
+  
 
 export const returnServiceRequestDal = async (req: Request) => {
 	const { service_no }: { service_no: string } = req.body
