@@ -1693,15 +1693,30 @@ export const addProductDal = async (req: Request) => {
 		  if (!procStockDatas?.subCategory_masterId) {
 			throw { error: true, meta: { message: 'Subcategory ID not found in procurement stock' } };
 		  }
+
+		  const existingBrand = await prisma.brand_master.findFirst({
+            where: {
+                name: brand,
+                ulb_id: ulb_id,  
+            },
+        });
+
+        if (existingBrand) {
+            throw { error: true, meta: { message: `Brand '${brand}' already exists in the specified ULB` } };
+        }
 		  
 		  const subCategoryMasterId = procStockDatas.subCategory_masterId;
-
-        const data: any = {
+		  const data: any = {
             name: brand,
-            subcategory_masterId: subCategoryMasterId,
             ulb_id: ulb_id,
+            subcategory: {
+                connect: {
+                    id: subCategoryMasterId, // Connecting to the existing subcategory
+                },
+            },
         };
 
+        // Create the brand
         const result = await prisma.brand_master.create({
             data: data,
         });
