@@ -13,6 +13,7 @@ import { extractRoleName } from '../../lib/roleNameExtractor'
 const prisma = new PrismaClient()
 
 export type procurementType = {
+	brandId: any
 	subcategory: string
 	brand: string
 	unit: string
@@ -72,10 +73,11 @@ export const createPreProcurementDal = async (req: Request) => {
 						description = inventoryData?.description as string
 					}
 
-					await tx.procurement_stocks.create({
+				const data = await tx.procurement_stocks.create({
 						data: {
 							procurement_no: procurement_no,
 							// boq_procurement_no: procurement_no,
+							brand_masterId:item?.brandId,
 							category_masterId: category,
 							subCategory_masterId: item?.subcategory,
 							unit_masterId: item?.unit,
@@ -85,6 +87,7 @@ export const createPreProcurementDal = async (req: Request) => {
 							description: description,
 						},
 					})
+					console.log("datadatadatadata",data)
 				})
 			)
 			await tx.ia_pre_procurement_inbox.create({
@@ -93,6 +96,7 @@ export const createPreProcurementDal = async (req: Request) => {
 				},
 			})
 		})
+		console.log("resultresult",result)
 		return result
 	} catch (err: any) {
 		console.log(err?.message)

@@ -373,109 +373,136 @@ export const getTotalStocksDal = async (req: Request) => {
 //   };
   
 export const getProcurementStocksDal = async (req: Request) => {
-	const page: number | undefined = Number(req?.query?.page) || 1; 
-	const take: number | undefined = Number(req?.query?.take) || 10; 
-	const from = req?.query?.from; 
-	const to = req?.query?.to; 
-	const ulb_id = req?.body?.auth?.ulb_id; 
-	const status = req?.query?.status_level ? Number(req.query.status_level) : undefined; 
-	let category_masterid = req?.query?.category_masterid;
-	if (Array.isArray(category_masterid)) {
-	  category_masterid = category_masterid[0]; 
-	}
-  
-	const startIndex: number = (page - 1) * take;
-	const endIndex: number = startIndex + take;
-	let count: number;
-	let totalPage: number;
-	let pagination: pagination = { currentPage: page, currentTake: take, totalPage: 0, totalResult: 0 };
-  
-	const whereClause: Prisma.procurementWhereInput = {};
+    const page: number | undefined = Number(req?.query?.page) || 1; 
+    const take: number | undefined = Number(req?.query?.take) || 10; 
+    const from = req?.query?.from; 
+    const to = req?.query?.to; 
+    const ulb_id = req?.body?.auth?.ulb_id; 
+    const status = req?.query?.status_level ? Number(req.query.status_level) : undefined; 
+    let category_masterid = req?.query?.category_masterid;
+    const search = (req?.query?.search || '') as string; // Ensure it's treated as a string
 
-	if (ulb_id) {
-	  whereClause.ulb_id = ulb_id; 
-	}
-  
-	if (from && to) {
-	  whereClause.updatedAt = {
-		gte: new Date(`${from}T00:00:00Z`), 
-		lte: new Date(`${to}T23:59:59Z`), 
-	  };
-	}
-  
-	if (category_masterid) {
-	  whereClause.category = {
-		id: category_masterid, 
-	  };
-	}
-  
+    // Ensure category_masterid is a single string, not an array
+    if (Array.isArray(category_masterid)) {
+        category_masterid = category_masterid[0]; 
+    }
 
-	if (status !== undefined) {
-		whereClause.status = status; 
-	  }
-  
-	const dataToSend: any[] = [];
-  
-	try {
-	  const result = await prisma.procurement.findMany({
-		orderBy: {
-		  updatedAt: 'desc', 
-		},
-		where: whereClause,
-		skip: startIndex, 
-		take: take, 
-		select: {
-		  id: true,
-		  category: {
-			select: {
-			  id: true,
-			  name: true,
-			},
-		  },
-		  supplier_master: true, 
-		  status: true,
-		  procurement_stocks: {
-			select: {
-			  description: true, 
-			},
-		  },
-		},
-	  });
+    const startIndex: number = (page - 1) * take;
+    const endIndex: number = startIndex + take;
+    let count: number;
+    let totalPage: number;
+    let pagination: pagination = { currentPage: page, currentTake: take, totalPage: 0, totalResult: 0 };
 
-	  dataToSend.push(...result);
+    const whereClause: Prisma.procurementWhereInput = {};
 
-	  count = await prisma.procurement.count({
-		where: whereClause,
-	  });
-  
-	  totalPage = Math.ceil(count / take);
+    if (ulb_id) {
+        whereClause.ulb_id = ulb_id; 
+    }
 
-	  if (endIndex < count) {
-		pagination.next = {
-		  page: page + 1, 
-		  take: take,
-		};
-	  }
-  
-	  if (startIndex > 0) {
-		pagination.prev = {
-		  page: page - 1, 
-		  take: take,
-		};
-	  }
-  
-	  pagination.totalPage = totalPage;
-	  pagination.totalResult = count;
-  
-	  return {
-		data: dataToSend,
-		pagination: pagination,
-	  };
-	} catch (err: any) {
-	  console.log(err); 
-	  return { error: true, message: getErrorMessage(err) }; 
-	}
+    if (from && to) {
+        whereClause.updatedAt = {
+            gte: new Date(`${from}T00:00:00Z`), 
+            lte: new Date(`${to}T23:59:59Z`), 
+        };
+    }
+
+    if (category_masterid) {
+        whereClause.category = {
+            id: category_masterid, 
+        };
+    }
+
+    if (status !== undefined) {
+        whereClause.status = status; 
+    }
+
+    // Add a search condition if the search term is provided
+    if (search) {
+        whereClause.procurement_stocks = {
+            some: {
+                OR: [
+                    {
+                        description: {
+                            contains: search, // Match the search term in the description field
+                            mode: 'insensitive', // Case insensitive search
+                        },
+                    },
+                    {
+                        procurement_no: {
+                            contains: search, // Match the search term in procurement_no
+                            mode: 'insensitive', // Case insensitive search
+                        },
+                    }
+                ]
+            }
+        };
+    }
+
+    const dataToSend: any[] = [];
+
+    try {
+        const result = await prisma.procurement.findMany({
+            orderBy: {
+                updatedAt: 'desc', 
+            },
+            where: whereClause,
+            skip: startIndex, 
+            take: take, 
+            select: {
+                id: true,
+                category: {
+                    select: {
+                        id: true,
+                        name: true,
+                    },
+                },
+                supplier_master: true, 
+                status: true,
+                procurement_stocks: {
+                    select: {
+                        description: true, 
+                        procurement_no: true,
+                    },
+                },
+            },
+        });
+
+        dataToSend.push(...result);
+
+        count = await prisma.procurement.count({
+            where: whereClause,
+        });
+
+        totalPage = Math.ceil(count / take);
+
+        if (endIndex < count) {
+            pagination.next = {
+                page: page + 1, 
+                take: take,
+            };
+        }
+
+        if (startIndex > 0) {
+            pagination.prev = {
+                page: page - 1, 
+                take: take,
+            };
+        }
+
+        pagination.totalPage = totalPage;
+        pagination.totalResult = count;
+
+        return {
+            data: dataToSend,
+            pagination: pagination,
+        };
+    } catch (err: any) {
+        console.log(err); 
+        return { error: true, message: getErrorMessage(err) }; 
+    }
 };
+
+
 
   
   
