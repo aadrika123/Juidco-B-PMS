@@ -269,52 +269,111 @@ export const createPreTenderDetailsDal = async (req: Request) => {
 }
 
 export const getPreTenderDetailsDal = async (req: Request) => {
-	const { reference_no } = req.params
-	try {
-		if (!reference_no) {
-			throw { error: true, message: "Reference number is required as 'reference_no'" }
-		}
+    const { reference_no } = req.params;
+    
+    try {
+        // Check if reference_no is provided
+        if (!reference_no) {
+            throw { error: true, message: "Reference number is required as 'reference_no'" };
+        }
 
-		const result = await prisma.pre_tendering_details.findFirst({
-			where: {
-				reference_no: reference_no,
-			},
-			select: {
-				reference_no: true,
-				boq: {
-					include: {
-						bid_details: {
-							select: {
-								bidder_master: {
-									select: {
-										id: true
-									}
-								}
-							}
-						}
-					}
-				},
-				emd: true,
-				estimated_amount: true,
-				emd_type: true,
-				emd_value: true,
-				pbg_type: true,
-				pbg_value: true,
-				tendering_type: true,
-				tenure: true,
-				min_supplier: true,
-				max_supplier: true,
-				no_of_covers: true,
-				is_rate_contract: true
-			},
-		})
+        // Query the pre_tendering_details table for the reference_no
+        const result = await prisma.pre_tendering_details.findFirst({
+            where: {
+                reference_no: reference_no,
+            },
+            select: {
+                reference_no: true,
+                boq: {
+                    include: {
+                        bid_details: {
+                            select: {
+                                bidder_master: {
+                                    select: {
+                                        id: true
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                emd: true,
+                estimated_amount: true,
+                emd_type: true,
+                emd_value: true,
+                pbg_type: true,
+                pbg_value: true,
+                tendering_type: true,
+                tenure: true,
+                min_supplier: true,
+                max_supplier: true,
+                no_of_covers: true,
+                is_rate_contract: true
+            },
+        });
 
-		return result ? result : null
-	} catch (err: any) {
-		console.log(err)
-		return { error: true, message: getErrorMessage(err) }
-	}
-}
+        // Ensure the boq and procurement_no are present
+        if (result?.boq && result?.boq?.procurement_no) {
+            console.log("Procurement Number found:", result.boq.procurement_no);
+
+            // Query the procurement_stocks table based on procurement_no
+            const boqData = await prisma.procurement_stocks.findFirst({
+                where: {
+                    procurement_no: result.boq.procurement_no,
+                },
+            });
+
+            console.log("boqData from procurement_stocks:", boqData);
+
+            // If boqData exists, we now query the CategoryMaster and SubCategoryMaster tables
+            let categoryDescription = null;
+            let subCategoryDescription = null;
+
+            // Query category master only if category_masterId is not null
+            if (boqData?.category_masterId) {
+                const categoryData = await prisma.category_master.findUnique({
+                    where: {
+                        id: boqData.category_masterId,  // Match the category_masterId
+                    },
+                   
+                });
+				console.log("categoryDatacategoryData",categoryData)
+				categoryDescription = categoryData || "category not found";
+            }
+			
+
+            // Query sub-category master only if subCategory_masterId is not null
+            if (boqData?.subCategory_masterId) {
+                const subCategoryData = await prisma.subcategory_master.findUnique({
+                    where: {
+                        id: boqData.subCategory_masterId,  
+                    },
+                    
+                });
+				subCategoryDescription = subCategoryData || "Sub-category not found";
+
+
+            }
+
+            // Combine all the data to return
+            return {
+				...result,
+                boqData,
+                categoryDescription,
+                subCategoryDescription,
+            };
+        } else {
+            console.log("No BOQ data or procurement_no found.");
+            return null;
+        }
+    } catch (err: any) {
+        console.error("Error fetching pre-tender details:", err);
+        return { error: true, message: getErrorMessage(err) };
+    }
+};
+
+
+
 
 export const addNoOfCoversDal = async (req: Request) => {
 	const { reference_no, no_of_covers }: { reference_no: string, no_of_covers: number } = req.body
