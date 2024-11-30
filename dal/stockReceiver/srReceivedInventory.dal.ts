@@ -1207,7 +1207,18 @@ export const addToInventoryDal = async (req: Request) => {
 	let inventoryId = inventory
 	let exist: boolean = false
 	let currentInventoryId: string
+	let statusData:boolean;
 	try {
+		if(typeof warranty == 'string'){
+			if(warranty == 'false'){
+				statusData = false;
+			}else if(warranty == 'true'){
+				statusData = true;
+			}
+
+		}else{
+			statusData = warranty;
+		}
 		const totalNonAddedReceiving: any = await prisma.receivings.aggregate({
 			where: {
 				procurement_no: procurement_no || '',
@@ -1347,6 +1358,7 @@ export const addToInventoryDal = async (req: Request) => {
                                 ? totalNonAddedReceiving?._sum?.received_quantity - Number(dead_stock)
                                 : totalNonAddedReceiving?._sum?.received_quantity,
                         },
+						...(warranty !== undefined && { warranty: statusData }),
                     },
                 });
 
@@ -1354,8 +1366,6 @@ export const addToInventoryDal = async (req: Request) => {
 
                 if (!updatedInv) throw { error: true, message: 'Error while updating inventory' };
             } else {
-                // If no matching inventory, create a new one
-				console.log("checking the warranty",warranty)
                 const createdInv = await tx.inventory.create({
                     data: {
                         category: { connect: { id: procData?.category_masterId } },
@@ -1369,10 +1379,9 @@ export const addToInventoryDal = async (req: Request) => {
                         quantity: dead_stock
                             ? totalNonAddedReceiving?._sum?.received_quantity - Number(dead_stock)
                             : totalNonAddedReceiving?._sum?.received_quantity,
-                        ...(warranty && { warranty: Boolean(warranty) }),
+                        ...(warranty && { warranty: statusData }),
                     },
                 });
-				console.log("createdInvcreatedInv",createdInv)
 
                 currentInventoryId = createdInv?.id;
 
