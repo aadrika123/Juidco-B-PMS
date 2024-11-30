@@ -56,6 +56,7 @@ export const getStockReqByStockHandoverNoDal = async (req: Request) => {
 				  abbreviation: true,
 				},
 			  },
+			
 			},
 		  },
 		  emp_service_request: {

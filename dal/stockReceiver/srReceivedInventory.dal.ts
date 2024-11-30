@@ -1355,6 +1355,7 @@ export const addToInventoryDal = async (req: Request) => {
                 if (!updatedInv) throw { error: true, message: 'Error while updating inventory' };
             } else {
                 // If no matching inventory, create a new one
+				console.log("checking the warranty",warranty)
                 const createdInv = await tx.inventory.create({
                     data: {
                         category: { connect: { id: procData?.category_masterId } },
@@ -1371,6 +1372,7 @@ export const addToInventoryDal = async (req: Request) => {
                         ...(warranty && { warranty: Boolean(warranty) }),
                     },
                 });
+				console.log("createdInvcreatedInv",createdInv)
 
                 currentInventoryId = createdInv?.id;
 
