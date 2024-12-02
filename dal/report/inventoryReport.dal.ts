@@ -6,23 +6,23 @@ import { pagination } from '../../type/common.type'
 const prisma = new PrismaClient()
 
 export const getTotalStocksDal = async (req: Request) => {
-	const page: number | undefined = Number(req?.query?.page)
-	const take: number | undefined = Number(req?.query?.take)
-	const from = req?.query?.from//yyyy-mm-dd
-	const to = req?.query?.to//yyyy-mm-dd
-	const startIndex: number | undefined = (page - 1) * take
-	const endIndex: number | undefined = startIndex + take
-	let count: number
-	let totalPage: number
-	let pagination: pagination = {}
-	const whereClause: Prisma.inventoryWhereInput = {}
-	const ulb_id = req?.body?.auth?.ulb_id
-	const dataToSend: any[] = []
+	const page: number | undefined = Number(req?.query?.page);
+	const take: number | undefined = Number(req?.query?.take);
+	const from = req?.query?.from; // yyyy-mm-dd
+	const to = req?.query?.to; // yyyy-mm-dd
+	const startIndex: number | undefined = (page - 1) * take;
+	const endIndex: number | undefined = startIndex + take;
+	let count: number;
+	let totalPage: number;
+	let pagination: pagination = {};
+	const whereClause: Prisma.inventoryWhereInput = {};
+	const ulb_id = req?.body?.auth?.ulb_id;
+	const dataToSend: any[] = [];
 
-	const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined
+	const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined;
 
-	const category: any[] = Array.isArray(req?.query?.category) ? req?.query?.category : [req?.query?.category]
-	const subcategory: any[] = Array.isArray(req?.query?.scategory) ? req?.query?.scategory : [req?.query?.scategory]
+	const category: any[] = Array.isArray(req?.query?.category) ? req?.query?.category : [req?.query?.category];
+	const subcategory: any[] = Array.isArray(req?.query?.scategory) ? req?.query?.scategory : [req?.query?.scategory];
 
 	//creating search options for the query
 	if (search) {
@@ -32,8 +32,8 @@ export const getTotalStocksDal = async (req: Request) => {
 					contains: search,
 					mode: 'insensitive',
 				},
-			}
-		]
+			},
+		];
 	}
 
 	if (category[0] || subcategory[0]) {
@@ -44,7 +44,6 @@ export const getTotalStocksDal = async (req: Request) => {
 						category_masterId: {
 							in: category,
 						},
-
 					},
 				]
 				: []),
@@ -58,21 +57,21 @@ export const getTotalStocksDal = async (req: Request) => {
 				]
 				: []),
 			{
-				ulb_id: ulb_id
-			}
-		]
+				ulb_id: ulb_id,
+			},
+		];
 	} else {
 		whereClause.AND = [
 			{
-				ulb_id: ulb_id
-			}
-		]
+				ulb_id: ulb_id,
+			},
+		];
 	}
 
 	try {
 		count = await prisma.inventory.count({
 			where: whereClause,
-		})
+		});
 		const result = await prisma.inventory.findMany({
 			orderBy: {
 				updatedAt: 'desc',
@@ -85,114 +84,122 @@ export const getTotalStocksDal = async (req: Request) => {
 				category: {
 					select: {
 						id: true,
-						name: true
-					}
+						name: true,
+					},
 				},
 				subcategory: {
 					select: {
 						id: true,
-						name: true
-					}
+						name: true,
+					},
 				},
 				unit: {
 					select: {
 						id: true,
 						name: true,
-						abbreviation: true
-					}
+						abbreviation: true,
+					},
 				},
 				description: true,
-				// quantity: true,
+				quantity: true,
 				warranty: true,
 				supplier_master: true,
-				quantity:true
 			},
-		})
-
+		});
 
 		const formattedFrom = from ? `${from} 00:00:00` : null;
 		const formattedTo = to ? `${to} 23:59:59` : null;
 
 		await Promise.all(
-			result.map(async (item: any, index: number) => {
+			result.map(async (item: any) => {
 				const products: any[] = await prisma.$queryRawUnsafe(`
-					SELECT sum(opening_quantity) as opening_quantity, serial_no,brand,quantity,opening_quantity,is_available,procurement_stock_id,updatedat
+					SELECT sum(opening_quantity) as opening_quantity, serial_no, brand, quantity, opening_quantity, is_available, procurement_stock_id, updatedat
 					FROM product.product_${item?.subcategory?.name.toLowerCase().replace(/\s/g, '')}
 					WHERE inventory_id = '${item?.id}'
-						${formattedFrom && formattedTo ? `and updatedat between '${formattedFrom}' and '${formattedTo}'` : ''}
-					group by serial_no,brand,quantity,opening_quantity,is_available,procurement_stock_id,updatedat
-					`)
+					${formattedFrom && formattedTo ? `and updatedat between '${formattedFrom}' and '${formattedTo}'` : ''}
+					group by serial_no, brand, quantity, opening_quantity, is_available, procurement_stock_id, updatedat
+				`);
 
 				const productsTotal: any[] = await prisma.$queryRawUnsafe(`
-						SELECT sum(opening_quantity) as opening_quantity
-						FROM product.product_${item?.subcategory?.name.toLowerCase().replace(/\s/g, '')}
-						WHERE inventory_id = '${item?.id}'
-							${formattedFrom && formattedTo ? `and updatedat between '${formattedFrom}' and '${formattedTo}'` : ''}
-						`)
+					SELECT sum(opening_quantity) as opening_quantity
+					FROM product.product_${item?.subcategory?.name.toLowerCase().replace(/\s/g, '')}
+					WHERE inventory_id = '${item?.id}'
+					${formattedFrom && formattedTo ? `and updatedat between '${formattedFrom}' and '${formattedTo}'` : ''}
+				`);
 
 				const stockReq = await prisma.stock_req_product.aggregate({
 					where: {
-						inventoryId: item?.id
+						inventoryId: item?.id,
 					},
 					_sum: {
-						quantity: true
-					}
-				})
+						quantity: true,
+					},
+				});
 
 				if (products.length !== 0) {
-					// item.opening_quantity = products[0]?.opening_quantity
-					item.products = products
+					item.products = products;
 					const deadStock = await prisma.inventory_dead_stock.aggregate({
 						where: {
-							inventoryId: item?.id
+							inventoryId: item?.id,
 						},
 						_sum: {
-							quantity: true
-						}
-					})
-					item.dead_stock = deadStock?._sum?.quantity
-					item.total_quantity = Number(productsTotal[0]?.opening_quantity) + Number(deadStock?._sum?.quantity) + Number(stockReq?._sum.quantity)
-					// item.quantity = Number(productsTotal[0]?.opening_quantity)
-					item.quantity = item.quantity
-					dataToSend.push(item);
+							quantity: true,
+						},
+					});
+					item.dead_stock = deadStock?._sum?.quantity;
+					item.total_quantity =
+						Number(productsTotal[0]?.opening_quantity) +
+						Number(deadStock?._sum?.quantity) +
+						Number(stockReq?._sum?.quantity);
 
-      dataToSend.sort((a, b) => {
-    if (a.name < b.name) return -1;
-    if (a.name > b.name) return 1;
-    return a.quantity - b.quantity; 
-});
+					// Make sure the quantity is not negative
+					if (item.quantity >= 0 && item.total_quantity >= 0) {
+						// Only push the item to dataToSend if its quantity is positive or zero
+						dataToSend.push(item);
+					} else {
+						count = count - 1; // Exclude this item from the count if quantities are negative
+					}
 				} else {
-					count = count - 1
+					count = count - 1; // Exclude this item from the count if no products are found
 				}
 			})
-		)
+		);
 
-		totalPage = Math.ceil(count / take)
+		// Sorting the results after all the checks
+		dataToSend.sort((a, b) => {
+			if (a.category.name < b.category.name) return -1;
+			if (a.category.name > b.category.name) return 1;
+			return a.total_quantity - b.total_quantity; // Sorting by total_quantity (ascending)
+		});
+
+		totalPage = Math.ceil(count / take);
 		if (endIndex < count) {
 			pagination.next = {
 				page: page + 1,
 				take: take,
-			}
+			};
 		}
 		if (startIndex > 0) {
 			pagination.prev = {
 				page: page - 1,
 				take: take,
-			}
+			};
 		}
-		pagination.currentPage = page
-		pagination.currentTake = take
-		pagination.totalPage = totalPage
-		pagination.totalResult = count
+		pagination.currentPage = page;
+		pagination.currentTake = take;
+		pagination.totalPage = totalPage;
+		pagination.totalResult = count;
+
 		return {
 			data: dataToSend,
 			pagination: pagination,
-		}
+		};
 	} catch (err: any) {
-		console.log(err)
-		return { error: true, message: getErrorMessage(err) }
+		console.log(err);
+		return { error: true, message: getErrorMessage(err) };
 	}
-}
+};
+
 
 // export const getProcurementStocksDal = async (req: Request) => {
 // 	const page: number | undefined = Number(req?.query?.page)
