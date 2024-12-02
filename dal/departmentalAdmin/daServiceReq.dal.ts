@@ -421,93 +421,111 @@ export const getServiceReqOutboxDal = async (req: Request) => {
 export const approveServiceRequestDal = async (req: Request) => {
 	const { service_no }: { service_no: string } = req.body
 	const ulb_id = req?.body?.auth?.ulb_id
-
+  
 	try {
-		const serviceReq = await prisma.service_request.findFirst({
-			where: {
-				service_no: service_no,
-			},
-			select: {
-				status: true,
-				service: true,
-			},
+	  // Fetch the service request details
+	  const serviceReq = await prisma.service_request.findFirst({
+		where: {
+		  service_no: service_no,
+		},
+		select: {
+		  status: true,
+		  service: true,
+		},
+	  })
+  
+	  if (serviceReq?.status !== 10 && serviceReq?.status !== 20) {
+		throw { error: true, message: 'Invalid status of service request to be approved' }
+	  }
+  
+	  const iaOutbox = await prisma.ia_service_req_outbox.count({
+		where: {
+		  service_no: service_no,
+		},
+	  })
+  
+	  // Start transaction
+	  await prisma.$transaction(async tx => {
+		// Check if the service_no already exists in the ia_service_req_inbox table
+		const existingInbox = await tx.ia_service_req_inbox.findFirst({
+		  where: {
+			service_no: service_no,
+		  },
 		})
-
-		if (serviceReq?.status !== 10) {
-			throw { error: true, message: 'Invalid status of service request to be approved' }
+  
+		if (!existingInbox) {
+		  // Only create a new record if it doesn't exist
+		  await tx.ia_service_req_inbox.create({
+			data: {
+			  service_no: service_no,
+			},
+		  })
+		} else {
+		  // If already exists, you can either throw an error or update based on your business logic
+		  console.log('Service No already exists in ia_service_req_inbox');
+		  // Optionally, you can skip the creation or update the existing record here
 		}
-
-		const iaOutbox = await prisma.ia_service_req_outbox.count({
+  
+		// Continue with the other actions in the transaction
+		await tx.da_service_req_inbox.delete({
+		  where: {
+			service_no: service_no,
+		  },
+		})
+  
+		await tx.da_service_req_outbox.create({
+		  data: {
+			service_no: service_no,
+		  },
+		})
+  
+		if (iaOutbox > 0) {
+		  await tx.ia_service_req_outbox.delete({
 			where: {
-				service_no: service_no,
+			  service_no: service_no,
 			},
+		  })
+		}
+  
+		await tx.service_request.update({
+		  where: {
+			service_no: service_no,
+		  },
+		  data: {
+			status: 20,
+		  },
 		})
-
-		//start transaction
-		await prisma.$transaction(async tx => {
-			await tx.da_service_req_inbox.delete({
-				where: {
-					service_no: service_no,
-				},
-			})
-
-			await tx.da_service_req_outbox.create({
-				data: {
-					service_no: service_no,
-				},
-			})
-
-			await tx.ia_service_req_inbox.create({
-				data: {
-					service_no: service_no,
-				},
-			})
-
-			if (iaOutbox > 0) {
-				await tx.ia_service_req_outbox.delete({
-					where: {
-						service_no: service_no,
-					},
-				})
-			}
-
-			await tx.service_request.update({
-				where: {
-					service_no: service_no,
-				},
-				data: {
-					status: 20,
-				},
-			})
-
-			await tx.notification.create({
-				data: {
-					role_id: Number(process.env.ROLE_IA),
-					title: 'New Service request',
-					destination: 81,
-					from: await extractRoleName(Number(process.env.ROLE_DA)),
-					description: `There is a ${serviceTranslator(serviceReq?.service)}. Service Number : ${service_no}`,
-					ulb_id
-				},
-			})
-			await tx.notification.create({
-				data: {
-					role_id: Number(process.env.ROLE_DIST),
-					title: 'Service request forwarded',
-					destination: 41,
-					from: await extractRoleName(Number(process.env.ROLE_DA)),
-					description: `${serviceTranslator(serviceReq?.service)} forwarded to Inventory Admin. Service Number : ${service_no}`,
-					ulb_id
-				},
-			})
+  
+		await tx.notification.create({
+		  data: {
+			role_id: Number(process.env.ROLE_IA),
+			title: 'New Service request',
+			destination: 81,
+			from: await extractRoleName(Number(process.env.ROLE_DA)),
+			description: `There is a ${serviceTranslator(serviceReq?.service)}. Service Number : ${service_no}`,
+			ulb_id
+		  },
 		})
-
-		return 'Approved by DA'
+  
+		await tx.notification.create({
+		  data: {
+			role_id: Number(process.env.ROLE_DIST),
+			title: 'Service request forwarded',
+			destination: 41,
+			from: await extractRoleName(Number(process.env.ROLE_DA)),
+			description: `${serviceTranslator(serviceReq?.service)} forwarded to Inventory Admin. Service Number : ${service_no}`,
+			ulb_id
+		  },
+		})
+	  })
+  
+	  return 'Approved by DA'
 	} catch (err: any) {
-		console.log(err)
-		return { error: true, message: err?.message }
+	  console.log(err)
+	  return { error: true, message: err?.message }
 	}
-}
+  }
+  
 
 export const rejectServiceRequestDal = async (req: Request) => {
 	const { service_no }: { service_no: string } = req.body

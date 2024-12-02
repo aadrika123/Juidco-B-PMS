@@ -465,8 +465,8 @@ export const approveServiceRequestDal = async (req: Request) => {
 				service_req_product: true,
 			},
 		})
-		console.log('serviceReqserviceReq',serviceReq)
 
+		console.log("serviceReqserviceReqserviceReq",serviceReq?.stock_handover_no)
 		if (serviceReq?.service === 'dead' && doc?.length === 0) {
 			throw { error: true, message: 'For dead stock request, document is mandatory' }
 		}
@@ -481,6 +481,12 @@ export const approveServiceRequestDal = async (req: Request) => {
 			},
 		})
 
+		const handoverData = await prisma.dist_stock_req_inbox.findFirst({
+			where :{
+				stock_handover_no:serviceReq?.stock_handover_no
+			}
+		})
+
 		const distOutbox = await prisma.dist_service_req_outbox.count({
 			where: {
 				service_no: service_no,
@@ -493,7 +499,6 @@ export const approveServiceRequestDal = async (req: Request) => {
 			},
 		})
 
-		console.log("serviceReq?.serviceserviceReq?.service",serviceReq?.service)
 		//start transaction
 		await prisma.$transaction(async tx => {
 			if (serviceReq?.service === 'dead') {
@@ -532,29 +537,34 @@ export const approveServiceRequestDal = async (req: Request) => {
 				},
 			})
 
-			// await tx.dist_service_req_inbox.create({
-			// 	data: {
-			// 		service_no: service_no,
-			// 	},
-			// })
+			if(handoverData == null){
+				await tx.dist_stock_req_inbox.create({
+					data: {
+						stock_handover_no: serviceReq?.stock_handover_no,
+					},
+				})
+			}
+			
 
-
+			// Check if record exists in dist_service_req_inbox
 			const existingInboxEntry = await tx.dist_service_req_inbox.findUnique({
 				where: {
-				  service_no: service_no, 
-				},
-			  });
-			  
-			  if (!existingInboxEntry) {
-				await tx.dist_service_req_inbox.create({
-				  data: {
 					service_no: service_no,
-				  },
-				});
-			  } else {
-				console.log(`Service number ${service_no} already exists in dist_service_req_inbox. Skipping insert.`);
-			  }
+				},
+			})
 
+			if (!existingInboxEntry) {
+				// Only insert if not already existing
+				await tx.dist_service_req_inbox.create({
+					data: {
+						service_no: service_no,
+					},
+				})
+			} else {
+				console.log(`Service number ${service_no} already exists in dist_service_req_inbox. Skipping insert.`);
+			}
+
+			// Check if service_no exists in dist_service_req_outbox
 			if (distOutbox > 0) {
 				await tx.dist_service_req_outbox.delete({
 					where: {
@@ -563,6 +573,24 @@ export const approveServiceRequestDal = async (req: Request) => {
 				})
 			}
 
+			// Check if record exists in da_service_req_outbox before insertion
+			const existingDaOutboxEntry = await tx.da_service_req_outbox.findUnique({
+				where: {
+					service_no: service_no,
+				},
+			})
+
+			if (existingDaOutboxEntry !== null) {
+				await tx.da_service_req_outbox.create({
+					data: {
+						service_no: service_no,
+					},
+				})
+			} else {
+				console.log(`Service number ${service_no} already exists in da_service_req_outbox. Skipping insert.`);
+			}
+
+			// Handle DA inbox and outbox based on service type
 			if (serviceReq?.service !== 'return') {
 				await tx.da_service_req_inbox.create({
 					data: {
@@ -570,6 +598,10 @@ export const approveServiceRequestDal = async (req: Request) => {
 					},
 				})
 			} else {
+				console.log("service_noservice_no",service_no,existingDaOutboxEntry)
+				// if(existingDaOutboxEntry !== null){
+
+				
 				await tx.da_service_req_inbox.delete({
 					where: {
 						service_no: service_no,
@@ -580,8 +612,10 @@ export const approveServiceRequestDal = async (req: Request) => {
 						service_no: service_no,
 					},
 				})
+			// }
 			}
 
+			// Deleting from da_service_req_outbox if necessary
 			if (daOutbox > 0) {
 				await tx.da_service_req_outbox.delete({
 					where: {
@@ -628,6 +662,7 @@ export const approveServiceRequestDal = async (req: Request) => {
 		return { error: true, message: err?.message }
 	}
 }
+
 
 export const rejectServiceRequestDal = async (req: Request) => {
 	const { service_no, remark }: { service_no: string, remark: string } = req.body;
@@ -696,6 +731,18 @@ export const rejectServiceRequestDal = async (req: Request) => {
 			},
 		  });
 		}
+		const data = await tx.da_service_req_inbox.findFirst({
+			where: {
+			  service_no: service_no,
+			} 
+		})
+
+		const datas = await tx.da_service_req_outbox.findFirst({
+			where: {
+			  service_no: service_no,
+			} 
+		})
+		console.log("datadata",datas)
   
 		// Handle DA Service Request Inbox or Outbox
 		if (serviceReq?.service !== 'return') {
@@ -705,16 +752,20 @@ export const rejectServiceRequestDal = async (req: Request) => {
 			},
 		  });
 		} else {
-		  await tx.da_service_req_inbox.delete({
-			where: {
-			  service_no: service_no,
-			},
-		  });
+			if(data !==null){
+				await tx.da_service_req_inbox.delete({
+					where: {
+					  service_no: service_no,
+					},
+				  });
+			}
+			if(datas ==null){
 		  await tx.da_service_req_outbox.create({
 			data: {
 			  service_no: service_no,
 			},
 		  });
+		}
 		}
   
 		// Delete from Dist Service Request Outbox if exists
@@ -983,10 +1034,7 @@ const warrantyClaim = async (serial_no: string, remark: string, subcategory_name
 				`
 		)
 		.then((result: any) => result[0])
-		console.log("subcategory_namesubcategory_name",subcategory_name)
-		console.log("serial_noserial_no",serial_no)
 
-		console.log("product",product)
 
 	const inv = await prisma.inventory.findFirst({
 		where: {

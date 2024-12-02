@@ -1188,6 +1188,7 @@ export const getReceivedInventoryOutboxByIdDal = async (req: Request) => {
 }
 
 const getRateContractSupplier = async (id: string) => {
+	console.log("ididididid",id)
 	const result = await prisma.rate_contract_supplier.findFirst({
 		where: {
 			id: id
