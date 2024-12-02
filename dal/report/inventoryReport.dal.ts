@@ -676,12 +676,10 @@ export const getTotalRemainingStocksDal = async (req: Request) => {
                     // Calculate remaining quantity
                     item.remaining_quantity = openingQuantity - deadStockQuantity - stockReqQuantity - warrantyStockQuantity;
 
-                    // Check if remaining quantity is negative and still push the item
-                    if (item.remaining_quantity < 0) {
-                        console.log(`Warning: Remaining quantity for item ${item.id} is negative: ${item.remaining_quantity}`);
+                    // Only add to dataToSend if remaining_quantity is 0 or positive
+                    if (item.remaining_quantity >= 0 && item.quantity >= 0) {
+                        dataToSend.push(item);
                     }
-
-                    dataToSend.push(item);
                 } else {
                     count = count - 1;
                 }
@@ -718,6 +716,7 @@ export const getTotalRemainingStocksDal = async (req: Request) => {
         return { error: true, message: getErrorMessage(err) };
     }
 };
+
 
 
 
