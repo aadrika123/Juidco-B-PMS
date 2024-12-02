@@ -54,12 +54,13 @@ export const getServiceReqByServiceNoDal = async (req: Request) => {
 				},
 			},
 		})
+		console.log("service_noservice_no",service_no)
 
-		await  prisma.da_service_req_inbox.create({
-			data: {
-				service_no: service_no,
-			},
-		})
+		// await  prisma.da_service_req_inbox.create({
+		// 	data: {
+		// 		service_no: service_no,
+		// 	},
+		// })
 
 		// let resultToSend: any = {}
 
