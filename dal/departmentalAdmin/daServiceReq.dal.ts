@@ -434,9 +434,10 @@ export const approveServiceRequestDal = async (req: Request) => {
 		},
 	  })
   
-	  if (serviceReq?.status !== 10 && serviceReq?.status !== 20) {
+	  if (serviceReq?.status !== 10 && serviceReq?.status !== 20 && serviceReq?.status !== 61) {
 		throw { error: true, message: 'Invalid status of service request to be approved' }
 	  }
+	  
   
 	  const iaOutbox = await prisma.ia_service_req_outbox.count({
 		where: {

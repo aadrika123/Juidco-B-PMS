@@ -86,6 +86,8 @@ export const getProcurementByProcurementNoDal = async (req: Request) => {
 			},
 		})
 
+		console.log("resultresult",result)
+
 		if (result?.procurement_stocks) {
 			await Promise.all(
 				result?.procurement_stocks.map(async (stock: any) => {
