@@ -1412,7 +1412,7 @@ export const addToInventoryDal = async (req: Request) => {
                     procurement_no: procurement_no,
                 },
             });
-            if (outboxExistence === 0) {
+            if (outboxExistence === 0 && !procData?.is_partial) {
                 const srRecInvOut = await tx.sr_received_inventory_outbox.create({
                     data: {
                         procurement_no: procurement_no,
