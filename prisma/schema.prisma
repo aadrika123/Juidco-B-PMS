@@ -856,21 +856,22 @@ model fee_details {
 }
 
 model critical_dates {
-    id                String         @id @default(uuid())
-    reference_no      String         @unique
-    publishingDate    DateTime
-    bidOpeningDate    DateTime
-    docSaleStartDate  DateTime
-    docSaleEndDate    DateTime
-    seekClariStrtDate DateTime
-    seekClariEndDate  DateTime
-    bidSubStrtDate    DateTime
-    bidSubEndDate     DateTime
-    preBidMettingDate DateTime?
-    createdAt         DateTime       @default(now())
-    updatedAt         DateTime       @updatedAt
-    tendering_form    tendering_form @relation(fields: [reference_no], references: [reference_no])
+  id                String         @id @default(uuid()) // Primary key with UUID
+  reference_no      String         @unique // Unique constraint for reference_no
+  publishingDate    DateTime?      // Nullable DateTime field
+  bidOpeningDate    DateTime?      // Nullable DateTime field
+  docSaleStartDate  DateTime?      // Nullable DateTime field
+  docSaleEndDate    DateTime?      // Nullable DateTime field
+  seekClariStrtDate DateTime?      // Nullable DateTime field
+  seekClariEndDate  DateTime?      // Nullable DateTime field
+  bidSubStrtDate    DateTime?      // Nullable DateTime field
+  bidSubEndDate     DateTime?      // Nullable DateTime field
+  preBidMettingDate DateTime?      // Nullable DateTime field
+  createdAt         DateTime       @default(now()) // Automatically set to current time
+  updatedAt         DateTime       @updatedAt       // Automatically updated when modified
+  tendering_form    tendering_form @relation(fields: [reference_no], references: [reference_no]) // Relation with tendering_form
 }
+
 
 enum bid_openers_docs_enum {
     B01
