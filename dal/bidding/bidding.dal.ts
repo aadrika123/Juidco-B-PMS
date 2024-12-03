@@ -9,14 +9,14 @@ const prisma = new PrismaClient()
 
 
 export const getBidDetailsDal = async (req: Request) => {
-    const { reference_no } = req.params
+    const { reference_no } = req.params;
     try {
 
         if (!reference_no) {
-            throw { error: true, message: "Reference number is required as 'reference_no'" }
+            throw { error: true, message: "Reference number is required as 'reference_no'" };
         }
 
-        const result: any = await prisma.bid_details.findFirst({
+        const result: any = await prisma.bid_details.findMany({
             where: { reference_no: reference_no },
             select: {
                 reference_no: true,
@@ -95,8 +95,9 @@ export const getBidDetailsDal = async (req: Request) => {
                     }
                 }
             }
-        })
+        });
 
+        console.log("resultresultresult",result)
 
         const techCriteria = await prisma.criteria.findMany({
             where: { reference_no: reference_no, criteria_type: 'technical' },
@@ -106,7 +107,7 @@ export const getBidDetailsDal = async (req: Request) => {
                 heading: true,
                 description: true
             }
-        })
+        });
 
         const finCriteria = await prisma.criteria.findMany({
             where: { reference_no: reference_no, criteria_type: 'financial' },
@@ -116,7 +117,7 @@ export const getBidDetailsDal = async (req: Request) => {
                 heading: true,
                 description: true
             }
-        })
+        });
 
         const techComparison = await prisma.comparison.count({
             where: {
@@ -129,7 +130,7 @@ export const getBidDetailsDal = async (req: Request) => {
                     }
                 }
             }
-        })
+        });
 
         const finComparison = await prisma.comparison.count({
             where: {
@@ -142,21 +143,24 @@ export const getBidDetailsDal = async (req: Request) => {
                     }
                 }
             }
-        })
+        });
 
-        if (result) {
-            result.techCriteria = techCriteria
-            result.finCriteria = finCriteria
-            result.techComparison = techComparison === 0 ? false : true
-            result.finComparison = finComparison === 0 ? false : true
+        if (result.length > 0) {
+            result.forEach((bidDetail: any) => {
+                bidDetail.techCriteria = techCriteria;
+                bidDetail.finCriteria = finCriteria;
+                bidDetail.techComparison = techComparison === 0 ? false : true;
+                bidDetail.finComparison = finComparison === 0 ? false : true;
+            });
         }
 
-        return result
+        return result;
     } catch (err: any) {
-        console.log(err)
-        return { error: true, message: getErrorMessage(err) }
+        console.log(err);
+        return { error: true, message: getErrorMessage(err) };
     }
-}
+};
+
 
 export const getProcurementDetailsByRefNoDal = async (req: Request) => {
     const { reference_no } = req.params
