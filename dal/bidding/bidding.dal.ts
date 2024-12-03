@@ -16,7 +16,7 @@ export const getBidDetailsDal = async (req: Request) => {
             throw { error: true, message: "Reference number is required as 'reference_no'" };
         }
 
-        const result: any = await prisma.bid_details.findMany({
+        const result: any = await prisma.bid_details.findFirst({
             where: { reference_no: reference_no },
             select: {
                 reference_no: true,
@@ -99,7 +99,7 @@ export const getBidDetailsDal = async (req: Request) => {
 
         console.log("resultresultresult",result)
 
-        const techCriteria = await prisma.criteria.findMany({
+        const techCriteria = await prisma.criteria.findFirst({
             where: { reference_no: reference_no, criteria_type: 'technical' },
             select: {
                 id: true,
@@ -109,7 +109,7 @@ export const getBidDetailsDal = async (req: Request) => {
             }
         });
 
-        const finCriteria = await prisma.criteria.findMany({
+        const finCriteria = await prisma.criteria.findFirst({
             where: { reference_no: reference_no, criteria_type: 'financial' },
             select: {
                 id: true,
