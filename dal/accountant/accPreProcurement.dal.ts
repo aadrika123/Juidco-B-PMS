@@ -2476,95 +2476,93 @@ export const getFeeDetailsPtDal = async (req: Request) => {
 }
 
 export const createCriticalDatesPtDal = async (req: Request) => {
-	const { preTender } = req.body;
-  
-	try {
-	  // Parsing the preTender payload (if it's a string, parse it as JSON)
-	  const formattedData: critical_dates = 
-		typeof preTender !== 'string'
-		  ? preTender // If preTender is already an object, don't parse again.
-		  : JSON.parse(preTender); // Parse if preTender is a string.
-  
-	  // Log formattedData to check how it's being parsed
-	  console.log('Formatted Data:', formattedData);
-  
-	  // Check if 'reference_no' exists in the payload
-	  if (!formattedData?.reference_no) {
-		throw { error: true, message: "Reference number is required as 'reference_no'" };
-	  }
-  
-	  // Validate if BOQ exists for the given reference_no
-	  const existence = await checkExistence(formattedData?.reference_no);
-	  if (!(await isBoqValid(formattedData?.reference_no))) {
-		throw { error: true, message: 'BOQ is not valid to be forwarded for pre tender' };
-	  }
-  
-	  // Check if critical dates already exist for the given reference_no
-	  const tableExistence = await prisma.critical_dates.count({
-		where: {
-		  reference_no: formattedData?.reference_no,
-		},
-	  });
-  
-	  // Function to handle date fields and return null if they are invalid
-	  const prepareDate = (date: any) => {
-		if (!date || date === "") return null; // Handle empty string or null as null
-		const parsedDate = new Date(date);
-		return isNaN(parsedDate.getTime()) ? null : parsedDate; // Return null if invalid date
-	  };
-  
-	  // Prepare the data to be inserted or updated
-	  const preparedData = {
-		reference_no: formattedData?.reference_no,
-		publishingDate: prepareDate(formattedData?.publishingDate),
-		bidOpeningDate: prepareDate(formattedData?.bidOpeningDate),
-		docSaleStartDate: prepareDate(formattedData?.docSaleStartDate),
-		docSaleEndDate: prepareDate(formattedData?.docSaleEndDate),
-		seekClariStrtDate: prepareDate(formattedData?.seekClariStrtDate),
-		seekClariEndDate: prepareDate(formattedData?.seekClariEndDate),
-		bidSubStrtDate: prepareDate(formattedData?.bidSubStrtDate),
-		bidSubEndDate: prepareDate(formattedData?.bidSubEndDate),
-		preBidMettingDate: prepareDate(formattedData?.preBidMettingDate),
-	  };
-  
-	  // Start transaction for inserting or updating critical dates
-	  await prisma.$transaction(async (tx) => {
-		// If tendering form doesn't exist, create it
-		if (!existence) {
-		  await tx.tendering_form.create({
-			data: {
-			  reference_no: formattedData?.reference_no,
-			},
-		  });
-		}
-  
-		// If critical dates don't exist, create them, otherwise update
-		if (!tableExistence) {
-		  await tx.critical_dates.create({
-			data: preparedData,
-		  });
-		} else {
-		  await tx.critical_dates.update({
-			where: {
-			  reference_no: formattedData?.reference_no,
-			},
-			data: preparedData,
-		  });
-		}
-	  });
-  
-	  // Return appropriate message based on whether it was added or updated
-	  return !tableExistence ? 'Critical dates added' : 'Critical dates updated';
-	} catch (err: any) {
-	  console.error('Error in createCriticalDatesPtDal:', err);
-	  return {
-		error: true,
-		message: err?.message || 'An unexpected error occurred while processing critical dates',
-	  };
-	}
-  };
-  
-  
+  const { preTender } = req.body;
+
+  try {
+    // Parsing the preTender payload (if it's a string, parse it as JSON)
+    const formattedData: critical_dates = typeof preTender !== 'string'
+      ? JSON.parse(JSON.stringify(preTender))
+      : JSON.parse(preTender);
+
+    // Log formattedData to check how it's being parsed
+    console.log('Formatted Data:', formattedData);
+
+    // Check if 'reference_no' exists in the payload
+    if (!formattedData?.reference_no) {
+      throw { error: true, message: "Reference number is required as 'reference_no'" };
+    }
+
+    // Validate if BOQ exists for the given reference_no
+    const existence = await checkExistence(formattedData?.reference_no);
+    if (!(await isBoqValid(formattedData?.reference_no))) {
+      throw { error: true, message: 'BOQ is not valid to be forwarded for pre tender' };
+    }
+
+    // Check if critical dates already exist for the given reference_no
+    const tableExistence = await prisma.critical_dates.count({
+      where: {
+        reference_no: formattedData?.reference_no,
+      },
+    });
+
+    // Function to handle date fields and return null if they are invalid
+    const prepareDate = (date: any) => {
+      if (!date || date === "") return null; // Handle empty string or null as null
+      const parsedDate = new Date(date);
+      return isNaN(parsedDate.getTime()) ? null : parsedDate; // Return null if invalid date
+    };
+
+    // Prepare the data to be inserted or updated
+    const preparedData = {
+      reference_no: formattedData?.reference_no,
+      publishingDate: prepareDate(formattedData?.publishingDate),
+      bidOpeningDate: prepareDate(formattedData?.bidOpeningDate),
+      docSaleStartDate: prepareDate(formattedData?.docSaleStartDate),
+      docSaleEndDate: prepareDate(formattedData?.docSaleEndDate),
+      seekClariStrtDate: prepareDate(formattedData?.seekClariStrtDate),
+      seekClariEndDate: prepareDate(formattedData?.seekClariEndDate),
+      bidSubStrtDate: prepareDate(formattedData?.bidSubStrtDate),
+      bidSubEndDate: prepareDate(formattedData?.bidSubEndDate),
+      preBidMettingDate: prepareDate(formattedData?.preBidMettingDate),
+    };
+
+    // Start transaction for inserting or updating critical dates
+    await prisma.$transaction(async (tx) => {
+      // If tendering form doesn't exist, create it
+      if (!existence) {
+        await tx.tendering_form.create({
+          data: {
+            reference_no: formattedData?.reference_no,
+          },
+        });
+      }
+
+      // If critical dates don't exist, create them, otherwise update
+      if (!tableExistence) {
+        await tx.critical_dates.create({
+          data: preparedData,
+        });
+      } else {
+        await tx.critical_dates.update({
+          where: {
+            reference_no: formattedData?.reference_no,
+          },
+          data: preparedData,
+        });
+      }
+    });
+
+    // Return appropriate message based on whether it was added or updated
+    return !tableExistence ? 'Critical dates added' : 'Critical dates updated';
+  } catch (err: any) {
+    console.error('Error in createCriticalDatesPtDal:', err);
+    return {
+      error: true,
+      message: err?.message || 'An unexpected error occurred while processing critical dates',
+    };
+  }
+};
+
 
 export const getCriticalDatesPtDal = async (req: Request) => {
 	const { reference_no } = req.params
