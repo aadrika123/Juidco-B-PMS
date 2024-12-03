@@ -7,11 +7,11 @@ const prisma = new PrismaClient()
 
 export const getStockListDal = async (req: Request) => {
 	const page: number | undefined = Number(req?.query?.page) || 1;
-	const take: number | undefined = Number(req?.query?.take) || 10; 
-	const from: string | undefined = req?.query?.from ? String(req?.query?.from) : undefined; 
-	const to: string | undefined = req?.query?.to ? String(req?.query?.to) : undefined; 
-	const startIndex: number = (page - 1) * take; 
-	const endIndex: number = startIndex + take; 
+	const take: number | undefined = Number(req?.query?.take) || 10;
+	const from: string | undefined = req?.query?.from ? String(req?.query?.from) : undefined;
+	const to: string | undefined = req?.query?.to ? String(req?.query?.to) : undefined;
+	const startIndex: number = (page - 1) * take;
+	const endIndex: number = startIndex + take;
 
 	let totalPage: number;
 	let pagination: pagination = {};
@@ -23,6 +23,7 @@ export const getStockListDal = async (req: Request) => {
 	const category: any[] = Array.isArray(req?.query?.category) ? req?.query?.category : [req?.query?.category];
 	const subcategory: any[] = Array.isArray(req?.query?.scategory) ? req?.query?.scategory : [req?.query?.scategory];
 
+	// Adding search query to whereClause
 	if (search) {
 		whereClause.OR = [
 			{
@@ -30,10 +31,11 @@ export const getStockListDal = async (req: Request) => {
 					contains: search,
 					mode: 'insensitive',
 				},
-			}
+			},
 		];
 	}
 
+	// Adding category and subcategory filters
 	if (category[0] || subcategory[0]) {
 		whereClause.AND = [
 			...(category[0]
@@ -66,13 +68,13 @@ export const getStockListDal = async (req: Request) => {
 				: []),
 			{
 				ulb_id: ulb_id,
-			}
+			},
 		];
 	} else {
 		whereClause.AND = [
 			{
 				ulb_id: ulb_id,
-			}
+			},
 		];
 	}
 
@@ -109,6 +111,7 @@ export const getStockListDal = async (req: Request) => {
 			},
 		});
 
+		// Enhanced result mapping to include warranty and dead stock status
 		const enhancedResult = await Promise.all(
 			result.map(async (item) => {
 				const warranty = await prisma.inventory_warranty.findFirst({
@@ -126,38 +129,47 @@ export const getStockListDal = async (req: Request) => {
 
 				if (warranty) {
 					statuses.push({
-						status: "Warranty", 
+						status: 'Warranty',
 						inventoryId: item.id,
 					});
 				}
 
 				if (deadStock) {
 					statuses.push({
-						status: "Dead Stock", 
+						status: 'Dead Stock',
 						inventoryId: item.id,
 					});
 				}
 				if (statuses.length === 0) {
 					statuses.push({
-						status: "Inventory", 
+						status: 'Inventory',
 						inventoryId: item.id,
 					});
 				}
 				return statuses.map((statusItem) => ({
 					...item,
-					status: statusItem.status, 
-					inventoryId: statusItem.inventoryId, 
+					status: statusItem.status,
+					inventoryId: statusItem.inventoryId,
 				}));
 			})
 		);
 
+		// Flattening the result after enhancing
 		const flattenedResult = enhancedResult.flat();
 
-		const count = flattenedResult.length;
-		totalPage = Math.ceil(count / take); 
+		// Filtering out the items with negative quantities
+		const validItems = flattenedResult.filter((item) => item.quantity >= 0);
 
-		const paginatedResult = flattenedResult.slice(startIndex, endIndex);
+		// Count the valid items for pagination
+		const count = validItems.length;
 
+		// Calculate total pages
+		totalPage = Math.ceil(count / take);
+
+		// Get the paginated result
+		const paginatedResult = validItems.slice(startIndex, endIndex);
+
+		// Pagination data
 		if (endIndex < count) {
 			pagination.next = {
 				page: page + 1,
@@ -186,6 +198,7 @@ export const getStockListDal = async (req: Request) => {
 		return { error: true, message: getErrorMessage(err) };
 	}
 };
+
 
 
 
