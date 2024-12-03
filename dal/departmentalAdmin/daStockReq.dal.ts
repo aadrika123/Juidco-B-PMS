@@ -447,7 +447,7 @@ export const forwardToIaDal = async (req: Request) => {
 					throw { error: true, message: 'Invalid stock handover' }
 				}
 
-				if (stockReq?.status < 1 || stockReq?.status > 2) {
+				if (stockReq?.status < -1|| stockReq?.status == 0  || stockReq?.status > 2) {
 					throw { error: true, message: 'Stock request is not valid to be forwarded' }
 				}
 				const iaOutboxCount: number = await prisma.ia_stock_req_outbox.count({

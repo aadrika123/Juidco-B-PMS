@@ -343,10 +343,10 @@ export const getPreTenderDetailsDal = async (req: Request) => {
                     if (data?.category_masterId) {
                         const categoryData = await prisma.category_master.findUnique({
                             where: {
-                                id: data.category_masterId,  // Match the category_masterId from the current item
+                                id: data.category_masterId,  
                             },
                             select: {
-                                name: true, // Return the name of the category instead of description
+                                name: true, 
                             },
                         });
                         console.log("categoryData:", categoryData);
