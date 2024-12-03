@@ -9,11 +9,11 @@ const prisma = new PrismaClient()
 
 
 export const getBidDetailsDal = async (req: Request) => {
-    const { reference_no } = req.params;
+    const { reference_no } = req.params
     try {
 
         if (!reference_no) {
-            throw { error: true, message: "Reference number is required as 'reference_no'" };
+            throw { error: true, message: "Reference number is required as 'reference_no'" }
         }
 
         const result: any = await prisma.bid_details.findFirst({
@@ -95,75 +95,68 @@ export const getBidDetailsDal = async (req: Request) => {
                     }
                 }
             }
-        });
+        })
 
-        console.log("resultresultresult", result);
 
-        // Check if result is null or undefined
-        if (result) {
-            const techCriteria = await prisma.criteria.findFirst({
-                where: { reference_no: reference_no, criteria_type: 'technical' },
-                select: {
-                    id: true,
-                    criteria_type: true,
-                    heading: true,
-                    description: true
-                }
-            });
-
-            const finCriteria = await prisma.criteria.findFirst({
-                where: { reference_no: reference_no, criteria_type: 'financial' },
-                select: {
-                    id: true,
-                    criteria_type: true,
-                    heading: true,
-                    description: true
-                }
-            });
-
-            const techComparison = await prisma.comparison.count({
-                where: {
-                    reference_no: reference_no,
-                    comparison_criteria: {
-                        some: {
-                            criteria: {
-                                criteria_type: 'technical'
-                            }
-                        }
-                    }
-                }
-            });
-
-            const finComparison = await prisma.comparison.count({
-                where: {
-                    reference_no: reference_no,
-                    comparison_criteria: {
-                        some: {
-                            criteria: {
-                                criteria_type: 'financial'
-                            }
-                        }
-                    }
-                }
-            });
-
-            // Ensure the result is an array before attempting to loop
-            if (Array.isArray(result)) {
-                result.forEach((bidDetail: any) => {
-                    bidDetail.techCriteria = techCriteria;
-                    bidDetail.finCriteria = finCriteria;
-                    bidDetail.techComparison = techComparison === 0 ? false : true;
-                    bidDetail.finComparison = finComparison === 0 ? false : true;
-                });
+        const techCriteria = await prisma.criteria.findMany({
+            where: { reference_no: reference_no, criteria_type: 'technical' },
+            select: {
+                id: true,
+                criteria_type: true,
+                heading: true,
+                description: true
             }
+        })
+
+        const finCriteria = await prisma.criteria.findMany({
+            where: { reference_no: reference_no, criteria_type: 'financial' },
+            select: {
+                id: true,
+                criteria_type: true,
+                heading: true,
+                description: true
+            }
+        })
+
+        const techComparison = await prisma.comparison.count({
+            where: {
+                reference_no: reference_no,
+                comparison_criteria: {
+                    some: {
+                        criteria: {
+                            criteria_type: 'technical'
+                        }
+                    }
+                }
+            }
+        })
+
+        const finComparison = await prisma.comparison.count({
+            where: {
+                reference_no: reference_no,
+                comparison_criteria: {
+                    some: {
+                        criteria: {
+                            criteria_type: 'financial'
+                        }
+                    }
+                }
+            }
+        })
+
+        if (result) {
+            result.techCriteria = techCriteria
+            result.finCriteria = finCriteria
+            result.techComparison = techComparison === 0 ? false : true
+            result.finComparison = finComparison === 0 ? false : true
         }
 
-        return result;
+        return result
     } catch (err: any) {
-        console.log(err);
-        return { error: true, message: getErrorMessage(err) };
+        console.log(err)
+        return { error: true, message: getErrorMessage(err) }
     }
-};
+}
 
 
 
