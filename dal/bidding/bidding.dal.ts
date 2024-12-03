@@ -97,61 +97,65 @@ export const getBidDetailsDal = async (req: Request) => {
             }
         });
 
-        console.log("resultresultresult",result)
+        console.log("resultresultresult", result);
 
-        const techCriteria = await prisma.criteria.findFirst({
-            where: { reference_no: reference_no, criteria_type: 'technical' },
-            select: {
-                id: true,
-                criteria_type: true,
-                heading: true,
-                description: true
-            }
-        });
-
-        const finCriteria = await prisma.criteria.findFirst({
-            where: { reference_no: reference_no, criteria_type: 'financial' },
-            select: {
-                id: true,
-                criteria_type: true,
-                heading: true,
-                description: true
-            }
-        });
-
-        const techComparison = await prisma.comparison.count({
-            where: {
-                reference_no: reference_no,
-                comparison_criteria: {
-                    some: {
-                        criteria: {
-                            criteria_type: 'technical'
-                        }
-                    }
+        // Check if result is null or undefined
+        if (result) {
+            const techCriteria = await prisma.criteria.findFirst({
+                where: { reference_no: reference_no, criteria_type: 'technical' },
+                select: {
+                    id: true,
+                    criteria_type: true,
+                    heading: true,
+                    description: true
                 }
-            }
-        });
-
-        const finComparison = await prisma.comparison.count({
-            where: {
-                reference_no: reference_no,
-                comparison_criteria: {
-                    some: {
-                        criteria: {
-                            criteria_type: 'financial'
-                        }
-                    }
-                }
-            }
-        });
-
-        if (result.length > 0) {
-            result.forEach((bidDetail: any) => {
-                bidDetail.techCriteria = techCriteria;
-                bidDetail.finCriteria = finCriteria;
-                bidDetail.techComparison = techComparison === 0 ? false : true;
-                bidDetail.finComparison = finComparison === 0 ? false : true;
             });
+
+            const finCriteria = await prisma.criteria.findFirst({
+                where: { reference_no: reference_no, criteria_type: 'financial' },
+                select: {
+                    id: true,
+                    criteria_type: true,
+                    heading: true,
+                    description: true
+                }
+            });
+
+            const techComparison = await prisma.comparison.count({
+                where: {
+                    reference_no: reference_no,
+                    comparison_criteria: {
+                        some: {
+                            criteria: {
+                                criteria_type: 'technical'
+                            }
+                        }
+                    }
+                }
+            });
+
+            const finComparison = await prisma.comparison.count({
+                where: {
+                    reference_no: reference_no,
+                    comparison_criteria: {
+                        some: {
+                            criteria: {
+                                criteria_type: 'financial'
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Ensure the result is an array before attempting to loop
+            if (Array.isArray(result)) {
+                result.forEach((bidDetail: any) => {
+                    bidDetail.techCriteria = techCriteria;
+                    bidDetail.finCriteria = finCriteria;
+                    bidDetail.techComparison = techComparison === 0 ? false : true;
+                    bidDetail.finComparison = finComparison === 0 ? false : true;
+                });
+            }
         }
 
         return result;
@@ -160,6 +164,7 @@ export const getBidDetailsDal = async (req: Request) => {
         return { error: true, message: getErrorMessage(err) };
     }
 };
+
 
 
 export const getProcurementDetailsByRefNoDal = async (req: Request) => {
