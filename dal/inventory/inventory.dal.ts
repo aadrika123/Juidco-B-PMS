@@ -1,12 +1,13 @@
 import { Request, Response } from 'express'
 import getErrorMessage from '../../lib/getErrorMessage'
-import { PrismaClient, inventory } from '@prisma/client'
+import { Prisma, PrismaClient, inventory } from '@prisma/client'
 import { pagination } from '../../type/common.type'
 
 const prisma = new PrismaClient()
 
 export const createItemDal = async (req: Request) => {
 	const { category, subcategory, brand, quantity, description, unit } = req.body
+	const ulb_id = req?.body?.auth?.ulb_id
 
 	const data: inventory = {
 		category: { connect: { id: category } },
@@ -15,6 +16,7 @@ export const createItemDal = async (req: Request) => {
 		...(brand && { brand_masterId: brand }),
 		...(quantity && { quantity: quantity }),
 		...(description && { description: description }),
+		ulb_id: ulb_id
 	}
 
 	try {
@@ -37,6 +39,7 @@ export const getItemDal = async (req: Request) => {
 	let totalPage: number
 	let pagination: pagination = {}
 	const whereClause: any = {}
+	const ulb_id = req?.body?.auth?.ulb_id
 
 	// const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined
 	const search: any[] = Array.isArray(req?.query?.search) ? req?.query?.search : [req?.query?.search]
@@ -70,6 +73,7 @@ export const getItemDal = async (req: Request) => {
 			in: brand,
 		}
 	}
+	whereClause.ulb_id = ulb_id
 
 	try {
 		count = await prisma.inventory.count({
@@ -142,7 +146,8 @@ export const getItemByFilterDal = async (req: Request) => {
 	let count: number
 	let totalPage: number
 	let pagination: pagination = {}
-	const whereClause: any = {}
+	const whereClause: Prisma.inventoryWhereInput = {}
+	const ulb_id = req?.body?.auth?.ulb_id
 
 	const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined
 
@@ -153,9 +158,7 @@ export const getItemByFilterDal = async (req: Request) => {
 		return { error: true, message: 'Category and sub-category are required' }
 	}
 
-	console.log(req?.query?.category,req?.query?.scategory)
-
-	//creating search options for the query
+	console.log(req?.query?.category, req?.query?.scategory)
 	if (search) {
 		whereClause.OR = [
 			{
@@ -166,23 +169,6 @@ export const getItemByFilterDal = async (req: Request) => {
 			},
 		]
 	}
-
-	//creating filter options for the query
-	// if (category[0]) {
-	// 	whereClause.category_masterId = {
-	// 		in: category,
-	// 	}
-	// }
-	// if (subcategory[0]) {
-	// 	whereClause.subcategory_masterId = {
-	// 		in: subcategory,
-	// 	}
-	// }
-	// if (brand[0]) {
-	// 	whereClause.brand_masterId = {
-	// 		in: brand,
-	// 	}
-	// }
 	if (category[0] || subcategory[0]) {
 		whereClause.AND = [
 			...(category[0]
@@ -203,13 +189,30 @@ export const getItemByFilterDal = async (req: Request) => {
 					},
 				]
 				: []),
+			{ ulb_id: ulb_id }
+		]
+	} else {
+		whereClause.AND = [
+			{ ulb_id: ulb_id }
 		]
 	}
+
+	// for imergency 
+    // if(ulb_id) {
+	// 	whereClause.AND = [
+	// 		{ ulb_id: ulb_id }
+	// 	]
+	// }
 
 	try {
 		count = await prisma.inventory.count({
 			where: whereClause,
 		})
+
+		// console.log("whereClausewhereClause",whereClause)
+		console.log("category",category)
+		console.log("subcategory",subcategory)
+
 		const result = await prisma.inventory.findMany({
 			orderBy: {
 				updatedAt: 'desc',
@@ -242,6 +245,7 @@ export const getItemByFilterDal = async (req: Request) => {
 				warranty: true,
 			},
 		})
+		console.log("resultresult line 236",result)
 		totalPage = Math.ceil(count / take)
 		if (endIndex < count) {
 			pagination.next = {

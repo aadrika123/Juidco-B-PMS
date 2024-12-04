@@ -1,6 +1,6 @@
 import express from 'express'
 const router = express.Router()
-import { getTotalStocks, getDeadStocks, getStockMovement } from '../../controller/report/inventoryReport.controller'
+import { getTotalStocks, getDeadStocks, getStockMovement,getTotalRemainingStocks, getProcurementStocks } from '../../controller/report/inventoryReport.controller'
 import { getPreProcurementReport } from '../../controller/report/preProcurementReport.controller'
 import { getPostProcurementReport } from '../../controller/report/postProcurementReport.controller'
 import { getDistStockReqReport, getDistServiceReqReport } from '../../controller/report/levelWiseReport/dd/distReport.controller'
@@ -21,6 +21,8 @@ import { getPlacedOrderReport } from '../../controller/report/placedOrder.contro
 
 //inventory reports------------------------------------------------------------------------------------------------------
 router.get('/inventory/total', getTotalStocks)
+router.get('/inventory/statuswise', getProcurementStocks)
+router.get('/inventory/remainingstock', getTotalRemainingStocks)
 router.get('/inventory/dead', getDeadStocks)
 router.get('/inventory/movement', getStockMovement)
 

@@ -4,7 +4,7 @@ Status - Closed
 */
 
 import { Request } from 'express'
-import { PrismaClient, service_request, service_enum } from '@prisma/client'
+import { PrismaClient, service_request, service_enum, Prisma } from '@prisma/client'
 import generateServiceNumber from '../../lib/serviceNumberGenerator'
 import getErrorMessage from '../../lib/getErrorMessage'
 import { pagination } from '../../type/common.type'
@@ -40,105 +40,134 @@ export const serviceTranslator = (service: service_enum): string => {
 }
 
 export const createServiceRequestDal = async (req: Request) => {
-	const { products, service, stock_handover_no, inventoryId, auth }: reqType = req.body
-
-	const ulb_id = auth?.ulb_id
-
+	const { products, service, stock_handover_no, inventoryId, auth }: reqType = req.body;
+	const ulb_id = auth?.ulb_id;
 	try {
-		const service_no = generateServiceNumber(ulb_id)
+		const service_no = generateServiceNumber(ulb_id);
+		console.log("service_no",service_no)
 
 		const data: Omit<service_request, 'createdAt' | 'updatedAt' | 'remark' | 'id'> = {
 			service_no: service_no,
 			stock_handover_no: stock_handover_no,
 			service: service,
 			inventoryId: inventoryId,
-			status: service === 'return' ? 20 : 10,
-		}
+			status: service === 'return' ? 20 : service === 'dead' ? 61 : 10,
+			ulb_id: ulb_id
+		};
 
-		let serviceReq: any
+		let serviceReq: any;
 
-		//start transaction
-		await prisma.$transaction(async tx => {
+		await prisma.$transaction(async (tx) => {
 			serviceReq = await tx.service_request.create({
 				data: data,
-			})
+			});
 
+			if (service === 'dead') {
+				await tx.stock_request.updateMany({
+					where: {
+						stock_handover_no: stock_handover_no,
+					},
+					data: {
+						status: 61,
+					},
+				});
+				console.log(`Updated stock_request status to 61 for stock_handover_no: ${stock_handover_no}`);
+			}
 			await Promise.all(
-				products.map(async product => {
+				products.map(async (product) => {
 					const quantityForService = await prisma.stock_req_product.findFirst({
 						where: {
 							stock_handover_no: stock_handover_no,
-							serial_no: product
+							serial_no: product,
 						},
 						select: {
-							quantity: true
-						}
-					})
-					await tx.service_req_product.create({
-						data: {
-							service_no: service_no,
-							serial_no: product,
-							inventoryId: inventoryId,
-							quantity: quantityForService?.quantity
+							quantity: true,
 						},
-					})
+					});
+
+					await tx.service_req_product.upsert({
+						where: {
+							serial_no: product,  
+						},
+						update: {
+							quantity: quantityForService?.quantity,  
+							inventoryId: inventoryId,  
+						},
+						create: {
+							service_no: service_no,
+							serial_no: product, 
+							inventoryId: inventoryId,
+							quantity: quantityForService?.quantity,
+						},
+					});
 
 					await tx.stock_req_product.update({
 						where: {
 							stock_handover_no_serial_no: {
 								stock_handover_no: stock_handover_no,
-								serial_no: product
-							}
+								serial_no: product,
+							},
 						},
 						data: {
-							is_available: false
+							is_available: false,
 						},
-					})
+					});
 				})
-			)
+			);
 
 			await tx.dist_service_req_outbox.create({
 				data: {
 					service_no: service_no,
 				},
-			})
+			});
 
 			await tx.da_service_req_inbox.create({
 				data: {
 					service_no: service_no,
 				},
-			})
+			});
+
 			if (service === 'return') {
 				await tx.ia_service_req_inbox.create({
 					data: {
 						service_no: service_no,
 					},
-				})
+				});
 				await tx.notification.create({
 					data: {
 						role_id: Number(process.env.ROLE_IA),
 						title: 'New Service request',
 						destination: 81,
 						description: `There is a ${serviceTranslator(service)}. Service Number : ${service_no}`,
+						ulb_id,
 					},
-				})
+				});
 			}
+
 			await tx.notification.create({
 				data: {
 					role_id: Number(process.env.ROLE_DA),
 					title: 'New Service request',
 					destination: 26,
 					description: `There is a ${serviceTranslator(service)}. Service Number : ${service_no}`,
+					ulb_id,
 				},
-			})
-		})
+			});
 
-		return serviceReq
+			await tx.dist_service_req_inbox.create({
+				data: {
+					service_no: service_no,
+				},
+			});
+		});
+
+		return serviceReq;
 	} catch (err: any) {
-		console.log(err)
-		return { error: true, message: err?.message }
+		console.log(err);
+		return { error: true, message: err?.message };
 	}
-}
+};
+
 
 export const getServiceReqInboxDal = async (req: Request) => {
 	const page: number | undefined = Number(req?.query?.page)
@@ -148,7 +177,8 @@ export const getServiceReqInboxDal = async (req: Request) => {
 	let count: number
 	let totalPage: number
 	let pagination: pagination = {}
-	const whereClause: any = {}
+	const whereClause: Prisma.dist_service_req_inboxWhereInput = {}
+	const ulb_id = req?.body?.auth?.ulb_id
 
 	const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined
 
@@ -241,6 +271,19 @@ export const getServiceReqInboxDal = async (req: Request) => {
 					},
 				]
 				: []),
+			{
+				service_req: {
+					ulb_id: ulb_id
+				}
+			}
+		]
+	} else {
+		whereClause.AND = [
+			{
+				service_req: {
+					ulb_id: ulb_id
+				}
+			}
 		]
 	}
 
@@ -336,7 +379,8 @@ export const getServiceReqOutboxDal = async (req: Request) => {
 	let count: number
 	let totalPage: number
 	let pagination: pagination = {}
-	const whereClause: any = {}
+	const whereClause: Prisma.dist_service_req_outboxWhereInput = {}
+	const ulb_id = req?.body?.auth?.ulb_id
 
 	const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined
 
@@ -429,6 +473,19 @@ export const getServiceReqOutboxDal = async (req: Request) => {
 					},
 				]
 				: []),
+			{
+				service_req: {
+					ulb_id: ulb_id
+				}
+			}
+		]
+	} else {
+		whereClause.AND = [
+			{
+				service_req: {
+					ulb_id: ulb_id
+				}
+			}
 		]
 	}
 

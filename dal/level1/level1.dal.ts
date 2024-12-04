@@ -1,5 +1,5 @@
 import { Request } from 'express'
-import { PrismaClient } from '@prisma/client'
+import { Prisma, PrismaClient } from '@prisma/client'
 import getErrorMessage from '../../lib/getErrorMessage'
 // import { imageUploader } from '../../lib/imageUploader'
 import { pagination } from '../../type/common.type'
@@ -17,7 +17,8 @@ export const getInboxDal = async (req: Request) => {
 	let count: number
 	let totalPage: number
 	let pagination: pagination = {}
-	const whereClause: any = {}
+	const whereClause: Prisma.level1_inboxWhereInput = {}
+	const ulb_id = req?.body?.auth?.ulb_id
 
 	const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined
 
@@ -36,12 +37,16 @@ export const getInboxDal = async (req: Request) => {
 				},
 			},
 			{
-				procurement_stocks: {
-					description: {
-						contains: search,
-						mode: 'insensitive',
+				procurement: {
+					procurement_stocks: {
+						some: {
+							description: {
+								contains: search,
+								mode: 'insensitive',
+							},
+						}
 					},
-				},
+				}
 			},
 		]
 	}
@@ -51,43 +56,68 @@ export const getInboxDal = async (req: Request) => {
 			...(category[0]
 				? [
 					{
-						category_masterId: {
-							in: category,
-						},
+						procurement: {
+							category_masterId: {
+								in: category,
+							},
+						}
 					},
 				]
 				: []),
 			...(subcategory[0]
 				? [
 					{
-						procurement_stocks: {
-							subcategory_masterId: {
-								in: subcategory,
-							},
-						},
+						procurement: {
+							procurement_stocks: {
+								some: {
+									subCategory_masterId: {
+										in: subcategory,
+									},
+								},
+							}
+						}
 					},
 				]
 				: []),
 			...(brand[0]
 				? [
 					{
-						procurement_stocks: {
-							brand_masterId: {
-								in: brand,
-							},
-						},
+						procurement: {
+							procurement_stocks: {
+								some: {
+									brand_masterId: {
+										in: brand,
+									},
+								},
+							}
+						}
 					},
 				]
 				: []),
 			...(status[0]
 				? [
 					{
-						status: {
-							in: status.map(Number),
-						},
+						procurement: {
+							status: {
+								in: status.map(Number),
+							},
+						}
 					},
 				]
 				: []),
+			{
+				procurement: {
+					ulb_id: ulb_id
+				}
+			}
+		]
+	} else {
+		whereClause.AND = [
+			{
+				procurement: {
+					ulb_id: ulb_id
+				}
+			}
 		]
 	}
 
@@ -122,6 +152,7 @@ export const getInboxDal = async (req: Request) => {
 				},
 			},
 		})
+		console.log('result',result)
 
 		let resultToSend: any[] = []
 
@@ -166,7 +197,8 @@ export const getOutboxDal = async (req: Request) => {
 	let count: number
 	let totalPage: number
 	let pagination: pagination = {}
-	const whereClause: any = {}
+	const whereClause: Prisma.level1_outboxWhereInput = {}
+	const ulb_id = req?.body?.auth?.ulb_id
 
 	const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined
 
@@ -185,12 +217,16 @@ export const getOutboxDal = async (req: Request) => {
 				},
 			},
 			{
-				procurement_stocks: {
-					description: {
-						contains: search,
-						mode: 'insensitive',
+				procurement: {
+					procurement_stocks: {
+						some: {
+							description: {
+								contains: search,
+								mode: 'insensitive',
+							},
+						}
 					},
-				},
+				}
 			},
 		]
 	}
@@ -200,43 +236,68 @@ export const getOutboxDal = async (req: Request) => {
 			...(category[0]
 				? [
 					{
-						category_masterId: {
-							in: category,
-						},
+						procurement: {
+							category_masterId: {
+								in: category,
+							},
+						}
 					},
 				]
 				: []),
 			...(subcategory[0]
 				? [
 					{
-						procurement_stocks: {
-							subcategory_masterId: {
-								in: subcategory,
-							},
-						},
+						procurement: {
+							procurement_stocks: {
+								some: {
+									subCategory_masterId: {
+										in: subcategory,
+									},
+								},
+							}
+						}
 					},
 				]
 				: []),
 			...(brand[0]
 				? [
 					{
-						procurement_stocks: {
-							brand_masterId: {
-								in: brand,
-							},
-						},
+						procurement: {
+							procurement_stocks: {
+								some: {
+									brand_masterId: {
+										in: brand,
+									},
+								},
+							}
+						}
 					},
 				]
 				: []),
 			...(status[0]
 				? [
 					{
-						status: {
-							in: status.map(Number),
-						},
+						procurement: {
+							status: {
+								in: status.map(Number),
+							},
+						}
 					},
 				]
 				: []),
+			{
+				procurement: {
+					ulb_id: ulb_id
+				}
+			}
+		]
+	} else {
+		whereClause.AND = [
+			{
+				procurement: {
+					ulb_id: ulb_id
+				}
+			}
 		]
 	}
 
@@ -309,6 +370,7 @@ export const getOutboxDal = async (req: Request) => {
 
 export const forwardToLevel2Dal = async (req: Request) => {
 	const { procurement_no }: { procurement_no: string } = req.body
+	const ulb_id = req?.body?.auth?.ulb_id
 	try {
 		if (!procurement_no) {
 			throw {
@@ -383,6 +445,7 @@ export const forwardToLevel2Dal = async (req: Request) => {
 					destination: 60,
 					from: await extractRoleName(Number(process.env.ROLE_LEVEL1)),
 					description: `There is a procurement and Pre tender form to be approved. Procurement Number : ${procurement_no}`,
+					ulb_id
 				},
 			})
 		})
@@ -396,6 +459,7 @@ export const forwardToLevel2Dal = async (req: Request) => {
 
 export const returnToDaDal = async (req: Request) => {
 	const { procurement_no, remark }: { procurement_no: string; remark: string } = req.body
+	const ulb_id = req?.body?.auth?.ulb_id
 	try {
 		if (!procurement_no) {
 			throw {
@@ -467,6 +531,7 @@ export const returnToDaDal = async (req: Request) => {
 					destination: 82,
 					from: await extractRoleName(Number(process.env.ROLE_LEVEL1)),
 					description: `There is a procurement returned from level 1. Procurement Number : ${procurement_no}`,
+					ulb_id
 				},
 			})
 		})
@@ -480,6 +545,7 @@ export const returnToDaDal = async (req: Request) => {
 
 export const approvalByLevel1Dal = async (req: Request) => {
 	const { procurement_no }: { procurement_no: string } = req.body
+	const ulb_id = req?.body?.auth?.ulb_id
 	try {
 		if (!procurement_no) {
 			throw {
@@ -544,6 +610,7 @@ export const approvalByLevel1Dal = async (req: Request) => {
 					destination: 82,
 					from: await extractRoleName(Number(process.env.ROLE_LEVEL1)),
 					description: `There is a procurement approved by level 1. Procurement Number : ${procurement_no}`,
+					ulb_id
 				},
 			})
 		})
@@ -557,6 +624,7 @@ export const approvalByLevel1Dal = async (req: Request) => {
 
 export const rejectionByLevel1Dal = async (req: Request) => {
 	const { procurement_no, remark }: { procurement_no: string, remark: string } = req.body
+	const ulb_id = req?.body?.auth?.ulb_id
 	try {
 		if (!procurement_no) {
 			throw {
@@ -625,6 +693,7 @@ export const rejectionByLevel1Dal = async (req: Request) => {
 					destination: 82,
 					from: await extractRoleName(Number(process.env.ROLE_LEVEL1)),
 					description: `There is a procurement rejected by level 1. Procurement Number : ${procurement_no}`,
+					ulb_id
 				},
 			})
 		})

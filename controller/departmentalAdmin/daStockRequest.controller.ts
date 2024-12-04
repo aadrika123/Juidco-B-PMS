@@ -1,5 +1,5 @@
 import { Request, Response } from 'express'
-import { getStockReqInboxDal, getStockReqOutboxDal, forwardToIaDal, rejectStockReqDal, returnStockReqDal, procurementApprovalDal } from '../../dal/departmentalAdmin/daStockReq.dal'
+import { getStockReqInboxDal, getStockReqOutboxDal, forwardToIaDal, rejectStockReqDal, returnStockReqDal, procurementApprovalDal, forwardToIaDeadDal } from '../../dal/departmentalAdmin/daStockReq.dal'
 
 export const getStockReqInbox = async (req: Request, res: Response) => {
 	const result: any = await getStockReqInboxDal(req)
@@ -39,6 +39,24 @@ export const getStockReqOutbox = async (req: Request, res: Response) => {
 
 export const forwardToIa = async (req: Request, res: Response) => {
 	const result: any = await forwardToIaDal(req)
+	if (!result?.error) {
+		res.status(200).json({
+			status: true,
+			message: `Forwarded to IA successfully`,
+			data: result,
+		})
+	} else {
+		res.status(404).json({
+			status: false,
+			message: `Error while forwarding to IA`,
+			error: result?.message,
+		})
+	}
+}
+
+
+export const forwardToIaDead = async (req: Request, res: Response) => {
+	const result: any = await forwardToIaDeadDal(req)
 	if (!result?.error) {
 		res.status(200).json({
 			status: true,

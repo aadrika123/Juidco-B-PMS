@@ -5,23 +5,43 @@ import { pagination } from '../../type/common.type'
 const prisma = new PrismaClient()
 
 export const createBrandDal = async (req: Request) => {
-    const { name, subcategory } = req.body
 
+    const { name, subcategory } = req.body;
+    const ulb_id = req?.body?.auth?.ulb_id;
+
+    if (!name || !subcategory || !ulb_id) {
+        return { error: true, message: "Name, subcategory, and ulb_id are required." };
+    }
     const data: any = {
         name: name,
         subcategory_masterId: subcategory,
-    }
+        ulb_id: ulb_id
+    };
 
     try {
+        const existingBrand = await prisma.brand_master.findFirst({
+            where: {
+                name: name,
+                ulb_id: ulb_id,  
+            },
+        });
+        if (existingBrand) {
+            return { error: true, message: `Brand '${name}' already exists in the specified ULB.` };
+        }
+
         const result = await prisma.brand_master.create({
             data: data,
-        })
-        return result
+        });
+
+        return { success: true, message: "Brand created successfully", brand: result };
+
     } catch (err: any) {
-        console.log(err?.message)
-        return { error: true, message: err?.message }
+        console.log("Error occurred while creating brand:", err?.message);
+ 
+        return { error: true, message: err?.meta?.message || "An unexpected error occurred while creating the brand." };
     }
-}
+};
+
 
 export const getBrandDal = async (req: Request) => {
     const page: number | undefined = Number(req?.query?.page)
@@ -32,6 +52,7 @@ export const getBrandDal = async (req: Request) => {
     let totalPage: number
     let pagination: pagination = {}
     const whereClause: any = {}
+    const ulb_id = req?.body?.auth?.ulb_id
 
     const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined
 
@@ -70,6 +91,14 @@ export const getBrandDal = async (req: Request) => {
                 : []),
         ]
     }
+
+    whereClause.AND = [
+        ...(Array.isArray(whereClause?.AND) ? [whereClause?.AND] : []),
+        {
+            ulb_id: ulb_id,
+        },
+    ]
+
     try {
         count = await prisma.brand_master.count({
             where: whereClause,
@@ -113,7 +142,7 @@ export const getBrandDal = async (req: Request) => {
 }
 
 export const getBrandBySubcategoryIdDal = async (req: Request) => {
-    const { subcategoryId } = req.params
+    const { subcategoryId } = req.params;
     try {
         const result = await prisma.brand_master.findMany({
             where: {
@@ -166,10 +195,12 @@ export const getBrandBySubcategoryIdActiveOnlyDal = async (req: Request) => {
 }
 
 export const getBrandActiveOnlyDal = async (req: Request) => {
+    const ulb_id = req?.body?.auth?.ulb_id
     try {
         const result = await prisma.brand_master.findMany({
             where: {
                 status: true,
+                ulb_id: ulb_id
             },
             orderBy: {
                 updatedAt: 'desc',

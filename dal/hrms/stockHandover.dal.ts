@@ -97,45 +97,49 @@ export const getHandoverDataDal = async (req: Request) => {
 		})
 		const result = await prisma.stock_request.findMany({
 			orderBy: {
-				updatedAt: 'desc',
+			  updatedAt: 'desc',
 			},
 			where: {
-				...whereClause,
-				emp_id: user?.emp_id,
+			  ...whereClause,
+			  emp_id: user?.emp_id,
+			  status: {
+				notIn: [6, 7, 55], // Excluding status codes 6, 7, and 55
+			  },
 			},
 			...(page && { skip: startIndex }),
 			...(take && { take: take }),
 			select: {
-				stock_handover_no: true,
-				emp_id: true,
-				emp_name: true,
-				inventory: {
-					select: {
-						id: true,
-						category: {
-							select: { name: true },
-						},
-						subcategory: {
-							select: { name: true },
-						},
-						brand: {
-							select: { name: true },
-						},
-						unit: {
-							select: { name: true },
-						},
-						description: true,
-						quantity: true,
-						warranty: true,
-					},
+			  stock_handover_no: true,
+			  emp_id: true,
+			  emp_name: true,
+			  inventory: {
+				select: {
+				  id: true,
+				  category: {
+					select: { name: true },
+				  },
+				  subcategory: {
+					select: { name: true },
+				  },
+				  brand: {
+					select: { name: true },
+				  },
+				  unit: {
+					select: { name: true },
+				  },
+				  description: true,
+				  quantity: true,
+				  warranty: true,
 				},
-				is_alloted: true,
-				status: true,
-				allotted_quantity: true,
-				allotment_date: true,
-				release_date: true,
+			  },
+			  is_alloted: true,
+			  status: true,
+			  allotted_quantity: true,
+			  allotment_date: true,
+			  release_date: true,
 			},
-		})
+		  });
+		  
 		totalPage = Math.ceil(count / take)
 		if (endIndex < count) {
 			pagination.next = {

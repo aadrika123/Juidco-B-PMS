@@ -16,6 +16,7 @@ export const getIaStockReqReportDal = async (req: Request) => {
 	let totalPage: number
 	let pagination: pagination = {}
 	const whereClause: Prisma.ia_stock_req_inboxWhereInput = {}
+	const ulb_id = req?.body?.auth?.ulb_id
 
 	const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined
 
@@ -84,7 +85,20 @@ export const getIaStockReqReportDal = async (req: Request) => {
 						}
 					}
 				]
-				: [])
+				: []),
+			{
+				stock_request: {
+					ulb_id: ulb_id
+				}
+			}
+		]
+	} else {
+		whereClause.AND = [
+			{
+				stock_request: {
+					ulb_id: ulb_id
+				}
+			}
 		]
 	}
 
@@ -184,6 +198,7 @@ export const getIaServiceReqReportDal = async (req: Request) => {
 	let totalPage: number
 	let pagination: pagination = {}
 	const whereClause: Prisma.ia_service_req_inboxWhereInput = {}
+	const ulb_id = req?.body?.auth?.ulb_id
 
 	const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined
 
@@ -251,7 +266,20 @@ export const getIaServiceReqReportDal = async (req: Request) => {
 						}
 					}
 				]
-				: [])
+				: []),
+			{
+				service_req: {
+					ulb_id: ulb_id
+				}
+			}
+		]
+	} else {
+		whereClause.AND = [
+			{
+				service_req: {
+					ulb_id: ulb_id
+				}
+			}
 		]
 	}
 
@@ -352,6 +380,7 @@ export const getIaProcurementReportDal = async (req: Request) => {
 	let totalPage: number
 	let pagination: pagination = {}
 	const whereClause: Prisma.ia_pre_procurement_inboxWhereInput = {}
+	const ulb_id = req?.body?.auth?.ulb_id
 
 	const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined
 
@@ -411,7 +440,20 @@ export const getIaProcurementReportDal = async (req: Request) => {
 						}
 					}
 				]
-				: [])
+				: []),
+			{
+				procurement: {
+					ulb_id: ulb_id
+				}
+			}
+		]
+	} else {
+		whereClause.AND = [
+			{
+				procurement: {
+					ulb_id: ulb_id
+				}
+			}
 		]
 	}
 
@@ -524,6 +566,7 @@ export const getIaBoqReportDal = async (req: Request) => {
 	let totalPage: number
 	let pagination: pagination = {}
 	const whereClause: Prisma.da_boq_inboxWhereInput = {}
+	const ulb_id = req?.body?.auth?.ulb_id
 
 	const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined
 
@@ -587,7 +630,20 @@ export const getIaBoqReportDal = async (req: Request) => {
 						}
 					}
 				]
-				: [])
+				: []),
+			{
+				boq: {
+					ulb_id: ulb_id
+				}
+			}
+		]
+	} else {
+		whereClause.AND = [
+			{
+				boq: {
+					ulb_id: ulb_id
+				}
+			}
 		]
 	}
 
@@ -698,6 +754,7 @@ export const getIaTenderReportDal = async (req: Request) => {
 	let totalPage: number
 	let pagination: pagination = {}
 	const whereClause: Prisma.acc_boq_inboxWhereInput = {}
+	const ulb_id = req?.body?.auth?.ulb_id
 
 	const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined
 
@@ -765,7 +822,20 @@ export const getIaTenderReportDal = async (req: Request) => {
 						}
 					}
 				]
-				: [])
+				: []),
+			{
+				boq: {
+					ulb_id: ulb_id
+				}
+			}
+		]
+	} else {
+		whereClause.AND = [
+			{
+				boq: {
+					ulb_id: ulb_id
+				}
+			}
 		]
 	}
 

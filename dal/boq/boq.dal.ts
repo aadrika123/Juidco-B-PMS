@@ -21,6 +21,7 @@ export const getBoqByRefNoDal = async (req: Request) => {
 				remark: true,
 				status: true,
 				isEdited: true,
+				gstchecked:true,
 				procurement: {
 					select: {
 						is_rate_contract: true,
@@ -177,8 +178,10 @@ export const getBoqByRefNoDal = async (req: Request) => {
 
 export const editBoqDal = async (req: Request) => {
 	const { boqData } = req.body
+
 	try {
 		const formattedBoqData: boqData = JSON.parse(boqData)
+		console.log("boqData",formattedBoqData?.gstChecked)
 		// const img = req.files as Express.Multer.File[]
 		// let docToSend: any[] = []
 
@@ -224,6 +227,7 @@ export const editBoqDal = async (req: Request) => {
 					...(formattedBoqData?.estimated_cost && { estimated_cost: formattedBoqData?.estimated_cost }),
 					...(formattedBoqData?.remark && { remark: formattedBoqData?.remark }),
 					...(formattedBoqData?.hsn_code && { hsn_code: formattedBoqData?.hsn_code }),
+					...(formattedBoqData?.gstChecked && {gstchecked:formattedBoqData?.gstChecked})
 				},
 			})
 

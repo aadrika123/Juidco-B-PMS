@@ -10,7 +10,10 @@ import {
     getPreProcurementRejectedDal,
     getPreProcurementReleasedDal,
     editPreProcurementDal,
-    forwardToLevel1Dal
+    forwardToLevel1Dal,
+    getInventoryDatatDal,
+    getInventoryByHandoverNoAndId,
+    updateInventoryQuantityDal
 } from "../../dal/stockReceiver/preProcurement.dal";
 
 
@@ -52,7 +55,61 @@ export const getPreProcurement = async (req: Request, res: Response) => {
     }
 }
 
+export const getInventoryData = async (req: Request, res: Response) => {
+    const result: any = await getInventoryDatatDal(req)
+    if (!result?.error) {
+        res.status(200).json({
+            status: true,
+            message: `Inventory list fetched successfully`,
+            data: result?.data,
+            pagination: result?.pagination
+        })
+    } else {
+        res.status(404).json({
+            status: false,
+            message: `Error while fetching Inventory list`,
+            error: result?.message
+        })
+    }
+}
 
+
+export const getInventoryByHandoverNo = async (req: Request, res: Response) => {
+    const result: any = await getInventoryByHandoverNoAndId(req)
+    if (!result?.error) {
+        res.status(200).json({
+            status: true,
+            message: `Inventory Data by ID fetched successfully`,
+            data: result?.data,
+            pagination: result?.pagination
+        })
+    } else {
+        res.status(404).json({
+            status: false,
+            message: `Error while fetching Inventory  Data by ID`,
+            error: result?.message
+        })
+    }
+}
+
+
+export const updateInventoryQuantity = async (req: Request, res: Response) => {
+    const result: any = await updateInventoryQuantityDal(req)
+    if (!result?.error) {
+        res.status(200).json({
+            status: true,
+            message: `Inventory Data by ID fetched successfully`,
+            data: result?.data,
+            pagination: result?.pagination
+        })
+    } else {
+        res.status(404).json({
+            status: false,
+            message: `Error while fetching Inventory  Data by ID`,
+            error: result?.message
+        })
+    }
+}
 
 export const getPreProcurementById = async (req: Request, res: Response) => {
     const result: any = await getPreProcurementByIdDal(req)

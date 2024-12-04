@@ -81,6 +81,7 @@ type productType = {
 
 export const editServiceRequestDal = async (req: Request) => {
 	const { service_no, products, service, stock_handover_no, inventoryId }: reqType = req.body
+	const ulb_id = req?.body?.auth?.ulb_id
 
 	try {
 		const data: Omit<service_request, 'createdAt' | 'updatedAt' | 'remark' | 'id'> = {
@@ -89,6 +90,7 @@ export const editServiceRequestDal = async (req: Request) => {
 			service: service,
 			inventoryId: inventoryId,
 			status: service === 'return' ? 20 : 10,
+			ulb_id: ulb_id
 		}
 
 		let serviceReq: any
@@ -135,6 +137,7 @@ export const editServiceRequestDal = async (req: Request) => {
 						destination: 81,
 						from: await extractRoleName(Number(process.env.ROLE_DIST)),
 						description: `There is a ${serviceTranslator(service)}. Service Number : ${service_no}`,
+						ulb_id
 					},
 				})
 			}
@@ -145,6 +148,7 @@ export const editServiceRequestDal = async (req: Request) => {
 					destination: 26,
 					from: await extractRoleName(Number(process.env.ROLE_DIST)),
 					description: `There is a ${serviceTranslator(service)}. Service Number : ${service_no}`,
+					ulb_id
 				},
 			})
 		})

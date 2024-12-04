@@ -5,22 +5,41 @@ import { pagination } from '../../type/common.type'
 const prisma = new PrismaClient()
 
 export const createCategoryDal = async (req: Request) => {
-	const { name } = req.body
+  const { name, auth } = req.body;
+  const ulb_id = auth?.ulb_id;
 
-	const data: any = {
-		name: name,
-	}
 
-	try {
-		const result = await prisma.category_master.create({
-			data: data,
-		})
-		return result
-	} catch (err: any) {
-		console.log(err)
-		return { error: true, message: err?.message }
-	}
-}
+  const data: any = {
+    name: name,
+    ulb_id: ulb_id,
+  };
+
+  try {
+    if (!ulb_id) {
+      throw { error: true, message: 'ULB id is not valid' };
+    }
+    const existingCategory = await prisma.category_master.findUnique({
+      where: {
+        name: name, 
+      },
+    });
+
+    if (existingCategory) {
+      throw { error: true, message: 'Category with this name already exists' };
+    }
+    const result = await prisma.category_master.create({
+      data: data,
+    });
+
+    return result;
+  } catch (err: any) {
+    console.log(err);
+    if (err.code === 'P2002') {
+      return { error: true, message: 'Unique constraint failed on the fields: (name)' };
+    }
+    return { error: true, message: err?.message || 'An unexpected error occurred' };
+  }
+};
 
 export const getCategoryDal = async (req: Request) => {
 	const page: number | undefined = Number(req?.query?.page)
@@ -31,6 +50,7 @@ export const getCategoryDal = async (req: Request) => {
 	let totalPage: number
 	let pagination: pagination = {}
 	const whereClause: any = {}
+	const ulb_id = req?.body?.auth?.ulb_id
 
 	const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined
 	const status: boolean | undefined = req?.query?.status === undefined ? undefined : req?.query?.status === 'true' ? true : false
@@ -51,13 +71,21 @@ export const getCategoryDal = async (req: Request) => {
 		whereClause.AND = [
 			...(status !== undefined
 				? [
-						{
-							status: status,
-						},
-					]
+					{
+						status: status,
+					},
+				]
 				: []),
 		]
 	}
+
+	whereClause.AND = [
+		...(Array.isArray(whereClause?.AND) ? [whereClause?.AND] : []),
+		{
+			ulb_id: ulb_id,
+		},
+	]
+
 	try {
 		count = await prisma.category_master.count({
 			where: whereClause,
@@ -130,10 +158,35 @@ export const getCategoryByName = async (name: string) => {
 }
 
 export const getCategoryActiveOnlyDal = async (req: Request) => {
+	const ulb_id = req?.body?.auth?.ulb_id
 	try {
 		const result = await prisma.category_master.findMany({
 			where: {
 				status: true,
+				ulb_id: ulb_id
+			},
+			orderBy: {
+				updatedAt: 'desc',
+			},
+		})
+		console.log("resultresult",result)
+		return result
+	} catch (err: any) {
+		console.log(err)
+		return { error: true, message: err?.message }
+	}
+}
+
+export const getCategoryActiveOnlyByIdDal = async (req: Request) => {
+	const ulb_id = req?.body?.auth?.ulb_id;
+	const {id} = req?.params;
+	// console.log("resasdasd",req?.params)
+	try {
+		const result = await prisma.category_master.findFirst({
+			where: {
+				status: true,
+				ulb_id: ulb_id,
+				id:id
 			},
 			orderBy: {
 				updatedAt: 'desc',

@@ -3,7 +3,8 @@ import {
     getBidDetailsDal,
     getProcurementDetailsByRefNoDal,
     getRateContractDetailsNoDal,
-    getBidderByIdDal
+    getBidderByIdDal,
+    getAllRateContractDetailsNoDal
 } from "../../dal/bidding/bidding.dal";
 
 
@@ -43,6 +44,23 @@ export const getProcurementDetailsByRefNo = async (req: Request, res: Response) 
 
 export const getRateContractDetailsNo = async (req: Request, res: Response) => {
     const result: any = await getRateContractDetailsNoDal(req)
+    if (!result?.error) {
+        res.status(200).json({
+            status: true,
+            message: `Rate contract details fetched successfully`,
+            data: result
+        })
+    } else {
+        res.status(404).json({
+            status: false,
+            message: `Error while fetching rate contract details`,
+            error: result?.message
+        })
+    }
+}
+
+export const getAllRateContractDetailsNo = async (req: Request, res: Response) => {
+    const result: any = await getAllRateContractDetailsNoDal(req)
     if (!result?.error) {
         res.status(200).json({
             status: true,

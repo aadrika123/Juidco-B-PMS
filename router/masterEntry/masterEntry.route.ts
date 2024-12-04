@@ -1,7 +1,7 @@
 import express from 'express'
 const router = express.Router()
 import { createSubCategory, getSubcategory, getSubcategoryByCategoryId, getSubcategoryActiveOnly, editSubcategory, switchStatus as subSwitch, getSubcategoryByCategoryIdActiveOnly, getSubcategoryById } from './../../controller/masterEntry/subcategory.controller'
-import { createCategory, getCategory, getCategoryById, editCategory, switchStatus, getCategoryActiveOnly } from '../../controller/masterEntry/category.controller'
+import { createCategory, getCategory, getCategoryById, editCategory, switchStatus, getCategoryActiveOnly, getCategoryActiveOnlyById } from '../../controller/masterEntry/category.controller'
 import { createBrand, getBrand, getBrandBySubcategoryId, getBrandActiveOnly, getBrandBySubcategoryIdActiveOnly, editBrand, switchStatus as brandSwitch, getBrandById } from '../../controller/masterEntry/brand.controller'
 import { createUnit, getUnit, getUnitById, editUnit, switchStatus as unitSwitch, getUnitActiveOnly } from '../../controller/masterEntry/unit.controller'
 import { createSupplier, getSupplier, getSupplierById, editSupplier, switchStatus as supplierSwitch, getSupplierActiveOnly, getSupplierByProcurementNo } from '../../controller/masterEntry/supplier.controller'
@@ -22,9 +22,10 @@ router.get('/sub-category/:id', getSubcategoryById)
 router.post('/category', createCategory)
 router.get('/category', getCategory)
 router.get('/category/active', getCategoryActiveOnly)
+router.get('/category/active/:id', getCategoryActiveOnlyById)
 router.post('/category/update', editCategory)
 router.post('/category/switch', switchStatus)
-router.get('/category/:id', getCategoryById)
+router.get('/category/:id', getCategoryActiveOnlyById)
 
 //Brand
 router.get('/by-subcategory/:subcategoryId', getBrandBySubcategoryId) //I had to remove '/brand' which was more suitable but for some reason it was not working on staging server(https://aadrikainfomedia.com/auth) but was working fine on local server.

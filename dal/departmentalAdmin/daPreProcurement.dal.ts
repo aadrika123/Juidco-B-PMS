@@ -1,5 +1,5 @@
 import { Request } from 'express'
-import { PrismaClient } from '@prisma/client'
+import { Prisma, PrismaClient } from '@prisma/client'
 import getErrorMessage from '../../lib/getErrorMessage'
 import { imageUploader } from '../../lib/imageUploader'
 import { pagination } from '../../type/common.type'
@@ -15,7 +15,8 @@ export const getPreProcurementDal = async (req: Request) => {
 	let count: number
 	let totalPage: number
 	let pagination: pagination = {}
-	const whereClause: any = {}
+	const whereClause: Prisma.da_pre_procurement_inboxWhereInput = {}
+	const ulb_id = req?.body?.auth?.ulb_id
 
 	const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined
 
@@ -35,10 +36,14 @@ export const getPreProcurementDal = async (req: Request) => {
 			},
 			{
 				procurement: {
-					description: {
-						contains: search,
-						mode: 'insensitive',
-					},
+					procurement_stocks: {
+						some: {
+							description: {
+								contains: search,
+								mode: 'insensitive',
+							},
+						}
+					}
 				},
 			},
 		]
@@ -54,9 +59,13 @@ export const getPreProcurementDal = async (req: Request) => {
 	}
 	if (subcategory[0]) {
 		whereClause.procurement = {
-			subcategory_masterId: {
-				in: subcategory,
-			},
+			procurement_stocks: {
+				some: {
+					subCategory_masterId: {
+						in: subcategory,
+					},
+				}
+			}
 		}
 	}
 	if (status[0]) {
@@ -68,10 +77,18 @@ export const getPreProcurementDal = async (req: Request) => {
 	}
 	if (brand[0]) {
 		whereClause.procurement = {
-			brand_masterId: {
-				in: brand,
-			},
+			procurement_stocks: {
+				some: {
+					brand_masterId: {
+						in: brand,
+					},
+				}
+			}
 		}
+	}
+
+	whereClause.procurement = {
+		ulb_id: ulb_id
 	}
 
 	try {
@@ -283,6 +300,7 @@ export const getPreProcurementByOrderNoDal = async (req: Request) => {
 
 export const backToSrDal = async (req: Request) => {
 	const { preProcurement, remark }: { preProcurement: string[]; remark: string } = req.body
+	const ulb_id = req?.body?.auth?.ulb_id
 	try {
 		preProcurement.map(async item => {
 			const inbox: any = await prisma.da_pre_procurement_inbox.findFirst({
@@ -336,6 +354,7 @@ export const backToSrDal = async (req: Request) => {
 						destination: 10,
 						from: await extractRoleName(Number(process.env.ROLE_DA)),
 						description: `There is a procurement returned from DA to be revised. Procurement Number : ${inbox?.procurement_no}`,
+						ulb_id
 					},
 				}),
 			])
@@ -349,6 +368,7 @@ export const backToSrDal = async (req: Request) => {
 
 export const editPreProcurementDal = async (req: Request) => {
 	const { procurement_no, category, subcategory, brand, description, rate, quantity, total_rate, remark, unit } = req.body
+	const ulb_id = req?.body?.auth?.ulb_id
 
 	const data = {
 		category: { connect: { id: category } },
@@ -421,6 +441,7 @@ export const editPreProcurementDal = async (req: Request) => {
 					destination: 10,
 					from: await extractRoleName(Number(process.env.ROLE_DA)),
 					description: `There is a procurement Edited by DA. Procurement Number : ${procurement_no}`,
+					ulb_id
 				},
 			}),
 		])
@@ -509,6 +530,8 @@ export const releaseForTenderByProcNoDal = async (req: Request) => {
 	const { procurement }: { procurement: string } = req.body
 	const img = req.files
 	const formattedProcurement = typeof procurement !== 'string' ? JSON.stringify(procurement) : procurement
+	const formattedAuth = typeof req?.body?.auth !== 'string' ? JSON.stringify(req?.body?.auth) : req.body?.auth
+	const ulb_id = JSON.parse(formattedAuth)?.ulb_id
 	try {
 		await Promise.all(
 			JSON.parse(formattedProcurement).map(async (procurement_no: string) => {
@@ -574,6 +597,7 @@ export const releaseForTenderByProcNoDal = async (req: Request) => {
 							destination: 15,
 							from: await extractRoleName(Number(process.env.ROLE_DA)),
 							description: `There is a procurement released for tender. Procurement Number : ${procurement_no}`,
+							ulb_id
 						},
 					}),
 				])
@@ -594,7 +618,8 @@ export const getPreProcurementOutboxDal = async (req: Request) => {
 	let count: number
 	let totalPage: number
 	let pagination: pagination = {}
-	const whereClause: any = {}
+	const whereClause: Prisma.da_pre_procurement_outboxWhereInput = {}
+	const ulb_id = req?.body?.auth?.ulb_id
 
 	const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined
 
@@ -614,10 +639,14 @@ export const getPreProcurementOutboxDal = async (req: Request) => {
 			},
 			{
 				procurement: {
-					description: {
-						contains: search,
-						mode: 'insensitive',
-					},
+					procurement_stocks: {
+						some: {
+							description: {
+								contains: search,
+								mode: 'insensitive',
+							},
+						}
+					}
 				},
 			},
 		]
@@ -633,9 +662,13 @@ export const getPreProcurementOutboxDal = async (req: Request) => {
 	}
 	if (subcategory[0]) {
 		whereClause.procurement = {
-			subcategory_masterId: {
-				in: subcategory,
-			},
+			procurement_stocks: {
+				some: {
+					subCategory_masterId: {
+						in: subcategory,
+					},
+				}
+			}
 		}
 	}
 	if (status[0]) {
@@ -647,10 +680,18 @@ export const getPreProcurementOutboxDal = async (req: Request) => {
 	}
 	if (brand[0]) {
 		whereClause.procurement = {
-			brand_masterId: {
-				in: brand,
-			},
+			procurement_stocks: {
+				some: {
+					brand_masterId: {
+						in: brand,
+					},
+				}
+			}
 		}
+	}
+
+	whereClause.procurement = {
+		ulb_id: ulb_id
 	}
 
 	try {
@@ -803,6 +844,8 @@ export const getPreProcurementOutboxByIdDal = async (req: Request) => {
 
 export const rejectByProcurementNoDal = async (req: Request) => {
 	const { procurement_no, remark }: { procurement_no: string[]; remark: string } = req.body
+	const ulb_id = req?.body?.auth?.ulb_id
+
 	try {
 		procurement_no.map(async item => {
 			await prisma.$transaction([
@@ -845,6 +888,7 @@ export const rejectByProcurementNoDal = async (req: Request) => {
 						destination: 14,
 						from: await extractRoleName(Number(process.env.ROLE_DA)),
 						description: `There is a procurement rejected. Procurement Number : ${procurement_no}`,
+						ulb_id
 					},
 				}),
 			])
@@ -858,6 +902,8 @@ export const rejectByProcurementNoDal = async (req: Request) => {
 
 export const rejectDal = async (req: Request) => {
 	const { preProcurement, remark }: { preProcurement: string[]; remark: string } = req.body
+	const ulb_id = req?.body?.auth?.ulb_id
+
 	try {
 		preProcurement.map(async item => {
 			const inbox: any = await prisma.da_pre_procurement_inbox.findFirst({
@@ -911,6 +957,7 @@ export const rejectDal = async (req: Request) => {
 						destination: 14,
 						from: await extractRoleName(Number(process.env.ROLE_DA)),
 						description: `There is a procurement rejected. Procurement Number : ${inbox?.procurement_no}`,
+						ulb_id
 					},
 				}),
 			])
@@ -925,6 +972,8 @@ export const rejectDal = async (req: Request) => {
 export const forwardToAccountantDal = async (req: Request) => {
 	const { preProcurement }: { preProcurement: string } = req.body
 	const img = req.files
+	const formattedAuth = typeof req?.body?.auth !== 'string' ? JSON.stringify(req?.body?.auth) : req.body?.auth
+	const ulb_id = JSON.parse(formattedAuth)?.ulb_id
 	try {
 		await Promise.all(
 			JSON.parse(preProcurement).map(async (item: string) => {
@@ -985,6 +1034,7 @@ export const forwardToAccountantDal = async (req: Request) => {
 							destination: 30,
 							from: await extractRoleName(Number(process.env.ROLE_DA)),
 							description: `There is a procurement for BOQ. Procurement Number : ${inbox?.procurement_no}`,
+							ulb_id
 						},
 					}),
 				])
@@ -1005,7 +1055,8 @@ export const getBoqInboxDal = async (req: Request) => {
 	let count: number
 	let totalPage: number
 	let pagination: pagination = {}
-	const whereClause: any = {}
+	const whereClause: Prisma.da_boq_inboxWhereInput = {}
+	const ulb_id = req?.body?.auth?.ulb_id
 
 	const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined
 
@@ -1037,6 +1088,18 @@ export const getBoqInboxDal = async (req: Request) => {
 			// 		},
 			// 	},
 			// },
+			{
+				boq: {
+				  procurement_stocks: {
+					some: {
+					  procurement_no: {
+						contains: search,
+						mode: 'insensitive',
+					  },
+					},
+				  },
+				},
+			  },
 		]
 	}
 
@@ -1059,9 +1122,13 @@ export const getBoqInboxDal = async (req: Request) => {
 			procurement_stocks: {
 				some: {
 					procurement: {
-						subcategory_masterId: {
-							in: subcategory,
-						},
+						procurement_stocks: {
+							some: {
+								subCategory_masterId: {
+									in: subcategory,
+								},
+							}
+						}
 					},
 				},
 			},
@@ -1079,13 +1146,21 @@ export const getBoqInboxDal = async (req: Request) => {
 			procurement_stocks: {
 				some: {
 					procurement: {
-						brand_masterId: {
-							in: brand,
-						},
+						procurement_stocks: {
+							some: {
+								brand_masterId: {
+									in: brand,
+								},
+							}
+						}
 					},
 				},
 			},
 		}
+	}
+
+	whereClause.boq = {
+		ulb_id: ulb_id
 	}
 
 	try {
@@ -1186,7 +1261,8 @@ export const getBoqOutboxDal = async (req: Request) => {
 	let count: number
 	let totalPage: number
 	let pagination: pagination = {}
-	const whereClause: any = {}
+	const whereClause: Prisma.da_boq_outboxWhereInput = {}
+	const ulb_id = req?.body?.auth?.ulb_id
 
 	const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined
 
@@ -1240,9 +1316,13 @@ export const getBoqOutboxDal = async (req: Request) => {
 			procurement_stocks: {
 				some: {
 					procurement: {
-						subcategory_masterId: {
-							in: subcategory,
-						},
+						procurement_stocks: {
+							some: {
+								subCategory_masterId: {
+									in: subcategory,
+								},
+							}
+						}
 					},
 				},
 			},
@@ -1260,13 +1340,21 @@ export const getBoqOutboxDal = async (req: Request) => {
 			procurement_stocks: {
 				some: {
 					procurement: {
-						brand_masterId: {
-							in: brand,
-						},
+						procurement_stocks: {
+							some: {
+								brand_masterId: {
+									in: brand,
+								},
+							}
+						}
 					},
 				},
 			},
 		}
+	}
+
+	whereClause.boq = {
+		ulb_id: ulb_id
 	}
 
 	try {
@@ -1418,6 +1506,11 @@ export const forwardToFinanceDal = async (req: Request) => {
 				},
 				data: {
 					status: 40,
+					procurement: {
+						update: {
+							status: 100
+						}
+					}
 				},
 			})
 
@@ -1440,6 +1533,7 @@ export const forwardToFinanceDal = async (req: Request) => {
 
 export const proceedForPostProcurementDal = async (req: Request) => {
 	const { reference_no }: { reference_no: string } = req.body
+	const ulb_id = req?.body?.auth?.ulb_id
 	try {
 		if (!reference_no) {
 			throw { error: true, message: 'Reference number is required' }
@@ -1498,6 +1592,7 @@ export const proceedForPostProcurementDal = async (req: Request) => {
 					destination: 23,
 					from: await extractRoleName(Number(process.env.ROLE_DA)),
 					description: `There is a procurement ready for post procurement. Procurement Number : ${boq?.procurement?.procurement_no as string}`,
+					ulb_id
 				},
 			})
 		})
@@ -1511,6 +1606,7 @@ export const proceedForPostProcurementDal = async (req: Request) => {
 
 export const returnToAccountantDal = async (req: Request) => {
 	const { reference_no, remark }: { reference_no: string; remark: string } = req.body
+	const ulb_id = req?.body?.auth?.ulb_id
 	try {
 		const boqData = await prisma.boq.findFirst({
 			where: {
@@ -1575,6 +1671,7 @@ export const returnToAccountantDal = async (req: Request) => {
 					destination: 31,
 					from: await extractRoleName(Number(process.env.ROLE_DA)),
 					description: `There is a BOQ returned from DA. Reference Number : ${reference_no}`,
+					ulb_id
 				},
 			})
 		})
@@ -1588,6 +1685,7 @@ export const returnToAccountantDal = async (req: Request) => {
 
 export const rejectBoqDal = async (req: Request) => {
 	const { reference_no, remark }: { reference_no: string; remark: string } = req.body
+	const ulb_id = req?.body?.auth?.ulb_id
 	try {
 		const boqData = await prisma.boq.findFirst({
 			where: {
@@ -1665,6 +1763,7 @@ export const rejectBoqDal = async (req: Request) => {
 					destination: 31,
 					from: await extractRoleName(Number(process.env.ROLE_DA)),
 					description: `There is a BOQ rejected. Reference Number : ${reference_no}`,
+					ulb_id
 				},
 			})
 		})
@@ -1684,7 +1783,8 @@ export const getPreTenderingInboxDal = async (req: Request) => {
 	let count: number
 	let totalPage: number
 	let pagination: pagination = {}
-	const whereClause: any = {}
+	const whereClause: Prisma.da_pre_tender_inboxWhereInput = {}
+	const ulb_id = req?.body?.auth?.ulb_id
 
 	const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined
 
@@ -1703,13 +1803,21 @@ export const getPreTenderingInboxDal = async (req: Request) => {
 				},
 			},
 			{
-				procurement: {
-					description: {
-						contains: search,
-						mode: 'insensitive',
-					},
-				},
-			},
+				tendering_form: {
+					boq: {
+						procurement: {
+							procurement_stocks: {
+								some: {
+									description: {
+										contains: search,
+										mode: 'insensitive',
+									},
+								}
+							},
+						},
+					}
+				}
+			}
 		]
 	}
 
@@ -1719,17 +1827,19 @@ export const getPreTenderingInboxDal = async (req: Request) => {
 			...(category[0]
 				? [
 					{
-						boq: {
-							procurements: {
-								some: {
-									procurement: {
-										category_masterId: {
-											in: category,
+						tendering_form: {
+							boq: {
+								procurements: {
+									some: {
+										procurement: {
+											category_masterId: {
+												in: category,
+											},
 										},
 									},
 								},
 							},
-						},
+						}
 					},
 				]
 				: []),
@@ -1737,17 +1847,23 @@ export const getPreTenderingInboxDal = async (req: Request) => {
 			...(subcategory[0]
 				? [
 					{
-						boq: {
-							procurements: {
-								some: {
-									procurement: {
-										subcategory_masterId: {
-											in: subcategory,
+						tendering_form: {
+							boq: {
+								procurements: {
+									some: {
+										procurement: {
+											procurement_stocks: {
+												some: {
+													subCategory_masterId: {
+														in: subcategory,
+													},
+												}
+											}
 										},
 									},
 								},
 							},
-						},
+						}
 					},
 				]
 				: []),
@@ -1755,11 +1871,13 @@ export const getPreTenderingInboxDal = async (req: Request) => {
 			...(brand[0]
 				? [
 					{
-						boq: {
-							status: {
-								in: status.map(Number),
+						tendering_form: {
+							boq: {
+								status: {
+									in: status.map(Number),
+								},
 							},
-						},
+						}
 					},
 				]
 				: []),
@@ -1767,20 +1885,43 @@ export const getPreTenderingInboxDal = async (req: Request) => {
 			...(brand[0]
 				? [
 					{
-						boq: {
-							procurements: {
-								some: {
-									procurement: {
-										brand_masterId: {
-											in: brand,
+						tendering_form: {
+							boq: {
+								procurements: {
+									some: {
+										procurement: {
+											procurement_stocks: {
+												some: {
+													brand_masterId: {
+														in: brand,
+													},
+												}
+											}
 										},
 									},
 								},
 							},
-						},
+						}
 					},
 				]
 				: []),
+			{
+				tendering_form: {
+					boq: {
+						ulb_id: ulb_id
+					}
+				}
+			}
+		]
+	} else {
+		whereClause.AND = [
+			{
+				tendering_form: {
+					boq: {
+						ulb_id: ulb_id
+					}
+				}
+			}
 		]
 	}
 
@@ -1883,7 +2024,8 @@ export const getPreTenderingOutboxDal = async (req: Request) => {
 	let count: number
 	let totalPage: number
 	let pagination: pagination = {}
-	const whereClause: any = {}
+	const whereClause: Prisma.da_pre_tender_outboxWhereInput = {}
+	const ulb_id = req?.body?.auth?.ulb_id
 
 	const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined
 
@@ -1902,12 +2044,20 @@ export const getPreTenderingOutboxDal = async (req: Request) => {
 				},
 			},
 			{
-				procurement: {
-					description: {
-						contains: search,
-						mode: 'insensitive',
-					},
-				},
+				tendering_form: {
+					boq: {
+						procurement: {
+							procurement_stocks: {
+								some: {
+									description: {
+										contains: search,
+										mode: 'insensitive',
+									},
+								}
+							}
+						},
+					}
+				}
 			},
 		]
 	}
@@ -1918,17 +2068,19 @@ export const getPreTenderingOutboxDal = async (req: Request) => {
 			...(category[0]
 				? [
 					{
-						boq: {
-							procurements: {
-								some: {
-									procurement: {
-										category_masterId: {
-											in: category,
+						tendering_form: {
+							boq: {
+								procurements: {
+									some: {
+										procurement: {
+											category_masterId: {
+												in: category,
+											},
 										},
 									},
 								},
 							},
-						},
+						}
 					},
 				]
 				: []),
@@ -1936,17 +2088,23 @@ export const getPreTenderingOutboxDal = async (req: Request) => {
 			...(subcategory[0]
 				? [
 					{
-						boq: {
-							procurements: {
-								some: {
-									procurement: {
-										subcategory_masterId: {
-											in: subcategory,
+						tendering_form: {
+							boq: {
+								procurements: {
+									some: {
+										procurement: {
+											procurement_stocks: {
+												some: {
+													subCategory_masterId: {
+														in: subcategory,
+													},
+												}
+											}
 										},
 									},
 								},
 							},
-						},
+						}
 					},
 				]
 				: []),
@@ -1954,11 +2112,13 @@ export const getPreTenderingOutboxDal = async (req: Request) => {
 			...(brand[0]
 				? [
 					{
-						boq: {
-							status: {
-								in: status.map(Number),
+						tendering_form: {
+							boq: {
+								status: {
+									in: status.map(Number),
+								},
 							},
-						},
+						}
 					},
 				]
 				: []),
@@ -1966,20 +2126,43 @@ export const getPreTenderingOutboxDal = async (req: Request) => {
 			...(brand[0]
 				? [
 					{
-						boq: {
-							procurements: {
-								some: {
-									procurement: {
-										brand_masterId: {
-											in: brand,
+						tendering_form: {
+							boq: {
+								procurements: {
+									some: {
+										procurement: {
+											procurement_stocks: {
+												some: {
+													brand_masterId: {
+														in: brand,
+													},
+												}
+											}
 										},
 									},
 								},
 							},
 						},
-					},
+					}
 				]
 				: []),
+			{
+				tendering_form: {
+					boq: {
+						ulb_id: ulb_id
+					}
+				}
+			}
+		]
+	} else {
+		whereClause.AND = [
+			{
+				tendering_form: {
+					boq: {
+						ulb_id: ulb_id
+					}
+				}
+			}
 		]
 	}
 
@@ -2076,6 +2259,7 @@ export const getPreTenderingOutboxDal = async (req: Request) => {
 
 export const approveBoqForPtDal = async (req: Request) => {
 	const { reference_no }: { reference_no: string } = req.body
+	const ulb_id = req?.body?.auth?.ulb_id
 	try {
 		const boqData = await prisma.boq.findFirst({
 			where: {
@@ -2133,6 +2317,7 @@ export const approveBoqForPtDal = async (req: Request) => {
 					destination: 31,
 					from: await extractRoleName(Number(process.env.ROLE_DA)),
 					description: `There is a BOQ approved for pre-tendering form. Reference Number : ${reference_no}`,
+					ulb_id
 				},
 			})
 		})
@@ -2146,6 +2331,7 @@ export const approveBoqForPtDal = async (req: Request) => {
 
 export const approvePreTenderDal = async (req: Request) => {
 	const { reference_no }: { reference_no: string } = req.body
+	const ulb_id = req?.body?.auth?.ulb_id
 	try {
 		const preTenderData = await prisma.tendering_form.findFirst({
 			where: {
@@ -2288,6 +2474,7 @@ export const approvePreTenderDal = async (req: Request) => {
 					destination: 32,
 					from: await extractRoleName(Number(process.env.ROLE_DA)),
 					description: `There is a pre-tendering form approved. Reference Number : ${reference_no}`,
+					ulb_id
 				},
 			})
 		})
@@ -2301,6 +2488,7 @@ export const approvePreTenderDal = async (req: Request) => {
 
 export const rejectPreTenderDal = async (req: Request) => {
 	const { reference_no, remark }: { reference_no: string; remark: string } = req.body
+	const ulb_id = req?.body?.auth?.ulb_id
 	try {
 		const preTenderData = await prisma.tendering_form.findFirst({
 			where: {
@@ -2373,6 +2561,7 @@ export const rejectPreTenderDal = async (req: Request) => {
 					destination: 32,
 					from: await extractRoleName(Number(process.env.ROLE_DA)),
 					description: `There is a pre-tendering form rejected. Reference Number : ${reference_no}`,
+					ulb_id
 				},
 			})
 		})
@@ -2386,6 +2575,7 @@ export const rejectPreTenderDal = async (req: Request) => {
 
 export const returnToAccPtDal = async (req: Request) => {
 	const { reference_no, remark }: { reference_no: string; remark: string } = req.body
+	const ulb_id = req?.body?.auth?.ulb_id
 	try {
 		const preTenderData = await prisma.tendering_form.findFirst({
 			where: {
@@ -2448,6 +2638,7 @@ export const returnToAccPtDal = async (req: Request) => {
 					destination: 32,
 					from: await extractRoleName(Number(process.env.ROLE_DA)),
 					description: `There is a pre-tendering form returned from DA. Reference Number : ${reference_no}`,
+					ulb_id
 				},
 			})
 		})

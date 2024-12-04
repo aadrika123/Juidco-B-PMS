@@ -13,7 +13,8 @@ export const getStockReqInboxDal = async (req: Request) => {
 	let count: number
 	let totalPage: number
 	let pagination: pagination = {}
-	const whereClause: any = {}
+	const whereClause: Prisma.sr_stock_req_inboxWhereInput = {}
+	const ulb_id = req?.body?.auth?.ulb_id
 
 	const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined
 
@@ -32,64 +33,75 @@ export const getStockReqInboxDal = async (req: Request) => {
 				},
 			},
 			{
-				emp_id: {
-					description: {
+				stock_request: {
+					emp_id: {
 						contains: search,
 						mode: 'insensitive',
 					},
-				},
+				}
 			},
 		]
 	}
 
-	if (category[0] || subcategory[0] || brand[0]) {
-		whereClause.AND = [
-			...(category[0]
-				? [
-						{
-							stock_request: {
-								category_masterId: {
-									in: category,
-								},
+	// if (category[0] || subcategory[0] || brand[0]) {
+	whereClause.AND = [
+		...(category[0]
+			? [
+				{
+					stock_request: {
+						inventory: {
+							category_masterId: {
+								in: category,
 							},
-						},
-					]
-				: []),
-			...(subcategory[0]
-				? [
-						{
-							stock_request: {
-								subcategory_masterId: {
-									in: subcategory,
-								},
+						}
+					},
+				},
+			]
+			: []),
+		...(subcategory[0]
+			? [
+				{
+					stock_request: {
+						inventory: {
+							subcategory_masterId: {
+								in: subcategory,
 							},
-						},
-					]
-				: []),
-			...(brand[0]
-				? [
-						{
-							stock_request: {
-								brand_masterId: {
-									in: brand,
-								},
+						}
+					},
+				},
+			]
+			: []),
+		...(brand[0]
+			? [
+				{
+					stock_request: {
+						inventory: {
+							brand_masterId: {
+								in: brand,
 							},
+						}
+					},
+				},
+			]
+			: []),
+		...(status[0]
+			? [
+				{
+					stock_request: {
+						status: {
+							in: status.map(Number),
 						},
-					]
-				: []),
-			...(status[0]
-				? [
-						{
-							stock_request: {
-								status: {
-									in: status.map(Number),
-								},
-							},
-						},
-					]
-				: []),
-		]
-	}
+					},
+				},
+			]
+			: []),
+		{
+			stock_request: {
+				ulb_id: ulb_id
+			}
+		}
+	]
+	// }
 
 	try {
 		count = await prisma.sr_stock_req_inbox.count({
@@ -186,7 +198,8 @@ export const getStockReqOutboxDal = async (req: Request) => {
 	let count: number
 	let totalPage: number
 	let pagination: pagination = {}
-	const whereClause: any = {}
+	const whereClause: Prisma.sr_stock_req_outboxWhereInput = {}
+	const ulb_id = req?.body?.auth?.ulb_id
 
 	const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined
 
@@ -205,64 +218,75 @@ export const getStockReqOutboxDal = async (req: Request) => {
 				},
 			},
 			{
-				emp_id: {
-					description: {
+				stock_request: {
+					emp_id: {
 						contains: search,
 						mode: 'insensitive',
 					},
-				},
+				}
 			},
 		]
 	}
 
-	if (category[0] || subcategory[0] || brand[0]) {
-		whereClause.AND = [
-			...(category[0]
-				? [
-						{
-							stock_request: {
-								category_masterId: {
-									in: category,
-								},
+	// if (category[0] || subcategory[0] || brand[0]) {
+	whereClause.AND = [
+		...(category[0]
+			? [
+				{
+					stock_request: {
+						inventory: {
+							category_masterId: {
+								in: category,
 							},
-						},
-					]
-				: []),
-			...(subcategory[0]
-				? [
-						{
-							stock_request: {
-								subcategory_masterId: {
-									in: subcategory,
-								},
+						}
+					},
+				},
+			]
+			: []),
+		...(subcategory[0]
+			? [
+				{
+					stock_request: {
+						inventory: {
+							subcategory_masterId: {
+								in: subcategory,
 							},
-						},
-					]
-				: []),
-			...(brand[0]
-				? [
-						{
-							stock_request: {
-								brand_masterId: {
-									in: brand,
-								},
+						}
+					},
+				},
+			]
+			: []),
+		...(brand[0]
+			? [
+				{
+					stock_request: {
+						inventory: {
+							brand_masterId: {
+								in: brand,
 							},
+						}
+					},
+				},
+			]
+			: []),
+		...(status[0]
+			? [
+				{
+					stock_request: {
+						status: {
+							in: status.map(Number),
 						},
-					]
-				: []),
-			...(status[0]
-				? [
-						{
-							stock_request: {
-								status: {
-									in: status.map(Number),
-								},
-							},
-						},
-					]
-				: []),
-		]
-	}
+					},
+				},
+			]
+			: []),
+		{
+			stock_request: {
+				ulb_id: ulb_id
+			}
+		}
+	]
+	// }
 
 	try {
 		count = await prisma.sr_stock_req_outbox.count({
@@ -456,6 +480,7 @@ export const approveStockReqDal = async (req: Request) => {
 
 export const returnStockReqDal = async (req: Request) => {
 	const { stock_handover_no }: { stock_handover_no: string[] } = req.body
+	const ulb_id = req?.body?.auth?.ulb_id
 
 	try {
 		await Promise.all(
@@ -503,6 +528,7 @@ export const returnStockReqDal = async (req: Request) => {
 							title: 'Stock returned',
 							destination: 40,
 							description: `stock request : ${item} has returned`,
+							ulb_id
 						},
 					}),
 				])
@@ -517,6 +543,7 @@ export const returnStockReqDal = async (req: Request) => {
 
 export const rejectStockReqDal = async (req: Request) => {
 	const { stock_handover_no }: { stock_handover_no: string[] } = req.body
+	const ulb_id = req?.body?.auth?.ulb_id
 
 	try {
 		await Promise.all(
@@ -564,6 +591,7 @@ export const rejectStockReqDal = async (req: Request) => {
 							title: 'Stock rejected',
 							destination: 40,
 							description: `stock request : ${item} has rejected`,
+							ulb_id
 						},
 					}),
 				])
@@ -661,6 +689,7 @@ export const stockReturnApprovalDal = async (req: Request) => {
 
 export const stockReturnRejectDal = async (req: Request) => {
 	const { stock_handover_no, remark }: { stock_handover_no: string; remark: string } = req.body
+	const ulb_id = req?.body?.auth?.ulb_id
 
 	try {
 		const stockReq = await prisma.stock_request.findFirst({
@@ -707,6 +736,7 @@ export const stockReturnRejectDal = async (req: Request) => {
 					title: 'Stock return request rejected',
 					destination: 40,
 					description: `Return request for ${stock_handover_no} has been rejected`,
+					ulb_id
 				},
 			})
 		})
@@ -720,6 +750,7 @@ export const stockReturnRejectDal = async (req: Request) => {
 
 export const stockReturnReqReturnDal = async (req: Request) => {
 	const { stock_handover_no, remark }: { stock_handover_no: string; remark: string } = req.body
+	const ulb_id = req?.body?.auth?.ulb_id
 
 	try {
 		const stockReq = await prisma.stock_request.findFirst({
@@ -766,6 +797,7 @@ export const stockReturnReqReturnDal = async (req: Request) => {
 					title: 'Stock return request returned back',
 					destination: 40,
 					description: `Return request for ${stock_handover_no} has been Returned back`,
+					ulb_id
 				},
 			})
 		})
@@ -905,6 +937,7 @@ export const deadStockApprovalDal = async (req: Request) => {
 
 export const deadStockRejectDal = async (req: Request) => {
 	const { stock_handover_no, remark }: { stock_handover_no: string; remark: string } = req.body
+	const ulb_id = req?.body?.auth?.ulb_id
 
 	try {
 		const stockReq = await prisma.stock_request.findFirst({
@@ -951,6 +984,7 @@ export const deadStockRejectDal = async (req: Request) => {
 					title: 'Dead stock request rejected',
 					destination: 40,
 					description: `Dead stock request for ${stock_handover_no} has been rejected`,
+					ulb_id
 				},
 			})
 		})
@@ -964,6 +998,7 @@ export const deadStockRejectDal = async (req: Request) => {
 
 export const deadStockReturnDal = async (req: Request) => {
 	const { stock_handover_no, remark }: { stock_handover_no: string; remark: String } = req.body
+	const ulb_id = req?.body?.auth?.ulb_id
 
 	try {
 		const stockReq = await prisma.stock_request.findFirst({
@@ -1010,6 +1045,7 @@ export const deadStockReturnDal = async (req: Request) => {
 					title: 'Dead stock request returned',
 					destination: 40,
 					description: `Dead stock request for ${stock_handover_no} has been returned`,
+					ulb_id
 				},
 			})
 		})
@@ -1098,6 +1134,7 @@ export const claimWarrantyDal = async (req: Request) => {
 
 export const warrantyClaimRejectDal = async (req: Request) => {
 	const { stock_handover_no, remark }: { stock_handover_no: string; remark: string } = req.body
+	const ulb_id = req?.body?.auth?.ulb_id
 
 	try {
 		const stockReq = await prisma.stock_request.findFirst({
@@ -1144,6 +1181,7 @@ export const warrantyClaimRejectDal = async (req: Request) => {
 					title: 'Warranty claim rejected',
 					destination: 40,
 					description: `Warranty claim request for ${stock_handover_no} has been rejected`,
+					ulb_id
 				},
 			})
 		})
@@ -1157,6 +1195,7 @@ export const warrantyClaimRejectDal = async (req: Request) => {
 
 export const warrantyClaimReturnDal = async (req: Request) => {
 	const { stock_handover_no, remark }: { stock_handover_no: string; remark: string } = req.body
+	const ulb_id = req?.body?.auth?.ulb_id
 
 	try {
 		const stockReq = await prisma.stock_request.findFirst({
@@ -1203,6 +1242,7 @@ export const warrantyClaimReturnDal = async (req: Request) => {
 					title: 'Warranty claim returned',
 					destination: 40,
 					description: `Warranty claim request for ${stock_handover_no} has been returned`,
+					ulb_id
 				},
 			})
 		})

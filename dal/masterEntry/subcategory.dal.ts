@@ -6,10 +6,12 @@ const prisma = new PrismaClient()
 
 export const createSubcategoryDal = async (req: Request) => {
 	const { name, category_masterId } = req.body
+	const ulb_id = req?.body?.auth?.ulb_id
 
 	const data: any = {
 		name: name,
 		category_masterId: category_masterId,
+		ulb_id: ulb_id
 	}
 
 	try {
@@ -53,6 +55,7 @@ export const getSubcategoryDal = async (req: Request) => {
 	let totalPage: number
 	let pagination: pagination = {}
 	const whereClause: any = {}
+	const ulb_id = req?.body?.auth?.ulb_id
 
 	const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined
 
@@ -91,6 +94,14 @@ export const getSubcategoryDal = async (req: Request) => {
 				: []),
 		]
 	}
+
+	whereClause.AND = [
+		...(Array.isArray(whereClause?.AND) ? [whereClause?.AND] : []),
+		{
+			ulb_id: ulb_id,
+		},
+	]
+
 	try {
 		count = await prisma.subcategory_master.count({
 			where: whereClause,
@@ -190,10 +201,12 @@ export const getSubcategoryByCategoryIdActiveOnlyDal = async (req: Request) => {
 }
 
 export const getSubcategoryActiveOnlyDal = async (req: Request) => {
+	const ulb_id = req?.body?.auth?.ulb_id
 	try {
 		const result = await prisma.subcategory_master.findMany({
 			where: {
 				status: true,
+				ulb_id: ulb_id
 			},
 			orderBy: {
 				updatedAt: 'desc',

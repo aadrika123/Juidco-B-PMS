@@ -17,6 +17,7 @@ export const getTenderReportDal = async (req: Request) => {
 	let totalPage: number
 	let pagination: pagination = {}
 	const whereClause: Prisma.pre_tendering_detailsWhereInput = {}
+	const ulb_id = req?.body?.auth?.ulb_id
 
 	const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined
 
@@ -83,7 +84,20 @@ export const getTenderReportDal = async (req: Request) => {
 							}
 						}
 					]
-					: [])
+					: []),
+				{
+					boq: {
+						ulb_id: ulb_id
+					}
+				}
+			]
+		} else {
+			whereClause.AND = [
+				{
+					boq: {
+						ulb_id: ulb_id
+					}
+				}
 			]
 		}
 

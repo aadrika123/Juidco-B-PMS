@@ -13,6 +13,7 @@ import { extractRoleName } from '../../lib/roleNameExtractor'
 const prisma = new PrismaClient()
 
 export type procurementType = {
+	brandId: any
 	subcategory: string
 	brand: string
 	unit: string
@@ -52,7 +53,8 @@ export const createPreProcurementDal = async (req: Request) => {
 					category: { connect: { id: category } },
 					total_rate: total_rate,
 					is_rate_contract: is_rate_contract,
-					...(is_rate_contract && { rate_contract_supplier: supplier })
+					...(is_rate_contract && { rate_contract_supplier: supplier }),
+					ulb_id: ulb_id
 				},
 			})
 			await Promise.all(
@@ -71,10 +73,11 @@ export const createPreProcurementDal = async (req: Request) => {
 						description = inventoryData?.description as string
 					}
 
-					await tx.procurement_stocks.create({
+				const data = await tx.procurement_stocks.create({
 						data: {
 							procurement_no: procurement_no,
 							// boq_procurement_no: procurement_no,
+							brand_masterId:item?.brandId,
 							category_masterId: category,
 							subCategory_masterId: item?.subcategory,
 							unit_masterId: item?.unit,
@@ -84,6 +87,7 @@ export const createPreProcurementDal = async (req: Request) => {
 							description: description,
 						},
 					})
+					console.log("datadatadatadata",data)
 				})
 			)
 			await tx.ia_pre_procurement_inbox.create({
@@ -92,6 +96,7 @@ export const createPreProcurementDal = async (req: Request) => {
 				},
 			})
 		})
+		console.log("resultresult",result)
 		return result
 	} catch (err: any) {
 		console.log(err?.message)
@@ -265,6 +270,7 @@ export const getPreProcurementDal = async (req: Request) => {
 	let totalPage: number
 	let pagination: pagination = {}
 	const whereClause: Prisma.ia_pre_procurement_inboxWhereInput = {}
+	const ulb_id = req?.body?.auth?.ulb_id
 
 	const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined
 
@@ -351,6 +357,19 @@ export const getPreProcurementDal = async (req: Request) => {
 					},
 				]
 				: []),
+			{
+				procurement: {
+					ulb_id: ulb_id
+				}
+			}
+		]
+	} else {
+		whereClause.AND = [
+			{
+				procurement: {
+					ulb_id: ulb_id
+				}
+			}
 		]
 	}
 
@@ -420,6 +439,293 @@ export const getPreProcurementDal = async (req: Request) => {
 		return { error: true, message: getErrorMessage(err) }
 	}
 }
+
+
+export const getInventoryDatatDal = async (req: Request) => {
+	const page: number | undefined = Number(req?.query?.page);
+	const take: number | undefined = Number(req?.query?.take);
+	const startIndex: number | undefined = (page - 1) * take;
+	const endIndex: number | undefined = startIndex + take;
+	let count: number;
+	let totalPage: number;
+	let pagination: pagination = {};
+	const whereClause: Prisma.inventoryWhereInput = {};  
+	const ulb_id = req?.body?.auth?.ulb_id;
+  
+	const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined;
+  
+	const category: any[] = Array.isArray(req?.query?.category) ? req?.query?.category : [req?.query?.category];
+	const subcategory: any[] = Array.isArray(req?.query?.scategory) ? req?.query?.scategory : [req?.query?.scategory];
+	const brand: any[] = Array.isArray(req?.query?.brand) ? req?.query?.brand : [req?.query?.brand];
+
+	whereClause.quantity = {
+		gt: 0, 
+	  };
+	if (search) {
+	  whereClause.OR = [
+		{
+		  description: {
+			contains: search,
+			mode: 'insensitive',
+		  },
+		},
+	  ];
+	}
+  
+	if (category[0] || subcategory[0] || brand[0]) {
+	  whereClause.AND = [
+		...(category[0]
+		  ? [
+			  {
+				category_masterId: {
+				  in: category,
+				},
+			  },
+			]
+		  : []),
+		...(subcategory[0]
+		  ? [
+			  {
+				subcategory_masterId: {
+				  in: subcategory,
+				},
+			  },
+			]
+		  : []),
+		...(brand[0]
+		  ? [
+			  {
+				brand_masterId: {
+				  in: brand,
+				},
+			  },
+			]
+		  : []),
+		{
+		  ulb_id: ulb_id,
+		},
+	  ];
+	} else {
+	  whereClause.AND = [
+		{
+		  ulb_id: ulb_id,
+		},
+	  ];
+	}
+  
+	try {
+
+	  count = await prisma.inventory.count({
+		where: whereClause,
+	  });
+  
+
+	  const result = await prisma.inventory.findMany({
+		orderBy: {
+		  updatedAt: 'desc',
+		},
+		where: whereClause,
+		...(page && { skip: startIndex }),
+		...(take && { take: take }),
+		include: {
+			stock_req_product: {
+			select: {
+			  stock_handover_no: true, 
+			  serial_no:true
+			},
+		  },
+		  category: {
+			select: {
+			  name: true,
+			},
+		  },
+		  subcategory: {
+			select: {
+			  name: true,
+			},
+		  },
+		  brand: {
+			select: {
+			  name: true,
+			},
+		  },
+		},
+	  });
+
+	  const resultToSend = result.map(item => ({
+		id: item.id,
+		description: item.description,
+		quantity: item.quantity,
+		warranty: item.warranty,
+		category: item.category?.name,
+		subcategory: item.subcategory?.name,
+		brand: item.brand?.name,
+		unit_masterId: item.unit_masterId,
+		supplier_masterId: item.supplier_masterId,
+		createdAt: item.createdAt,
+		updatedAt: item.updatedAt,
+		stock_handover_no: item.stock_req_product && item.stock_req_product.length > 0 ? item.stock_req_product[0].stock_handover_no : null, 
+		serial_no: item.stock_req_product && item.stock_req_product.length > 0 ? item.stock_req_product[0].serial_no : null, 
+	  }));
+  
+	  totalPage = Math.ceil(count / take);
+	  if (endIndex < count) {
+		pagination.next = {
+		  page: page + 1,
+		  take: take,
+		};
+	  }
+	  if (startIndex > 0) {
+		pagination.prev = {
+		  page: page - 1,
+		  take: take,
+		};
+	  }
+	  pagination.currentPage = page;
+	  pagination.currentTake = take;
+	  pagination.totalPage = totalPage;
+	  pagination.totalResult = count;
+
+	  return {
+		data: resultToSend,
+		pagination: pagination,
+	  };
+	} catch (err: any) {
+	  console.log(err);
+	  return { error: true, message: getErrorMessage(err) };
+	}
+  };
+  
+  
+
+  export const getInventoryByHandoverNoAndId = async (req: Request) => {
+
+	const {  id } = req.params;
+  
+	if (!id ) {
+	  return {
+		error: true,
+		message: 'Both handover_no and id must be provided.',
+	  };
+	}
+  
+	try {
+	  const inventoryData = await prisma.inventory.findFirst({
+		where: {
+		  stock_req_product: {
+			some: {
+			  stock_handover_no: String(id), 
+			},
+		  },
+		},
+		include: {
+		  stock_req_product: {
+			where: {
+			  stock_handover_no: String(id), 
+			},
+			select: {
+			  stock_handover_no: true,
+			  serial_no: true,
+			},
+		  },
+		  category: {
+			select: {
+			  name: true,
+			},
+		  },
+		  subcategory: {
+			select: {
+			  name: true,
+			},
+		  },
+		  brand: {
+			select: {
+			  name: true,
+			},
+		  },
+		},
+	  });
+  
+	  if (!inventoryData) {
+		return {
+		  error: true,
+		  message: 'No inventory found for the given id and handover_no.',
+		};
+	  }
+  
+	  return {
+		data: {
+		  id: inventoryData.id,
+		  description: inventoryData.description,
+		  quantity: inventoryData.quantity,
+		  warranty: inventoryData.warranty,
+		  category: inventoryData.category?.name,
+		  subcategory: inventoryData.subcategory?.name,
+		  brand: inventoryData.brand?.name,
+		  unit_masterId: inventoryData.unit_masterId,
+		  supplier_masterId: inventoryData.supplier_masterId,
+		  createdAt: inventoryData.createdAt,
+		  updatedAt: inventoryData.updatedAt,
+		  stock_handover_no: inventoryData.stock_req_product[0]?.stock_handover_no,
+		  serial_no: inventoryData.stock_req_product[0]?.serial_no,
+		},
+	  };
+	} catch (err: any) {
+	  console.log(err);
+	  return { error: true, message: getErrorMessage(err) };
+	}
+  };
+  
+  
+  
+  export const updateInventoryQuantityDal = async (req: Request) => {
+	const { id } = req.params;
+	const { quantity } = req.body;  
+	console.log("api hit ")
+	if (!id || quantity === undefined || quantity <= 0) {
+	  return {
+		error: true,
+		message: 'Both id and a valid quantity must be provided. Quantity must be greater than 0.',
+	  };
+	}
+	
+	try {
+	  const inventoryData = await prisma.inventory.findFirst({
+		where: {
+		  stock_req_product: {
+			some: {
+			  stock_handover_no: String(id),
+			},
+		  },
+		},
+	  });
+	  console.log("api hit ",inventoryData)
+	  
+	  if (!inventoryData) {
+		return {
+		  error: true,
+		  message: 'No inventory found for the given id and handover_no.',
+		};
+	  }
+
+	  const updatedInventory = await prisma.inventory.update({
+		where: { id: inventoryData.id },
+		data: { quantity: (inventoryData?.quantity - quantity) }, 
+	  });
+	  return {
+		data: updatedInventory
+	  };
+	} catch (err: any) {
+	  console.log(err);
+	  return { error: true, message: getErrorMessage(err) };
+	}
+  };
+  
+  
+
+
+
+
 
 export const getPreProcurementByIdDal = async (req: Request) => {
 	const { id } = req.params
@@ -545,6 +851,8 @@ export const getPreProcurementByOrderNoDal = async (req: Request) => {
 export const forwardToDaDal = async (req: Request) => {
 	const { preProcurement }: { preProcurement: string } = req.body
 	const img = req.files
+	const formattedAuth = typeof req?.body?.auth !== 'string' ? JSON.stringify(req?.body?.auth) : req.body?.auth
+	const ulb_id = JSON.parse(formattedAuth)?.ulb_id
 
 	try {
 		await Promise.all(
@@ -647,6 +955,7 @@ export const forwardToDaDal = async (req: Request) => {
 							destination: 20,
 							from: await extractRoleName(Number(process.env.ROLE_IA)),
 							description: `There is a new procurement to be approved. Procurement Number : ${inbox?.procurement_no}`,
+							ulb_id
 						},
 					}),
 				])
@@ -662,6 +971,7 @@ export const forwardToDaDal = async (req: Request) => {
 export const forwardToLevel1Dal = async (req: Request) => {
 	const { procurement_no }: { procurement_no: string } = req.body
 	const img = req?.files
+	const ulb_id = req?.body?.auth?.ulb_id
 
 	try {
 		const procData = await prisma.procurement.findFirst({
@@ -752,6 +1062,7 @@ export const forwardToLevel1Dal = async (req: Request) => {
 					destination: 50,
 					from: await extractRoleName(Number(process.env.ROLE_IA)),
 					description: `There is a new procurement to be approved. Procurement Number : ${procurement_no}`,
+					ulb_id
 				},
 			})
 		})
@@ -941,6 +1252,7 @@ export const getPreProcurementOutboxDal = async (req: Request) => {
 	let totalPage: number
 	let pagination: pagination = {}
 	const whereClause: Prisma.ia_pre_procurement_outboxWhereInput = {}
+	const ulb_id = req?.body?.auth?.ulb_id
 
 	const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined
 
@@ -1027,6 +1339,19 @@ export const getPreProcurementOutboxDal = async (req: Request) => {
 					},
 				]
 				: []),
+			{
+				procurement: {
+					ulb_id: ulb_id
+				}
+			}
+		]
+	} else {
+		whereClause.AND = [
+			{
+				procurement: {
+					ulb_id: ulb_id
+				}
+			}
 		]
 	}
 
@@ -1166,6 +1491,7 @@ export const getPreProcurementRejectedDal = async (req: Request) => {
 	let totalPage: number
 	let pagination: pagination = {}
 	const whereClause: Prisma.ia_pre_procurement_inboxWhereInput = {}
+	const ulb_id = req?.body?.auth?.ulb_id
 
 	const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined
 
@@ -1259,6 +1585,11 @@ export const getPreProcurementRejectedDal = async (req: Request) => {
 				},
 			]
 			: []),
+		{
+			procurement: {
+				ulb_id: ulb_id
+			}
+		}
 	]
 	// }
 
@@ -1337,7 +1668,8 @@ export const getPreProcurementReleasedDal = async (req: Request) => {
 	let count: number
 	let totalPage: number
 	let pagination: pagination = {}
-	const whereClause: any = {}
+	const whereClause: Prisma.ia_pre_procurement_inboxWhereInput = {}
+	const ulb_id = req?.body?.auth?.ulb_id
 
 	const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined
 
@@ -1357,10 +1689,14 @@ export const getPreProcurementReleasedDal = async (req: Request) => {
 			},
 			{
 				procurement: {
-					description: {
-						contains: search,
-						mode: 'insensitive',
-					},
+					procurement_stocks: {
+						some: {
+							description: {
+								contains: search,
+								mode: 'insensitive',
+							},
+						}
+					}
 				},
 			},
 		]
@@ -1376,9 +1712,13 @@ export const getPreProcurementReleasedDal = async (req: Request) => {
 	}
 	if (subcategory[0]) {
 		whereClause.procurement = {
-			subcategory_masterId: {
-				in: subcategory,
-			},
+			procurement_stocks: {
+				some: {
+					subCategory_masterId: {
+						in: subcategory,
+					},
+				}
+			}
 		}
 	}
 	if (status[0]) {
@@ -1390,16 +1730,35 @@ export const getPreProcurementReleasedDal = async (req: Request) => {
 	}
 	if (brand[0]) {
 		whereClause.procurement = {
-			brand_masterId: {
-				in: brand,
-			},
+			procurement_stocks: {
+				some: {
+					brand_masterId: {
+						in: brand,
+					},
+				}
+			}
 		}
 	}
-	whereClause.procurement = {
-		status: {
-			in: [12, 22]
+	// whereClause.procurement = {
+	// 	status: {
+	// 		in: [12, 22]
+	// 	},
+	// }
+
+	whereClause.AND = [
+		{
+			procurement: {
+				status: {
+					in: [12, 22]
+				},
+			}
 		},
-	}
+		{
+			procurement: {
+				ulb_id: ulb_id
+			}
+		}
+	]
 
 	try {
 		count = await prisma.ia_pre_procurement_inbox.count({

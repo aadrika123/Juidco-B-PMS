@@ -16,6 +16,7 @@ export const getWarrantyReportDal = async (req: Request) => {
 	let totalPage: number
 	let pagination: pagination = {}
 	const whereClause: Prisma.service_requestWhereInput = {}
+	const ulb_id = req?.body?.auth?.ulb_id
 
 	const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined
 
@@ -85,6 +86,15 @@ export const getWarrantyReportDal = async (req: Request) => {
 						},
 					]
 					: []),
+				{
+					ulb_id: ulb_id
+				}
+			]
+		} else {
+			whereClause.AND = [
+				{
+					ulb_id: ulb_id
+				}
 			]
 		}
 

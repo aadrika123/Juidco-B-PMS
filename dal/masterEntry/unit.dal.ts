@@ -6,10 +6,12 @@ const prisma = new PrismaClient()
 
 export const createUnitDal = async (req: Request) => {
 	const { name, abbreviation } = req.body
+	const ulb_id = req?.body?.auth?.ulb_id
 
 	const data: any = {
 		name: name,
 		abbreviation: abbreviation,
+		ulb_id: ulb_id
 	}
 
 	try {
@@ -32,6 +34,7 @@ export const getUnitDal = async (req: Request) => {
 	let totalPage: number
 	let pagination: pagination = {}
 	const whereClause: any = {}
+	const ulb_id = req?.body?.auth?.ulb_id
 
 	const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined
 	const status: boolean | undefined = req?.query?.status === undefined ? undefined : req?.query?.status === 'true' ? true : false
@@ -52,13 +55,21 @@ export const getUnitDal = async (req: Request) => {
 		whereClause.AND = [
 			...(status !== undefined
 				? [
-						{
-							status: status,
-						},
-					]
+					{
+						status: status,
+					},
+				]
 				: []),
 		]
 	}
+
+	whereClause.AND = [
+		...(Array.isArray(whereClause?.AND) ? [whereClause?.AND] : []),
+		{
+			ulb_id: ulb_id,
+		},
+	]
+
 	try {
 		count = await prisma.unit_master.count({
 			where: whereClause,
@@ -114,10 +125,12 @@ export const getUnitByIdDal = async (req: Request) => {
 }
 
 export const getUnitActiveOnlyDal = async (req: Request) => {
+	const ulb_id = req?.body?.auth?.ulb_id
 	try {
 		const result = await prisma.unit_master.findMany({
 			where: {
 				status: true,
+				ulb_id: ulb_id
 			},
 			orderBy: {
 				updatedAt: 'desc',

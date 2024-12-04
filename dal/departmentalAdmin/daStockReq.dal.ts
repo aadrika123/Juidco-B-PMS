@@ -7,6 +7,7 @@ import { extractRoleName } from '../../lib/roleNameExtractor'
 const prisma = new PrismaClient()
 
 export const getStockReqInboxDal = async (req: Request) => {
+	console.log("here data is availabel for stockreq")
 	const page: number | undefined = Number(req?.query?.page)
 	const take: number | undefined = Number(req?.query?.take)
 	const startIndex: number | undefined = (page - 1) * take
@@ -14,7 +15,8 @@ export const getStockReqInboxDal = async (req: Request) => {
 	let count: number
 	let totalPage: number
 	let pagination: pagination = {}
-	const whereClause: any = {}
+	const whereClause: Prisma.da_stock_req_inboxWhereInput = {}
+	const ulb_id = req?.body?.auth?.ulb_id
 
 	const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined
 
@@ -33,12 +35,20 @@ export const getStockReqInboxDal = async (req: Request) => {
 				},
 			},
 			{
-				emp_id: {
-					description: {
+				stock_request: {
+					emp_id: {
 						contains: search,
 						mode: 'insensitive',
 					},
-				},
+				}
+			},
+			{
+				stock_request: {
+					emp_name: {
+						contains: search,
+						mode: 'insensitive',
+					},
+				}
 			},
 		]
 	}
@@ -85,9 +95,11 @@ export const getStockReqInboxDal = async (req: Request) => {
 				? [
 					{
 						stock_request: {
-							brand_masterId: {
-								in: brand,
-							},
+							inventory: {
+								brand_masterId: {
+									in: brand,
+								},
+							}
 						},
 					},
 				]
@@ -103,6 +115,19 @@ export const getStockReqInboxDal = async (req: Request) => {
 					},
 				]
 				: []),
+			{
+				stock_request: {
+					ulb_id: ulb_id
+				}
+			}
+		]
+	} else {
+		whereClause.AND = [
+			{
+				stock_request: {
+					ulb_id: ulb_id
+				}
+			}
 		]
 	}
 
@@ -201,7 +226,8 @@ export const getStockReqOutboxDal = async (req: Request) => {
 	let count: number
 	let totalPage: number
 	let pagination: pagination = {}
-	const whereClause: any = {}
+	const whereClause: Prisma.da_stock_req_outboxWhereInput = {}
+	const ulb_id = req?.body?.auth?.ulb_id
 
 	const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined
 
@@ -220,12 +246,20 @@ export const getStockReqOutboxDal = async (req: Request) => {
 				},
 			},
 			{
-				emp_id: {
-					description: {
+				stock_request: {
+					emp_id: {
 						contains: search,
 						mode: 'insensitive',
 					},
-				},
+				}
+			},
+			{
+				stock_request: {
+					emp_name: {
+						contains: search,
+						mode: 'insensitive',
+					},
+				}
 			},
 		]
 	}
@@ -235,9 +269,16 @@ export const getStockReqOutboxDal = async (req: Request) => {
 			...(category[0]
 				? [
 					{
+						// stock_request: {
+						// 	category_masterId: {
+						// 		in: category,
+						// 	},
+						// },
 						stock_request: {
-							category_masterId: {
-								in: category,
+							inventory: {
+								category_masterId: {
+									in: category,
+								},
 							},
 						},
 					},
@@ -246,9 +287,16 @@ export const getStockReqOutboxDal = async (req: Request) => {
 			...(subcategory[0]
 				? [
 					{
+						// stock_request: {
+						// 	subcategory_masterId: {
+						// 		in: subcategory,
+						// 	},
+						// },
 						stock_request: {
-							subcategory_masterId: {
-								in: subcategory,
+							inventory: {
+								subcategory_masterId: {
+									in: subcategory,
+								},
 							},
 						},
 					},
@@ -258,9 +306,11 @@ export const getStockReqOutboxDal = async (req: Request) => {
 				? [
 					{
 						stock_request: {
-							brand_masterId: {
-								in: brand,
-							},
+							inventory: {
+								brand_masterId: {
+									in: brand,
+								},
+							}
 						},
 					},
 				]
@@ -276,6 +326,19 @@ export const getStockReqOutboxDal = async (req: Request) => {
 					},
 				]
 				: []),
+			{
+				stock_request: {
+					ulb_id: ulb_id
+				}
+			}
+		]
+	} else {
+		whereClause.AND = [
+			{
+				stock_request: {
+					ulb_id: ulb_id
+				}
+			}
 		]
 	}
 
@@ -368,6 +431,7 @@ export const getStockReqOutboxDal = async (req: Request) => {
 
 export const forwardToIaDal = async (req: Request) => {
 	const { stock_handover_no }: { stock_handover_no: string[] } = req.body
+	const ulb_id = req?.body?.auth?.ulb_id
 
 	try {
 		await Promise.all(
@@ -383,7 +447,7 @@ export const forwardToIaDal = async (req: Request) => {
 					throw { error: true, message: 'Invalid stock handover' }
 				}
 
-				if (stockReq?.status < 1 || stockReq?.status > 2) {
+				if (stockReq?.status < -1|| stockReq?.status == 0  || stockReq?.status > 2) {
 					throw { error: true, message: 'Stock request is not valid to be forwarded' }
 				}
 				const iaOutboxCount: number = await prisma.ia_stock_req_outbox.count({
@@ -434,6 +498,7 @@ export const forwardToIaDal = async (req: Request) => {
 							destination: 80,
 							from: await extractRoleName(Number(process.env.ROLE_DA)),
 							description: `There is a new stock request to be reviewed  : ${item}`,
+							ulb_id
 						},
 					}),
 				])
@@ -446,8 +511,109 @@ export const forwardToIaDal = async (req: Request) => {
 	}
 }
 
+
+export const forwardToIaDeadDal = async (req: Request) => {
+
+	const { stock_handover_no, service_no, inventoryId }: { 
+	  stock_handover_no: string[], 
+	  service_no: string[], 
+	  inventoryId: string | any 
+	} = req.body;
+	
+	const ulb_id = req?.body?.auth?.ulb_id;
+  
+	if (!stock_handover_no || stock_handover_no.length === 0) {
+	  return { error: true, message: 'No stock_handover_no provided.' };
+	}
+	
+	try {
+	  await Promise.all(
+		stock_handover_no.map(async (item: string) => {
+		  // Fetch the stock request by stock_handover_no
+		  let stockReq = await prisma.service_request.findFirst({
+			where: { stock_handover_no: item },
+			select: { status: true, stock_handover_no: true, service_no: true },
+		  });
+
+  
+		  if (!stockReq) {
+			console.log(`No service request found for stock_handover_no: ${item}. Creating a new record.`);
+
+			stockReq = await prisma.service_request.create({
+			  data: {
+				stock_handover_no: item,
+				service_no: service_no[0], 
+				status: 0,  
+				remark: '',
+				service: 'dead',  
+				inventoryId: String(inventoryId),  
+			  },
+			});
+  
+		  }
+
+		  const iaOutboxCount: number = await prisma.ia_stock_req_outbox.count({
+			where: { stock_handover_no: item },
+		  });
+  
+		  await prisma.$transaction([
+			prisma.da_stock_req_outbox.create({
+			  data: { stock_handover_no: item },
+			}),
+			prisma.ia_service_req_inbox.create({
+				data: { service_no: service_no[0] },
+			  }),
+  
+			prisma.ia_stock_req_inbox.create({
+			  data: { stock_handover_no: item },
+			}),
+  
+			prisma.da_stock_req_inbox.delete({
+			  where: { stock_handover_no: item },
+			}),
+  
+			prisma.service_request.update({
+			  where: { stock_handover_no: stockReq.stock_handover_no, service_no: stockReq.service_no },
+			  data: {
+				status: 20,  // Set status to "IA"
+				remark: '',
+			  },
+			}),
+  
+			...(iaOutboxCount !== 0
+			  ? [
+				  prisma.ia_stock_req_outbox.delete({
+					where: { stock_handover_no: item },
+				  }),
+				]
+			  : []),
+
+			prisma.notification.create({
+			  data: {
+				role_id: Number(process.env.ROLE_IA),  
+				title: 'New stock request',
+				destination: 80,  
+				from: await extractRoleName(Number(process.env.ROLE_DA)),  
+				description: `There is a new stock request to be reviewed: ${item}`, 
+				ulb_id,  
+			  },
+			}),
+		  ]);
+		})
+	  );
+  
+	  return 'Forwarded';
+	} catch (err: any) {
+	  console.log(err);
+	  return { error: true, message: getErrorMessage(err) };
+	}
+  };
+  
+  
+
 export const returnStockReqDal = async (req: Request) => {
 	const { stock_handover_no, remark }: { stock_handover_no: string[]; remark: string } = req.body
+	const ulb_id = req?.body?.auth?.ulb_id
 
 	try {
 		await Promise.all(
@@ -497,6 +663,7 @@ export const returnStockReqDal = async (req: Request) => {
 							destination: 40,
 							from: await extractRoleName(Number(process.env.ROLE_DA)),
 							description: `stock request : ${item} has been returned`,
+							ulb_id
 						},
 					}),
 				])
@@ -511,6 +678,7 @@ export const returnStockReqDal = async (req: Request) => {
 
 export const rejectStockReqDal = async (req: Request) => {
 	const { stock_handover_no, remark }: { stock_handover_no: string[]; remark: string } = req.body
+	const ulb_id = req?.body?.auth?.ulb_id
 
 	try {
 		await Promise.all(
@@ -560,6 +728,7 @@ export const rejectStockReqDal = async (req: Request) => {
 							destination: 40,
 							from: await extractRoleName(Number(process.env.ROLE_DA)),
 							description: `stock request : ${item} has been rejected`,
+							ulb_id
 						},
 					}),
 				])
@@ -574,6 +743,7 @@ export const rejectStockReqDal = async (req: Request) => {
 
 export const procurementApprovalDal = async (req: Request) => {
 	const { stock_handover_no, approve }: { stock_handover_no: string, approve: boolean } = req.body
+	const ulb_id = req?.body?.auth?.ulb_id
 
 	try {
 
@@ -594,6 +764,7 @@ export const procurementApprovalDal = async (req: Request) => {
 					destination: 0,
 					from: await extractRoleName(Number(process.env.ROLE_DA)),
 					description: ` Stock request : ${stock_handover_no} has ${!approve && 'no'} consent for procurement`,
+					ulb_id
 				},
 			})
 		})

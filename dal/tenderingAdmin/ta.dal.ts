@@ -17,6 +17,7 @@ export const getTaInboxDal = async (req: Request) => {
     let totalPage: number
     let pagination: pagination = {}
     const whereClause: Prisma.ta_inboxWhereInput = {}
+    const ulb_id = req?.body?.auth?.ulb_id
 
     const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined
 
@@ -25,12 +26,13 @@ export const getTaInboxDal = async (req: Request) => {
     const status: any[] = Array.isArray(req?.query?.status) ? req?.query?.status : [req?.query?.status]
     const brand: any[] = Array.isArray(req?.query?.brand) ? req?.query?.brand : [req?.query?.brand]
     const creationstatus: any[] = Array.isArray(req?.query?.creationstatus) ? req?.query?.creationstatus : [req?.query?.creationstatus]
+    const tenderType: any[] = Array.isArray(req?.query?.tendertype) ? req?.query?.tendertype : [req?.query?.tendertype];
+    const filteredCreationStatus = creationstatus.filter(status => status !== 4 && status !== 5)
+
 
 
     //creating search options for the query
     if (search) {
-        const tenderingTypes = ["least_cost", "qcbs", "rate_contract"];
-        const matchedTypes = tenderingTypes.filter(type => type.includes(search.toLowerCase()));
         whereClause.OR = [
             {
                 reference_no: {
@@ -38,36 +40,25 @@ export const getTaInboxDal = async (req: Request) => {
                     mode: 'insensitive',
                 },
             },
-
-            // ...(matchedTypes.length > 0
-            //     ? [
-            //         {
-            //             boq: {
-            //                 some: {
-            //                     pre_tendering_details: {
-            //                         tendering_type: { in: matchedTypes },
-            //                     },
-            //                 },
-            //             },
-            //         },
-            //     ]
-            //     : []),
-
-            // {
-            //     boq: {
-            //         pre_tendering_details: {
-            //             tendering_type: {
-            //                 equals: search,
-            //             }
-            //         },
-            //     },
-            // },
         ]
     }
 
     //creating filter options for the query
-    if (category[0] || subcategory[0] || brand[0]) {
+    if (category[0] || subcategory[0] || brand[0] || tenderType[0]) {
         whereClause.AND = [
+            ...(tenderType[0]
+                ? [
+                    {
+                        boq: {
+                            pre_tendering_details: {
+                                tendering_type: {
+                                    in: tenderType,
+                                }
+                            },
+                        },
+                    },
+                ]
+                : []),
             ...(category[0]
                 ? [
                     {
@@ -94,19 +85,32 @@ export const getTaInboxDal = async (req: Request) => {
                     },
                 ]
                 : []),
-            ...(creationstatus[0]
+            ...(filteredCreationStatus[0]
                 ? [
                     {
                         boq: {
                             bid_details: {
                                 creationStatus: {
-                                    in: creationstatus.map(Number),
+                                    in: filteredCreationStatus.map(Number),
                                 },
                             },
                         },
                     },
                 ]
                 : []),
+            {
+                boq: {
+                    ulb_id: ulb_id
+                }
+            }
+        ]
+    } else {
+        whereClause.AND = [
+            {
+                boq: {
+                    ulb_id: ulb_id
+                }
+            }
         ]
     }
 
@@ -189,17 +193,17 @@ export const getTaOutboxDal = async (req: Request) => {
     let count: number
     let totalPage: number
     let pagination: pagination = {}
-    const whereClause: any = {}
+    const whereClause: Prisma.ta_outboxWhereInput = {}
+    const ulb_id = req?.body?.auth?.ulb_id
 
-    const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined
+    const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined;
+    const category: any[] = Array.isArray(req?.query?.category) ? req?.query?.category : [req?.query?.category];
+    const subcategory: any[] = Array.isArray(req?.query?.scategory) ? req?.query?.scategory : [req?.query?.scategory];
+    const status: any[] = Array.isArray(req?.query?.status) ? req?.query?.status : [req?.query?.status];
+    const tenderType: any[] = Array.isArray(req?.query?.tendertype) ? req?.query?.tendertype : [req?.query?.tendertype];
+    const creationstatus: any[] = [4, 5];  // Filter for creationStatus 4 and 5
 
-    const category: any[] = Array.isArray(req?.query?.category) ? req?.query?.category : [req?.query?.category]
-    const subcategory: any[] = Array.isArray(req?.query?.scategory) ? req?.query?.scategory : [req?.query?.scategory]
-    const status: any[] = Array.isArray(req?.query?.status) ? req?.query?.status : [req?.query?.status]
-    const brand: any[] = Array.isArray(req?.query?.brand) ? req?.query?.brand : [req?.query?.brand]
-    const creationstatus: any[] = Array.isArray(req?.query?.creationstatus) ? req?.query?.creationstatus : [req?.query?.creationstatus]
-
-    //creating search options for the query
+    // Create search options
     if (search) {
         whereClause.OR = [
             {
@@ -208,68 +212,63 @@ export const getTaOutboxDal = async (req: Request) => {
                     mode: 'insensitive',
                 },
             },
-            {
+        ];
+    }
+
+    // Create filter options
+    const andFilters: Prisma.ta_outboxWhereInput[] = [];
+
+    // Filter by category and tenderType (optional)
+    if (category[0] || tenderType[0]) {
+        if (tenderType[0]) {
+            andFilters.push({
                 boq: {
                     pre_tendering_details: {
                         tendering_type: {
-                            contains: search,
-                            mode: 'insensitive',
+                            in: tenderType,
                         },
                     },
                 },
-            },
-        ]
+            });
+        }
+
+        if (category[0]) {
+            andFilters.push({
+                boq: {
+                    procurement: {
+                        category_masterId: {
+                            in: category,
+                        },
+                    },
+                },
+            });
+        }
     }
 
-    //creating filter options for the query
-    if (category[0] || subcategory[0] || brand[0]) {
-        whereClause.AND = [
-            ...(category[0]
-                ? [
-                    {
-                        boq: {
-                            procurement: {
-                                category_masterId: {
-                                    in: category,
-                                },
-                            },
-                        },
-                    },
-                ]
-                : []),
-            ...(status[0]
-                ? [
-                    {
-                        boq: {
-                            bid_details: {
-                                status: {
-                                    in: status.map(Number),
-                                },
-                            },
-                        },
-                    },
-                ]
-                : []),
-            ...(creationstatus[0]
-                ? [
-                    {
-                        boq: {
-                            bid_details: {
-                                creationStatus: {
-                                    in: creationstatus.map(Number),
-                                },
-                            },
-                        },
-                    },
-                ]
-                : []),
-        ]
+    // Add filter for bid_details creationStatus 4 and 5
+    andFilters.push({
+        boq: {
+            bid_details: {
+                creationStatus: {
+                    in: creationstatus, // Filter for creationStatus 4 or 5
+                },
+            },
+            ulb_id: ulb_id
+        },
+    });
+
+    // Add all filters to whereClause
+    if (andFilters.length > 0) {
+        whereClause.AND = andFilters;
     }
 
     try {
+        // Get the count of matching records
         count = await prisma.ta_outbox.count({
             where: whereClause,
-        })
+        });
+
+        // Get the matching records
         const result = await prisma.ta_outbox.findMany({
             orderBy: {
                 updatedAt: 'desc',
@@ -302,40 +301,43 @@ export const getTaOutboxDal = async (req: Request) => {
                         bid_details: {
                             select: {
                                 status: true,
-                                creationStatus: true,
+                                creationStatus: true, // Include creationStatus in the select
                             },
                         },
                     },
                 },
             },
-        })
+        });
 
-        totalPage = Math.ceil(count / take)
+        // Calculate pagination
+        totalPage = Math.ceil(count / take);
         if (endIndex < count) {
             pagination.next = {
                 page: page + 1,
                 take: take,
-            }
+            };
         }
         if (startIndex > 0) {
             pagination.prev = {
                 page: page - 1,
                 take: take,
-            }
+            };
         }
-        pagination.currentPage = page
-        pagination.currentTake = take
-        pagination.totalPage = totalPage
-        pagination.totalResult = count
+        pagination.currentPage = page;
+        pagination.currentTake = take;
+        pagination.totalPage = totalPage;
+        pagination.totalResult = count;
+
+        // Return the result with pagination data
         return {
             data: result,
             pagination: pagination,
-        }
+        };
     } catch (err: any) {
-        console.log(err)
-        return { error: true, message: getErrorMessage(err) }
+        console.log(err);
+        return { error: true, message: getErrorMessage(err) };
     }
-}
+};
 
 export const selectBidTypeDal = async (req: Request) => {
     const { reference_no, bid_type }: { reference_no: string; bid_type: bid_type_enum } = req.body
@@ -751,29 +753,34 @@ type amountDataType = {
 }
 
 export const addBiddingAmountDal = async (req: Request) => {
-    const { amountData }: { amountData: amountDataType[] } = req.body
+    const { amountData }: { amountData: amountDataType[] } = req.body;
     try {
         if (amountData.length === 0) {
-            throw { error: true, message: "Amount data is required as 'amountData'" }
+            throw { error: true, message: "Amount data is required as 'amountData'" };
         }
 
         await Promise.all(
             amountData.map(async item => {
-                await prisma.bidder_master.update({
-                    where: { id: item?.bidder_id },
-                    data: {
-                        bidding_amount: Number(item?.amount)
-                    }
-                })
-            })
-        )
+                if (!item?.bidder_id || !item?.amount) {
+                    throw { error: true, message: "Missing bidder_id or amount" };
+                }
 
-        return 'Bidder amount submitted'
+                await prisma.bidder_master.update({
+                    where: { id: item.bidder_id },
+                    data: {
+                        bidding_amount: Number(item.amount)
+                    }
+                });
+            })
+        );
+
+        return 'Bidder amount submitted';
     } catch (err: any) {
-        console.log(err)
-        return { error: true, message: getErrorMessage(err) }
+        console.log(err);
+        return { error: true, message: getErrorMessage(err) };
     }
-}
+};
+
 
 type comparisonCriteriaType = {
     criteria_id: string
@@ -979,7 +986,10 @@ export const financialComparisonResultDal = async (req: Request) => {
                     select: {
                         pre_tendering_details: {
                             select: {
-                                is_rate_contract: true
+                                is_rate_contract: true,
+                                max_supplier:true,
+                                min_supplier:true
+
                             }
                         }
                     }
@@ -1329,6 +1339,7 @@ export const selectWinnerDal = async (req: Request) => {
 
 export const finalizeComparisonDal = async (req: Request) => {
     const { reference_no }: { reference_no: string } = req.body
+    const ulb_id = req?.body?.auth?.ulb_id
     try {
 
         if (!reference_no) {
@@ -1463,6 +1474,7 @@ export const finalizeComparisonDal = async (req: Request) => {
                     destination: 23,
                     from: await extractRoleName(Number(process.env.ROLE_TA)),
                     description: `Bidding completed for Procurement Number : ${bidDetailsData?.boq?.procurement_no}`,
+                    ulb_id
                 },
             })
 
@@ -1512,6 +1524,7 @@ const calculateEndDate = (start_date: Date, tenure: number): Date => {
 
 export const setUnitPriceDal = async (req: Request) => {
     const { reference_no, procurement_no, items }: setUnitPricePayloadType = req.body
+    const ulb_id = req?.body?.auth?.ulb_id
     try {
 
         if (!procurement_no) {
@@ -1597,6 +1610,7 @@ export const setUnitPriceDal = async (req: Request) => {
                     destination: 23,
                     from: await extractRoleName(Number(process.env.ROLE_TA)),
                     description: `Bidding completed for Procurement Number : ${procurement_no}`,
+                    ulb_id
                 },
             })
 

@@ -6,23 +6,24 @@ import { pagination } from '../../type/common.type'
 const prisma = new PrismaClient()
 
 export const getStockListDal = async (req: Request) => {
-	const page: number | undefined = Number(req?.query?.page)
-	const take: number | undefined = Number(req?.query?.take)
-	const from: string | undefined = req?.query?.from ? String(req?.query?.from) : undefined//yyyy-mm-dd
-	const to: string | undefined = req?.query?.to ? String(req?.query?.to) : undefined//yyyy-mm-dd
-	const startIndex: number | undefined = (page - 1) * take
-	const endIndex: number | undefined = startIndex + take
-	let count: number
-	let totalPage: number
-	let pagination: pagination = {}
-	const whereClause: Prisma.inventoryWhereInput = {}
+	const page: number | undefined = Number(req?.query?.page) || 1;
+	const take: number | undefined = Number(req?.query?.take) || 10;
+	const from: string | undefined = req?.query?.from ? String(req?.query?.from) : undefined;
+	const to: string | undefined = req?.query?.to ? String(req?.query?.to) : undefined;
+	const startIndex: number = (page - 1) * take;
+	const endIndex: number = startIndex + take;
 
-	const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined
+	let totalPage: number;
+	let pagination: pagination = {};
+	const whereClause: Prisma.inventoryWhereInput = {};
+	const ulb_id = req?.body?.auth?.ulb_id;
 
-	const category: any[] = Array.isArray(req?.query?.category) ? req?.query?.category : [req?.query?.category]
-	const subcategory: any[] = Array.isArray(req?.query?.scategory) ? req?.query?.scategory : [req?.query?.scategory]
+	const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined;
 
-	//creating search options for the query
+	const category: any[] = Array.isArray(req?.query?.category) ? req?.query?.category : [req?.query?.category];
+	const subcategory: any[] = Array.isArray(req?.query?.scategory) ? req?.query?.scategory : [req?.query?.scategory];
+
+	// Adding search query to whereClause
 	if (search) {
 		whereClause.OR = [
 			{
@@ -30,10 +31,11 @@ export const getStockListDal = async (req: Request) => {
 					contains: search,
 					mode: 'insensitive',
 				},
-			}
-		]
+			},
+		];
 	}
 
+	// Adding category and subcategory filters
 	if (category[0] || subcategory[0]) {
 		whereClause.AND = [
 			...(category[0]
@@ -42,7 +44,6 @@ export const getStockListDal = async (req: Request) => {
 						category_masterId: {
 							in: category,
 						},
-
 					},
 				]
 				: []),
@@ -60,79 +61,149 @@ export const getStockListDal = async (req: Request) => {
 					{
 						createdAt: {
 							gte: new Date(from),
-							lte: new Date(to)
-						}
+							lte: new Date(to),
+						},
 					}
 				]
-				: [])
-		]
+				: []),
+			{
+				ulb_id: ulb_id,
+			},
+		];
+	} else {
+		whereClause.AND = [
+			{
+				ulb_id: ulb_id,
+			},
+		];
 	}
 
 	try {
-		count = await prisma.inventory.count({
-			where: whereClause,
-		})
 		const result = await prisma.inventory.findMany({
 			orderBy: {
 				updatedAt: 'desc',
 			},
 			where: whereClause,
-			...(page && { skip: startIndex }),
-			...(take && { take: take }),
 			select: {
 				id: true,
 				category: {
 					select: {
 						id: true,
-						name: true
-					}
+						name: true,
+					},
 				},
 				subcategory: {
 					select: {
 						id: true,
-						name: true
-					}
+						name: true,
+					},
 				},
 				unit: {
 					select: {
 						id: true,
 						name: true,
-						abbreviation: true
-					}
+						abbreviation: true,
+					},
 				},
 				description: true,
 				quantity: true,
 				warranty: true,
 			},
-		})
+		});
 
+		// Enhanced result mapping to include warranty and dead stock status
+		const enhancedResult = await Promise.all(
+			result.map(async (item) => {
+				const warranty = await prisma.inventory_warranty.findFirst({
+					where: {
+						inventoryId: item.id,
+					},
+				});
 
-		totalPage = Math.ceil(count / take)
+				const deadStock = await prisma.inventory_dead_stock.findFirst({
+					where: {
+						inventoryId: item.id,
+					},
+				});
+				let statuses: { status: string; inventoryId: string }[] = [];
+
+				if (warranty) {
+					statuses.push({
+						status: 'Warranty',
+						inventoryId: item.id,
+					});
+				}
+
+				if (deadStock) {
+					statuses.push({
+						status: 'Dead Stock',
+						inventoryId: item.id,
+					});
+				}
+				if (statuses.length === 0) {
+					statuses.push({
+						status: 'Inventory',
+						inventoryId: item.id,
+					});
+				}
+				return statuses.map((statusItem) => ({
+					...item,
+					status: statusItem.status,
+					inventoryId: statusItem.inventoryId,
+				}));
+			})
+		);
+
+		// Flattening the result after enhancing
+		const flattenedResult = enhancedResult.flat();
+
+		// Filtering out the items with negative quantities
+		const validItems = flattenedResult.filter((item) => item.quantity >= 0);
+
+		// Count the valid items for pagination
+		const count = validItems.length;
+
+		// Calculate total pages
+		totalPage = Math.ceil(count / take);
+
+		// Get the paginated result
+		const paginatedResult = validItems.slice(startIndex, endIndex);
+
+		// Pagination data
 		if (endIndex < count) {
 			pagination.next = {
 				page: page + 1,
 				take: take,
-			}
+			};
 		}
 		if (startIndex > 0) {
 			pagination.prev = {
 				page: page - 1,
 				take: take,
-			}
+			};
 		}
-		pagination.currentPage = page
-		pagination.currentTake = take
-		pagination.totalPage = totalPage
-		pagination.totalResult = count
+		pagination.currentPage = page;
+		pagination.currentTake = take;
+		pagination.totalPage = totalPage;
+		pagination.totalResult = count;
+
 		return {
-			data: result,
+			status: true,
+			message: 'Stock list fetched successfully',
+			data: paginatedResult,
 			pagination: pagination,
-		}
+		};
 	} catch (err: any) {
-		console.log(err)
-		return { error: true, message: getErrorMessage(err) }
+		console.log(err);
+		return { error: true, message: getErrorMessage(err) };
 	}
-}
+};
+
+
+
+
+
+
 
 export const getStockHistoryDal = async (req: Request) => {
 

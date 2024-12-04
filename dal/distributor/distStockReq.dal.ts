@@ -1,5 +1,5 @@
 import { Request } from 'express'
-import { PrismaClient } from '@prisma/client'
+import { Prisma, PrismaClient } from '@prisma/client'
 import generateStockHandoverNumber from '../../lib/stockHandoverNumberGenerator'
 import getErrorMessage from '../../lib/getErrorMessage'
 import { pagination } from '../../type/common.type'
@@ -93,7 +93,8 @@ export const getStockReqInboxDal = async (req: Request) => {
 	let count: number
 	let totalPage: number
 	let pagination: pagination = {}
-	const whereClause: any = {}
+	const whereClause: Prisma.dist_stock_req_inboxWhereInput = {}
+	const ulb_id = req?.body?.auth?.ulb_id
 
 	const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined
 
@@ -176,6 +177,25 @@ export const getStockReqInboxDal = async (req: Request) => {
 					},
 				]
 				: []),
+			{
+				stock_request: {
+					ulb_id: ulb_id,
+					status: {
+						not: 61, 
+					},
+				}
+			}
+		]
+	} else {
+		whereClause.AND = [
+			{
+				stock_request: {
+					ulb_id: ulb_id,
+					status: {
+						not: 61, 
+					},
+				}
+			}
 		]
 	}
 
@@ -275,7 +295,8 @@ export const getStockReqOutboxDal = async (req: Request) => {
 	let count: number
 	let totalPage: number
 	let pagination: pagination = {}
-	const whereClause: any = {}
+	const whereClause: Prisma.dist_stock_req_outboxWhereInput = {}
+	const ulb_id = req?.body?.auth?.ulb_id
 
 	const search: string | undefined = req?.query?.search ? String(req?.query?.search) : undefined
 
@@ -294,10 +315,12 @@ export const getStockReqOutboxDal = async (req: Request) => {
 				},
 			},
 			{
-				emp_id: {
-					description: {
-						contains: search,
-						mode: 'insensitive',
+				stock_request: {
+					inventory: {
+						description: {
+							contains: search,
+							mode: 'insensitive',
+						},
 					},
 				},
 			},
@@ -310,8 +333,10 @@ export const getStockReqOutboxDal = async (req: Request) => {
 				? [
 					{
 						stock_request: {
-							category_masterId: {
-								in: category,
+							inventory: {
+								category_masterId: {
+									in: category,
+								},
 							},
 						},
 					},
@@ -321,8 +346,10 @@ export const getStockReqOutboxDal = async (req: Request) => {
 				? [
 					{
 						stock_request: {
-							subcategory_masterId: {
-								in: subcategory,
+							inventory: {
+								subcategory_masterId: {
+									in: subcategory,
+								},
 							},
 						},
 					},
@@ -332,8 +359,10 @@ export const getStockReqOutboxDal = async (req: Request) => {
 				? [
 					{
 						stock_request: {
-							brand_masterId: {
-								in: brand,
+							inventory: {
+								brand_masterId: {
+									in: brand,
+								},
 							},
 						},
 					},
@@ -350,6 +379,19 @@ export const getStockReqOutboxDal = async (req: Request) => {
 					},
 				]
 				: []),
+			{
+				stock_request: {
+					ulb_id: ulb_id
+				}
+			}
+		]
+	} else {
+		whereClause.AND = [
+			{
+				stock_request: {
+					ulb_id: ulb_id
+				}
+			}
 		]
 	}
 
@@ -442,10 +484,12 @@ export const getStockReqOutboxDal = async (req: Request) => {
 
 export const forwardToDaDal = async (req: Request) => {
 	const { stock_handover_no }: { stock_handover_no: string[] } = req.body
+	const ulb_id = req?.body?.auth?.ulb_id
 
 	try {
 		await Promise.all(
 			stock_handover_no.map(async (item: string) => {
+				// Fetch the status of the stock request
 				const status: any = await prisma.stock_request.findFirst({
 					where: {
 						stock_handover_no: item,
@@ -457,6 +501,8 @@ export const forwardToDaDal = async (req: Request) => {
 				if (status?.status < -1 || status?.status > 0) {
 					throw { error: true, message: 'Stock request is not valid to be forwarded' }
 				}
+
+				// Determine the status to update based on the current status
 				const statusChecker = (status: number) => {
 					if (status === 0) {
 						return 2
@@ -464,53 +510,80 @@ export const forwardToDaDal = async (req: Request) => {
 						return 1
 					}
 				}
-				const daOutboxCount: number = await prisma.da_stock_req_outbox.count({
+				const statusToUpdate = statusChecker(Number(status?.status))
+
+				// Check if the stock_handover_no already exists in the da_stock_req_inbox table
+				const existingInbox = await prisma.da_stock_req_inbox.findFirst({
 					where: {
 						stock_handover_no: item,
 					},
 				})
 
-				const statusToUpdate = statusChecker(Number(status?.status))
-				await prisma.$transaction([
-					prisma.dist_stock_req_outbox.create({
-						data: { stock_handover_no: item },
-					}),
-					prisma.da_stock_req_inbox.create({
-						data: { stock_handover_no: item },
-					}),
-					prisma.stock_request.update({
+				// Only proceed if the stock_handover_no doesn't already exist in the da_stock_req_inbox
+				if (!existingInbox) {
+					const daOutboxCount: number = await prisma.da_stock_req_outbox.count({
 						where: {
 							stock_handover_no: item,
 						},
-						data: {
-							status: statusToUpdate,
-							remark: '',
-						},
-					}),
-					prisma.dist_stock_req_inbox.delete({
-						where: {
-							stock_handover_no: item,
-						},
-					}),
-					...(daOutboxCount !== 0
-						? [
-							prisma.da_stock_req_outbox.delete({
-								where: {
-									stock_handover_no: item,
-								},
-							}),
-						]
-						: []),
-					prisma.notification.create({
-						data: {
-							role_id: Number(process.env.ROLE_DA),
-							title: 'New stock request',
-							destination: 25,
-							from: await extractRoleName(Number(process.env.ROLE_DIST)),
-							description: `There is a new stock request to be reviewed  : ${item}`,
-						},
-					}),
-				])
+					})
+
+					// Perform the transaction to forward the request
+					await prisma.$transaction([
+						// Create a new entry in dist_stock_req_outbox table
+						prisma.dist_stock_req_outbox.create({
+							data: { stock_handover_no: item },
+						}),
+
+						// Create a new entry in da_stock_req_inbox table
+						prisma.da_stock_req_inbox.create({
+							data: { stock_handover_no: item },
+						}),
+
+						// Update the stock request status
+						prisma.stock_request.update({
+							where: {
+								stock_handover_no: item,
+							},
+							data: {
+								status: statusToUpdate,
+								remark: '',
+							},
+						}),
+
+						// Delete the entry from dist_stock_req_inbox table
+						prisma.dist_stock_req_inbox.delete({
+							where: {
+								stock_handover_no: item,
+							},
+						}),
+
+						// If there is a record in da_stock_req_outbox, delete it
+						...(daOutboxCount !== 0
+							? [
+								prisma.da_stock_req_outbox.delete({
+									where: {
+										stock_handover_no: item,
+									},
+								}),
+							]
+							: []),
+
+						// Create a notification for the DA role
+						prisma.notification.create({
+							data: {
+								role_id: Number(process.env.ROLE_DA),
+								title: 'New stock request',
+								destination: 25,
+								from: await extractRoleName(Number(process.env.ROLE_DIST)),
+								description: `There is a new stock request to be reviewed  : ${item}`,
+								ulb_id
+							},
+						}),
+					])
+				} else {
+					// Log if stock_handover_no already exists in da_stock_req_inbox
+					console.log(`Stock handover ${item} already exists in DA inbox.`);
+				}
 			})
 		)
 		return 'Forwarded'
@@ -519,6 +592,7 @@ export const forwardToDaDal = async (req: Request) => {
 		return { error: true, message: getErrorMessage(err) }
 	}
 }
+
 
 export const handoverDal = async (req: Request) => {
 	const { stock_handover_no }: { stock_handover_no: string } = req.body
