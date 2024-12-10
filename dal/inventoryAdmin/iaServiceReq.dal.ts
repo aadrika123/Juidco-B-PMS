@@ -579,18 +579,47 @@ export const approveServiceRequestDal = async (req: Request) => {
 		}
   
 		// Handle DA inbox based on service type
-		if (serviceReq?.service !== 'return') {
-		  await tx.da_service_req_inbox.create({
-			data: { service_no },
-		  });
-		} else {
-		  await tx.da_service_req_inbox.delete({
-			where: { service_no },
-		  });
-		  await tx.da_service_req_outbox.create({
-			data: { service_no },
-		  });
-		}
+		console.log("serviceReq?.serviceserviceReq?.service",serviceReq?.service)
+		// if (serviceReq?.service !== 'return') {
+		// 	console.log("1")
+		//   await tx.da_service_req_inbox.create({
+		// 	data: { service_no },
+		//   });
+		// } else {
+		// 	console.log("2")
+		//   await tx.da_service_req_inbox.delete({
+		// 	where: { service_no },
+		//   });
+		//   await tx.da_service_req_outbox.create({
+		// 	data: { service_no },
+		//   });
+		// }
+
+		console.log("serviceReq?.service:", serviceReq?.service);
+
+if (serviceReq?.service !== 'return') {
+  console.log("1 - Service is not 'return', creating in da_service_req_inbox.");
+  await tx.da_service_req_inbox.create({
+    data: { service_no },
+  });
+} else {
+  console.log("2 - Service is 'return', checking if record exists before deleting.");
+  const record = await tx.da_service_req_inbox.findUnique({
+    where: { service_no },
+  });
+
+  if (record) {
+    await tx.da_service_req_inbox.delete({
+      where: { service_no },
+    });
+    await tx.da_service_req_outbox.create({
+      data: { service_no },
+    });
+  } else {
+    console.log(`Record with service_no ${service_no} not found, skipping delete.`);
+  }
+}
+
   
 		// Deleting from da_service_req_outbox if necessary
 		if (daOutbox > 0) {
