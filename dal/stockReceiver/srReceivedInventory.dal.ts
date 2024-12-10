@@ -1708,13 +1708,13 @@ export const addProductDal = async (req: Request) => {
         if (!procStockDatas?.subCategory_masterId) {
             throw { error: true, meta: { message: 'Subcategory ID not found in procurement stock' } };
         }
-        const existingBrand = await prisma.brand_master.findFirst({
-            where: {
-                name: brand,
-                ulb_id: ulb_id,
-            },
-        });
-        if (existingBrand) {
+        // const existingBrand = await prisma.brand_master.findFirst({
+        //     where: {
+        //         name: brand,
+        //         ulb_id: ulb_id,
+        //     },
+        // });
+        // if (existingBrand) {
             const sanitizedSubCategoryName = procStockDatas.subCategory?.name?.toLowerCase().replace(/\s/g, '') ?? '';
 
             if (procExist === 0) {
@@ -1759,9 +1759,9 @@ export const addProductDal = async (req: Request) => {
                 );
             });
             return 'Products Added';
-        } else {
-            throw { error: true, meta: { message: 'Brand does not exist' } };
-        }
+        // } else {
+        //     throw { error: true, meta: { message: 'Brand does not exist' } };
+        // }
         
     } catch (err: any) {
         console.log(err);
