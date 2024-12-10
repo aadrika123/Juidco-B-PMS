@@ -1716,6 +1716,7 @@ export const addProductDal = async (req: Request) => {
         // });
         // if (existingBrand) {
             const sanitizedSubCategoryName = procStockDatas.subCategory?.name?.toLowerCase().replace(/\s/g, '') ?? '';
+			console.log("sanitizedSubCategoryName",sanitizedSubCategoryName)
 
             if (procExist === 0) {
                 throw { error: true, meta: { message: 'Procurement number is invalid' } };
