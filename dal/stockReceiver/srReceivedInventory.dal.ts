@@ -1188,7 +1188,6 @@ export const getReceivedInventoryOutboxByIdDal = async (req: Request) => {
 }
 
 const getRateContractSupplier = async (id: string) => {
-	console.log("ididididid",id)
 	const result = await prisma.rate_contract_supplier.findFirst({
 		where: {
 			id: id
@@ -1680,19 +1679,23 @@ export const addProductDal = async (req: Request) => {
         serial_no: string;
     };
     const { product, procurement_no, procurement_stock_id, brand, sub_category }: { product: productType[]; procurement_no: string; procurement_stock_id: string; brand: string; sub_category: string } = req.body;
+
     try {
+
         if (!procurement_no) {
             throw { error: true, meta: { message: "Procurement number is required as 'procurement_no'" } };
         }
-		if (!brand || brand?.length == 0 ) {
-            throw { error: true, meta: { message: "brand name is required" } };
+
+        if (!brand || brand?.length === 0) {
+            throw { error: true, meta: { message: "Brand name is required" } };
         }
+
         const procExist = await prisma.procurement.count({
             where: {
                 procurement_no: procurement_no,
             },
         });
-        const ulb_id = req?.body?.auth?.ulb_id;
+
         const procStockDatas = await prisma.procurement_stocks.findFirst({
             where: { id: procurement_stock_id },
             select: {
@@ -1705,70 +1708,95 @@ export const addProductDal = async (req: Request) => {
                 },
             },
         });
+
         if (!procStockDatas?.subCategory_masterId) {
             throw { error: true, meta: { message: 'Subcategory ID not found in procurement stock' } };
         }
-        // const existingBrand = await prisma.brand_master.findFirst({
-        //     where: {
-        //         name: brand,
-        //         ulb_id: ulb_id,
-        //     },
-        // });
-        // if (existingBrand) {
-            const sanitizedSubCategoryName = procStockDatas.subCategory?.name?.toLowerCase().replace(/\s/g, '') ?? '';
-			console.log("sanitizedSubCategoryName",sanitizedSubCategoryName)
 
-            if (procExist === 0) {
-                throw { error: true, meta: { message: 'Procurement number is invalid' } };
-            }
-            const totalNonAddedReceiving: any = await prisma.receivings.aggregate({
-                where: {
-                    procurement_no: procurement_no || '',
-                    is_added: false,
-                },
-                _sum: {
-                    received_quantity: true,
-                },
-            });
+        const sanitizedSubCategoryName = procStockDatas.subCategory?.name?.toLowerCase().replace(/\s/g, '') ?? '';
+        console.log("sanitizedSubCategoryName", sanitizedSubCategoryName);
 
-            if (totalNonAddedReceiving?._sum?.received_quantity === null) {
-                throw { error: true, meta: { message: 'No receiving to be added' } };
-            }
-            const query = `
-                SELECT SUM(quantity) as total_quantity
-                FROM product.product_${sanitizedSubCategoryName}
-                WHERE procurement_no = '${procurement_no}' AND is_added = false AND procurement_stock_id = '${procurement_stock_id}';
-            `;
-            const totalQuantity: any[] = await prisma.$queryRawUnsafe(query);
-            const sumOfQuantity = product.reduce((total, item) => total + (Number(item?.quantity) ? Number(item?.quantity) : 1), 0);
-            if (totalQuantity[0]?.total_quantity + Number(sumOfQuantity) > totalNonAddedReceiving?._sum?.received_quantity) {
-                throw { error: true, meta: { message: 'Number of added products cannot be more than received stocks' } };
-            }
-            await prisma.$transaction(async tx => {
-                await Promise.all(
-                    product.map(async item => {
-                        await tx.$queryRawUnsafe(`
-                            UPDATE product.product_${sanitizedSubCategoryName}
-                            SET quantity = quantity + ${item?.quantity ? item?.quantity : 1},
-                                opening_quantity = opening_quantity + ${item?.quantity ? item?.quantity : 1}
-                            WHERE serial_no = '${item?.serial_no}'
-                            AND procurement_no = '${procurement_no}'
-                            AND procurement_stock_id = '${procurement_stock_id}'
-                            AND brand = '${brand}'
-                        `);
-                    })
-                );
-            });
-            return 'Products Added';
-        // } else {
-        //     throw { error: true, meta: { message: 'Brand does not exist' } };
-        // }
-        
+        if (procExist === 0) {
+            throw { error: true, meta: { message: 'Procurement number is invalid' } };
+        }
+
+        const totalNonAddedReceiving: any = await prisma.receivings.aggregate({
+            where: {
+                procurement_no: procurement_no || '',
+                // is_added: false,
+            },
+            _sum: {
+                remaining_quantity: true,
+            },
+        });
+		console.log("totalNonAddedReceiving",totalNonAddedReceiving)
+
+        if (totalNonAddedReceiving?._sum?.remaining_quantity === null) {
+            throw { error: true, meta: { message: 'No receiving to be added' } };
+        }
+
+        const query = `
+            SELECT SUM(quantity) as total_quantity
+            FROM product.product_${sanitizedSubCategoryName}
+            WHERE procurement_no = '${procurement_no}' AND is_added = false AND procurement_stock_id = '${procurement_stock_id}';
+        `;
+        const totalQuantity: any[] = await prisma.$queryRawUnsafe(query);
+
+        const sumOfQuantity = product.reduce((total, item) => total + (Number(item?.quantity) ? Number(item?.quantity) : 1), 0);
+
+        if (totalQuantity[0]?.total_quantity + Number(sumOfQuantity) > totalNonAddedReceiving?._sum?.received_quantity) {
+            throw { error: true, meta: { message: 'Number of added products cannot be more than received stocks' } };
+        }
+
+        await prisma.$transaction(async tx => {
+            // Update product quantities
+            await Promise.all(
+                product.map(async item => {
+                    await tx.$queryRawUnsafe(`
+                        UPDATE product.product_${sanitizedSubCategoryName}
+                        SET quantity = quantity + ${item?.quantity ? item?.quantity : 1},
+                            opening_quantity = opening_quantity + ${item?.quantity ? item?.quantity : 1}
+                        WHERE serial_no = '${item?.serial_no}'
+                        AND procurement_no = '${procurement_no}'
+                        AND procurement_stock_id = '${procurement_stock_id}'
+                        AND brand = '${brand}'
+                    `);
+                })
+            );
+
+            await Promise.all(
+                product.map(async item => {
+                    // Find the corresponding receiving record
+                    const receiving = await tx.receivings.findFirst({
+                        where: {
+                            procurement_no: procurement_no,
+                            // is_added: false, 
+                        },
+                    });
+
+                    if (receiving) {
+                        const updatedReceivedQuantity = (receiving.remaining_quantity || 0) - (item?.quantity || 1);
+                        await tx.receivings.update({
+                            where: {
+                                id: receiving.id,
+                            },
+                            data: {
+                                remaining_quantity: updatedReceivedQuantity,
+                                is_added: true, 
+                            },
+                        });
+                    }
+                })
+            );
+        });
+
+        return 'Products Added';
     } catch (err: any) {
         console.log(err);
         return { error: true, message: err?.meta?.message };
     }
 };
+
 
 
 // export const addProductDal = async (req: Request) => {

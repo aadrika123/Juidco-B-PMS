@@ -950,6 +950,7 @@ const addToDeadStock = async (
 	console.log("serial_no:", serial_no);
 
 	const sanitizedSubcategoryName = subcategory_name.toLowerCase().replace(/\s/g, '');
+	console.log("sanitizedSubcategoryName", sanitizedSubcategoryName);
   
 	const product = await prisma
 	  .$queryRawUnsafe(
@@ -961,12 +962,14 @@ const addToDeadStock = async (
 	  )
 	  .then((result: any) => result[0]);
 
+	  console.log("product", product);
+
   
 	if ((Number(product?.opening_quantity) - quantity) < 0) {
 	  throw new Error('No more quantity available');
 	}
   
-	await tx.$queryRawUnsafe(`
+	const data = await tx.$queryRawUnsafe(`
 	  UPDATE product.product_${sanitizedSubcategoryName}
 	  SET is_available = false, 
 		  is_dead = true, 
@@ -974,6 +977,8 @@ const addToDeadStock = async (
 		  opening_quantity = ${Number(product?.opening_quantity) - quantity}
 	  WHERE serial_no = '${serial_no}'
 	`);
+
+	console.log("data", data);
   
 	await tx.inventory.update({
 	  where: {
@@ -995,22 +1000,25 @@ const addToDeadStock = async (
 	  },
 	});
 
+	console.log("invDeadStock", invDeadStock);
 	const uploaded = await imageUploaderV2(doc);
 	
 	await Promise.all(
 	  uploaded.map(async (item) => {
-		await tx.inventory_dead_stock_image.create({
+		const data1 =  await tx.inventory_dead_stock_image.create({
 		  data: {
 			doc_path: item,
 			uploader: 'IA',
 			inventory_dead_stockId: invDeadStock?.id,
 		  },
 		});
+		console.log("datatatatat1",data1)
 	  })
 	);
+	
   
 	if (stock_handover_no && service_no) {
-	  await tx.service_history.create({
+	 const data2 =  await tx.service_history.create({
 		data: {
 		  stock_handover_no: stock_handover_no,
 		  service_no: service_no,
@@ -1020,6 +1028,8 @@ const addToDeadStock = async (
 		  inventoryId: product?.inventory_id,
 		},
 	  });
+
+	  console.log("datatatatat2",data2)
 	}
   };
   
