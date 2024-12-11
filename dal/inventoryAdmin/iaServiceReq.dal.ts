@@ -602,23 +602,32 @@ if (serviceReq?.service !== 'return') {
   await tx.da_service_req_inbox.create({
     data: { service_no },
   });
-} else {
-  console.log("2 - Service is 'return', checking if record exists before deleting.");
-  const record = await tx.da_service_req_inbox.findUnique({
-    where: { service_no },
-  });
+}else {
+	console.log("2 - Service is 'return', checking if record exists before deleting.");
+  
+	const record = await tx.da_service_req_inbox.findUnique({
+	  where: { service_no },
+	});
+  
+	if (record) {
+	  await tx.da_service_req_inbox.delete({
+		where: { service_no },
+	  });
 
-  if (record) {
-    await tx.da_service_req_inbox.delete({
-      where: { service_no },
-    });
-    await tx.da_service_req_outbox.create({
-      data: { service_no },
-    });
-  } else {
-    console.log(`Record with service_no ${service_no} not found, skipping delete.`);
+	  await tx.da_service_req_outbox.upsert({
+		where: { service_no }, 
+		update: {
+		  service_no, 
+		},
+		create: {
+		  service_no, 
+		},
+	  });
+	} else {
+	  console.log(`Record with service_no ${service_no} not found, skipping delete.`);
+	}
   }
-}
+  
 
   
 		// Deleting from da_service_req_outbox if necessary
