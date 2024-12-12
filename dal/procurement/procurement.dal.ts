@@ -217,15 +217,14 @@ export const getInventoryAdditionValidityNoDal = async (req: Request) => {
 				},
 			},
 		})
-		console.log("procurement_stock_id 220 ",procurement_stock_id)
 
 		const receiving = await prisma.receivings.aggregate({
 			where: {
 				procurement_stock_id: procurement_stock_id,
-				// is_added: false
+				is_added: false
 			},
 			_sum: {
-				remaining_quantity: true,
+				received_quantity: true,
 			},
 		})
 
@@ -235,7 +234,7 @@ export const getInventoryAdditionValidityNoDal = async (req: Request) => {
 			 WHERE is_added = false AND procurement_stock_id = '${procurement_stock_id}'
 		`)
 
-		if (Number(receiving?._sum?.remaining_quantity) === Number(product[0]?.total_quantity)) {
+		if (Number(receiving?._sum?.received_quantity) === Number(product[0]?.total_quantity)) {
 			is_valid_for_addition = true
 		}
 
@@ -249,6 +248,7 @@ export const getInventoryAdditionValidityNoDal = async (req: Request) => {
 		return { error: true, message: getErrorMessage(err) }
 	}
 }
+
 
 type procStockType = {
 	id: string,
