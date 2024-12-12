@@ -1199,7 +1199,6 @@ const getRateContractSupplier = async (id: string) => {
 	return result?.supplier_masterId
 }
 
-// comment for testing 
 export const addToInventoryDal = async (req: Request) => {
 	const { procurement_no, procurement_stock_id, dead_stock, inventory, warranty } = req.body
 	const img = req.files
@@ -1208,22 +1207,12 @@ export const addToInventoryDal = async (req: Request) => {
 	let inventoryId = inventory
 	let exist: boolean = false
 	let currentInventoryId: string
-	let statusData:boolean;
 	try {
-		if(typeof warranty == 'string'){
-			if(warranty == 'false'){
-				statusData = false;
-			}else if(warranty == 'true'){
-				statusData = true;
-			}
-
-		}else{
-			statusData = warranty;
-		}
 		const totalNonAddedReceiving: any = await prisma.receivings.aggregate({
 			where: {
 				procurement_no: procurement_no || '',
 				procurement_stock_id: procurement_stock_id,
+				is_added: false,
 			},
 			_sum: {
 				received_quantity: true,
@@ -1259,6 +1248,7 @@ export const addToInventoryDal = async (req: Request) => {
                 description: true,
             },
         });
+		console.log("procStockData",procStockData)
 
         const query = `
             SELECT SUM(quantity) as total_quantity
@@ -1358,7 +1348,6 @@ export const addToInventoryDal = async (req: Request) => {
                                 ? totalNonAddedReceiving?._sum?.received_quantity - Number(dead_stock)
                                 : totalNonAddedReceiving?._sum?.received_quantity,
                         },
-						...(warranty !== undefined && { warranty: statusData }),
                     },
                 });
 
@@ -1366,6 +1355,7 @@ export const addToInventoryDal = async (req: Request) => {
 
                 if (!updatedInv) throw { error: true, message: 'Error while updating inventory' };
             } else {
+                // If no matching inventory, create a new one
                 const createdInv = await tx.inventory.create({
                     data: {
                         category: { connect: { id: procData?.category_masterId } },
@@ -1375,11 +1365,10 @@ export const addToInventoryDal = async (req: Request) => {
                         },
                         unit: { connect: { id: procStockData?.unit_masterId } },
                         description: procStockData?.description,
-						ulb_id:ulb_id,
                         quantity: dead_stock
                             ? totalNonAddedReceiving?._sum?.received_quantity - Number(dead_stock)
                             : totalNonAddedReceiving?._sum?.received_quantity,
-                        ...(warranty && { warranty: statusData }),
+                        ...(warranty && { warranty: Boolean(warranty) }),
                     },
                 });
 
@@ -1411,7 +1400,7 @@ export const addToInventoryDal = async (req: Request) => {
                     procurement_no: procurement_no,
                 },
             });
-            if (outboxExistence === 0 && !procData?.is_partial) {
+            if (outboxExistence === 0) {
                 const srRecInvOut = await tx.sr_received_inventory_outbox.create({
                     data: {
                         procurement_no: procurement_no,
@@ -1447,9 +1436,6 @@ export const addToInventoryDal = async (req: Request) => {
         return { error: true, message: err?.message };
     }
 };
-
-
-
 
 
 // export const addToInventoryDal = async (req: Request) => {
@@ -1746,7 +1732,7 @@ export const addProductDal = async (req: Request) => {
 		const query = `
 			SELECT SUM(quantity) as total_quantity
 			FROM product.product_${procStockData?.subCategory?.name.toLowerCase().replace(/\s/g, '')}
-			 WHERE procurement_no = '${procurement_no}' AND is_added = false AND procurement_stock_id = '${procurement_stock_id}';
+			 WHERE procurement_no = '${procurement_no}'  AND procurement_stock_id = '${procurement_stock_id}';
 		`
 		const totalQuantity: any[] = await prisma.$queryRawUnsafe(query)
 
@@ -1779,8 +1765,6 @@ export const addProductDal = async (req: Request) => {
 		return { error: true, message: err?.meta?.message }
 	}
 }
-
-
 
 // export const addProductDal = async (req: Request) => {
 // 	type productType = {
