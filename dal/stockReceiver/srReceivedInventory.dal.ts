@@ -1200,255 +1200,6 @@ const getRateContractSupplier = async (id: string) => {
 }
 
 // comment for testing 
-// export const addToInventoryDal = async (req: Request) => {
-// 	const { procurement_no, procurement_stock_id, dead_stock, inventory, warranty } = req.body
-// 	const img = req.files
-// 	const formattedAuth = typeof req?.body?.auth !== 'string' ? JSON.stringify(req?.body?.auth) : req.body?.auth
-// 	const ulb_id = JSON.parse(formattedAuth)?.ulb_id
-// 	let inventoryId = inventory
-// 	let exist: boolean = false
-// 	let currentInventoryId: string
-// 	let statusData:boolean;
-// 	try {
-// 		if(typeof warranty == 'string'){
-// 			if(warranty == 'false'){
-// 				statusData = false;
-// 			}else if(warranty == 'true'){
-// 				statusData = true;
-// 			}
-
-// 		}else{
-// 			statusData = warranty;
-// 		}
-// 		const totalNonAddedReceiving: any = await prisma.receivings.aggregate({
-// 			where: {
-// 				procurement_no: procurement_no || '',
-// 				procurement_stock_id: procurement_stock_id,
-// 			},
-// 			_sum: {
-// 				received_quantity: true,
-// 			},
-// 		})
-
-//         if (totalNonAddedReceiving?._sum?.received_quantity === null) {
-//             throw { error: true, message: 'No receiving to be added' };
-//         }
-
-//         const NonAddedReceiving: any = await prisma.receivings.findMany({
-//             where: {
-//                 procurement_no: procurement_no || '',
-//                 procurement_stock_id: procurement_stock_id,
-//                 is_added: false,
-//             },
-//         });
-
-//         if (dead_stock && !img) {
-//             throw { error: true, message: 'If there is any dead stock, at least one image is mandatory.' };
-//         }
-
-//         const procData = await prisma.procurement.findFirst({
-//             where: { procurement_no: procurement_no },
-//         });
-
-//         const procStockData = await prisma.procurement_stocks.findFirst({
-//             where: { id: procurement_stock_id },
-//             select: {
-//                 subCategory: { select: { id: true, name: true } },
-//                 category_masterId: true,
-//                 unit_masterId: true,
-//                 description: true,
-//             },
-//         });
-
-//         const query = `
-//             SELECT SUM(quantity) as total_quantity
-//             FROM product.product_${procStockData?.subCategory?.name.toLowerCase().replace(/\s/g, '')}
-//             WHERE procurement_no = '${procurement_no}' AND is_added = false AND procurement_stock_id = '${procurement_stock_id}'
-//         `;
-//         const totalQuantity: any[] = await prisma.$queryRawUnsafe(query);
-
-//         if (totalQuantity[0]?.total_quantity !== totalNonAddedReceiving?._sum?.received_quantity) {
-//             throw { error: true, message: 'Number of added products must be equal to received stocks' };
-//         }
-
-//         await prisma.$transaction(async (tx) => {
-//             await Promise.all(
-//                 NonAddedReceiving.map(async (item: any) => {
-//                     const updatedReceiving = await tx.receivings.update({
-//                         where: {
-//                             id: item?.id,
-//                         },
-//                         data: {
-//                             is_added: true,
-//                         },
-//                     });
-//                     if (!updatedReceiving) throw { error: true, message: 'Error while updating receiving' };
-//                 })
-//             );
-
-//             // Handle dead stock logic
-//             if (dead_stock) {
-//                 const prev_dead_stock = await prisma.dead_stock.findFirst({
-//                     where: {
-//                         procurement_no: procurement_no,
-//                     },
-//                 });
-
-//                 if (prev_dead_stock) {
-//                     const updatedDeadStock = await tx.dead_stock.update({
-//                         where: {
-//                             procurement_no: procurement_no,
-//                         },
-//                         data: {
-//                             quantity: Number(prev_dead_stock?.quantity) + Number(dead_stock),
-//                         },
-//                     });
-//                     if (!updatedDeadStock) throw { error: true, message: 'Error while updating dead stock' };
-//                 } else {
-//                     const createdDeadStock = await tx.dead_stock.create({
-//                         data: {
-//                             procurement_no: procurement_no,
-//                             quantity: Number(dead_stock),
-//                         },
-//                     });
-//                     if (!createdDeadStock) throw { error: true, message: 'Error while creating dead stock' };
-//                 }
-
-//                 if (img) {
-//                     const uploaded = await imageUploader(img); // Upload image and get reference info
-
-//                     await Promise.all(
-//                         uploaded.map(async (item) => {
-//                             const dsImg = await tx.dead_stock_image.create({
-//                                 data: {
-//                                     procurement_no: procurement_no,
-//                                     ReferenceNo: item?.ReferenceNo,
-//                                     uniqueId: item?.uniqueId,
-//                                 },
-//                             });
-//                             if (!dsImg) throw { error: true, message: 'Error while creating dead stock image' };
-//                         })
-//                     );
-//                 }
-//             }
-
-//             const existingInventory = await tx.inventory.findFirst({
-// 				where: {
-// 					description: procStockData?.description,
-// 				},
-// 			});
-
-// 			const supplier = await prisma.supplier_master.findFirst({
-// 				where: { procurement_no: procurement_no },
-// 				select: { id: true }
-// 			});
-
-//             if (existingInventory) {
-//                 // If inventory exists, update the quantity
-//                 inventoryId = existingInventory.id;
-//                 exist = true;
-
-//                 const updatedInv = await tx.inventory.update({
-//                     where: {
-//                         id: inventoryId,
-//                     },
-//                     data: {
-//                         quantity: {
-//                             increment: dead_stock
-//                                 ? totalNonAddedReceiving?._sum?.received_quantity - Number(dead_stock)
-//                                 : totalNonAddedReceiving?._sum?.received_quantity,
-//                         },
-// 						...(warranty !== undefined && { warranty: statusData }),
-//                     },
-//                 });
-
-//                 currentInventoryId = updatedInv?.id;
-
-//                 if (!updatedInv) throw { error: true, message: 'Error while updating inventory' };
-//             } else {
-//                 const createdInv = await tx.inventory.create({
-//                     data: {
-//                         category: { connect: { id: procData?.category_masterId } },
-//                         subcategory: { connect: { id: procStockData?.subCategory?.id } },
-//                         supplier_master: {
-//                             connect: { id: procData?.is_rate_contract ? await getRateContractSupplier(procData?.rate_contract_supplier as string) : supplier?.id },
-//                         },
-//                         unit: { connect: { id: procStockData?.unit_masterId } },
-//                         description: procStockData?.description,
-// 						ulb_id:ulb_id,
-//                         quantity: dead_stock
-//                             ? totalNonAddedReceiving?._sum?.received_quantity - Number(dead_stock)
-//                             : totalNonAddedReceiving?._sum?.received_quantity,
-//                         ...(warranty && { warranty: statusData }),
-//                     },
-//                 });
-
-//                 currentInventoryId = createdInv?.id;
-
-//                 if (!createdInv) throw { error: true, message: 'Error while creating inventory' };
-//             }
-
-//             const historyExistence = await prisma.stock_addition_history.findFirst({
-//                 where: {
-//                     procurement_no: procurement_no,
-//                     procurement_stock_id: procurement_stock_id,
-//                 },
-//             });
-
-//             if (!historyExistence) {
-//                 const historyCreation = await tx.stock_addition_history.create({
-//                     data: {
-//                         inventory: { connect: { id: currentInventoryId } },
-//                         procurement_no: procurement_no,
-//                         procurement_stock_id: procurement_stock_id,
-//                     },
-//                 });
-//                 if (!historyCreation) throw { error: true, message: 'Error while creating history' };
-//             }
-
-//             const outboxExistence = await prisma.sr_received_inventory_outbox.count({
-//                 where: {
-//                     procurement_no: procurement_no,
-//                 },
-//             });
-//             if (outboxExistence === 0 && !procData?.is_partial) {
-//                 const srRecInvOut = await tx.sr_received_inventory_outbox.create({
-//                     data: {
-//                         procurement_no: procurement_no,
-//                     },
-//                 });
-//                 if (!srRecInvOut) throw { error: true, message: 'Error while creating SR outbox' };
-//             }
-
-//             if (!procData?.is_partial) {
-//                 const srRecInvInDel = await tx.sr_received_inventory_inbox.delete({
-//                     where: {
-//                         procurement_no: procurement_no,
-//                     },
-//                 });
-//                 if (!srRecInvInDel) throw { error: true, message: 'Error while deleting SR inbox' };
-//             }
-
-//             await tx.$queryRawUnsafe(`
-//                 UPDATE product.product_${procStockData?.subCategory?.name.toLowerCase().replace(/\s/g, '')}
-//                 SET is_added = true, is_available = true, inventory_id = '${currentInventoryId}'
-//                 WHERE procurement_no = '${procurement_no}' AND is_added = false AND is_available = false
-//             `);
-//         });
-
-//         return {
-//             dead_stock: dead_stock || 0,
-//             total_Added_stock: dead_stock
-//                 ? totalNonAddedReceiving?._sum?.received_quantity - Number(dead_stock)
-//                 : totalNonAddedReceiving?._sum?.received_quantity,
-//         };
-//     } catch (err: any) {
-//         console.log(err);
-//         return { error: true, message: err?.message };
-//     }
-// };
-
-
 export const addToInventoryDal = async (req: Request) => {
 	const { procurement_no, procurement_stock_id, dead_stock, inventory, warranty } = req.body
 	const img = req.files
@@ -1457,19 +1208,28 @@ export const addToInventoryDal = async (req: Request) => {
 	let inventoryId = inventory
 	let exist: boolean = false
 	let currentInventoryId: string
+	let statusData:boolean;
 	try {
+		if(typeof warranty == 'string'){
+			if(warranty == 'false'){
+				statusData = false;
+			}else if(warranty == 'true'){
+				statusData = true;
+			}
+
+		}else{
+			statusData = warranty;
+		}
 		const totalNonAddedReceiving: any = await prisma.receivings.aggregate({
 			where: {
 				procurement_no: procurement_no || '',
 				procurement_stock_id: procurement_stock_id,
-				// is_added: false,
 			},
 			_sum: {
 				received_quantity: true,
 			},
 		})
 
-		console.log("totalNonAddedReceiving",totalNonAddedReceiving)
         if (totalNonAddedReceiving?._sum?.received_quantity === null) {
             throw { error: true, message: 'No receiving to be added' };
         }
@@ -1499,16 +1259,13 @@ export const addToInventoryDal = async (req: Request) => {
                 description: true,
             },
         });
-		console.log("procStockData",procStockData)
 
         const query = `
             SELECT SUM(quantity) as total_quantity
             FROM product.product_${procStockData?.subCategory?.name.toLowerCase().replace(/\s/g, '')}
-            WHERE procurement_no = '${procurement_no}'  AND procurement_stock_id = '${procurement_stock_id}'
+            WHERE procurement_no = '${procurement_no}' AND is_added = false AND procurement_stock_id = '${procurement_stock_id}'
         `;
         const totalQuantity: any[] = await prisma.$queryRawUnsafe(query);
-		console.log("totalQuantity",totalQuantity)
-		console.log('totalNonAddedReceiving',totalNonAddedReceiving)
 
         if (totalQuantity[0]?.total_quantity !== totalNonAddedReceiving?._sum?.received_quantity) {
             throw { error: true, message: 'Number of added products must be equal to received stocks' };
@@ -1601,6 +1358,7 @@ export const addToInventoryDal = async (req: Request) => {
                                 ? totalNonAddedReceiving?._sum?.received_quantity - Number(dead_stock)
                                 : totalNonAddedReceiving?._sum?.received_quantity,
                         },
+						...(warranty !== undefined && { warranty: statusData }),
                     },
                 });
 
@@ -1608,7 +1366,6 @@ export const addToInventoryDal = async (req: Request) => {
 
                 if (!updatedInv) throw { error: true, message: 'Error while updating inventory' };
             } else {
-                // If no matching inventory, create a new one
                 const createdInv = await tx.inventory.create({
                     data: {
                         category: { connect: { id: procData?.category_masterId } },
@@ -1618,10 +1375,11 @@ export const addToInventoryDal = async (req: Request) => {
                         },
                         unit: { connect: { id: procStockData?.unit_masterId } },
                         description: procStockData?.description,
+						ulb_id:ulb_id,
                         quantity: dead_stock
                             ? totalNonAddedReceiving?._sum?.received_quantity - Number(dead_stock)
                             : totalNonAddedReceiving?._sum?.received_quantity,
-                        ...(warranty && { warranty: Boolean(warranty) }),
+                        ...(warranty && { warranty: statusData }),
                     },
                 });
 
@@ -1653,7 +1411,7 @@ export const addToInventoryDal = async (req: Request) => {
                     procurement_no: procurement_no,
                 },
             });
-            if (outboxExistence === 0) {
+            if (outboxExistence === 0 && !procData?.is_partial) {
                 const srRecInvOut = await tx.sr_received_inventory_outbox.create({
                     data: {
                         procurement_no: procurement_no,
@@ -1689,6 +1447,9 @@ export const addToInventoryDal = async (req: Request) => {
         return { error: true, message: err?.message };
     }
 };
+
+
+
 
 
 // export const addToInventoryDal = async (req: Request) => {
@@ -1916,128 +1677,108 @@ export const addToInventoryDal = async (req: Request) => {
 // }
 
 export const addProductDal = async (req: Request) => {
-    type productType = {
-        quantity: number;
-        serial_no: string;
-    };
-    const { product, procurement_no, procurement_stock_id, brand, sub_category }: { product: productType[]; procurement_no: string; procurement_stock_id: string; brand: string; sub_category: string } = req.body;
+	type productType = {
+		quantity: number
+		serial_no: string
+	}
+	const { product, procurement_no, procurement_stock_id, brand }: { product: productType[]; procurement_no: string; procurement_stock_id: string, brand: string } = req.body
+	try {
+		if (!procurement_no) {
+			throw { error: true, meta: { message: "Procurement number is required as 'procurement_no'" } }
+		}
 
-    try {
+		const procExist = await prisma.procurement.count({
+			where: {
+				procurement_no: procurement_no,
+			},
+		})
 
-        if (!procurement_no) {
-            throw { error: true, meta: { message: "Procurement number is required as 'procurement_no'" } };
-        }
+		if (procExist === 0) {
+			throw { error: true, meta: { message: 'Procurement number is invalid' } }
+		}
 
-        if (!brand || brand?.length === 0) {
-            throw { error: true, meta: { message: "Brand name is required" } };
-        }
+		const totalNonAddedReceiving: any = await prisma.receivings.aggregate({
+			where: {
+				procurement_no: procurement_no || '',
+				is_added: false,
+			},
+			_sum: {
+				received_quantity: true,
+			},
+		})
 
-        const procExist = await prisma.procurement.count({
-            where: {
-                procurement_no: procurement_no,
-            },
-        });
+		if (totalNonAddedReceiving?._sum?.received_quantity === null) {
+			throw { error: true, meta: { message: 'No receiving to be added' } }
+		}
 
-        const procStockDatas = await prisma.procurement_stocks.findFirst({
-            where: { id: procurement_stock_id },
-            select: {
-                subCategory_masterId: true,
-                subCategory: {
-                    select: {
-                        id: true,
-                        name: true,
-                    },
-                },
-            },
-        });
+		// const procData = await prisma.procurement.findFirst({
+		// 	where: {
+		// 		procurement_no: procurement_no
+		// 	},
+		// 	select: {
+		// 		procurement_stocks: {
+		// 			select: {
+		// 				Stock_request: {
+		// 					select: {
+		// 						inventory: {
+		// 							select: {
+		// 								subcategory_masterId: true,
+		// 							},
+		// 						},
+		// 					},
+		// 				},
+		// 			},
+		// 		},
+		// 	},
+		// })
+		const procStockData = await prisma.procurement_stocks.findFirst({
+			where: { id: procurement_stock_id },
+			select: {
+				subCategory: {
+					select: {
+						id: true,
+						name: true
+					}
+				}
+			}
+		})
 
-        if (!procStockDatas?.subCategory_masterId) {
-            throw { error: true, meta: { message: 'Subcategory ID not found in procurement stock' } };
-        }
+		const query = `
+			SELECT SUM(quantity) as total_quantity
+			FROM product.product_${procStockData?.subCategory?.name.toLowerCase().replace(/\s/g, '')}
+			 WHERE procurement_no = '${procurement_no}' AND is_added = false AND procurement_stock_id = '${procurement_stock_id}';
+		`
+		const totalQuantity: any[] = await prisma.$queryRawUnsafe(query)
 
-        const sanitizedSubCategoryName = procStockDatas.subCategory?.name?.toLowerCase().replace(/\s/g, '') ?? '';
-        console.log("sanitizedSubCategoryName", sanitizedSubCategoryName);
+		const sumOfQuantity = product.reduce((total, product) => total + (Number(product?.quantity) ? Number(product?.quantity) : 1), 0)
 
-        if (procExist === 0) {
-            throw { error: true, meta: { message: 'Procurement number is invalid' } };
-        }
+		if (totalQuantity[0]?.total_quantity + Number(sumOfQuantity) > totalNonAddedReceiving?._sum?.received_quantity) {
+			throw { error: true, meta: { message: 'Number of added products cannot be more than received stocks' } }
+		}
 
-        const totalNonAddedReceiving: any = await prisma.receivings.aggregate({
-            where: {
-                procurement_no: procurement_no || '',
-                // is_added: false,
-            },
-            _sum: {
-                remaining_quantity: true,
-            },
-        });
-		console.log("totalNonAddedReceiving",totalNonAddedReceiving)
+		await prisma.$transaction(async tx => {
+			await Promise.all(
+				product.map(async item => {
+					await tx.$queryRawUnsafe(`
+					INSERT INTO product.product_${procStockData?.subCategory?.name.toLowerCase().replace(/\s/g, '')} (
+					serial_no,
+					quantity,
+					opening_quantity,
+					procurement_no,
+					procurement_stock_id,
+					brand
+					) VALUES ('${item?.serial_no}',${item?.quantity ? item?.quantity : 1},${item?.quantity ? item?.quantity : 1},'${procurement_no}','${procurement_stock_id}','${brand}' )
+					`)
+				})
+			)
+		})
 
-        if (totalNonAddedReceiving?._sum?.remaining_quantity === null) {
-            throw { error: true, meta: { message: 'No receiving to be added' } };
-        }
-
-        const query = `
-            SELECT SUM(quantity) as total_quantity
-            FROM product.product_${sanitizedSubCategoryName}
-            WHERE procurement_no = '${procurement_no}' AND is_added = false AND procurement_stock_id = '${procurement_stock_id}';
-        `;
-        const totalQuantity: any[] = await prisma.$queryRawUnsafe(query);
-
-        const sumOfQuantity = product.reduce((total, item) => total + (Number(item?.quantity) ? Number(item?.quantity) : 1), 0);
-
-        if (totalQuantity[0]?.total_quantity + Number(sumOfQuantity) > totalNonAddedReceiving?._sum?.received_quantity) {
-            throw { error: true, meta: { message: 'Number of added products cannot be more than received stocks' } };
-        }
-
-        await prisma.$transaction(async tx => {
-            // Update product quantities
-            await Promise.all(
-                product.map(async item => {
-                    await tx.$queryRawUnsafe(`
-                        UPDATE product.product_${sanitizedSubCategoryName}
-                        SET quantity = quantity + ${item?.quantity ? item?.quantity : 1},
-                            opening_quantity = opening_quantity + ${item?.quantity ? item?.quantity : 1}
-                        WHERE serial_no = '${item?.serial_no}'
-                        AND procurement_no = '${procurement_no}'
-                        AND procurement_stock_id = '${procurement_stock_id}'
-                        AND brand = '${brand}'
-                    `);
-                })
-            );
-
-            await Promise.all(
-                product.map(async item => {
-                    // Find the corresponding receiving record
-                    const receiving = await tx.receivings.findFirst({
-                        where: {
-                            procurement_no: procurement_no,
-                            // is_added: false, 
-                        },
-                    });
-
-                    if (receiving) {
-                        const updatedReceivedQuantity = (receiving.remaining_quantity || 0) - (item?.quantity || 1);
-                        await tx.receivings.update({
-                            where: {
-                                id: receiving.id,
-                            },
-                            data: {
-                                remaining_quantity: updatedReceivedQuantity,
-                                is_added: true, 
-                            },
-                        });
-                    }
-                })
-            );
-        });
-
-        return 'Products Added';
-    } catch (err: any) {
-        console.log(err);
-        return { error: true, message: err?.meta?.message };
-    }
-};
+		return 'Products added'
+	} catch (err: any) {
+		console.log(err)
+		return { error: true, message: err?.meta?.message }
+	}
+}
 
 
 
