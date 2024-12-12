@@ -595,45 +595,75 @@ export const forwardToDaDal = async (req: Request) => {
 
 
 export const handoverDal = async (req: Request) => {
-	const { stock_handover_no }: { stock_handover_no: string } = req.body
-
+	const { stock_handover_no }: { stock_handover_no: string } = req.body;
+  
 	try {
-		const status: any = await prisma.stock_request.findFirst({
-			where: {
-				stock_handover_no: stock_handover_no,
+	  // Check the current status of the stock request
+	  const status: any = await prisma.stock_request.findFirst({
+		where: {
+		  stock_handover_no: stock_handover_no,
+		},
+		select: {
+		  status: true,
+		},
+	  });
+  
+	  if (status?.status < 3) {
+		throw { error: true, message: 'Stock request is not valid to be handed over' };
+	  }
+  
+	  await prisma.$transaction(async (tx) => {
+		// Update the stock request status
+		await tx.stock_request.update({
+		  where: {
+			stock_handover_no: stock_handover_no,
+		  },
+		  data: {
+			status: 4,
+		  },
+		});
+  
+		// Delete from dist_stock_req_inbox
+		await tx.dist_stock_req_inbox.delete({
+		  where: {
+			stock_handover_no: stock_handover_no,
+		  },
+		});
+  
+		// Check if the stock_handover_no already exists in dist_stock_req_outbox
+		const existingRecord = await tx.dist_stock_req_outbox.findUnique({
+		  where: {
+			stock_handover_no: stock_handover_no,
+		  },
+		});
+  
+		if (existingRecord) {
+		  // If the record already exists, update it
+		  await tx.dist_stock_req_outbox.update({
+			where: { stock_handover_no: stock_handover_no },
+			data: {
+			  // Update any fields you want to modify
+			  stock_handover_no: stock_handover_no, // keep the same value or change if needed
+			  updatedAt: new Date(), // Example: update the timestamp
+			  // Add other fields that need updating, for example:
+			  // someOtherField: newValue
 			},
-			select: {
-				status: true,
+		  });
+		} else {
+		  // If the record does not exist, insert a new record
+		  await tx.dist_stock_req_outbox.create({
+			data: {
+			  stock_handover_no: stock_handover_no,
+			  // Add any other data fields if required
 			},
-		})
-		if (status?.status < 3) {
-			throw { error: true, message: 'Stock request is not valid to be handed over' }
+		  });
 		}
-
-		await prisma.$transaction(async tx => {
-			await tx.stock_request.update({
-				where: {
-					stock_handover_no: stock_handover_no,
-				},
-				data: {
-					status: 4,
-				},
-			})
-			await tx.dist_stock_req_inbox.delete({
-				where: {
-					stock_handover_no: stock_handover_no,
-				}
-			})
-			await tx.dist_stock_req_outbox.create({
-				data: {
-					stock_handover_no: stock_handover_no,
-				}
-			})
-		})
-
-		return 'Handed over'
+	  });
+  
+	  return 'Handed over';
 	} catch (err: any) {
-		console.log(err)
-		return { error: true, message: getErrorMessage(err) }
+	  console.log(err);
+	  return { error: true, message: getErrorMessage(err) };
 	}
-}
+  };
+  

@@ -989,7 +989,7 @@ const addToDeadStock = async (
 
 	console.log("data", data);
   
-	await tx.inventory.update({
+	const datas = await tx.inventory.update({
 	  where: {
 		id: product?.inventory_id,
 	  },
@@ -999,6 +999,8 @@ const addToDeadStock = async (
 		},
 	  },
 	});
+
+	console.log("datas",datas)
   
 	const invDeadStock = await tx.inventory_dead_stock.create({
 	  data: {
@@ -1080,6 +1082,15 @@ const warrantyClaim = async (serial_no: string, remark: string, subcategory_name
 			serial_no: product?.serial_no,
 			quantity: product?.quantity,
 			remark2: remark,
+		},
+	})
+
+	await tx.stock_request.update({
+		where: {
+			stock_handover_no: stock_handover_no,
+		},
+		data: {
+			status: 3,
 		},
 	})
 
