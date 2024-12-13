@@ -477,12 +477,20 @@ export const approveServiceRequestDal = async (req: Request) => {
 	  const daOutbox = await prisma.da_service_req_outbox.count({
 		where: { service_no },
 	  });
+	  console.log("data 480",serviceReq?.service)
   
 	  // Start transaction
 	  await prisma.$transaction(async (tx) => {
+		console.log("data 483",serviceReq?.service)
 		if (serviceReq?.service === 'dead') {
+			console.log("data 484",serviceReq?.service)
+			console.log("serviceReqProdserviceReqProd",serviceReqProd)
+			console.log("489",serviceReqProd)
 		  await Promise.all(
+			
 			serviceReqProd.map(async (prod) => {
+				console.log("datata 492",prod)
+				console.log('serviceReqserviceReq 493',serviceReq)
 			  await addToDeadStock(
 				prod?.serial_no,
 				prod.quantity,

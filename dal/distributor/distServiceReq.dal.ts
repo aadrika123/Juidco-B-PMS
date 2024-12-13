@@ -85,21 +85,33 @@ export const createServiceRequestDal = async (req: Request) => {
 						},
 					});
 
-					await tx.service_req_product.upsert({
-						where: {
-							serial_no: product,  
-						},
-						update: {
-							quantity: quantityForService?.quantity,  
-							inventoryId: inventoryId,  
-						},
-						create: {
+
+
+					const data = await tx.service_req_product.create({
+						data: {
 							service_no: service_no,
 							serial_no: product, 
 							inventoryId: inventoryId,
 							quantity: quantityForService?.quantity,
 						},
 					});
+
+					// const data = await tx.service_req_product.upsert({
+					// 	where: {
+					// 		serial_no: product,  
+					// 	},
+					// 	update: {
+					// 		quantity: quantityForService?.quantity,  
+					// 		inventoryId: inventoryId,  
+					// 	},
+					// 	create: {
+					// 		service_no: service_no,
+					// 		serial_no: product, 
+					// 		inventoryId: inventoryId,
+					// 		quantity: quantityForService?.quantity,
+					// 	},
+					// });
+					console.log("===========data ================",data)
 
 					await tx.stock_req_product.update({
 						where: {
