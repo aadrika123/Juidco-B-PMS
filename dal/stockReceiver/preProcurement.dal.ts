@@ -13,6 +13,7 @@ import { extractRoleName } from '../../lib/roleNameExtractor'
 const prisma = new PrismaClient()
 
 export type procurementType = {
+	supplier: any
 	brandId: any
 	subcategory: string
 	brand: string
@@ -24,7 +25,7 @@ export type procurementType = {
 }
 
 export const createPreProcurementDal = async (req: Request) => {
-	const { category, procurement, auth, supplier, is_rate_contract = false }: { category: string; procurement: procurementType[]; supplier?: string, is_rate_contract?: boolean, auth: any } = req.body
+	const { category, procurement, auth, supplier, is_rate_contract  }: { category: string; procurement: procurementType[]; supplier?: string, is_rate_contract?: boolean, auth: any } = req.body
 
 	const ulb_id = auth?.ulb_id
 
@@ -45,6 +46,10 @@ export const createPreProcurementDal = async (req: Request) => {
 		}
 
 		const total_rate = procurement.reduce((total, item) => total + item?.total_rate, 0)
+		if(is_rate_contract){
+			console.log("is_rate_contract",procurement[0].supplier)
+		}
+		console.log()
 
 		await prisma.$transaction(async tx => {
 			await tx.procurement.create({
@@ -53,7 +58,8 @@ export const createPreProcurementDal = async (req: Request) => {
 					category: { connect: { id: category } },
 					total_rate: total_rate,
 					is_rate_contract: is_rate_contract,
-					...(is_rate_contract && { rate_contract_supplier: supplier }),
+					// ...(is_rate_contract && { rate_contract_supplier: supplier }),
+					...(is_rate_contract && { rate_contract_supplier: procurement[0].supplier }),
 					ulb_id: ulb_id
 				},
 			})
