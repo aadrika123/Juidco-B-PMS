@@ -1080,7 +1080,7 @@ model service_request {
 model service_req_product {
     id              String          @id @default(uuid())
     service_no      String
-    serial_no       String          @unique
+    serial_no       String          //@unique
     quantity        Float           @default(1)
     status          Int             @default(0) // -1=failed, 0=pending, 1=successful
     inventory       inventory       @relation(fields: [inventoryId], references: [id])
