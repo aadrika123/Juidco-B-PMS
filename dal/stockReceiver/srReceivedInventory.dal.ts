@@ -1397,11 +1397,22 @@ export const addToInventoryDal = async (req: Request) => {
                 if (!historyCreation) throw { error: true, message: 'Error while creating history' };
             }
 
-            const outboxExistence = await prisma.sr_received_inventory_outbox.count({
+			const NonAddedReceivingForOurbox: any = await prisma.receivings.findMany({
+				where: {
+					procurement_no: procurement_no || '',
+					is_added: false,
+				},
+			});
+
+			const outboxExistence = await prisma.sr_received_inventory_outbox.count({
                 where: {
                     procurement_no: procurement_no,
                 },
             });
+			console.log("NonAddedReceivingForOurbox line 1412",NonAddedReceivingForOurbox?.length)
+			if(NonAddedReceivingForOurbox?.length == 1){
+
+           
             if (outboxExistence === 0) {
                 const srRecInvOut = await tx.sr_received_inventory_outbox.create({
                     data: {
@@ -1410,6 +1421,7 @@ export const addToInventoryDal = async (req: Request) => {
                 });
                 if (!srRecInvOut) throw { error: true, message: 'Error while creating SR outbox' };
             }
+		
 
             if (!procData?.is_partial) {
                 const srRecInvInDel = await tx.sr_received_inventory_inbox.delete({
@@ -1419,7 +1431,7 @@ export const addToInventoryDal = async (req: Request) => {
                 });
                 if (!srRecInvInDel) throw { error: true, message: 'Error while deleting SR inbox' };
             }
-
+		}
             await tx.$queryRawUnsafe(`
                 UPDATE product.product_${procStockData?.subCategory?.name.toLowerCase().replace(/\s/g, '')}
                 SET is_added = true, is_available = true, inventory_id = '${currentInventoryId}'
